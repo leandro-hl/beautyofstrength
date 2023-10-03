@@ -1,0 +1,38 @@
+CREATE TABLE IF NOT EXISTS muscle
+(
+    id   INT         NOT NULL GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    name VARCHAR(50) NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS bodygroup
+(
+    id   INT         NOT NULL GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    name VARCHAR(50) NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS musclebodygroup
+(
+    id           INT NOT NULL GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    bodygroup_id INT NOT NULL REFERENCES bodygroup (id),
+    muscle_id    INT NOT NULL REFERENCES muscle (id)
+);
+
+CREATE TABLE IF NOT EXISTS exercisemuscle
+(
+    id          INT NOT NULL GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    exercise_id INT NOT NULL REFERENCES exercise (id),
+    muscle_id   INT NOT NULL REFERENCES muscle (id)
+);
+
+CREATE TABLE IF NOT EXISTS equipment
+(
+    id   INT         NOT NULL GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    name VARCHAR(50) NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS exerciseequipment
+(
+    id          INT NOT NULL GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    exercise_id INT NOT NULL REFERENCES exercise (id),
+    equipment_id INT NOT NULL REFERENCES equipment (id)
+);

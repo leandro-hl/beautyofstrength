@@ -1,0 +1,78 @@
+body {
+  overflow-y: hidden;
+  height: 100vh;
+  background-color: #333333;
+}
+
+.App {
+  text-align: center;
+}
+
+.align-center > input {
+  text-align: center !important;
+}
+
+.no-padding {
+  padding: 0px !important;
+}
+
+.no-right-padding {
+  padding-right: 0px !important;
+}
+
+.no-left-padding {
+  padding-left: 0px !important;
+}
+
+.no-margin {
+  margin: 0px !important;
+}
+
+.no-bottom-margin {
+  margin-bottom: 0px !important;
+}
+
+.full-width {
+  width: 100% !important;
+}
+
+.hurry {
+  color: brown;
+}
+
+.icon-pointer:hover {
+  cursor: pointer;
+}
+
+.full-height {
+  height: 100vh;
+  /*overflow-y: scroll;*/
+  margin-left: auto;
+}
+
+.white-background {
+  background-color: white;
+}
+
+.fit-content {
+  width: fit-content !important;
+}
+
+.no-border-input, .no-border-input > input {
+  padding: 0px !important;
+  border: 0px !important;
+}
+
+.no-bold {
+  font-weight: unset !important;
+}
+
+.bold {
+  font-weight: bold !important;
+}
+
+/*Modal*/
+.scrollable-content {
+  height: 40vh !important;
+  overflow-y: scroll !important;
+}
