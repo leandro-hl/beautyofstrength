@@ -1,5 +1,6 @@
-import {createContext, useContext, useReducer} from "react";
+import {createContext, useContext, useEffect, useReducer, useState} from "react";
 import axios from "axios";
+import {signIn} from "./service";
 
 export const STEPS = {
     LOGGED: "LOGGED"
@@ -36,6 +37,34 @@ export function setStep(step) {
     }
 }
 
+function RegisterServiceWorkers({children}) {
+    const [isServiceWorkerRegistered, setIsServiceWorkerRegistered] = useState(false);
+
+    useEffect(() => {
+        async function registerServiceWorker() {
+            if ('serviceWorker' in navigator) {
+                await signIn();
+                try {
+                    const registration = await navigator.serviceWorker.register(`${process.env.PUBLIC_URL}/service-worker.js`);
+                    console.log('Service Worker registered with scope:', registration.scope);
+                } catch (error) {
+                    console.log('Service Worker registration failed:', error);
+                    // You can handle failure as you see fit, perhaps setting another state variable or logging the error.
+                }
+            }
+            setIsServiceWorkerRegistered(true);
+        }
+
+        registerServiceWorker();
+    }, []);
+
+    if (!isServiceWorkerRegistered) {
+        return null; // or return a loading spinner or some placeholder content if desired
+    }
+
+    return <>{children}</>;
+}
+
 function ResponseInterceptor({children}) {
     const {dispatch} = useContext(AppContext)
 
@@ -61,7 +90,9 @@ export function ContextProvider({children}) {
     return (
         <AppContext.Provider value={{state, dispatch}}>
             <ResponseInterceptor>
-                {children}
+                <RegisterServiceWorkers>
+                    {children}
+                </RegisterServiceWorkers>
             </ResponseInterceptor>
         </AppContext.Provider>
     )

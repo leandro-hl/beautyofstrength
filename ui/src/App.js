@@ -6,20 +6,23 @@ import ElseRoute from "./components/ElseRoute";
 import Home from "./components/Home";
 import {HomeStudent} from "./components/HomeStudent";
 import HomeProfessor from "./components/HomeProfessor";
+import {Component} from "react";
 
-function App() {
-    return (
-      <ContextProvider>
-          <BrowserRouter basename={`${process.env.PUBLIC_URL}`}>
-              <Switch>
-                  <Route exact path={"/"} component={Home}/>
-                  <Route path={"/professor"} component={HomeProfessor}/>
-                  <Route path={"/student"} component={HomeStudent}/>
-                  <ElseRoute/>
-              </Switch>
-          </BrowserRouter>
-      </ContextProvider>
-    );
+class App extends Component {
+    render() {
+        return (
+            <ContextProvider>
+                <BrowserRouter basename={`${process.env.PUBLIC_URL}`}>
+                    <Switch>
+                        <Route exact path={"/"} component={Home}/>
+                        <Route exact path={"/professor"} component={HomeProfessor}/>
+                        <Route exact path={"/student"} component={HomeStudent}/>
+                        <ElseRoute/>
+                    </Switch>
+                </BrowserRouter>
+            </ContextProvider>
+        );
+    }
 }
 
 export default App;

@@ -5,8 +5,9 @@ type SignUpRequest struct {
 	Password *string `json:"password"`
 }
 
-type SignUpResponse struct {
-	Token *string `json:"token"`
+type SignInRequest struct {
+	Username *string `json:"username"`
+	Password *string `json:"password"`
 }
 
 type SaveExercisesBlockRequest struct {
@@ -23,4 +24,8 @@ type ExerciseRequest struct {
 
 type RestingTime struct {
 	Interval *int `json:"interval"`
+}
+
+type SaveUserDevicePushNotificationSubscriptionRequest struct {
+	Subscription *string `json:"subscription"`
 }

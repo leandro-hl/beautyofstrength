@@ -1,40 +1,54 @@
 package main
 
 import (
+	"context"
+	"encoding/base64"
 	"encoding/json"
 	"errors"
 	"github.com/gorilla/mux"
 	"github.com/jmoiron/sqlx"
+	"github.com/leandro-hl/beautyofstrength/back/webpush"
+	"log"
 	"mime/multipart"
 	"net/http"
 	"os"
 	"path/filepath"
+	"regexp"
 	"sort"
 	"strconv"
 	"strings"
 )
 
 type Endpoints struct {
-	db *sqlx.DB
-	r  *mux.Router
+	db   *sqlx.DB
+	conf *Config
+	r    *mux.Router
 }
 
-func NewEndpoints() *Endpoints {
+func NewEndpoints(conf *Config) *Endpoints {
 	return &Endpoints{
-		db: InitDB(),
-		r:  mux.NewRouter().PathPrefix("/api").Subrouter(),
+		db:   InitDB(*conf.DatasourceName),
+		conf: conf,
+		r:    mux.NewRouter().PathPrefix("/api").Subrouter(),
 	}
 }
 
 func (o *Endpoints) Handle() http.Handler {
-	o.r.Path("/signUp").HandlerFunc(o.HandleIPWhiteListing(o.HandleTransactional(o.signUp)))
+	o.r.Path("/signUp").HandlerFunc(o.HandleIPWhiteListing(o.HandleFatal(o.HandleTransactional(o.signUp))))
+	o.r.Path("/signIn").HandlerFunc(o.HandleIPWhiteListing(o.HandleFatal(o.HandleTransactional(o.signIn))))
 
 	//Profesor services
 	o.r.Path("/listExercises").HandlerFunc(o.HandleAuthenticatedTransactional(o.listExercises))
 	o.r.Path("/saveExercisesBlock").HandlerFunc(o.HandleAuthenticatedTransactional(o.saveExercisesBlock))
 
 	//Student services
+	o.r.Path("/xxx").HandlerFunc(o.HandleAuthenticatedTransactional(o.serveImage))
+
+	//General Services
 	o.r.Path("/serveImage").HandlerFunc(o.HandleAuthenticatedTransactional(o.serveImage))
+	o.r.Path("/retrieveVapidPublicKey").HandlerFunc(o.HandleAuthenticatedTransactional(o.retrieveVapidPublicKey))
+	o.r.Path("/saveUserDevicePushNotificationSubscription").HandlerFunc(o.HandleAuthenticatedTransactional(o.saveUserDevicePushNotificationSubscription))
+	o.r.Path("/testPushNotificationWorks").HandlerFunc(o.HandleAuthenticatedTransactional(o.testPushNotificationWorks))
 	return o.r
 }
 
@@ -50,24 +64,78 @@ func (o *Endpoints) saveExercisesBlock(w http.ResponseWriter, r *http.Request, t
 	saveExercisesBlock(tx, t)
 }
 
-func (o *Endpoints) signUp(w http.ResponseWriter, r *http.Request, tx *sqlx.Tx) {
-	var request SignUpRequest
-	err := json.NewDecoder(r.Body).Decode(&request)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
-		return
-	}
+func (o *Endpoints) retrieveVapidPublicKey(w http.ResponseWriter, r *http.Request, tx *sqlx.Tx) {
+	w.Write([]byte(*o.conf.VapidPublicKey))
+}
 
-	token := "exampleToken"
-	response := &SignUpResponse{
-		Token: &token,
-	}
+func (o *Endpoints) saveUserDevicePushNotificationSubscription(w http.ResponseWriter, r *http.Request, tx *sqlx.Tx) {
+	t := SaveUserDevicePushNotificationSubscriptionRequest{}
+	err := o.Decode(r, &t)
+	Check(err)
 
-	err = json.NewEncoder(w).Encode(response)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
+	userId := UserId(r)
+	reg := regexp.MustCompile(`\(([^)]+)\)`)
+	device := reg.FindString(r.Header.Get("User-Agent"))
+
+	key, err := base64.StdEncoding.DecodeString(*o.conf.VapidDataKey)
+	Check(err)
+
+	encrypted, err := encrypt(*t.Subscription, key)
+	Check(err)
+	saveUserDevicePushNotificationSubscription(tx, userId, encrypted, device)
+}
+
+func (o *Endpoints) testPushNotificationWorks(w http.ResponseWriter, r *http.Request, tx *sqlx.Tx) {
+	/*
+		8. NOTIF 1:
+			1. QUESTION_TRAINED_TODAY
+			2. “Hola! Entrenaste Hoy”? Botones SI / NO
+			3. Guardar la respuesta del usuario en la db.
+			4. Configurar el horario en el que se envia la notification.
+				1. A las 21HS Argentina.
+					1. GOOD TO HAVE (Por la noche seguro. Podría ser después de la ultima clase configurada por el entrenador, para ese dia)
+	*/
+
+	/*
+	 const subscription = req.body.subscription;
+	    const payload = req.body.payload;
+	    const options = {
+	      TTL: req.body.ttl,
+	    };
+
+	    setTimeout(function () {
+	      webPush
+	        .sendNotification(subscription, payload, options)
+	        .then(function () {
+	          res.sendStatus(201);
+	        })
+	        .catch(function (error) {
+	          console.log(error);
+	          res.sendStatus(500);
+	        });
+	    }, req.body.delay * 1000);
+	*/
+	userId := UserId(r)
+	reg := regexp.MustCompile(`\(([^)]+)\)`)
+	device := reg.FindString(r.Header.Get("User-Agent"))
+	key, err := base64.StdEncoding.DecodeString(*o.conf.VapidDataKey)
+	Check(err)
+	vapiddata, _ := decrypt(retrieveUserDeviceNotifationSubscription(tx, userId, device), key)
+	var sub webpush.Subscription
+	JsonDecode(&sub, strings.NewReader(vapiddata))
+
+	webpush.SendNotification([]byte("QUESTION_TRAINED_TODAY"), &sub, &webpush.Options{
+		//Topic:   "", //check it
+		TTL:     60, //secs
+		Urgency: "medium",
+		VAPID: webpush.VAPID{
+			PublicKey:  *o.conf.VapidPublicKey,
+			PrivateKey: *o.conf.VapidPrivateKey,
+		},
+		//RecordSize: 0,
+		//Subscriber: "",
+	})
+	w.WriteHeader(http.StatusOK)
 }
 
 func (o *Endpoints) serveImage(w http.ResponseWriter, r *http.Request, tx *sqlx.Tx) {
@@ -149,30 +217,63 @@ func (o *Endpoints) Decode(r *http.Request, v interface{}) error {
 	return json.NewDecoder(r.Body).Decode(v)
 }
 
+// todo: this will be Redis
+var sessionStore = make(map[string]int64)
+var currentSession = ""
+
+func (o *Endpoints) signUp(w http.ResponseWriter, r *http.Request, tx *sqlx.Tx) {
+	var request SignUpRequest
+	err := json.NewDecoder(r.Body).Decode(&request)
+	CheckErr(err)
+
+	//todo: validate that the user does not already exists?
+	currentSession = storeSessionCookie(w)
+}
+
+func (o *Endpoints) signIn(w http.ResponseWriter, r *http.Request, tx *sqlx.Tx) {
+	var request SignInRequest
+	err := json.NewDecoder(r.Body).Decode(&request)
+	CheckErr(err)
+
+	//todo: validate user credentials
+	currentSession = storeSessionCookie(w)
+}
+
+func (o *Endpoints) HandleAuthorization(handlerFunc http.HandlerFunc) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		//get user type and permissions
+		//if !ok -> status.Unathotizer
+		handlerFunc(w, r)
+	}
+}
+
 func (o *Endpoints) HandleAuthenticated(handlerFunc http.HandlerFunc) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		//TODO: AUTH
-		//usr, pss, ok := r.BasicAuth()
-		//
-		//if !ok {
-		//	w.WriteHeader(http.StatusUnauthorized)
-		//	return
-		//}
-		//
-		//ok = true //o.s.UserIsValid(usr, pss)
-		//
-		//if usr != pss {
-		//	w.WriteHeader(http.StatusInternalServerError)
-		//	return
-		//}
-		//
-		//if !ok {
-		//	w.WriteHeader(http.StatusUnauthorized)
+		//todo: fix cookie shit
+		//data, err := o.retrieveSessionData(r)
+		//if err != nil {
+		//	http.Redirect(w, r, "/login", http.StatusSeeOther)
 		//	return
 		//}
 
-		handlerFunc(w, r)
+		//todo: check the user exists?
+		userId, _ := sessionStore[currentSession]
+		handlerFunc(w, r.WithContext(context.WithValue(r.Context(), "userId", userId)))
 	}
+}
+
+func (o *Endpoints) retrieveSessionData(r *http.Request) (*int64, error) {
+	cookie, err := r.Cookie("custom_session_token")
+	if err != nil {
+		return nil, err
+	}
+
+	data, ok := sessionStore[cookie.Value]
+	if !ok {
+		return nil, err
+	}
+
+	return &data, nil
 }
 
 func (o *Endpoints) HandleIPWhiteListing(f http.HandlerFunc) http.HandlerFunc {
@@ -180,7 +281,7 @@ func (o *Endpoints) HandleIPWhiteListing(f http.HandlerFunc) http.HandlerFunc {
 		origin := strings.Split(r.RemoteAddr, ":")[0]
 		phoneIP := "192.168.0.42"
 		macIP := "192.168.0.131"
-		if origin != phoneIP && origin != macIP {
+		if origin != "127.0.0.1" && origin != phoneIP && origin != macIP {
 			panic("error")
 		}
 
@@ -193,9 +294,15 @@ type HandlerTransactional func(http.ResponseWriter, *http.Request, *sqlx.Tx)
 func (o *Endpoints) HandleTransactional(handlerFunc HandlerTransactional) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		tx, err := o.db.Beginx()
-
 		Check(err)
-
+		defer func() {
+			if e := recover(); e != nil {
+				if rollbackErr := tx.Rollback(); rollbackErr != nil {
+					log.Fatalf("update failed: %v, unable to back: %v", err, rollbackErr)
+				}
+				panic(e)
+			}
+		}()
 		handlerFunc(w, r, tx)
 	}
 }

@@ -14,8 +14,8 @@ import (
 	"strings"
 )
 
-func InitDB() *sqlx.DB {
-	db, err := sqlx.Connect("postgres", "user=postgres password=WUtlsNu8T7fb8yV1TcQJ host=localhost port=5432 dbname=beautyofstrength sslmode=disable")
+func InitDB(datasourceName string) *sqlx.DB {
+	db, err := sqlx.Connect("postgres", datasourceName)
 
 	if err != nil {
 		log.Fatalln(err)

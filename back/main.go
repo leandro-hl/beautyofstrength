@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"flag"
 	"github.com/gorilla/handlers"
 	"log"
 	"net/http"
@@ -10,7 +11,20 @@ import (
 	"time"
 )
 
+type Config struct {
+	VapidPublicKey  *string `json:"vapidPublicKey"`
+	VapidPrivateKey *string `json:"vapidPrivateKey"`
+	VapidDataKey    *string `json:"vapidDataKey"`
+	DatasourceName  *string `json:"datasourceName"`
+}
+
 func main() {
+	confSpec := FlagString("conf", "back/conf.json", "Config")
+	flag.Parse()
+
+	config := Config{}
+	LoadConfig(*confSpec, &config)
+	//config.Validate()
 	/*db := postgres.InitDB()
 	//postgres.Deploy(db)
 	postgres.PatchByGit(db)*/
@@ -19,13 +33,14 @@ func main() {
 
 	l := log.New(os.Stdout, "api:", log.LstdFlags)
 
-	o := NewEndpoints()
+	o := NewEndpoints(&config)
 
-	headers := handlers.AllowedHeaders([]string{"Content-type"})
-	origins := handlers.AllowedOrigins([]string{"http://192.168.0.131:3000"})
+	headers := handlers.AllowedHeaders([]string{"Content-type", "Accept", "Content-Length", "Accept-Encoding", "X-CSRF-Token", "Authorization"})
+	origins := handlers.AllowedOrigins([]string{"http://192.168.0.131:3000", "http://localhost:3000", "http://app.localhost:3000", "http://127.0.0.1:3000"})
 	methods := handlers.AllowedMethods([]string{"GET", "HEAD", "POST", "PUT", "OPTIONS"})
 	s := &http.Server{
-		Addr:         "192.168.0.131" + os.Getenv("APP_PORT"),
+		//Addr:         "192.168.0.131" + os.Getenv("APP_PORT"),
+		Addr:         "localhost" + os.Getenv("APP_PORT"),
 		Handler:      handlers.CORS(headers, origins, methods)(o.Handle()),
 		ErrorLog:     l,
 		ReadTimeout:  5 * time.Second,
