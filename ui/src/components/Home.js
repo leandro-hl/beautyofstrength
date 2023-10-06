@@ -2,16 +2,13 @@ import React, {Component} from "react";
 import {Button, Divider, Grid, Modal} from "semantic-ui-react";
 import { withRouter } from "react-router-dom"
 import {
-    signIn,
     testPushNotificationWorks
 } from "../service";
-import {ModalEnableNotifications} from "./ModalEnableNotifications";
 
 class Home extends Component {
     render() {
         return (
             <>
-                <ModalEnableNotifications/>
                 <Grid textAlign='center' style={{ height: '100vh' }} verticalAlign='middle'>
                     <Grid.Column style={{ maxWidth: 450 }}>
                         <Button onClick={() => this.props.history.push('/professor')}>Professor Flow</Button>

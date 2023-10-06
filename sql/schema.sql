@@ -365,16 +365,25 @@ CREATE TABLE IF NOT EXISTS useraccount
 );
 
 INSERT INTO useraccount(name, username, usertype, password)
-VALUES('Juan Solanilla', 'juan123', 'P', 'juan123');
+VALUES ('Juan Solanilla', 'juan123', 'P', 'juan123');
+INSERT INTO useraccount(name, username, usertype, password)
+VALUES ('Estudiante 1', 'estudiante123', 'E', 'estudiante123');
 
 CREATE TABLE IF NOT EXISTS userdevice
 (
-    id              BIGINT      NOT NULL GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
-    name            VARCHAR(50) NOT NULL,
-    vapiddata       VARCHAR     NULL,
+    id             BIGINT      NOT NULL GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    name           VARCHAR(50) NOT NULL,
+    vapiddata      VARCHAR     NULL,
     useraccount_id BIGINT      NOT NULL REFERENCES useraccount (id)
 );
 
+CREATE TABLE IF NOT EXISTS usertraininghistory
+(
+    id             BIGINT                      NOT NULL GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    date           TIMESTAMP WITHOUT TIME ZONE NOT NULL,
+    answer         BOOLEAN                     NOT NULL,
+    useraccount_id BIGINT                      NOT NULL REFERENCES useraccount (id)
+);
 
 
 

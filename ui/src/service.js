@@ -7,8 +7,8 @@ axios.interceptors.request.use((config) => {
     return config
 })
 
-export function signIn() {
-    return axios.post("signIn", {username: 'username', password:'password'})
+export function signIn(username) {
+    return axios.post("signIn", {username: username, password:'password'})
 }
 
 export function listExercises() {
@@ -27,6 +27,15 @@ export function saveUserDevicePushNotificationSubscription(payload) {
     return axios.post("saveUserDevicePushNotificationSubscription", payload)
 }
 
+export function saveUserTrainedToday(payload) {
+    return axios.post("saveUserTrainedToday", payload)
+}
+
+export function getUserLoadedTrainingToday() {
+    return axios.get("getUserLoadedTrainingToday")
+}
+
+//todo: delete
 export function testPushNotificationWorks() {
     return axios.post("testPushNotificationWorks")
 }

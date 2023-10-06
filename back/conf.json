@@ -1,7 +1,0 @@
-{
-  "vapidPublicKey": "BF0zhIQf4A1hJm7pBNo6VXtvZs-l6SmjY-cwP6fozN7cJtwLCzs1Z_KmaK9IxFKNmtc85JcKMEp3Ot71T7wmYyM",
-  "vapidPrivateKey": "-B69dmOdF8KMgCHf_FMi40oVLyVsuYeAAsIk_WSqzGE",
-  "vapidDataKey": "JD2i1yi94fBrgHq8AoAQx5oZ+T+FAgQtPGs8l6FPGt8=",
-  "redis":  "JD2i1yi94f",
-  "datasourceName": "user=postgres password=WUtlsNu8T7fb8yV1TcQJ host=localhost port=5432 dbname=beautyofstrength sslmode=disable"
-}

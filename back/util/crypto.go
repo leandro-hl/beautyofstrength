@@ -1,4 +1,4 @@
-package main
+package util
 
 import (
 	"crypto/aes"
@@ -8,7 +8,7 @@ import (
 	"io"
 )
 
-func generateAESKey(bits int) ([]byte, error) {
+func GenerateAESKey(bits int) ([]byte, error) {
 	keyLength := bits / 8
 	key := make([]byte, keyLength)
 	if _, err := io.ReadFull(rand.Reader, key); err != nil {
@@ -17,7 +17,7 @@ func generateAESKey(bits int) ([]byte, error) {
 	return key, nil
 }
 
-func encrypt(plainText string, key []byte) (string, error) {
+func Encrypt(plainText string, key []byte) (string, error) {
 	block, err := aes.NewCipher(key)
 	if err != nil {
 		return "", err
@@ -38,7 +38,7 @@ func encrypt(plainText string, key []byte) (string, error) {
 	return hex.EncodeToString(cipherText), nil
 }
 
-func decrypt(cipherText string, key []byte) (string, error) {
+func Decrypt(cipherText string, key []byte) (string, error) {
 	block, err := aes.NewCipher(key)
 	if err != nil {
 		return "", err

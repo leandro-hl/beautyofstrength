@@ -29,3 +29,7 @@ type RestingTime struct {
 type SaveUserDevicePushNotificationSubscriptionRequest struct {
 	Subscription *string `json:"subscription"`
 }
+
+type SaveUserTrainedToday struct {
+	Answer bool `json:"answer"`
+}

@@ -4,6 +4,7 @@ import (
 	"context"
 	"flag"
 	"github.com/gorilla/handlers"
+	"github.com/leandro-hl/beautyofstrength/back/util"
 	"log"
 	"net/http"
 	"os"
@@ -12,18 +13,18 @@ import (
 )
 
 type Config struct {
-	VapidPublicKey  *string `json:"vapidPublicKey"`
-	VapidPrivateKey *string `json:"vapidPrivateKey"`
-	VapidDataKey    *string `json:"vapidDataKey"`
-	DatasourceName  *string `json:"datasourceName"`
+	VapidPublicKey *string `json:"vapidPublicKey"`
+	//VapidPrivateKey *string `json:"vapidPrivateKey"`
+	VapidDataKey   *string `json:"vapidDataKey"`
+	DatasourceName *string `json:"datasourceName"`
 }
 
 func main() {
-	confSpec := FlagString("conf", "back/conf.json", "Config")
+	confSpec := util.FlagString("conf", "back/web/conf.json", "Config")
 	flag.Parse()
 
 	config := Config{}
-	LoadConfig(*confSpec, &config)
+	util.LoadConfig(*confSpec, &config)
 	//config.Validate()
 	/*db := postgres.InitDB()
 	//postgres.Deploy(db)

@@ -7,7 +7,8 @@ import (
 	"errors"
 	"github.com/gorilla/mux"
 	"github.com/jmoiron/sqlx"
-	"github.com/leandro-hl/beautyofstrength/back/webpush"
+	"github.com/leandro-hl/beautyofstrength/back/db"
+	"github.com/leandro-hl/beautyofstrength/back/util"
 	"log"
 	"mime/multipart"
 	"net/http"
@@ -27,7 +28,7 @@ type Endpoints struct {
 
 func NewEndpoints(conf *Config) *Endpoints {
 	return &Endpoints{
-		db:   InitDB(*conf.DatasourceName),
+		db:   db.InitDB(*conf.DatasourceName),
 		conf: conf,
 		r:    mux.NewRouter().PathPrefix("/api").Subrouter(),
 	}
@@ -42,7 +43,8 @@ func (o *Endpoints) Handle() http.Handler {
 	o.r.Path("/saveExercisesBlock").HandlerFunc(o.HandleAuthenticatedTransactional(o.saveExercisesBlock))
 
 	//Student services
-	o.r.Path("/xxx").HandlerFunc(o.HandleAuthenticatedTransactional(o.serveImage))
+	o.r.Path("/saveUserTrainedToday").HandlerFunc(o.HandleAuthenticatedTransactional(o.saveUserTrainedToday))
+	o.r.Path("/getUserLoadedTrainingToday").HandlerFunc(o.HandleAuthenticatedTransactional(o.getUserLoadedTrainingToday))
 
 	//General Services
 	o.r.Path("/serveImage").HandlerFunc(o.HandleAuthenticatedTransactional(o.serveImage))
@@ -53,15 +55,23 @@ func (o *Endpoints) Handle() http.Handler {
 }
 
 func (o *Endpoints) listExercises(w http.ResponseWriter, r *http.Request, tx *sqlx.Tx) {
-	exercises := listExercises(tx)
+	exercises := db.ListExercises(tx)
 	o.Respond(w, exercises, http.StatusOK)
 }
 
 func (o *Endpoints) saveExercisesBlock(w http.ResponseWriter, r *http.Request, tx *sqlx.Tx) {
 	t := SaveExercisesBlockRequest{}
 	err := o.Decode(r, &t)
-	Check(err)
-	saveExercisesBlock(tx, t)
+	util.Check(err)
+
+	exercises := make([]db.ExerciseBlockGroup, 0)
+	for _, e := range t.Exercises {
+		exercises = append(exercises, db.ExerciseBlockGroup{
+			ExerciseId: e.Id,
+			Reps:       e.Reps,
+		})
+	}
+	db.SaveExercisesBlock(tx, *t.Laps, *t.LapRest.Interval, *t.ExeRest.Interval, exercises)
 }
 
 func (o *Endpoints) retrieveVapidPublicKey(w http.ResponseWriter, r *http.Request, tx *sqlx.Tx) {
@@ -71,18 +81,36 @@ func (o *Endpoints) retrieveVapidPublicKey(w http.ResponseWriter, r *http.Reques
 func (o *Endpoints) saveUserDevicePushNotificationSubscription(w http.ResponseWriter, r *http.Request, tx *sqlx.Tx) {
 	t := SaveUserDevicePushNotificationSubscriptionRequest{}
 	err := o.Decode(r, &t)
-	Check(err)
+	util.Check(err)
 
-	userId := UserId(r)
+	userId := util.UserId(r)
 	reg := regexp.MustCompile(`\(([^)]+)\)`)
 	device := reg.FindString(r.Header.Get("User-Agent"))
 
 	key, err := base64.StdEncoding.DecodeString(*o.conf.VapidDataKey)
-	Check(err)
+	util.Check(err)
 
-	encrypted, err := encrypt(*t.Subscription, key)
-	Check(err)
-	saveUserDevicePushNotificationSubscription(tx, userId, encrypted, device)
+	encrypted, err := util.Encrypt(*t.Subscription, key)
+	util.Check(err)
+	db.SaveUserDevicePushNotificationSubscription(tx, userId, encrypted, device)
+}
+
+func (o *Endpoints) saveUserTrainedToday(w http.ResponseWriter, r *http.Request, tx *sqlx.Tx) {
+	t := SaveUserTrainedToday{}
+	err := o.Decode(r, &t)
+	util.Check(err)
+	userId := util.UserId(r)
+	db.SaveUserTrainedToday(tx, userId, t.Answer)
+}
+
+func (o *Endpoints) getUserLoadedTrainingToday(w http.ResponseWriter, r *http.Request, tx *sqlx.Tx) {
+	userId := util.UserId(r)
+	trained := db.GetUserLoadedTrainingToday(tx, userId)
+	o.Respond(w, &struct {
+		Loaded *bool `json:"loaded"`
+	}{
+		Loaded: &trained,
+	}, http.StatusOK)
 }
 
 func (o *Endpoints) testPushNotificationWorks(w http.ResponseWriter, r *http.Request, tx *sqlx.Tx) {
@@ -115,27 +143,27 @@ func (o *Endpoints) testPushNotificationWorks(w http.ResponseWriter, r *http.Req
 	        });
 	    }, req.body.delay * 1000);
 	*/
-	userId := UserId(r)
-	reg := regexp.MustCompile(`\(([^)]+)\)`)
-	device := reg.FindString(r.Header.Get("User-Agent"))
-	key, err := base64.StdEncoding.DecodeString(*o.conf.VapidDataKey)
-	Check(err)
-	vapiddata, _ := decrypt(retrieveUserDeviceNotifationSubscription(tx, userId, device), key)
-	var sub webpush.Subscription
-	JsonDecode(&sub, strings.NewReader(vapiddata))
-
-	webpush.SendNotification([]byte("QUESTION_TRAINED_TODAY"), &sub, &webpush.Options{
-		//Topic:   "", //check it
-		TTL:     60, //secs
-		Urgency: "medium",
-		VAPID: webpush.VAPID{
-			PublicKey:  *o.conf.VapidPublicKey,
-			PrivateKey: *o.conf.VapidPrivateKey,
-		},
-		//RecordSize: 0,
-		//Subscriber: "",
-	})
-	w.WriteHeader(http.StatusOK)
+	//userId := util.UserId(r)
+	//reg := regexp.MustCompile(`\(([^)]+)\)`)
+	//device := reg.FindString(r.Header.Get("User-Agent"))
+	//key, err := base64.StdEncoding.DecodeString(*o.conf.VapidDataKey)
+	//util.Check(err)
+	//vapiddata, _ := util.Decrypt(db.RetrieveUserDeviceNotifationSubscription(tx, userId, device), key)
+	//var sub webpush.Subscription
+	//util.JsonDecode(&sub, strings.NewReader(vapiddata))
+	//
+	//webpush.SendNotification([]byte("QUESTION_TRAINED_TODAY"), &sub, &webpush.Options{
+	//	//Topic:   "", //check it
+	//	TTL:     60, //secs
+	//	Urgency: "medium",
+	//	VAPID: webpush.VAPID{
+	//		PublicKey:  *o.conf.VapidPublicKey,
+	//		PrivateKey: *o.conf.VapidPrivateKey,
+	//	},
+	//	//RecordSize: 0,
+	//	//Subscriber: "",
+	//})
+	//w.WriteHeader(http.StatusOK)
 }
 
 func (o *Endpoints) serveImage(w http.ResponseWriter, r *http.Request, tx *sqlx.Tx) {
@@ -177,7 +205,7 @@ func (o *Endpoints) serveImage(w http.ResponseWriter, r *http.Request, tx *sqlx.
 
 func (o *Endpoints) getImage(key string, r *http.Request) (multipart.File, *multipart.FileHeader, string) {
 	input, header, err := r.FormFile(key)
-	Check(err)
+	util.Check(err)
 
 	allowed := []string{"image/jpeg", "image/jpg", "image/png"}
 	mimetype := header.Header.Get("Content-Type")
@@ -224,19 +252,22 @@ var currentSession = ""
 func (o *Endpoints) signUp(w http.ResponseWriter, r *http.Request, tx *sqlx.Tx) {
 	var request SignUpRequest
 	err := json.NewDecoder(r.Body).Decode(&request)
-	CheckErr(err)
+	util.CheckErr(err)
 
 	//todo: validate that the user does not already exists?
-	currentSession = storeSessionCookie(w)
+	//create user
+	//currentSession = storeSessionCookie(w)
 }
 
 func (o *Endpoints) signIn(w http.ResponseWriter, r *http.Request, tx *sqlx.Tx) {
 	var request SignInRequest
 	err := json.NewDecoder(r.Body).Decode(&request)
-	CheckErr(err)
+	util.CheckErr(err)
 
 	//todo: validate user credentials
-	currentSession = storeSessionCookie(w)
+	userId := db.GetUserIdByUserName(tx, *request.Username)
+
+	currentSession = util.StoreSessionCookie(w, sessionStore, userId)
 }
 
 func (o *Endpoints) HandleAuthorization(handlerFunc http.HandlerFunc) http.HandlerFunc {
@@ -294,7 +325,7 @@ type HandlerTransactional func(http.ResponseWriter, *http.Request, *sqlx.Tx)
 func (o *Endpoints) HandleTransactional(handlerFunc HandlerTransactional) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		tx, err := o.db.Beginx()
-		Check(err)
+		util.Check(err)
 		defer func() {
 			if e := recover(); e != nil {
 				if rollbackErr := tx.Rollback(); rollbackErr != nil {
@@ -316,7 +347,7 @@ func (o *Endpoints) HandleFatal(handlerFunc http.HandlerFunc) http.HandlerFunc {
 		defer func() {
 			if e := recover(); e != nil {
 				switch e.(type) {
-				case ValidationErrors:
+				case util.ValidationErrors:
 					o.Respond(w, e, http.StatusBadRequest)
 				default:
 					o.Respond(w, e, http.StatusInternalServerError)

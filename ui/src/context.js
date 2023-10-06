@@ -43,7 +43,6 @@ function RegisterServiceWorkers({children}) {
     useEffect(() => {
         async function registerServiceWorker() {
             if ('serviceWorker' in navigator) {
-                await signIn();
                 try {
                     const registration = await navigator.serviceWorker.register(`${process.env.PUBLIC_URL}/service-worker.js`);
                     console.log('Service Worker registered with scope:', registration.scope);

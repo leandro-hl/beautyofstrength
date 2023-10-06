@@ -1,7 +1,6 @@
 import React, {Component} from "react";
 import {Button, Modal} from "semantic-ui-react";
-import {retrieveVapidPublicKey, saveUserDevicePushNotificationSubscription} from "../service";
-import {urlBase64ToUint8Array} from "../functions";
+import {saveUserTrainedToday} from "../service";
 
 export class ModalHaveTrained extends Component {
     state = { showModal: false }
@@ -10,7 +9,8 @@ export class ModalHaveTrained extends Component {
         this.setState({ showModal: true });
     }
 
-    async handleConfirm() {
+    async handleConfirm(answer) {
+        await saveUserTrainedToday({answer})
         this.handleClose();
     }
 
@@ -26,8 +26,8 @@ export class ModalHaveTrained extends Component {
                     <p>Mantene tu calendario actualizado para tener una mejor progresion.</p>
                 </Modal.Content>
                 <Modal.Actions>
-                    <Button secondary onClick={() => this.handleClose()}>No</Button>
-                    <Button primary onClick={() => this.handleConfirm()}>Si</Button>
+                    <Button secondary onClick={() => this.handleConfirm(false)}>No</Button>
+                    <Button primary onClick={() => this.handleConfirm(true)}>Si</Button>
                 </Modal.Actions>
             </Modal>
         )

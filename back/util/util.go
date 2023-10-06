@@ -1,4 +1,4 @@
-package main
+package util
 
 import (
 	"crypto/rand"
@@ -249,7 +249,7 @@ func RunCmd(name string, args ...string) string {
 	return string(out)
 }
 
-func generateSessionID() (string, error) {
+func GenerateSessionID() (string, error) {
 	// Define the byte length for the session ID.
 	// 16 bytes gives us 128 bits of randomness, which should be sufficient for session IDs.
 	const sessionIDLength = 16
@@ -265,10 +265,10 @@ func generateSessionID() (string, error) {
 	return sessionID, nil
 }
 
-func storeSessionCookie(w http.ResponseWriter) string {
-	sessionID, err := generateSessionID()
+func StoreSessionCookie(w http.ResponseWriter, sessionStore map[string]int64, userId int64) string {
+	sessionID, err := GenerateSessionID()
 	CheckErr(err)
-	sessionStore[sessionID] = 1 //todo: only have 1 user now
+	sessionStore[sessionID] = userId
 	return sessionID
 	//http.SetCookie(w, &http.Cookie{
 	//	Name:   "custom_session_token",

@@ -1,9 +1,10 @@
-package main
+package db
 
 import (
 	"fmt"
 	"github.com/jmoiron/sqlx"
 	"github.com/jmoiron/sqlx/reflectx"
+	"github.com/leandro-hl/beautyofstrength/back/util"
 	_ "github.com/lib/pq"
 	"io/ioutil"
 	"log"
@@ -73,18 +74,18 @@ func Insert(tx *sqlx.Tx, t interface{}) *int64 {
 
 	var id int64
 	err := tx.QueryRow(insert, values...).Scan(&id)
-	Check(err)
+	util.Check(err)
 	return &id
 }
 
 func Deploy(db *sqlx.DB) {
 	parent, err := filepath.Abs("main/patches/sql")
 
-	Check(err)
+	util.Check(err)
 
 	entries, err := os.ReadDir(parent)
 
-	Check(err)
+	util.Check(err)
 
 	tx, err := db.Begin()
 
@@ -93,16 +94,16 @@ func Deploy(db *sqlx.DB) {
 			subDir := parent + "/" + entry.Name()
 			fs, err := os.ReadDir(subDir)
 
-			Check(err)
+			util.Check(err)
 
 			for _, file := range fs {
 				patch, err := ioutil.ReadFile(subDir + "/" + file.Name())
 
-				Check(err)
+				util.Check(err)
 
 				_, err = tx.Exec(string(patch))
 
-				Check(err)
+				util.Check(err)
 			}
 		}
 	}

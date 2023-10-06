@@ -1,4 +1,4 @@
-package main
+package db
 
 import "time"
 
@@ -35,6 +35,13 @@ type UserDevice struct {
 	Name          *string `json:"name"`
 	VapidData     *string `json:"vapiddata"`
 	UserAccountId *int64  `json:"useraccount_id"`
+}
+
+type UserTrainingHistory struct {
+	Id            *int64    `json:"id"`
+	Date          time.Time `json:"date"`
+	Answer        *bool     `json:"answer"`
+	UserAccountId *int64    `json:"useraccount_id"`
 }
 
 type WebPushNotificationSubscription struct {

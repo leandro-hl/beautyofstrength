@@ -1,7 +1,7 @@
 import React, {Component, createRef} from "react";
 import {Button, Divider, Dropdown, Input, Label, List, Segment} from "semantic-ui-react";
 import {ExerciseListItem} from "./ExerciseListItem";
-import {listExercises, saveExercisesBlock} from "../service"
+import {listExercises, saveExercisesBlock, signIn} from "../service"
 import {RestInput} from "./RestInput";
 import {withRouter} from "react-router-dom";
 
@@ -12,6 +12,7 @@ class HomeProfessor extends Component {
     async componentDidMount() {
         try {
             this.setState({loading: true})
+            await signIn('juan123');
             const res = await listExercises()
 
             this.setState({loading: false, exerciseOptions: res.data.map(e => ({key: e.id, value:e.id, text:e.name}))})
