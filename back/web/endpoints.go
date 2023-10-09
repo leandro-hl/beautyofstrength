@@ -18,6 +18,7 @@ import (
 	"sort"
 	"strconv"
 	"strings"
+	"sync"
 )
 
 type Endpoints struct {
@@ -246,8 +247,40 @@ func (o *Endpoints) Decode(r *http.Request, v interface{}) error {
 }
 
 // todo: this will be Redis
-var sessionStore = make(map[string]int64)
-var currentSession = ""
+type SessionManager struct {
+	s         map[string]int64
+	a         sync.Mutex
+	lastAdded string
+}
+
+func (o *SessionManager) Read(token string) int64 {
+	o.a.Lock()
+	defer o.a.Unlock()
+	//todo should be token in prod
+	id, ok := o.s[o.lastAdded]
+	if !ok {
+		panic("Invalid session token")
+	}
+	return id
+}
+
+func (o *SessionManager) Write(token string, id int64) {
+	o.a.Lock()
+	defer o.a.Unlock()
+	id, ok := o.s[token]
+	if !ok {
+		panic("Invalid session token")
+	}
+}
+
+func NewSessionManager() *SessionManager {
+	return &SessionManager{
+		s: make(map[string]int64),
+		a: sync.Mutex{},
+	}
+}
+
+var sessionStore = NewSessionManager()
 
 func (o *Endpoints) signUp(w http.ResponseWriter, r *http.Request, tx *sqlx.Tx) {
 	var request SignUpRequest
@@ -256,7 +289,7 @@ func (o *Endpoints) signUp(w http.ResponseWriter, r *http.Request, tx *sqlx.Tx) 
 
 	//todo: validate that the user does not already exists?
 	//create user
-	//currentSession = storeSessionCookie(w)
+	//o.storeSessionCookie(w, userId)
 }
 
 func (o *Endpoints) signIn(w http.ResponseWriter, r *http.Request, tx *sqlx.Tx) {
@@ -267,7 +300,45 @@ func (o *Endpoints) signIn(w http.ResponseWriter, r *http.Request, tx *sqlx.Tx) 
 	//todo: validate user credentials
 	userId := db.GetUserIdByUserName(tx, *request.Username)
 
-	currentSession = util.StoreSessionCookie(w, sessionStore, userId)
+	o.storeSessionCookie(w, userId)
+	w.WriteHeader(http.StatusOK)
+}
+
+func (o *Endpoints) storeSessionCookie(w http.ResponseWriter, userId int64) {
+	sessionID, err := util.GenerateSessionID()
+	util.CheckErr(err)
+	sessionStore.Write(sessionID, userId)
+	//http.SetCookie(w, &http.Cookie{
+	//	Name:   "custom_session_token",
+	//	Value:  "sessionID",
+	//	Domain: "localhost",
+	//	MaxAge: 60 * 60 * 24 * 365,
+	//	//Expires: time.Now().Add(1 * time.Hour),
+	//	//HttpOnly: true,
+	//	//Domain: "localhost:3000",
+	//	//Path: "/",
+	//	//SameSite: http.SameSiteLaxMode,
+	//	//Secure: false,
+	//})
+
+	//if strings.HasPrefix(route, "http://localhost") {
+	//	http.SetCookie(w, &http.Cookie{
+	//		Name:   optimizelySessionKey,
+	//		Value:  uuid.New().String(),
+	//		Path:   "/",
+	//		Domain: "localhost",
+	//		MaxAge: 60 * 60 * 24 * 365,
+	//	})
+	//} else {
+	//	http.SetCookie(w, &http.Cookie{
+	//		Name:   optimizelySessionKey,
+	//		Value:  uuid.New().String(),
+	//		Path:   "/",
+	//		Secure: true,
+	//		Domain: xHost,
+	//		MaxAge: 60 * 60 * 24 * 365,
+	//	})
+	//}
 }
 
 func (o *Endpoints) HandleAuthorization(handlerFunc http.HandlerFunc) http.HandlerFunc {
@@ -287,32 +358,27 @@ func (o *Endpoints) HandleAuthenticated(handlerFunc http.HandlerFunc) http.Handl
 		//	return
 		//}
 
-		//todo: check the user exists?
-		userId, _ := sessionStore[currentSession]
+		//todo: check the user exists? Also: should be retrieveSessionData()
+		userId := sessionStore.Read("")
 		handlerFunc(w, r.WithContext(context.WithValue(r.Context(), "userId", userId)))
 	}
 }
 
-func (o *Endpoints) retrieveSessionData(r *http.Request) (*int64, error) {
+func (o *Endpoints) retrieveSessionData(r *http.Request) *int64 {
 	cookie, err := r.Cookie("custom_session_token")
-	if err != nil {
-		return nil, err
-	}
+	util.Check(err)
 
-	data, ok := sessionStore[cookie.Value]
-	if !ok {
-		return nil, err
-	}
-
-	return &data, nil
+	data := sessionStore.Read(cookie.Value)
+	return &data
 }
 
 func (o *Endpoints) HandleIPWhiteListing(f http.HandlerFunc) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		origin := strings.Split(r.RemoteAddr, ":")[0]
 		phoneIP := "192.168.0.42"
-		macIP := "192.168.0.131"
-		if origin != "127.0.0.1" && origin != phoneIP && origin != macIP {
+		androidPhoneIP := "192.168.0.114"
+		macIP := *o.conf.Address
+		if origin != "127.0.0.1" && origin != phoneIP && origin != macIP && origin != androidPhoneIP {
 			panic("error")
 		}
 

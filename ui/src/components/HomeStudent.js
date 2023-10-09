@@ -14,7 +14,7 @@ export class HomeStudent extends Component {
     }
 
     render() {
-        const {loadedTrainingToday, loading} = this.state;
+        const {loadedTrainingToday, loading, showSecondModal} = this.state;
 
         if (loading) {
             return <Loader active/>
@@ -22,9 +22,9 @@ export class HomeStudent extends Component {
 
         return (
             <Segment basic>
-                <ModalEnableNotifications/>
+                <ModalEnableNotifications onSubscribed={() => this.setState({showSecondModal: true})}/>
                 {
-                    !loadedTrainingToday &&
+                    showSecondModal && !loadedTrainingToday  &&
                     <ModalHaveTrained/>
                 }
             </Segment>

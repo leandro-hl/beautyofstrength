@@ -265,44 +265,6 @@ func GenerateSessionID() (string, error) {
 	return sessionID, nil
 }
 
-func StoreSessionCookie(w http.ResponseWriter, sessionStore map[string]int64, userId int64) string {
-	sessionID, err := GenerateSessionID()
-	CheckErr(err)
-	sessionStore[sessionID] = userId
-	return sessionID
-	//http.SetCookie(w, &http.Cookie{
-	//	Name:   "custom_session_token",
-	//	Value:  "sessionID",
-	//	Domain: "localhost",
-	//	MaxAge: 60 * 60 * 24 * 365,
-	//	//Expires: time.Now().Add(1 * time.Hour),
-	//	//HttpOnly: true,
-	//	//Domain: "localhost:3000",
-	//	//Path: "/",
-	//	//SameSite: http.SameSiteLaxMode,
-	//	//Secure: false,
-	//})
-
-	//if strings.HasPrefix(route, "http://localhost") {
-	//	http.SetCookie(w, &http.Cookie{
-	//		Name:   optimizelySessionKey,
-	//		Value:  uuid.New().String(),
-	//		Path:   "/",
-	//		Domain: "localhost",
-	//		MaxAge: 60 * 60 * 24 * 365,
-	//	})
-	//} else {
-	//	http.SetCookie(w, &http.Cookie{
-	//		Name:   optimizelySessionKey,
-	//		Value:  uuid.New().String(),
-	//		Path:   "/",
-	//		Secure: true,
-	//		Domain: xHost,
-	//		MaxAge: 60 * 60 * 24 * 365,
-	//	})
-	//}
-}
-
 func UserId(r *http.Request) int64 {
 	return r.Context().Value("userId").(int64)
 }

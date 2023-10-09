@@ -3,6 +3,7 @@ package main
 import (
 	"encoding/base64"
 	"flag"
+	"fmt"
 	"github.com/jmoiron/sqlx"
 	"github.com/leandro-hl/beautyofstrength/back/db"
 	"github.com/leandro-hl/beautyofstrength/back/util"
@@ -61,5 +62,6 @@ func execute(config Config, sql *sqlx.DB, key []byte) {
 			//RecordSize: 0,
 			//Subscriber: "",
 		})
+		fmt.Println("Notification sent to: " + sub.Endpoint)
 	}
 }

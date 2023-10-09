@@ -45,11 +45,13 @@ function RegisterServiceWorkers({children}) {
             if ('serviceWorker' in navigator) {
                 try {
                     const registration = await navigator.serviceWorker.register(`${process.env.PUBLIC_URL}/service-worker.js`);
-                    console.log('Service Worker registered with scope:', registration.scope);
+                    alert('Service Worker registered with scope:'+ registration.scope);
                 } catch (error) {
-                    console.log('Service Worker registration failed:', error);
+                    alert('Service Worker registration failed:'+ error);
                     // You can handle failure as you see fit, perhaps setting another state variable or logging the error.
                 }
+            } else {
+                alert('No service worker');
             }
             setIsServiceWorkerRegistered(true);
         }

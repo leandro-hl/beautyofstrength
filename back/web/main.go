@@ -15,8 +15,10 @@ import (
 type Config struct {
 	VapidPublicKey *string `json:"vapidPublicKey"`
 	//VapidPrivateKey *string `json:"vapidPrivateKey"`
-	VapidDataKey   *string `json:"vapidDataKey"`
-	DatasourceName *string `json:"datasourceName"`
+	VapidDataKey   *string  `json:"vapidDataKey"`
+	DatasourceName *string  `json:"datasourceName"`
+	AllowedOrigins []string `json:"allowedOrigins"`
+	Address        *string  `json:"address"`
 }
 
 func main() {
@@ -29,19 +31,15 @@ func main() {
 	/*db := postgres.InitDB()
 	//postgres.Deploy(db)
 	postgres.PatchByGit(db)*/
-
-	os.Setenv("APP_PORT", ":3001")
-
 	l := log.New(os.Stdout, "api:", log.LstdFlags)
 
 	o := NewEndpoints(&config)
 
-	headers := handlers.AllowedHeaders([]string{"Content-type", "Accept", "Content-Length", "Accept-Encoding", "X-CSRF-Token", "Authorization"})
-	origins := handlers.AllowedOrigins([]string{"http://192.168.0.131:3000", "http://localhost:3000", "http://app.localhost:3000", "http://127.0.0.1:3000"})
+	headers := handlers.AllowedHeaders([]string{"ngrok-skip-browser-warning", "Content-type", "Accept", "Content-Length", "Accept-Encoding", "X-CSRF-Token", "Authorization"})
+	origins := handlers.AllowedOrigins(config.AllowedOrigins)
 	methods := handlers.AllowedMethods([]string{"GET", "HEAD", "POST", "PUT", "OPTIONS"})
 	s := &http.Server{
-		//Addr:         "192.168.0.131" + os.Getenv("APP_PORT"),
-		Addr:         "localhost" + os.Getenv("APP_PORT"),
+		Addr:         *config.Address,
 		Handler:      handlers.CORS(headers, origins, methods)(o.Handle()),
 		ErrorLog:     l,
 		ReadTimeout:  5 * time.Second,
@@ -53,6 +51,7 @@ func main() {
 	go func() {
 		l.Println("Starting server at port 3001...")
 
+		//err := s.ListenAndServeTLS("cert.pem", "key_no_pass.pem")
 		err := s.ListenAndServe()
 
 		if err != nil {

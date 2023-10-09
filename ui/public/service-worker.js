@@ -8,7 +8,7 @@ self.addEventListener('fetch', (event) => {
 
 //Not supported on Safari iOS
 self.addEventListener('notificationclick', function (event) {
-    let url = 'http://localhost:3000/student';
+    let url = '/student';
 
     //notification obj Not supported on Safari Mac nor iOS
     event.notification.close(); // Android needs explicit close.

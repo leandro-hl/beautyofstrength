@@ -1,6 +1,6 @@
 import axios from "axios";
 
-const host = 'http://localhost:3001/api/'
+const host = `https://HOST/api/`
 
 axios.interceptors.request.use((config) => {
     config.baseURL = host

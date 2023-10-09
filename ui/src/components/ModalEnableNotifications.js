@@ -36,6 +36,7 @@ export class ModalEnableNotifications extends Component {
         }
         await saveUserDevicePushNotificationSubscription({subscription: JSON.stringify(subscription)})
         console.log("push subscription saved.")
+        this.props.onSubscribed()
     }
 
     async requestPermission() {
