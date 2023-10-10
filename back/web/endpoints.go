@@ -40,8 +40,12 @@ func (o *Endpoints) Handle() http.Handler {
 	o.r.Path("/signIn").HandlerFunc(o.HandleIPWhiteListing(o.HandleFatal(o.HandleTransactional(o.signIn))))
 
 	//Profesor services
+	o.r.Path("/listPlanifications").HandlerFunc(o.HandleAuthenticatedTransactional(o.listPlanifications))
+	o.r.Path("/listRoutines").HandlerFunc(o.HandleAuthenticatedTransactional(o.listRoutines))
 	o.r.Path("/listExercises").HandlerFunc(o.HandleAuthenticatedTransactional(o.listExercises))
-	o.r.Path("/saveExercisesBlock").HandlerFunc(o.HandleAuthenticatedTransactional(o.saveExercisesBlock))
+	o.r.Path("/saveExercisesBlock").HandlerFunc(o.HandleAuthenticatedTransactional(o.saveExercisesBlockReps))
+	o.r.Path("/saveExercisesBlockCpt").HandlerFunc(o.HandleAuthenticatedTransactional(o.saveExercisesBlockCpt))
+	o.r.Path("/getRoutineDetails").HandlerFunc(o.HandleAuthenticatedTransactional(o.getRoutineDetails))
 
 	//Student services
 	o.r.Path("/saveUserTrainedToday").HandlerFunc(o.HandleAuthenticatedTransactional(o.saveUserTrainedToday))
@@ -55,12 +59,59 @@ func (o *Endpoints) Handle() http.Handler {
 	return o.r
 }
 
+func (o *Endpoints) getRoutineDetails(w http.ResponseWriter, r *http.Request, tx *sqlx.Tx) {
+	routineId, err := strconv.ParseInt(r.URL.Query().Get("routineId"), 10, 64)
+	util.Check(err)
+
+	result := db.GetRoutineDetails(tx, routineId)
+	res := &GetRoutineDetailsResponse{Id: result[0].Routineid, Name: result[0].Routinename, Blocks: make([]GetRoutineDetailsBlock, 0)}
+
+	lastBlockId := int64(0)
+	var block *GetRoutineDetailsBlock
+	for _, r := range result {
+		if *r.Blockgroupid != lastBlockId {
+			lastBlockId = *r.Blockgroupid
+			if block != nil {
+				res.Blocks = append(res.Blocks, *block)
+			}
+			block = &GetRoutineDetailsBlock{
+				Id:              r.Blockgroupid,
+				Name:            r.Blockgroupname,
+				Type:            r.Type,
+				Laps:            r.Laps,
+				Exerestinterval: r.Exerestinterval,
+				Laprestinterval: r.Laprestinterval,
+				Exercises: []GetRoutineDetailsBlockExercise{
+					{Name: r.Exercisename, Secs: r.Secs, Reps: r.Reps},
+				},
+			}
+		} else {
+			block.Exercises = append(block.Exercises, GetRoutineDetailsBlockExercise{Name: r.Exercisename, Secs: r.Secs, Reps: r.Reps})
+		}
+	}
+	//last block
+	res.Blocks = append(res.Blocks, *block)
+
+	o.Respond(w, &res, http.StatusOK)
+}
+
+func (o *Endpoints) listRoutines(w http.ResponseWriter, r *http.Request, tx *sqlx.Tx) {
+	planificationId, err := strconv.ParseInt(r.URL.Query().Get("planificationId"), 10, 64)
+	util.Check(err)
+	o.Respond(w, db.ListRoutines(tx, planificationId), http.StatusOK)
+}
+
+func (o *Endpoints) listPlanifications(w http.ResponseWriter, r *http.Request, tx *sqlx.Tx) {
+	userId := util.UserId(r)
+	o.Respond(w, db.ListPlanifications(tx, userId), http.StatusOK)
+}
+
 func (o *Endpoints) listExercises(w http.ResponseWriter, r *http.Request, tx *sqlx.Tx) {
 	exercises := db.ListExercises(tx)
 	o.Respond(w, exercises, http.StatusOK)
 }
 
-func (o *Endpoints) saveExercisesBlock(w http.ResponseWriter, r *http.Request, tx *sqlx.Tx) {
+func (o *Endpoints) saveExercisesBlockReps(w http.ResponseWriter, r *http.Request, tx *sqlx.Tx) {
 	t := SaveExercisesBlockRequest{}
 	err := o.Decode(r, &t)
 	util.Check(err)
@@ -72,7 +123,33 @@ func (o *Endpoints) saveExercisesBlock(w http.ResponseWriter, r *http.Request, t
 			Reps:       e.Reps,
 		})
 	}
-	db.SaveExercisesBlock(tx, *t.Laps, *t.LapRest.Interval, *t.ExeRest.Interval, exercises)
+	db.SaveExercisesBlock(tx, *t.RoutineId, "gym", *t.BlockName, *t.Laps, *t.LapRest.Interval, *t.ExeRest.Interval, exercises)
+}
+
+func (o *Endpoints) saveExercisesBlockCpt(w http.ResponseWriter, r *http.Request, tx *sqlx.Tx) {
+	t := SaveExercisesBlockCptRequest{}
+	err := o.Decode(r, &t)
+	util.Check(err)
+
+	//todo: validate the planification exists.
+	//todo: validate that the routine exists. If not exists, create.
+	//todo: empezar aca para validar si existe y asignar bien los nombres. (mmm una cosa es validar que exista la actual)
+	// otra cosa es traer el ultimo o el count de rutinas de la planificacion... Bueno hacer una de las dos cosas
+	// lo que mas me interesa en este momento es el count de rutinas...
+	if t.RoutineId == nil {
+		t.RoutineId = db.CreateRoutine(tx, "Dia 1", *t.PlanificationId)
+	}
+
+	//todo: validate that the exercises exist
+	exercises := make([]db.ExerciseBlockGroup, 0)
+	for _, e := range t.Exercises {
+		exercises = append(exercises, db.ExerciseBlockGroup{
+			ExerciseId: e.Id,
+			Secs:       t.WorkingInterval,
+		})
+	}
+	db.SaveExercisesBlock(tx, *t.RoutineId, "cpt", *t.BlockName, *t.Laps, *t.RestingInteval, *t.RestingInteval, exercises)
+	o.Respond(w, &SaveExercisesBlockCptResponse{RoutineId: t.RoutineId}, http.StatusOK)
 }
 
 func (o *Endpoints) retrieveVapidPublicKey(w http.ResponseWriter, r *http.Request, tx *sqlx.Tx) {
@@ -267,10 +344,8 @@ func (o *SessionManager) Read(token string) int64 {
 func (o *SessionManager) Write(token string, id int64) {
 	o.a.Lock()
 	defer o.a.Unlock()
-	id, ok := o.s[token]
-	if !ok {
-		panic("Invalid session token")
-	}
+	o.s[token] = id
+	o.lastAdded = token
 }
 
 func NewSessionManager() *SessionManager {
@@ -395,7 +470,7 @@ func (o *Endpoints) HandleTransactional(handlerFunc HandlerTransactional) http.H
 		defer func() {
 			if e := recover(); e != nil {
 				if rollbackErr := tx.Rollback(); rollbackErr != nil {
-					log.Fatalf("update failed: %v, unable to back: %v", err, rollbackErr)
+					log.Printf("update failed: %v, unable to back: %v", e, rollbackErr)
 				}
 				panic(e)
 			}

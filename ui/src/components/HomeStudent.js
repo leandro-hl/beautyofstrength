@@ -3,8 +3,9 @@ import {Loader, Segment} from "semantic-ui-react";
 import {ModalHaveTrained} from "./ModalHaveTrained";
 import {getUserLoadedTrainingToday, signIn} from "../service";
 import {ModalEnableNotifications} from "./ModalEnableNotifications";
+import {withRouter} from "react-router-dom";
 
-export class HomeStudent extends Component {
+class HomeStudent extends Component {
     state = {loadedTrainingToday: false, loading: true}
 
     async componentDidMount() {
@@ -31,3 +32,5 @@ export class HomeStudent extends Component {
         )
     }
 }
+
+export default withRouter(HomeStudent);

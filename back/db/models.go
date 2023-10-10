@@ -2,6 +2,17 @@ package db
 
 import "time"
 
+type Planification struct {
+	Id   *int    `json:"id"`
+	Name *string `json:"name"`
+}
+
+type Routine struct {
+	Id              *int    `json:"id"`
+	Name            *string `json:"name"`
+	PlanificationId *int64  `json:"planification_id"`
+}
+
 type Exercise struct {
 	Id   *int    `json:"id"`
 	Name *string `json:"name"`
@@ -11,8 +22,10 @@ type BlockGroup struct {
 	Id              *int    `json:"id"`
 	Name            *string `json:"name"`
 	Laps            *int    `json:"laps"`
+	Type            *string `json:"type"`
 	LapRestInterval *int    `json:"lapRestInterval"`
 	ExeRestInterval *int    `json:"exeRestInterval"`
+	RoutineId       *int64  `json:"routine_id"`
 }
 
 type ExerciseBlockGroup struct {
@@ -20,6 +33,7 @@ type ExerciseBlockGroup struct {
 	BlockGroupId *int64 `json:"blockgroup_id"`
 	ExerciseId   *int   `json:"exercise_id"`
 	Reps         *int   `json:"reps"`
+	Secs         *int   `json:"secs"`
 }
 
 type UserAccount struct {

@@ -12,3 +12,15 @@ export function urlBase64ToUint8Array(base64String) {
     }
     return outputArray;
 }
+
+export function parseSearch(location) {
+    return new URLSearchParams(location.search)
+}
+
+export function queryParam({location}, param) {
+    return parseSearch(location).get(param)
+}
+
+export function queryParamAll({location}, param) {
+    return parseSearch(location).getAll(param)
+}

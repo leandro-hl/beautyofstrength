@@ -14,8 +14,8 @@ export class SegMinButtonGroup extends Component {
         const {minIsPrimary} = this.state
         return (
             <Button.Group>
-                <Button primary={!minIsPrimary} secondary={minIsPrimary} onClick={() => this.selected('seg')}>Seg</Button>
-                <Button secondary={!minIsPrimary} primary={minIsPrimary} onClick={() => this.selected('min')}>Min</Button>
+                <Button primary={!minIsPrimary} secondary={minIsPrimary} onClick={() => this.selected('sec')}>Seg</Button>
+                {/*<Button secondary={!minIsPrimary} primary={minIsPrimary} onClick={() => this.selected('min')}>Min</Button>*/}
             </Button.Group>
         )
     }

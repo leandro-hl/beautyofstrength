@@ -1,3 +1,11 @@
 drop table if exists exercise;
+drop table if exists muscle;
+drop table if exists exercisemuscle;
+drop table if exists planification;
+drop table if exists routine;
 drop table if exists blockgroup;
 drop table if exists exerciseblockgroup;
+drop table if exists useraccount;
+drop table if exists userplanification;
+drop table if exists userdevice;
+drop table if exists usertraininghistory;

@@ -8,7 +8,7 @@ export class RestInput extends Component {
         return (
             <Input type='number' className={'align-center'} fluid placeholder='30' max={300} min={0} action onChange={(e, {value}) => this.props.onChange(type, {amount: value})}>
                 <Label>
-                    {type === 'lap' ? <span>Descanso Ronda&nbsp;&nbsp;&nbsp;&nbsp;</span> : <span>Descanso Ejercicio</span>}
+                    {type === 'lapRest' ? <span>Descanso Ronda&nbsp;&nbsp;&nbsp;&nbsp;</span> : <span>Descanso Ejercicio</span>}
                 </Label>
                 <input />
                 <SegMinButtonGroup default={this.props.default} onIntervalSelected={(i) => this.props.onChange(type, {interval: i})}/>

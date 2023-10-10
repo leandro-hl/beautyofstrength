@@ -6,6 +6,58 @@ import (
 	"time"
 )
 
+func ListPlanifications(tx *sqlx.Tx, userId int64) []Planification {
+	dest := make([]Planification, 0)
+
+	err := tx.Select(&dest, `
+		select p.* from planification p
+		inner join userplanification u on p.id = u.planification_id
+		where u.useraccount_id = $1`, userId)
+	util.Check(err)
+
+	return dest
+}
+
+func GetRoutineDetails(tx *sqlx.Tx, routineId int64) []GetRoutineDetailsQuery {
+	dest := make([]GetRoutineDetailsQuery, 0)
+
+	err := tx.Select(&dest, `
+		select
+			r.id routineid,
+			r.name routinename,
+			b.id blockgroupid,
+			b.name blockgroupname,
+			b.laps,
+			b.type,
+			b.exerestinterval,
+			b.laprestinterval,
+			eb.reps,
+			eb.secs,
+			e.name exercisename
+			from routine r
+		inner join blockgroup b on r.id = b.routine_id
+		inner join exerciseblockgroup eb on b.id = eb.blockgroup_id
+		inner join exercise e on e.id = eb.exercise_id
+		where r.id=$1
+		order by b.id, eb.id;`, routineId)
+	util.Check(err)
+
+	return dest
+}
+
+func ListRoutines(tx *sqlx.Tx, planificationId int64) []Routine {
+	dest := make([]Routine, 0)
+
+	err := tx.Select(&dest, `
+		select r.* from routine r 
+		inner join planification p on r.planification_id = p.id
+		where p.id = $1
+		order by r.id`, planificationId)
+	util.Check(err)
+
+	return dest
+}
+
 func ListExercises(tx *sqlx.Tx) []Exercise {
 	var dest []Exercise
 
@@ -15,14 +67,26 @@ func ListExercises(tx *sqlx.Tx) []Exercise {
 	return dest
 }
 
-func SaveExercisesBlock(tx *sqlx.Tx, laps, lapRestInterval, exeRestInterval int, exercises []ExerciseBlockGroup) *int64 {
+func CreateRoutine(tx *sqlx.Tx, name string, planificationId int64) *int64 {
+	id := Insert(
+		tx,
+		&Routine{
+			Name:            &name,
+			PlanificationId: &planificationId,
+		})
+	return id
+}
+
+func SaveExercisesBlock(tx *sqlx.Tx, routineId int64, blockType, name string, laps, lapRestInterval, exeRestInterval int, exercises []ExerciseBlockGroup) *int64 {
 	id := Insert(
 		tx,
 		&BlockGroup{
-			Name:            nil,
+			Name:            &name,
 			Laps:            &laps,
+			Type:            &blockType,
 			LapRestInterval: &lapRestInterval,
 			ExeRestInterval: &exeRestInterval,
+			RoutineId:       &routineId,
 		})
 
 	for _, ex := range exercises {
@@ -32,6 +96,7 @@ func SaveExercisesBlock(tx *sqlx.Tx, laps, lapRestInterval, exeRestInterval int,
 				BlockGroupId: id,
 				ExerciseId:   ex.ExerciseId,
 				Reps:         ex.Reps,
+				Secs:         ex.Secs,
 			})
 	}
 
@@ -47,6 +112,7 @@ func SaveUserDevicePushNotificationSubscription(tx *sqlx.Tx, userId int64, vapid
 		tx.Exec("update userdevice set vapiddata = $1 where id = $2", vapiddata, userDeviceId)
 	} else if err.Error() == "sql: no rows in result set" {
 		Insert(tx, &UserDevice{
+
 			Name:          &deviceName,
 			VapidData:     &vapiddata,
 			UserAccountId: &userId,

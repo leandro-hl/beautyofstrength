@@ -1,7 +1,11 @@
 body {
   overflow-y: hidden;
-  height: 100vh;
+  height: 100%;
   background-color: #333333;
+}
+
+body > div {
+  height: 100%;
 }
 
 .App {
@@ -10,6 +14,13 @@ body {
 
 .align-center > input {
   text-align: center !important;
+}
+
+.input-left-label > div.label {
+  background-color: unset !important;
+  border: unset !important;
+  font-size: unset !important;
+  padding-left: 0px !important;
 }
 
 .no-padding {
@@ -34,6 +45,10 @@ body {
 
 .full-width {
   width: 100% !important;
+}
+
+.input-large > input {
+  font-size: 1.5em !important;
 }
 
 .hurry {

@@ -1,350 +1,598 @@
+drop table if exists exerciseblockgroup;
+drop table if exists userplanification;
+drop table if exists exercisemuscle;
+drop table if exists usertraininghistory;
+drop table if exists blockgroup;
+drop table if exists exercise;
+drop table if exists muscle;
+drop table if exists routine;
+drop table if exists planification;
+drop table if exists userdevice;
+drop table if exists useraccount;
+
+CREATE TABLE IF NOT EXISTS muscle
+(
+    id   INT          NOT NULL GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    name VARCHAR(100) NOT NULL UNIQUE
+);
+
+INSERT INTO muscle(name)
+VALUES ('Pectoral mayor'),
+       ('Pectoral menor'),
+       ('Serrato anterior'),
+       ('Dorsal ancho'),
+       ('Dorsal Redondo mayor'),
+       ('Dorsal Redondo menor'),
+       ('Espalda Trapecio'),
+       ('Abdominales Recto anterior del abdomen'),
+       ('Abdominales Oblicuo externo'),
+       ('Abdominales Oblicuo interno'),
+       ('Abdominales Transverso del abdomen'),
+       ('Espinales Iliocostal'),
+       ('Espinales Longisimo'),
+       ('Espinales Espinal'),
+       ('Deltoides anterior'),
+       ('Deltoides medio'),
+       ('Deltoides posterior'),
+       ('Brazo Biceps'),
+       ('Brazo Triceps'),
+       ('Brazo'),
+       ('Brazo Coracobraquial'),
+       ('Antebrazo Flexor radial del carpo'),
+       ('Antebrazo Palmar largo'),
+       ('Antebrazo Flexor ulnar del carpo'),
+       ('Antebrazo Flexor superficial de los dedos'),
+       ('Antebrazo Flexor profundo de los dedos'),
+       ('Antebrazo Pronador redondo'),
+       ('Antebrazo Pronador cuadrado'),
+       ('Antebrazo Supinador'),
+       ('Antebrazo Extensor radial largo del carpo'),
+       ('Antebrazo Extensor radial corto del carpo'),
+       ('Antebrazo Extensor ulnar del carpo'),
+       ('Antebrazo Extensor de los dedos'),
+       ('Antebrazo Extensor del dedo indice'),
+       ('Glúteo mayor'),
+       ('Glúteo medio'),
+       ('Glúteo menor'),
+       ('Muslo Cuádriceps (Recto femoral, Vasto intermedio, Vasto lateral, Vasto medial)'),
+       ('Muslo Sartorio'),
+       ('Muslo Tensor de la fascia lata'),
+       ('Muslo Aductores (Aductor mayor, Aductor mediano, Aductor menor, Pectineo, Grácil)'),
+       ('Muslo Isquiotibiales (Biceps femoral, Semitendinoso, Semimembranoso)'),
+       ('Pierna Anterior Tibial anterior'),
+       ('Pierna Anterior Extensor largo del dedo gordo'),
+       ('Pierna Anterior Extensor largo de los dedos'),
+       ('Pierna Posterior Gemelos Gastrocnemio'),
+       ('Pierna Posterior Gemelos Sóleo'),
+       ('Pierna Lateral Peroneo largo'),
+       ('Pierna Lateral Peroneo corto'),
+       ('Pierna Posterior Tibial posterior'),
+       ('Pierna Posterior Flexor largo de los dedos'),
+       ('Pierna Posterior Flexor largo del dedo gordo');
+
 CREATE TABLE IF NOT EXISTS exercise
 (
     id   INT         NOT NULL GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
     name VARCHAR(70) NOT NULL UNIQUE --lo pasamos a 70 por HS a rana que es muy largo
 );
 
-INSERT INTO exercise(name)
-VALUES ('Salto');
-INSERT INTO exercise(name)
-VALUES ('Salto Asistido');
-INSERT INTO exercise(name)
-VALUES ('Sentadilla');
-INSERT INTO exercise(name)
-VALUES ('Sentadilla Thruster a 1 Brazo'); --equipamiento
-INSERT INTO exercise(name)
-VALUES ('Sentadilla con Salto');
-INSERT INTO exercise(name)
-VALUES ('Sentadilla Lateral con Elevacion de Rodilla');
-INSERT INTO exercise(name)
-VALUES ('Sentadilla con Desplazamiento 1 mano abajo');
-INSERT INTO exercise(name)
-VALUES ('Burpees');
-INSERT INTO exercise(name)
-VALUES ('Trote');
-INSERT INTO exercise(name)
-VALUES ('Peso Muerto');
-INSERT INTO exercise(name)
-VALUES ('Peso Muerto Invertido Prono');
-INSERT INTO exercise(name)
-VALUES ('Peso Muerto Invertido en Paralelas');
-INSERT INTO exercise(name)
-VALUES ('Skater');
-INSERT INTO exercise(name)
-VALUES ('Skater con salto');
-INSERT INTO exercise(name)
-VALUES ('Skater con Skipping');
-INSERT INTO exercise(name)
-VALUES ('Skipping');
-INSERT INTO exercise(name)
-VALUES ('Skipping Lateral');
-INSERT INTO exercise(name)
-VALUES ('Skipping Lateral con zarpazo');
-INSERT INTO exercise(name)
-VALUES ('Canguro');
-INSERT INTO exercise(name)
-VALUES ('Wall Sit');
-INSERT INTO exercise(name)
-VALUES ('Wall Ball');
-INSERT INTO exercise(name)
-VALUES ('Pistol con Tope');
-INSERT INTO exercise(name)
-VALUES ('Muscle Up');
-INSERT INTO exercise(name)
-VALUES ('Dominada Comando');
-INSERT INTO exercise(name)
-VALUES ('Dominada Prona');
-INSERT INTO exercise(name)
-VALUES ('Dominada Prona a 1 Brazo');
-INSERT INTO exercise(name)
-VALUES ('Dominada Prona Ancha');
-INSERT INTO exercise(name)
-VALUES ('Dominada Prona Escapular');
-INSERT INTO exercise(name)
-VALUES ('Dominada Prona Isométrica');
-INSERT INTO exercise(name)
-VALUES ('Dominada Prona Offset Pull Up');
-INSERT INTO exercise(name)
-VALUES ('Dominada Supina / Chin Up');
-INSERT INTO exercise(name)
-VALUES ('Dominada Supina a 1 Brazo');
-INSERT INTO exercise(name)
-VALUES ('Dominada Supina Ancha');
-INSERT INTO exercise(name)
-VALUES ('Dominada Supina Escapular');
-INSERT INTO exercise(name)
-VALUES ('Dominada Supina Isométrica');
-INSERT INTO exercise(name)
-VALUES ('Dominada Supina Offset Pull Up');
-INSERT INTO exercise(name)
-VALUES ('Dominada Asimétrica');
-INSERT INTO exercise(name)
-VALUES ('Dominada Prona a Dominada Supina'); --transicion
-INSERT INTO exercise(name)
-VALUES ('Skull');
-INSERT INTO exercise(name)
-VALUES ('Australiana');
-INSERT INTO exercise(name)
-VALUES ('Cadera 90 90');
-INSERT INTO exercise(name)
-VALUES ('Escuadra');
-INSERT INTO exercise(name)
-VALUES ('Elevacion a 4 Tiempos');
-INSERT INTO exercise(name)
-VALUES ('Elevacion L Sit');
-INSERT INTO exercise(name)
-VALUES ('Elevacion L Sit a Vertical');
-INSERT INTO exercise(name)
-VALUES ('Elevacion V Sit');
-INSERT INTO exercise(name)
-VALUES ('Elevacion L Sit a V Sit'); --transicion
-INSERT INTO exercise(name)
-VALUES ('Criminal');
-INSERT INTO exercise(name)
-VALUES ('Vertical / Handstand');
-INSERT INTO exercise(name)
-VALUES ('Vertical / Handstand Straddle');
-INSERT INTO exercise(name)
-VALUES ('Vertical / Handstand Straddle a 1 Mano');
-INSERT INTO exercise(name)
-VALUES ('Vertical / Handstand Negativa a Plancha Lean'); --transicion
-INSERT INTO exercise(name)
-VALUES ('Vertical / Handstand Negativa a Plancha Tuck'); --transicion
-INSERT INTO exercise(name)
-VALUES ('Vertical / Handstand Negativa a Plancha Advanced'); --transicion
-INSERT INTO exercise(name)
-VALUES ('Vertical / Handstand Negativa a Plancha Half'); --transicion
-INSERT INTO exercise(name)
-VALUES ('Vertical / Handstand Negativa a Plancha Frog / Rana'); --transicion
-INSERT INTO exercise(name)
-VALUES ('Vertical / Handstand Negativa a Plancha Straddle'); --transicion
-INSERT INTO exercise(name)
-VALUES ('Vertical / Handstand Negativa a Plancha Full'); --transicion
-INSERT INTO exercise(name)
-VALUES ('Vertical / Handstand Negativa a Elbow Lever'); --transicion
-INSERT INTO exercise(name)
-VALUES ('Vertical / Handstand Negativa a Enanito'); --transicion
-INSERT INTO exercise(name)
-VALUES ('Front Lever Negativa con Press');
-INSERT INTO exercise(name)
-VALUES ('Elevación a Front Lever');
-INSERT INTO exercise(name)
-VALUES ('Front Lever Lean');
-INSERT INTO exercise(name)
-VALUES ('Front Lever Tuck');
-INSERT INTO exercise(name)
-VALUES ('Front Lever Advanced');
-INSERT INTO exercise(name)
-VALUES ('Front Lever Half');
-INSERT INTO exercise(name)
-VALUES ('Front Lever Frog / Rana');
-INSERT INTO exercise(name)
-VALUES ('Front Lever Straddle');
-INSERT INTO exercise(name)
-VALUES ('Front Lever Full');
-INSERT INTO exercise(name)
-VALUES ('Rana a Vertical / Handstand'); --transicion
-INSERT INTO exercise(name)
-VALUES ('Back Lever Tuck');
-INSERT INTO exercise(name)
-VALUES ('Back Lever Tuck Pull Up');
-INSERT INTO exercise(name)
-VALUES ('Back Lever Skin the Cat');
-INSERT INTO exercise(name)
-VALUES ('Back Lever Negativa');
-INSERT INTO exercise(name)
-VALUES ('Back Lever Advanced 1 pie');
-INSERT INTO exercise(name)
-VALUES ('Back Lever Advanced');
-INSERT INTO exercise(name)
-VALUES ('Back Lever Half');
-INSERT INTO exercise(name)
-VALUES ('Back Lever Straddle');
-INSERT INTO exercise(name)
-VALUES ('Back Lever Full');
-INSERT INTO exercise(name)
-VALUES ('Remo');
-INSERT INTO exercise(name)
-VALUES ('Remo Tuck');
-INSERT INTO exercise(name)
-VALUES ('Remo Pica');
-INSERT INTO exercise(name)
-VALUES ('Remo para Front Lever');
-INSERT INTO exercise(name)
-VALUES ('Dead Hang');
-INSERT INTO exercise(name)
-VALUES ('Victorian');
-INSERT INTO exercise(name)
-VALUES ('Colgado');
-INSERT INTO exercise(name)
-VALUES ('Colgado con 1 Dedo');
-INSERT INTO exercise(name)
-VALUES ('Colgado con 2 Dedos');
-INSERT INTO exercise(name)
-VALUES ('Colgado con 3 Dedos');
-INSERT INTO exercise(name)
-VALUES ('Colgado con 4 Dedos');
-INSERT INTO exercise(name)
-VALUES ('Colgado a 90 Grados');
-INSERT INTO exercise(name)
-VALUES ('Colgado a 1 Mano');
-INSERT INTO exercise(name)
-VALUES ('Elevación Rodilla');
-INSERT INTO exercise(name)
-VALUES ('Flexion');
-INSERT INTO exercise(name)
-VALUES ('Flexion Tuck');
-INSERT INTO exercise(name)
-VALUES ('Flexion Plancha Lean');
-INSERT INTO exercise(name)
-VALUES ('Flexion Abierta');
-INSERT INTO exercise(name)
-VALUES ('Flexion Diamante');
-INSERT INTO exercise(name)
-VALUES ('Flexion Escapular');
-INSERT INTO exercise(name)
-VALUES ('Flexion Tigre');
-INSERT INTO exercise(name)
-VALUES ('Flexion Pica');
-INSERT INTO exercise(name)
-VALUES ('Flexion Pica con Déficit');
-INSERT INTO exercise(name)
-VALUES ('Flexion Pica a Vertical / Handstand'); --transicion
-INSERT INTO exercise(name)
-VALUES ('Flexion Pica a Plancha Lean'); --transicion
-INSERT INTO exercise(name)
-VALUES ('Flexion Lateral');
-INSERT INTO exercise(name)
-VALUES ('Flexion Lateral Columna');
-INSERT INTO exercise(name)
-VALUES ('Flexion Hindu');
-INSERT INTO exercise(name)
-VALUES ('Flexion en Vertical / Handstand Push Up');
-INSERT INTO exercise(name)
-VALUES ('Empuje en Flexion Pica');
-INSERT INTO exercise(name)
-VALUES ('Vela');
-INSERT INTO exercise(name)
-VALUES ('Vela me paro');
-INSERT INTO exercise(name)
-VALUES ('Punteo Vela');
-INSERT INTO exercise(name)
-VALUES ('Hollow Estático');
-INSERT INTO exercise(name)
-VALUES ('Hollow Dinámico');
-INSERT INTO exercise(name)
-VALUES ('Plegado');
-INSERT INTO exercise(name)
-VALUES ('Bicicleta');
-INSERT INTO exercise(name)
-VALUES ('Superman Estático');
-INSERT INTO exercise(name)
-VALUES ('Superman Estático Colgado');
-INSERT INTO exercise(name)
-VALUES ('Superman Dinámico');
-INSERT INTO exercise(name)
-VALUES ('V Up');
-INSERT INTO exercise(name)
-VALUES ('V Up Cruzado');
-INSERT INTO exercise(name)
-VALUES ('V Up Lateral');
-INSERT INTO exercise(name)
-VALUES ('V Up 1 brazo pegado');
-INSERT INTO exercise(name)
-VALUES ('Step Lateral a 1');
-INSERT INTO exercise(name)
-VALUES ('Postura en Anillas'); --equipamiento
-INSERT INTO exercise(name)
-VALUES ('Rotación Tronco Sentado');
-INSERT INTO exercise(name)
-VALUES ('Fondo'); --equipamiento
-INSERT INTO exercise(name)
-VALUES ('Fondo Tigre');
-INSERT INTO exercise(name)
-VALUES ('Fondo en Barra'); --equipamiento
-INSERT INTO exercise(name)
-VALUES ('Fondo en Paralelas'); --equipamiento
-INSERT INTO exercise(name)
-VALUES ('Fondo en Anillas / Bulgaro'); --equipamiento
-INSERT INTO exercise(name)
-VALUES ('Fondo con Hollow en Barra'); --equipamiento
-INSERT INTO exercise(name)
-VALUES ('Fondo Supino en Barra'); --equipamiento
-INSERT INTO exercise(name)
-VALUES ('Fondo con Hollow en Paralelas'); --equipamiento
-INSERT INTO exercise(name)
-VALUES ('Fondo con Hollow en Anillas'); --equipamiento
-INSERT INTO exercise(name)
-VALUES ('Alacran');
-INSERT INTO exercise(name)
-VALUES ('Subida a Soga'); --equipamiento
-INSERT INTO exercise(name)
-VALUES ('Estocada');
-INSERT INTO exercise(name)
-VALUES ('Estocada Bulgara');
-INSERT INTO exercise(name)
-VALUES ('Estocada con Salto');
-INSERT INTO exercise(name)
-VALUES ('Estocada con Salto Cortas');
-INSERT INTO exercise(name)
-VALUES ('Elevación Talón');
-INSERT INTO exercise(name)
-VALUES ('Elevación Talón Colgado');
-INSERT INTO exercise(name)
-VALUES ('Elevación Frontal');
-INSERT INTO exercise(name)
-VALUES ('Elevación Frontal Disco Pared'); --equipamiento
-INSERT INTO exercise(name)
-VALUES ('Plancha Lean');
-INSERT INTO exercise(name)
-VALUES ('Plancha Tuck');
-INSERT INTO exercise(name)
-VALUES ('Plancha Advanced');
-INSERT INTO exercise(name)
-VALUES ('Plancha Half');
-INSERT INTO exercise(name)
-VALUES ('Plancha Frog / Rana');
-INSERT INTO exercise(name)
-VALUES ('Plancha Straddle');
-INSERT INTO exercise(name)
-VALUES ('Plancha Full');
-INSERT INTO exercise(name)
-VALUES ('Plancha Full Dragon');
-INSERT INTO exercise(name)
-VALUES ('Plancha Lateral con Disco Aductor'); --equipamiento
-INSERT INTO exercise(name)
-VALUES ('Pull Over');
-INSERT INTO exercise(name)
-VALUES ('Caseta');
-INSERT INTO exercise(name)
-VALUES ('Roll');
-INSERT INTO exercise(name)
-VALUES ('Roll a Front Lever'); --transicion
-INSERT INTO exercise(name)
-VALUES ('Elbow Lever');
-INSERT INTO exercise(name)
-VALUES ('Squat Clean');
-INSERT INTO exercise(name)
-VALUES ('Front Squat');
-INSERT INTO exercise(name)
-VALUES ('Ice Cream Maker');
-INSERT INTO exercise(name)
-VALUES ('Sit Up');
-INSERT INTO exercise(name)
-VALUES ('Sit Up con Anclaje'); --equipamiento
-INSERT INTO exercise(name)
-VALUES ('Sit Up con Anclaje y Disco'); --equipamiento
-INSERT INTO exercise(name)
-VALUES ('Planchado');
+CREATE TABLE IF NOT EXISTS exercisevariation
+(
+    id                  INT         NOT NULL GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    name                VARCHAR(70) NOT NULL UNIQUE,
+    technicalcomplexity INT         NOT NULL
+);
+
+
+INSERT INTO exercise(name)
+VALUES ('Salto'),
+       ('Salto Asistido'),
+       ('Sentadilla'),
+       ('Sentadilla Thruster a 1 Brazo'),     --equipamiento
+       ('Sentadilla con Salto'),
+       ('Sentadilla Lateral con Elevacion de Rodilla'),
+       ('Sentadilla con Desplazamiento 1 mano abajo'),
+       ('Burpees'),
+       ('Trote'),
+       ('Peso Muerto'),
+       ('Peso Muerto Invertido Prono'),
+       ('Peso Muerto Invertido en Paralelas'),
+       ('Sentadilla Skater'),
+       ('Sentadilla Skater con Salto'),
+       ('Sentadilla Skater con Skipping'),
+       ('Skipping'),
+       ('Skipping Lateral'),
+       ('Skipping Lateral con zarpazo'),
+       ('Canguro'),
+       ('Wall Sit'),
+       ('Wall Ball'),
+       ('Pistol con Tope'),
+       ('Muscle Up'),
+       ('Dominada Comando'),
+       ('Dominada Prona'),
+       ('Dominada Prona a 1 Brazo'),
+       ('Dominada Prona Ancha'),
+       ('Dominada Prona Escapular'),
+       ('Dominada Prona Isometrica'),
+       ('Dominada Prona Offset Pull Up'),
+       ('Dominada Supina / Chin Up'),
+       ('Dominada Supina a 1 Brazo'),
+       ('Dominada Supina Ancha'),
+       ('Dominada Supina Escapular'),
+       ('Dominada Supina Isometrica'),
+       ('Dominada Supina Offset Pull Up'),
+       ('Dominada Asimetrica'),
+       ('Skull'),
+       ('Australiana'),
+       ('Cadera 90 90'),
+       ('Escuadra'),
+       ('Elevacion a 4 Tiempos'),
+       ('Elevacion L Sit'),
+       ('Elevacion V Sit'),
+       ('Criminal'),
+       ('Vertical / Handstand'),
+       ('Vertical / Handstand Straddle'),
+       ('Vertical / Handstand Straddle a 1 Mano'),
+       ('Front Lever Negativa con Press'),
+       ('Elevación a Front Lever'),
+       ('Front Lever Lean'),
+       ('Front Lever Tuck'),
+       ('Front Lever Advanced'),
+       ('Front Lever Half'),
+       ('Front Lever Frog / Rana'),
+       ('Front Lever Straddle'),
+       ('Front Lever Full'),
+       ('Back Lever Tuck'),
+       ('Back Lever Tuck Pull Up'),
+       ('Back Lever Skin the Cat'),
+       ('Back Lever Negativa'),
+       ('Back Lever Advanced 1 pie'),
+       ('Back Lever Advanced'),
+       ('Back Lever Half'),
+       ('Back Lever Straddle'),
+       ('Back Lever Full'),
+       ('Remo'),
+       ('Remo Tuck'),
+       ('Remo Pica'),
+       ('Remo para Front Lever'),
+       ('Dead Hang'),
+       ('Victorian'),
+       ('Colgado'),
+       ('Colgado con 1 Dedo'),
+       ('Colgado con 2 Dedos'),
+       ('Colgado con 3 Dedos'),
+       ('Colgado con 4 Dedos'),
+       ('Colgado a 90 Grados'),
+       ('Colgado a 1 Mano'),
+       ('Elevación Rodilla'),
+       ('Flexion'),
+       ('Flexion Tuck'),
+       ('Flexion Plancha Lean'),
+       ('Flexion Abierta'),
+       ('Flexion Diamante'),
+       ('Flexion Escapular'),
+       ('Flexion Tigre'),
+       ('Flexion Pica'),
+       ('Flexion Pica con Deficit'),
+       ('Flexion Lateral'),
+       ('Flexion Lateral Columna'),
+       ('Flexion Hindu'),
+       ('Flexion en Vertical / Handstand Push Up'),
+       ('Empuje en Flexion Pica'),
+       ('Vela'),
+       ('Vela me paro'),
+       ('Punteo Vela'),
+       ('Hollow Estático'),
+       ('Hollow Dinámico'),
+       ('Plegado'),
+       ('Bicicleta'),
+       ('Superman Estático'),
+       ('Superman Estático Colgado'),
+       ('Superman Dinámico'),
+       ('V Up'),
+       ('V Up Cruzado'),
+       ('V Up Lateral'),
+       ('V Up 1 brazo pegado'),
+       ('Step Lateral a 1'),
+       ('Postura en Anillas'),                --equipamiento
+       ('Rotación Tronco Sentado'),
+       ('Fondo'),                             --equipamiento
+       ('Fondo Tigre'),
+       ('Fondo en Barra'),                    --equipamiento
+       ('Fondo en Paralelas'),                --equipamiento
+       ('Fondo en Anillas / Bulgaro'),        --equipamiento
+       ('Fondo con Hollow en Barra'),         --equipamiento
+       ('Fondo Supino en Barra'),             --equipamiento
+       ('Fondo con Hollow en Paralelas'),     --equipamiento
+       ('Fondo con Hollow en Anillas'),       --equipamiento
+       ('Alacran'),
+       ('Subida a Soga'),                     --equipamiento
+       ('Estocada'),
+       ('Estocada Bulgara'),
+       ('Estocada con Salto'),
+       ('Estocada con Salto Cortas'),
+       ('Elevación Talón'),
+       ('Elevación Talón Colgado'),
+       ('Elevación Frontal'),
+       ('Elevación Frontal Disco Pared'),     --equipamiento
+       ('Plancha Lean'),
+       ('Plancha Tuck'),
+       ('Plancha Advanced'),
+       ('Plancha Half'),
+       ('Plancha Frog / Rana'),
+       ('Plancha Straddle'),
+       ('Plancha Full'),
+       ('Plancha Full Dragon'),
+       ('Plancha Lateral con Disco Aductor'), --equipamiento
+       ('Pull Over'),
+       ('Caseta'),
+       ('Roll'),
+       ('Elbow Lever'),
+       ('Squat Clean'),
+       ('Front Squat'),
+       ('Ice Cream Maker'),
+       ('Sit Up'),
+       ('Sit Up con Anclaje'),                --equipamiento
+       ('Sit Up con Anclaje y Disco'),        --equipamiento
+       ('Planchado');
+
+CREATE TABLE IF NOT EXISTS exercisemuscle
+(
+    id          BIGINT NOT NULL GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    muscle_id   BIGINT REFERENCES muscle (id),
+    exercise_id BIGINT REFERENCES exercise (id)
+);
+
+INSERT INTO exercisemuscle (exercise_id, muscle_id)
+VALUES ((select id from exercise where name = 'Sentadilla'),
+        (select id from muscle where name = 'Muslo Cuadriceps')),
+       ((select id from exercise where name = 'Sentadilla'),
+        (select id from muscle where name = 'Muslo Isquiotibiales')),
+       ((select id from exercise where name = 'Sentadilla'),
+        (select id from muscle where name = 'Gluteos')),
+       ((select id from exercise where name = 'Sentadilla con Salto'),
+        (select id from muscle where name = 'Muslo Cuadriceps')),
+       ((select id from exercise where name = 'Sentadilla con Salto'),
+        (select id from muscle where name = 'Muslo Isquiotibiales')),
+       ((select id from exercise where name = 'Sentadilla con Salto'),
+        (select id from muscle where name = 'Gluteos')),
+       ((select id from exercise where name = 'Sentadilla con Salto'),
+        (select id from muscle where name = 'Muslo Aductores')),
+       ((select id from exercise where name = 'Sentadilla Thruster a 1 Brazo'),
+        (select id from muscle where name = 'Brazo Triceps')),
+       ((select id from exercise where name = 'Sentadilla Thruster a 1 Brazo'),
+        (select id from muscle where name = 'Brazo Biceps')),
+       ((select id from exercise where name = 'Sentadilla Thruster a 1 Brazo'),
+        (select id from muscle where name = 'Muslo Cuadriceps')),
+       ((select id from exercise where name = 'Sentadilla Thruster a 1 Brazo'),
+        (select id from muscle where name = 'Muslo Isquiotibiales')),
+       ((select id from exercise where name = 'Sentadilla Thruster a 1 Brazo'),
+        (select id from muscle where name = 'Gluteos')),
+       ((select id from exercise where name = 'Sentadilla Thruster a 1 Brazo'),
+        (select id from muscle where name = 'Hombros Deltoides')),
+       ((select id from exercise where name = 'Sentadilla Thruster a 1 Brazo'),
+        (select id from muscle where name = 'Lumbar')),
+       ((select id from exercise where name = 'Sentadilla Thruster a 1 Brazo'),
+        (select id from muscle where name = 'Pectoral mayor')),
+       --
+       ((select id from exercise where name = 'Sentadilla Lateral con Elevacion de Rodilla'),
+        (select id from muscle where name = 'Brazo Triceps')),
+       ((select id from exercise where name = 'Sentadilla Lateral con Elevacion de Rodilla'),
+        (select id from muscle where name = 'Brazo Biceps')),
+       ((select id from exercise where name = 'Sentadilla Lateral con Elevacion de Rodilla'),
+        (select id from muscle where name = 'Muslo Cuadriceps')),
+       ((select id from exercise where name = 'Sentadilla Lateral con Elevacion de Rodilla'),
+        (select id from muscle where name = 'Muslo Isquiotibiales')),
+       ((select id from exercise where name = 'Sentadilla Lateral con Elevacion de Rodilla'),
+        (select id from muscle where name = 'Gluteos')),
+       ((select id from exercise where name = 'Sentadilla Lateral con Elevacion de Rodilla'),
+        (select id from muscle where name = 'Hombros Deltoides')),
+       ((select id from exercise where name = 'Sentadilla Lateral con Elevacion de Rodilla'),
+        (select id from muscle where name = 'Lumbar')),
+       ((select id from exercise where name = 'Sentadilla Lateral con Elevacion de Rodilla'),
+        (select id from muscle where name = 'Pectoral mayor')),
+       --
+       ((select id from exercise where name = 'Sentadilla con Desplazamiento 1 mano abajo'),
+        (select id from muscle where name = 'Brazo Triceps')),
+       ((select id from exercise where name = 'Sentadilla con Desplazamiento 1 mano abajo'),
+        (select id from muscle where name = 'Brazo Biceps')),
+       ((select id from exercise where name = 'Sentadilla con Desplazamiento 1 mano abajo'),
+        (select id from muscle where name = 'Muslo Cuadriceps')),
+       ((select id from exercise where name = 'Sentadilla con Desplazamiento 1 mano abajo'),
+        (select id from muscle where name = 'Muslo Isquiotibiales')),
+       ((select id from exercise where name = 'Sentadilla con Desplazamiento 1 mano abajo'),
+        (select id from muscle where name = 'Gluteos')),
+       ((select id from exercise where name = 'Sentadilla con Desplazamiento 1 mano abajo'),
+        (select id from muscle where name = 'Hombros Deltoides')),
+       ((select id from exercise where name = 'Sentadilla con Desplazamiento 1 mano abajo'),
+        (select id from muscle where name = 'Lumbar')),
+       ((select id from exercise where name = 'Sentadilla con Desplazamiento 1 mano abajo'),
+        (select id from muscle where name = 'Pectoral mayor')),
+       --
+       ((select id from exercise where name = 'Burpees'),
+        (select id from muscle where name = 'Brazo Triceps')),
+       ((select id from exercise where name = 'Burpees'),
+        (select id from muscle where name = 'Brazo Biceps')),
+       ((select id from exercise where name = 'Burpees'),
+        (select id from muscle where name = 'Muslo Cuadriceps')),
+       ((select id from exercise where name = 'Burpees'),
+        (select id from muscle where name = 'Muslo Isquiotibiales')),
+       ((select id from exercise where name = 'Burpees'),
+        (select id from muscle where name = 'Gluteos')),
+       ((select id from exercise where name = 'Burpees'),
+        (select id from muscle where name = 'Hombros Deltoides')),
+       ((select id from exercise where name = 'Burpees'),
+        (select id from muscle where name = 'Lumbar')),
+       ((select id from exercise where name = 'Burpees'),
+        (select id from muscle where name = 'Pectoral mayor')),
+       ((select id from exercise where name = 'Burpees'),
+        (select id from muscle where name = 'Pierna Posterior Gemelos')),
+       --
+       ((select id from exercise where name = 'Peso Muerto'),
+        (select id from muscle where name = 'Pierna Posterior Gemelos')),
+       ((select id from exercise where name = 'Peso Muerto'),
+        (select id from muscle where name = 'Muslo Cuadriceps')),
+       ((select id from exercise where name = 'Peso Muerto'),
+        (select id from muscle where name = 'Gluteos')),
+       ((select id from exercise where name = 'Peso Muerto'),
+        (select id from muscle where name = 'Muslo Isquiotibiales')),
+       ((select id from exercise where name = 'Peso Muerto'),
+        (select id from muscle where name = 'Espalda Trapecio')),
+       ((select id from exercise where name = 'Peso Muerto'),
+        (select id from muscle where name = 'Erectores de la columna')),
+       --
+       ((select id from exercise where name = 'Peso Muerto Invertido Prono'),
+        (select id from muscle where name = 'Espalda Trapecio')),
+       ((select id from exercise where name = 'Peso Muerto Invertido Prono'),
+        (select id from muscle where name = 'Erectores de la columna')),
+       --
+       ((select id from exercise where name = 'Peso Muerto Invertido en Paralelas'),
+        (select id from muscle where name = 'Espalda Trapecio')),
+       ((select id from exercise where name = 'Peso Muerto Invertido en Paralelas'),
+        (select id from muscle where name = 'Erectores de la columna')),
+       --
+       ((select id from exercise where name = 'Sentadilla Skater'),
+        (select id from muscle where name = 'Muslo Cuadriceps')),
+       ((select id from exercise where name = 'Sentadilla Skater'),
+        (select id from muscle where name = 'Gluteos')),
+       ((select id from exercise where name = 'Sentadilla Skater'),
+        (select id from muscle where name = 'Muslo Isquiotibiales')),
+       --
+       ((select id from exercise where name = 'Sentadilla Skater con Salto'),
+        (select id from muscle where name = 'Muslo Cuadriceps')),
+       ((select id from exercise where name = 'Sentadilla Skater con Salto'),
+        (select id from muscle where name = 'Gluteos')),
+       ((select id from exercise where name = 'Sentadilla Skater con Salto'),
+        (select id from muscle where name = 'Muslo Isquiotibiales')),
+       --
+       ((select id from exercise where name = 'Sentadilla Skater con Skipping'),
+        (select id from muscle where name = 'Muslo Cuadriceps')),
+       ((select id from exercise where name = 'Sentadilla Skater con Skipping'),
+        (select id from muscle where name = 'Gluteos')),
+       ((select id from exercise where name = 'Sentadilla Skater con Skipping'),
+        (select id from muscle where name = 'Muslo Isquiotibiales')),
+       --
+       ((select id from exercise where name = 'Skipping'),
+        (select id from muscle where name = 'Muslo Cuadriceps')),
+       ((select id from exercise where name = 'Skipping'),
+        (select id from muscle where name = 'Gluteos')),
+       ((select id from exercise where name = 'Skipping'),
+        (select id from muscle where name = 'Gemelos')),
+       ((select id from exercise where name = 'Skipping'),
+        (select id from muscle where name = 'Muslo Isquiotibiales')),
+       ((select id from exercise where name = 'Skipping'),
+        (select id from muscle where name = 'Core')),
+       ((select id from exercise where name = 'Skipping'),
+        (select id from muscle where name = 'Flexores de la cadera')),
+       --
+       ((select id from exercise where name = 'Skipping Lateral'),
+        (select id from muscle where name = 'Muslo Cuadriceps')),
+       ((select id from exercise where name = 'Skipping Lateral'),
+        (select id from muscle where name = 'Gluteos')),
+       ((select id from exercise where name = 'Skipping Lateral'),
+        (select id from muscle where name = 'Gemelos')),
+       ((select id from exercise where name = 'Skipping Lateral'),
+        (select id from muscle where name = 'Muslo Isquiotibiales')),
+       ((select id from exercise where name = 'Skipping Lateral'),
+        (select id from muscle where name = 'Core')),
+       ((select id from exercise where name = 'Skipping Lateral'),
+        (select id from muscle where name = 'Flexores de la cadera')),
+       --
+       ((select id from exercise where name = 'Skipping Lateral con zarpazo'),
+        (select id from muscle where name = 'Muslo Cuadriceps')),
+       ((select id from exercise where name = 'Skipping Lateral con zarpazo'),
+        (select id from muscle where name = 'Gluteos')),
+       ((select id from exercise where name = 'Skipping Lateral con zarpazo'),
+        (select id from muscle where name = 'Gemelos')),
+       ((select id from exercise where name = 'Skipping Lateral con zarpazo'),
+        (select id from muscle where name = 'Muslo Isquiotibiales')),
+       ((select id from exercise where name = 'Skipping Lateral con zarpazo'),
+        (select id from muscle where name = 'Core')),
+       ((select id from exercise where name = 'Skipping Lateral con zarpazo'),
+        (select id from muscle where name = 'Flexores de la cadera')),
+       --
+       ((select id from exercise where name = 'Muscle Up'),
+        (select id from muscle where name = 'Core')),
+       ((select id from exercise where name = 'Muscle Up'),
+        (select id from muscle where name = 'Pectoral mayor')),
+       ((select id from exercise where name = 'Muscle Up'),
+        (select id from muscle where name = 'Brazo Triceps')),
+       ((select id from exercise where name = 'Muscle Up'),
+        (select id from muscle where name = 'Espalda Trapecio')),
+       ((select id from exercise where name = 'Muscle Up'),
+        (select id from muscle where name = 'Dorsal ancho')),
+       ((select id from exercise where name = 'Muscle Up'),
+        (select id from muscle where name = 'Serrato posterior')),
+       ((select id from exercise where name = 'Muscle Up'),
+        (select id from muscle where name = 'Brazo Biceps')),
+       --
+       ((select id from exercise where name = 'Dominada Comando'),
+        (select id from muscle where name = 'Core')),
+       ((select id from exercise where name = 'Dominada Comando'),
+        (select id from muscle where name = 'Brazo Triceps')),
+       ((select id from exercise where name = 'Dominada Comando'),
+        (select id from muscle where name = 'Brazo Biceps')),
+       ((select id from exercise where name = 'Dominada Comando'),
+        (select id from muscle where name = 'Espalda Trapecio')),
+       ((select id from exercise where name = 'Dominada Comando'),
+        (select id from muscle where name = 'Dorsal ancho')),
+       ((select id from exercise where name = 'Dominada Comando'),
+        (select id from muscle where name = 'Antebrazo')),
+       --
+       ((select id from exercise where name = 'Dominada Prona'),
+        (select id from muscle where name = 'Core')),
+       ((select id from exercise where name = 'Dominada Prona'),
+        (select id from muscle where name = 'Brazo Triceps')),
+       ((select id from exercise where name = 'Dominada Prona'),
+        (select id from muscle where name = 'Brazo Biceps')),
+       ((select id from exercise where name = 'Dominada Prona'),
+        (select id from muscle where name = 'Espalda Trapecio')),
+       ((select id from exercise where name = 'Dominada Prona'),
+        (select id from muscle where name = 'Dorsal ancho')),
+       ((select id from exercise where name = 'Dominada Prona'),
+        (select id from muscle where name = 'Antebrazo')),
+       --
+       ((select id from exercise where name = 'Dominada Prona a 1 Brazo'),
+        (select id from muscle where name = 'Core')),
+       ((select id from exercise where name = 'Dominada Prona a 1 Brazo'),
+        (select id from muscle where name = 'Brazo Triceps')),
+       ((select id from exercise where name = 'Dominada Prona a 1 Brazo'),
+        (select id from muscle where name = 'Brazo Biceps')),
+       ((select id from exercise where name = 'Dominada Prona a 1 Brazo'),
+        (select id from muscle where name = 'Espalda Trapecio')),
+       ((select id from exercise where name = 'Dominada Prona a 1 Brazo'),
+        (select id from muscle where name = 'Dorsal ancho')),
+       ((select id from exercise where name = 'Dominada Prona a 1 Brazo'),
+        (select id from muscle where name = 'Antebrazo')),
+       --
+       ((select id from exercise where name = 'Dominada Prona Ancha'),
+        (select id from muscle where name = 'Core')),
+       ((select id from exercise where name = 'Dominada Prona Ancha'),
+        (select id from muscle where name = 'Brazo Triceps')),
+       ((select id from exercise where name = 'Dominada Prona Ancha'),
+        (select id from muscle where name = 'Brazo Biceps')),
+       ((select id from exercise where name = 'Dominada Prona Ancha'),
+        (select id from muscle where name = 'Espalda Trapecio')),
+       ((select id from exercise where name = 'Dominada Prona Ancha'),
+        (select id from muscle where name = 'Dorsal ancho')),
+       ((select id from exercise where name = 'Dominada Prona Ancha'),
+        (select id from muscle where name = 'Antebrazo')),
+       --
+       ((select id from exercise where name = 'Dominada Prona Escapular'),
+        (select id from muscle where name = 'Core')),
+       ((select id from exercise where name = 'Dominada Prona Escapular'),
+        (select id from muscle where name = 'Brazo Triceps')),
+       ((select id from exercise where name = 'Dominada Prona Escapular'),
+        (select id from muscle where name = 'Brazo Biceps')),
+       ((select id from exercise where name = 'Dominada Prona Escapular'),
+        (select id from muscle where name = 'Espalda Trapecio')),
+       ((select id from exercise where name = 'Dominada Prona Escapular'),
+        (select id from muscle where name = 'Dorsal ancho')),
+       ((select id from exercise where name = 'Dominada Prona Escapular'),
+        (select id from muscle where name = 'Antebrazo')),
+       --
+       ((select id from exercise where name = 'Dominada Prona Isometrica'),
+        (select id from muscle where name = 'Core')),
+       ((select id from exercise where name = 'Dominada Prona Isometrica'),
+        (select id from muscle where name = 'Brazo Triceps')),
+       ((select id from exercise where name = 'Dominada Prona Isometrica'),
+        (select id from muscle where name = 'Brazo Biceps')),
+       ((select id from exercise where name = 'Dominada Prona Isometrica'),
+        (select id from muscle where name = 'Espalda Trapecio')),
+       ((select id from exercise where name = 'Dominada Prona Isometrica'),
+        (select id from muscle where name = 'Dorsal ancho')),
+       ((select id from exercise where name = 'Dominada Prona Isometrica'),
+        (select id from muscle where name = 'Antebrazo')),
+       --
+       ((select id from exercise where name = 'Dominada Prona Offset Pull Up'),
+        (select id from muscle where name = 'Core')),
+       ((select id from exercise where name = 'Dominada Prona Offset Pull Up'),
+        (select id from muscle where name = 'Brazo Triceps')),
+       ((select id from exercise where name = 'Dominada Prona Offset Pull Up'),
+        (select id from muscle where name = 'Brazo Biceps')),
+       ((select id from exercise where name = 'Dominada Prona Offset Pull Up'),
+        (select id from muscle where name = 'Espalda Trapecio')),
+       ((select id from exercise where name = 'Dominada Prona Offset Pull Up'),
+        (select id from muscle where name = 'Dorsal ancho')),
+       ((select id from exercise where name = 'Dominada Prona Offset Pull Up'),
+        (select id from muscle where name = 'Antebrazo')),
+       --
+       ((select id from exercise where name = 'Dominada Supina / Chin Up'),
+        (select id from muscle where name = 'Brazo Biceps')),
+       ((select id from exercise where name = 'Dominada Supina / Chin Up'),
+        (select id from muscle where name = 'Brazo Triceps')),
+       ((select id from exercise where name = 'Dominada Supina / Chin Up'),
+        (select id from muscle where name = 'Hombros Deltoides')),
+       --
+       ((select id from exercise where name = 'Dominada Supina a 1 Brazo'),
+        (select id from muscle where name = 'Brazo Biceps')),
+       ((select id from exercise where name = 'Dominada Supina a 1 Brazo'),
+        (select id from muscle where name = 'Brazo Triceps')),
+       ((select id from exercise where name = 'Dominada Supina a 1 Brazo'),
+        (select id from muscle where name = 'Hombros Deltoides')),
+       --
+       ((select id from exercise where name = 'Dominada Supina Ancha'),
+        (select id from muscle where name = 'Brazo Biceps')),
+       ((select id from exercise where name = 'Dominada Supina Ancha'),
+        (select id from muscle where name = 'Brazo Triceps')),
+       ((select id from exercise where name = 'Dominada Supina Ancha'),
+        (select id from muscle where name = 'Hombros Deltoides')),
+       --
+       ((select id from exercise where name = 'Dominada Supina Escapular'),
+        (select id from muscle where name = 'Brazo Biceps')),
+       ((select id from exercise where name = 'Dominada Supina Escapular'),
+        (select id from muscle where name = 'Brazo Triceps')),
+       ((select id from exercise where name = 'Dominada Supina Escapular'),
+        (select id from muscle where name = 'Hombros Deltoides')),
+       --
+       ((select id from exercise where name = 'Dominada Supina Isometrica'),
+        (select id from muscle where name = 'Brazo Biceps')),
+       ((select id from exercise where name = 'Dominada Supina Isometrica'),
+        (select id from muscle where name = 'Brazo Triceps')),
+       ((select id from exercise where name = 'Dominada Supina Isometrica'),
+        (select id from muscle where name = 'Hombros Deltoides')),
+       --
+       ((select id from exercise where name = 'Dominada Supina Offset Pull Up'),
+        (select id from muscle where name = 'Brazo Biceps')),
+       ((select id from exercise where name = 'Dominada Supina Offset Pull Up'),
+        (select id from muscle where name = 'Brazo Triceps')),
+       ((select id from exercise where name = 'Dominada Supina Offset Pull Up'),
+        (select id from muscle where name = 'Hombros Deltoides')),
+       --
+       ((select id from exercise where name = 'Dominada Asimetrica'),
+        (select id from muscle where name = 'Brazo Biceps')),
+       ((select id from exercise where name = 'Dominada Asimetrica'),
+        (select id from muscle where name = 'Brazo Triceps')),
+       ((select id from exercise where name = 'Dominada Asimetrica'),
+        (select id from muscle where name = 'Hombros Deltoides'));
+
+CREATE TABLE IF NOT EXISTS planification
+(
+    id   BIGINT      NOT NULL GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    name VARCHAR(30) NOT NULL
+);
+
+INSERT INTO planification (name)
+VALUES ('El Coliseo');
+INSERT INTO planification (name)
+VALUES ('Esqualo');
+
+CREATE TABLE IF NOT EXISTS routine
+(
+    id               BIGINT      NOT NULL GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    name             VARCHAR(30) NOT NULL, --auto generated Day 1 / 2/ 3, etc.
+    planification_id BIGINT REFERENCES planification (id)
+);
 
 CREATE TABLE IF NOT EXISTS blockgroup
 (
-    id               BIGINT      NOT NULL GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
-    name             VARCHAR(30) NULL,
-    laps             INT         NOT NULL,
-    laprestinterval  INT         NOT NULL,
-    exerestinterval  INT         NOT NULL,
-    createdbyuser_id BIGINT      NOT NULL REFERENCES useraccount (id)
+    id              BIGINT      NOT NULL GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    name            VARCHAR(35) NULL,
+    laps            INT         NOT NULL,
+    laprestinterval INT         NOT NULL,
+    exerestinterval INT         NOT NULL,
+    type            varchar(10) NOT NULL,
+    routine_id      BIGINT      NOT NULL REFERENCES routine (id)
 );
 
 CREATE TABLE IF NOT EXISTS exerciseblockgroup
@@ -352,7 +600,8 @@ CREATE TABLE IF NOT EXISTS exerciseblockgroup
     id            BIGINT NOT NULL GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
     blockgroup_id BIGINT NOT NULL REFERENCES blockgroup (id),
     exercise_id   INT    NOT NULL REFERENCES exercise (id),
-    reps          INT    NOT NULL
+    reps          INT    NULL,
+    secs          INT    NULL
 );
 
 CREATE TABLE IF NOT EXISTS useraccount
@@ -365,9 +614,26 @@ CREATE TABLE IF NOT EXISTS useraccount
 );
 
 INSERT INTO useraccount(name, username, usertype, password)
-VALUES ('Juan Solanilla', 'juan123', 'P', 'juan123');
-INSERT INTO useraccount(name, username, usertype, password)
-VALUES ('Estudiante 1', 'estudiante123', 'E', 'estudiante123');
+VALUES ('Juan Solanilla', 'juan123', 'P', 'juan123'),
+       ('Estudiante 1', 'estudiante1_123', 'E', 'estudiante123'),
+       ('Estudiante 2', 'estudiante2_123', 'E', 'estudiante123');
+
+CREATE TABLE IF NOT EXISTS userplanification
+(
+    id               BIGINT NOT NULL GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    planification_id BIGINT REFERENCES planification (id),
+    useraccount_id   BIGINT NOT NULL REFERENCES useraccount (id)
+);
+
+INSERT INTO userplanification(planification_id, useraccount_id)
+VALUES ((select id from planification where name = 'El Coliseo'),
+        (select id from useraccount where username = 'juan123')),
+       ((select id from planification where name = 'Esqualo'),
+        (select id from useraccount where username = 'juan123')),
+       ((select id from planification where name = 'El Coliseo'),
+        (select id from useraccount where username = 'estudiante1_123')),
+       ((select id from planification where name = 'El Coliseo'),
+        (select id from useraccount where username = 'estudiante2_123'));
 
 CREATE TABLE IF NOT EXISTS userdevice
 (
