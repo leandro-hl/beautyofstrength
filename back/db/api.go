@@ -27,6 +27,7 @@ func GetRoutineDetails(tx *sqlx.Tx, routineId int64) []GetRoutineDetailsQuery {
 			r.name routinename,
 			b.id blockgroupid,
 			b.name blockgroupname,
+			b.duration blockgroupduration,
 			b.laps,
 			b.type,
 			b.exerestinterval,
@@ -61,10 +62,16 @@ func ListRoutines(tx *sqlx.Tx, planificationId int64) []Routine {
 func ListExercises(tx *sqlx.Tx) []Exercise {
 	var dest []Exercise
 
-	err := tx.Select(&dest, `SELECT * FROM exercise ORDER BY name`)
+	err := tx.Select(&dest, `SELECT * FROM exercise ORDER BY name, id`)
 	util.Check(err)
 
 	return dest
+}
+
+func CountRoutinesInPlanification(tx *sqlx.Tx, planificationId int64) *int {
+	var des int
+	tx.Get(&des, "select count(1) from routine where planification_id=$1", planificationId)
+	return &des
 }
 
 func CreateRoutine(tx *sqlx.Tx, name string, planificationId int64) *int64 {
@@ -77,15 +84,16 @@ func CreateRoutine(tx *sqlx.Tx, name string, planificationId int64) *int64 {
 	return id
 }
 
-func SaveExercisesBlock(tx *sqlx.Tx, routineId int64, blockType, name string, laps, lapRestInterval, exeRestInterval int, exercises []ExerciseBlockGroup) *int64 {
+func SaveExercisesBlock(tx *sqlx.Tx, routineId int64, blockType, name string, duration, laps, lapRestInterval, exeRestInterval *int, exercises []ExerciseBlockGroup) *int64 {
 	id := Insert(
 		tx,
 		&BlockGroup{
 			Name:            &name,
-			Laps:            &laps,
+			Duration:        duration,
+			Laps:            laps,
 			Type:            &blockType,
-			LapRestInterval: &lapRestInterval,
-			ExeRestInterval: &exeRestInterval,
+			LapRestInterval: lapRestInterval,
+			ExeRestInterval: exeRestInterval,
 			RoutineId:       &routineId,
 		})
 

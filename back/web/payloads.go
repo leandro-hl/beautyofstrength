@@ -29,7 +29,43 @@ type SaveExercisesBlockCptRequest struct {
 	RestingInteval  *int              `json:"restingInteval"`
 }
 
+type SaveExercisesBlockAmrapRequest struct {
+	RoutineId       *int64            `json:"routineId"`
+	PlanificationId *int64            `json:"planificationId"`
+	Exercises       []ExerciseRequest `json:"exercises"`
+	BlockDuration   *int              `json:"blockDuration"`
+	BlockName       *string           `json:"blockName"`
+}
+
+type SaveExercisesBlockComboRequest struct {
+	RoutineId       *int64            `json:"routineId"`
+	PlanificationId *int64            `json:"planificationId"`
+	Exercises       []ExerciseRequest `json:"exercises"`
+	BlockName       *string           `json:"blockName"`
+	Laps            *int              `json:"laps"`
+}
+
+type SaveExercisesBlockComboResponse struct {
+	RoutineId *int64 `json:"routineId"`
+}
+
+type SaveExercisesBlockPirRequest struct {
+	RoutineId       *int64            `json:"routineId"`
+	PlanificationId *int64            `json:"planificationId"`
+	Exercises       []ExerciseRequest `json:"exercises"`
+	BlockName       *string           `json:"blockName"`
+	Laps            *int              `json:"laps"`
+}
+
+type SaveExercisesBlockPirResponse struct {
+	RoutineId *int64 `json:"routineId"`
+}
+
 type SaveExercisesBlockCptResponse struct {
+	RoutineId *int64 `json:"routineId"`
+}
+
+type SaveExercisesBlockAmrapResponse struct {
 	RoutineId *int64 `json:"routineId"`
 }
 
@@ -59,6 +95,7 @@ type GetRoutineDetailsResponse struct {
 type GetRoutineDetailsBlock struct {
 	Id              *int64                           `json:"id"`
 	Name            *string                          `json:"name"`
+	Duration        *int                             `json:"duration"`
 	Type            *string                          `json:"type"`
 	Laps            *int                             `json:"laps"`
 	Exerestinterval *int                             `json:"exerestinterval"`

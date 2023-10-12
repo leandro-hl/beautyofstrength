@@ -1,5 +1,5 @@
 body {
-  overflow-y: hidden;
+  overflow-y: scroll;
   height: 100%;
   background-color: #333333;
 }
@@ -14,6 +14,39 @@ body > div {
 
 .align-center > input {
   text-align: center !important;
+}
+
+.list-item-icon {
+  position: absolute !important;
+  right: 45px !important;
+  top: 15px !important;
+  font-size: 2em !important;
+}
+
+.list-item-icon-input {
+  position: absolute !important;
+  right: 0px !important;
+  top: 15px !important;
+  font-size: 2em !important;
+}
+
+/*todo: how to use theme here?*/
+.mine-selected {
+  background-color: #f9d118 !important;
+}
+
+.chevron-up {
+  position: absolute !important;
+  right: 35px !important;
+  top: 0px !important;
+  font-size: 2em !important;
+}
+
+.chevron-down {
+  position: absolute !important;
+  right: 35px !important;
+  top: 29px !important;
+  font-size: 2em !important;
 }
 
 .input-left-label > div.label {

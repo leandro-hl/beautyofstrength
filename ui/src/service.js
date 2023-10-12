@@ -35,6 +35,18 @@ export function saveExercisesBlockCpt(payload) {
     return axios.post("saveExercisesBlockCpt", payload)
 }
 
+export function saveExercisesBlockAmrap(payload) {
+    return axios.post("saveExercisesBlockAmrap", payload)
+}
+
+export function saveExercisesBlockCombo(payload) {
+    return axios.post("saveExercisesBlockCombo", payload)
+}
+
+export function saveExerciseBlockPir(payload) {
+    return axios.post("saveExerciseBlockPir", payload)
+}
+
 export function retrieveVapidPublicKey() {
     return axios.get("retrieveVapidPublicKey")
 }

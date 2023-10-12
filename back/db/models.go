@@ -14,13 +14,15 @@ type Routine struct {
 }
 
 type Exercise struct {
-	Id   *int    `json:"id"`
-	Name *string `json:"name"`
+	Id                  *int    `json:"id"`
+	Name                *string `json:"name"`
+	TechnicalComplexity *int    `json:"technicalcomplexity"`
 }
 
 type BlockGroup struct {
 	Id              *int    `json:"id"`
 	Name            *string `json:"name"`
+	Duration        *int    `json:"duration"`
 	Laps            *int    `json:"laps"`
 	Type            *string `json:"type"`
 	LapRestInterval *int    `json:"lapRestInterval"`

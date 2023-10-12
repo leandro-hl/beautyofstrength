@@ -1,13 +1,21 @@
 import React, {Component, createRef} from "react";
-import {Button, Divider, Dropdown, Grid, Header, Input, Label, List, Segment} from "semantic-ui-react";
+import {Button, Divider, Dropdown, Grid, Header, Input, Label, List, Message, Segment} from "semantic-ui-react";
 import {ExerciseListItem} from "./ExerciseListItem";
 import {RestInput} from "./RestInput";
-import {listExercises, saveExercisesBlock, saveExercisesBlockCpt, signIn} from "../service";
+import {
+    listExercises, saveExerciseBlockPir,
+    saveExercisesBlock,
+    saveExercisesBlockAmrap,
+    saveExercisesBlockCombo,
+    saveExercisesBlockCpt,
+    signIn
+} from "../service";
 import {withRouter} from "react-router-dom";
 import {ModalTrainingBlockType} from "./ModalTrainingBlockType";
 import {ExerciseListItemCircuitInterval} from "./ExerciseListItemCircuitInterval";
 import {InputNumber} from "./InputNumber";
 import {queryParam} from "../functions";
+import {ExerciseListItemCombo} from "./ExerciseListItemCombo";
 
 class PageBlockCreate extends Component {
     dropdownRef = createRef()
@@ -18,7 +26,17 @@ class PageBlockCreate extends Component {
         const planificationId = queryParam(props, 'planificationId')
         const routineId = queryParam(props, 'routineId')
         const nextBlockNumber = queryParam(props, 'nextBlockNumber')
-        this.state = {planificationId, routineId, exercisesBuffer: [], blockName: 'Bloque '+(nextBlockNumber??1), exercises: [], exerciseOptions: [], lapRestDefault: 'sec', exeRestDefault: 'sec'}
+        const defaultPiramidTop = 12
+        const defaultIncrementPerSerie = 2
+        const defaultPiramidSeries = Math.floor(defaultPiramidTop / defaultIncrementPerSerie)
+        this.state = {
+            planificationId,
+            routineId,
+            defaultPiramidTop,
+            defaultIncrementPerSerie,
+            defaultPiramidSeries,
+            next: 0,
+            exercisesBuffer: [], blockName: 'Bloque '+(nextBlockNumber??1), exercises: [], exerciseOptions: [], lapRestDefault: 'sec', exeRestDefault: 'sec'}
     }
 
     async componentDidMount() {
@@ -32,7 +50,7 @@ class PageBlockCreate extends Component {
         }
     }
 
-    saveExercise(i, reps) {
+    saveExerciseV1(i, reps) {
         const {exercises} = this.state
         const index = exercises.indexOf(i)
         exercises[index].reps = reps
@@ -46,6 +64,13 @@ class PageBlockCreate extends Component {
         }
     }
 
+    saveExercise(i, reps) {
+        const {exercises} = this.state
+        const index = exercises.indexOf(i)
+        exercises[index].reps = reps
+        this.setState({exercises, next: index+1})
+    }
+
     handleChange = (e, input) => {
         const exercises = input.value.map(v => (input.options.find(x => x.value === v)))
         this.setState({exercisesBuffer: [...exercises]})
@@ -55,8 +80,9 @@ class PageBlockCreate extends Component {
         this.setState({[type]: {...this.state[type], ...obj}})
     }
 
-    redirectToParentRoutine(routineId) {
-        this.props.history.push('/routine?routineId='+routineId)
+    redirectToParentRoutine() {
+        const {planificationId, routineId} = this.state;
+        this.props.history.push('/routine?planificationId='+planificationId+'&routineId='+routineId)
     }
 
     async saveExercisesBlockCpt() {
@@ -78,6 +104,70 @@ class PageBlockCreate extends Component {
                 restingInteval: parseInt(restingInteval, 10)
             }
             const res = await saveExercisesBlockCpt(request)
+            this.redirectToParentRoutine(res.data.routineId)
+        } catch (e) {
+            console.log(e)
+        }
+    }
+
+    async saveExercisesBlockAmrap() {
+        try {
+            const {exercises, blockName, blockDuration, planificationId, routineId} = this.state
+            this.setState({saving: true})
+
+            if(!blockDuration) {
+                //todo required validation.
+            }
+
+            const request = {
+                planificationId: parseInt(planificationId,10),
+                routineId: !!routineId ? parseInt(routineId,10) : null,
+                blockName: blockName,
+                exercises: exercises.map(e => ({id:e.key, reps: parseInt(e.reps, 10)})),
+                blockDuration: parseInt(blockDuration,10),
+                laps: null,
+                workingInterval: null,
+                restingInteval: null
+            }
+            const res = await saveExercisesBlockAmrap(request)
+            this.redirectToParentRoutine(res.data.routineId)
+        } catch (e) {
+            console.log(e)
+        }
+    }
+
+    async saveExercisesBlockCombo() {
+        try {
+            const {exercises, laps, blockName, planificationId, routineId} = this.state
+            this.setState({saving: true})
+
+            const request = {
+                planificationId: parseInt(planificationId,10),
+                routineId: !!routineId ? parseInt(routineId,10) : null,
+                blockName: blockName,
+                exercises: exercises.map(e => ({id:e.key})),
+                laps: parseInt(laps, 10),
+            }
+            const res = await saveExercisesBlockCombo(request)
+            this.redirectToParentRoutine(res.data.routineId)
+        } catch (e) {
+            console.log(e)
+        }
+    }
+
+    async saveExerciseBlockPir() {
+        try {
+            const {exercises, laps, blockName, planificationId, routineId} = this.state
+            this.setState({saving: true})
+
+            const request = {
+                planificationId: parseInt(planificationId,10),
+                routineId: !!routineId ? parseInt(routineId,10) : null,
+                blockName: blockName,
+                exercises: exercises.map(e => ({id:e.key, reps: e.reps})),
+                laps: parseInt(laps, 10),
+            }
+            const res = await saveExerciseBlockPir(request)
             this.redirectToParentRoutine(res.data.routineId)
         } catch (e) {
             console.log(e)
@@ -114,12 +204,67 @@ class PageBlockCreate extends Component {
     }
 
     generateBlockTypeUI(id, name) {
-        const {exercisesBuffer, blockName} = this.state;
+        const {
+            exercisesBuffer,
+            blockName,
+            defaultPiramidTop,
+            defaultIncrementPerSerie,
+            defaultPiramidSeries
+        } = this.state;
+
+        if (id === 'pir') {
+            exercisesBuffer.splice(1)
+            exercisesBuffer[0].reps = defaultPiramidTop
+            for (let i = 1; i < defaultPiramidSeries; i++) {
+                exercisesBuffer.push({...exercisesBuffer[0], reps: exercisesBuffer[i-1].reps-defaultIncrementPerSerie})
+            }
+        }
+
         this.setState({showModal: false, blockType: id, exercises: [...exercisesBuffer], exercisesBuffer: [], blockName: blockName+': '+name})
     }
 
+    repeatExercise(item, atTop) {
+        const {
+            exercises,
+            defaultIncrementPerSerie
+        } = this.state;
+        if (atTop) {
+            const buffer = {...item}
+            buffer.reps += defaultIncrementPerSerie
+            this.setState({exercises: [buffer, ...exercises]})
+        } else {
+            this.setState({exercises: [...exercises, item]})
+        }
+    }
+
+    moveUp(currentIndex){
+        if (currentIndex === 0) {
+            return
+        }
+        const {exercises} = this.state;
+        const buffer = [...exercises]
+        const previousExercise = buffer[currentIndex-1]
+        const currentExercise = buffer[currentIndex]
+        buffer[currentIndex] = previousExercise
+        buffer[currentIndex-1] = currentExercise
+        this.setState({exercises: [...buffer], currentSelectedIndex: currentIndex-1})
+    }
+
+    moveDown(currentIndex){
+        const {exercises} = this.state;
+        if (currentIndex === exercises.length-1) {
+            return
+        }
+        const buffer = [...exercises]
+        const nextExercise = buffer[currentIndex+1]
+        const currentExercise = buffer[currentIndex]
+        buffer[currentIndex] = nextExercise
+        buffer[currentIndex+1] = currentExercise
+        this.setState({exercises: [...buffer], currentSelectedIndex: currentIndex+1})
+    }
+
     renderBlockTypeUI() {
-        const {blockType, lapRestDefault, exercises} = this.state;
+        const {blockType, lapRestDefault, exercises, next, currentSelectedIndex} = this.state;
 
         switch (blockType) {
             case 'cpt':
@@ -159,6 +304,81 @@ class PageBlockCreate extends Component {
                         </Button.Group>
                     </>
                 )
+            case 'amrap':
+                return (
+                    <>
+                        <List>
+                            {
+                                exercises.map((i, index) => {
+                                    return (<ExerciseListItem focus={index===next} key={index} item={i} finished={(reps) => this.saveExercise(i, reps)}/>)
+                                })
+                            }
+                        </List>
+                        <Divider hidden/>
+                        <Segment textAlign='center'>
+                            <InputNumber label={'Duracion (Minutos)'} minutes large onChange={({amount}) => this.setState({blockDuration: amount})}/>
+                        </Segment>
+                        <Button.Group fluid>
+                            <Button secondary onClick={() => this.props.history.goBack()}>Cancelar</Button>
+                            <Button primary onClick={() => this.saveExercisesBlockAmrap()}>Guardar</Button>
+                        </Button.Group>
+                    </>
+                )
+            case 'cbo':
+                return (
+                    <>
+                        <List>
+                            {
+                                exercises.map((i, index) => {
+                                    return (<ExerciseListItemCombo
+                                        key={index}
+                                        item={i}
+                                        selected={currentSelectedIndex === index}
+                                        onRepeat={(item) => this.repeatExercise(item)}
+                                        moveUp={() => this.moveUp(index)}
+                                        moveDown={() => this.moveDown(index)}
+                                    />)
+                                })
+                            }
+                        </List>
+                        <Divider hidden/>
+                        <Segment textAlign='center'>
+                            <Divider horizontal>Rondas</Divider>
+                            <InputNumber large onChange={({amount}) => this.setState({laps: amount})}/>
+                        </Segment>
+                        <Button.Group fluid>
+                            <Button secondary onClick={() => this.props.history.goBack()}>Cancelar</Button>
+                            <Button primary onClick={() => this.saveExercisesBlockCombo()}>Guardar</Button>
+                        </Button.Group>
+                    </>
+                )
+            case 'pir':
+                return (
+                    <>
+                        <List>
+                            {
+                                exercises.map((i, index) => {
+                                    return (<ExerciseListItem
+                                        focus={index===next}
+                                        key={index}
+                                        item={i}
+                                        value={i.reps}
+                                        onRepeat={index===0 ? (item) => this.repeatExercise(item, true) : null}
+                                        finished={(reps) => this.saveExercise(i, reps)}/>)
+                                })
+                            }
+                        </List>
+                        <Divider hidden/>
+                        <Segment textAlign='center'>
+                            <Divider horizontal>Rondas</Divider>
+                            <InputNumber large onChange={({amount}) => this.setState({laps: amount})}/>
+                        </Segment>
+                        <Button.Group fluid>
+                            <Button secondary onClick={() => this.props.history.goBack()}>Cancelar</Button>
+                            <Button primary onClick={() => this.saveExerciseBlockPir()}>Guardar</Button>
+                        </Button.Group>
+                    </>
+                )
             default:
                 return (
                     <>
@@ -170,10 +390,6 @@ class PageBlockCreate extends Component {
                             }
                         </List>
                         <RestInput default={lapRestDefault} type={'lapRest'} onChange={(type, obj) => this.restUpdate(type, obj)}/>
-                        <Input type='number' className={'align-center'} fluid placeholder='4' max={9} min={0} action onChange={(e, {value}) => this.setState({laps: value})}>
-                            <Label>Rondas</Label>
-                            <input/>
-                        </Input>
                     </>
                 )
         }
@@ -188,6 +404,7 @@ class PageBlockCreate extends Component {
                 {
                     !blockType &&
                     <>
+                        <Message>Necesitas repetir un ejercicio? No te preocupes, podes hacerlo una vez generado el bloque. (Combos)</Message>
                         <div ref={this.dropdownRef}>
                             <Dropdown
                                 placeholder='Elegi los ejercicios'

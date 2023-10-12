@@ -49,7 +49,10 @@ class PagePlanificationDetail extends Component {
                     </Message>
                 }
                 {routines.map(p => (<Segment style={{width: '100%'}} key={p.id} onClick={() => this.redirectToRoutine(p.id)}>{p.name+' '+p.id}</Segment>))}
-                <Button fluid onClick={() => this.redirectToCreateRoutine()}>Agregar una Rutina</Button>
+                <Button.Group fluid>
+                    <Button secondary onClick={() => this.props.history.push('/professor')}>Planificaciones</Button>
+                    <Button primary onClick={() => this.redirectToCreateRoutine()}>Agregar una Rutina</Button>
+                </Button.Group>
             </Segment>
         )
     }

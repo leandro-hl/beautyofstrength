@@ -5,6 +5,7 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"github.com/gorilla/mux"
 	"github.com/jmoiron/sqlx"
 	"github.com/leandro-hl/beautyofstrength/back/db"
@@ -45,6 +46,9 @@ func (o *Endpoints) Handle() http.Handler {
 	o.r.Path("/listExercises").HandlerFunc(o.HandleAuthenticatedTransactional(o.listExercises))
 	o.r.Path("/saveExercisesBlock").HandlerFunc(o.HandleAuthenticatedTransactional(o.saveExercisesBlockReps))
 	o.r.Path("/saveExercisesBlockCpt").HandlerFunc(o.HandleAuthenticatedTransactional(o.saveExercisesBlockCpt))
+	o.r.Path("/saveExercisesBlockAmrap").HandlerFunc(o.HandleAuthenticatedTransactional(o.saveExercisesBlockAmrap))
+	o.r.Path("/saveExercisesBlockCombo").HandlerFunc(o.HandleAuthenticatedTransactional(o.saveExercisesBlockCombo))
+	o.r.Path("/saveExerciseBlockPir").HandlerFunc(o.HandleAuthenticatedTransactional(o.saveExerciseBlockPir))
 	o.r.Path("/getRoutineDetails").HandlerFunc(o.HandleAuthenticatedTransactional(o.getRoutineDetails))
 
 	//Student services
@@ -77,6 +81,7 @@ func (o *Endpoints) getRoutineDetails(w http.ResponseWriter, r *http.Request, tx
 			block = &GetRoutineDetailsBlock{
 				Id:              r.Blockgroupid,
 				Name:            r.Blockgroupname,
+				Duration:        r.BlockDuration,
 				Type:            r.Type,
 				Laps:            r.Laps,
 				Exerestinterval: r.Exerestinterval,
@@ -123,7 +128,7 @@ func (o *Endpoints) saveExercisesBlockReps(w http.ResponseWriter, r *http.Reques
 			Reps:       e.Reps,
 		})
 	}
-	db.SaveExercisesBlock(tx, *t.RoutineId, "gym", *t.BlockName, *t.Laps, *t.LapRest.Interval, *t.ExeRest.Interval, exercises)
+	db.SaveExercisesBlock(tx, *t.RoutineId, "gym", *t.BlockName, nil, t.Laps, t.LapRest.Interval, t.ExeRest.Interval, exercises)
 }
 
 func (o *Endpoints) saveExercisesBlockCpt(w http.ResponseWriter, r *http.Request, tx *sqlx.Tx) {
@@ -133,11 +138,9 @@ func (o *Endpoints) saveExercisesBlockCpt(w http.ResponseWriter, r *http.Request
 
 	//todo: validate the planification exists.
 	//todo: validate that the routine exists. If not exists, create.
-	//todo: empezar aca para validar si existe y asignar bien los nombres. (mmm una cosa es validar que exista la actual)
-	// otra cosa es traer el ultimo o el count de rutinas de la planificacion... Bueno hacer una de las dos cosas
-	// lo que mas me interesa en este momento es el count de rutinas...
 	if t.RoutineId == nil {
-		t.RoutineId = db.CreateRoutine(tx, "Dia 1", *t.PlanificationId)
+		last := db.CountRoutinesInPlanification(tx, *t.PlanificationId)
+		t.RoutineId = db.CreateRoutine(tx, fmt.Sprintf("Dia %d", *last+1), *t.PlanificationId)
 	}
 
 	//todo: validate that the exercises exist
@@ -148,8 +151,79 @@ func (o *Endpoints) saveExercisesBlockCpt(w http.ResponseWriter, r *http.Request
 			Secs:       t.WorkingInterval,
 		})
 	}
-	db.SaveExercisesBlock(tx, *t.RoutineId, "cpt", *t.BlockName, *t.Laps, *t.RestingInteval, *t.RestingInteval, exercises)
+	db.SaveExercisesBlock(tx, *t.RoutineId, "cpt", *t.BlockName, nil, t.Laps, t.RestingInteval, t.RestingInteval, exercises)
 	o.Respond(w, &SaveExercisesBlockCptResponse{RoutineId: t.RoutineId}, http.StatusOK)
+}
+
+func (o *Endpoints) saveExercisesBlockAmrap(w http.ResponseWriter, r *http.Request, tx *sqlx.Tx) {
+	t := SaveExercisesBlockAmrapRequest{}
+	err := o.Decode(r, &t)
+	util.Check(err)
+
+	//todo: validate the planification exists.
+	//todo: validate that the routine exists. If not exists, create.
+	if t.RoutineId == nil {
+		last := db.CountRoutinesInPlanification(tx, *t.PlanificationId)
+		t.RoutineId = db.CreateRoutine(tx, fmt.Sprintf("Dia %d", *last+1), *t.PlanificationId)
+	}
+
+	//todo: validate that the exercises exist
+	exercises := make([]db.ExerciseBlockGroup, 0)
+	for _, e := range t.Exercises {
+		exercises = append(exercises, db.ExerciseBlockGroup{
+			ExerciseId: e.Id,
+			Reps:       e.Reps,
+		})
+	}
+	db.SaveExercisesBlock(tx, *t.RoutineId, "amrap", *t.BlockName, t.BlockDuration, nil, nil, nil, exercises)
+	o.Respond(w, &SaveExercisesBlockAmrapResponse{RoutineId: t.RoutineId}, http.StatusOK)
+}
+
+func (o *Endpoints) saveExercisesBlockCombo(w http.ResponseWriter, r *http.Request, tx *sqlx.Tx) {
+	t := SaveExercisesBlockComboRequest{}
+	err := o.Decode(r, &t)
+	util.Check(err)
+
+	//todo: validate the planification exists.
+	//todo: validate that the routine exists. If not exists, create.
+	if t.RoutineId == nil {
+		last := db.CountRoutinesInPlanification(tx, *t.PlanificationId)
+		t.RoutineId = db.CreateRoutine(tx, fmt.Sprintf("Dia %d", *last+1), *t.PlanificationId)
+	}
+
+	//todo: validate that the exercises exist
+	exercises := make([]db.ExerciseBlockGroup, 0)
+	for _, e := range t.Exercises {
+		exercises = append(exercises, db.ExerciseBlockGroup{
+			ExerciseId: e.Id,
+		})
+	}
+	db.SaveExercisesBlock(tx, *t.RoutineId, "combo", *t.BlockName, nil, t.Laps, nil, nil, exercises)
+	o.Respond(w, &SaveExercisesBlockComboResponse{RoutineId: t.RoutineId}, http.StatusOK)
+}
+
+func (o *Endpoints) saveExerciseBlockPir(w http.ResponseWriter, r *http.Request, tx *sqlx.Tx) {
+	t := SaveExercisesBlockPirRequest{}
+	err := o.Decode(r, &t)
+	util.Check(err)
+
+	//todo: validate the planification exists.
+	//todo: validate that the routine exists. If not exists, create.
+	if t.RoutineId == nil {
+		last := db.CountRoutinesInPlanification(tx, *t.PlanificationId)
+		t.RoutineId = db.CreateRoutine(tx, fmt.Sprintf("Dia %d", *last+1), *t.PlanificationId)
+	}
+
+	//todo: validate that the exercises exist
+	exercises := make([]db.ExerciseBlockGroup, 0)
+	for _, e := range t.Exercises {
+		exercises = append(exercises, db.ExerciseBlockGroup{
+			ExerciseId: e.Id,
+			Reps:       e.Reps,
+		})
+	}
+	db.SaveExercisesBlock(tx, *t.RoutineId, "pir", *t.BlockName, nil, t.Laps, nil, nil, exercises)
+	o.Respond(w, &SaveExercisesBlockPirResponse{RoutineId: t.RoutineId}, http.StatusOK)
 }
 
 func (o *Endpoints) retrieveVapidPublicKey(w http.ResponseWriter, r *http.Request, tx *sqlx.Tx) {

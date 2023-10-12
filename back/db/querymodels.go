@@ -5,6 +5,7 @@ type GetRoutineDetailsQuery struct {
 	Routinename     *string `json:"routinename"`
 	Blockgroupid    *int64  `json:"blockgroupid"`
 	Blockgroupname  *string `json:"blockgroupname"`
+	BlockDuration   *int    `json:"blockgroupduration"`
 	Laps            *int    `json:"laps"`
 	Type            *string `json:"type"`
 	Exerestinterval *int    `json:"exerestinterval"`

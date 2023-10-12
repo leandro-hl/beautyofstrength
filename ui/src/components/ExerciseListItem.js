@@ -1,5 +1,5 @@
 import React, {Component, createRef} from "react";
-import {Grid, Input, Label, List} from "semantic-ui-react";
+import {Grid, Icon, Input, Label, List} from "semantic-ui-react";
 
 export class ExerciseListItem extends Component {
     inputRef = createRef()
@@ -10,7 +10,9 @@ export class ExerciseListItem extends Component {
     }
 
     componentDidMount() {
-        this.inputRef.current.focus()
+        if(this.props.focus) {
+            this.inputRef.current.focus()
+        }
     }
 
     handleChange(value) {
@@ -28,18 +30,27 @@ export class ExerciseListItem extends Component {
     };
 
     render() {
+        if(this.props.focus && this.inputRef.current) {
+            this.inputRef.current.focus()
+        }
         return (
             <List.Item key={this.props.item.key}>
                 <Grid>
                     <Grid.Row>
                         <Grid.Column width={12} stretched style={{paddingRight: 0}}>
-                            <Label basic style={{width: '100%', padding: 20}}>{this.props.item.text}</Label>
+                            <Label basic style={{width: '100%', padding: 20}}>
+                                {this.props.item.text}
+                                { this.props.onRepeat && <Icon name={'sync'} className={'list-item-icon-input'}
+                                       onClick={() => this.props.onRepeat(this.props.item)}/>
+                                }
+                            </Label>
                         </Grid.Column>
                         <Grid.Column width={4} stretched style={{paddingLeft: 0}}>
                             <Input fluid
                                    ref={this.inputRef} placeholder='10' type={'number'}
                                    min={1}
                                    max={99}
+                                   value={this.props.value}
                                    onKeyDown={(event) => this.handleKeyDown(event)}
                                    onChange={(e, {value}) => this.handleChange(value)}/>
                         </Grid.Column>
