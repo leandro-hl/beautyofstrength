@@ -6,6 +6,12 @@ import (
 	"time"
 )
 
+func ListExerciseNames(db *sqlx.DB) []ListExerciseIdName {
+	var exercisesNames []ListExerciseIdName
+	db.Select(&exercisesNames, "select id, name from exercise")
+	return exercisesNames
+}
+
 func ListPlanifications(tx *sqlx.Tx, userId int64) []Planification {
 	dest := make([]Planification, 0)
 
@@ -59,10 +65,10 @@ func ListRoutines(tx *sqlx.Tx, planificationId int64) []Routine {
 	return dest
 }
 
-func ListExercises(tx *sqlx.Tx) []Exercise {
-	var dest []Exercise
+func ListExercises(tx *sqlx.Tx) []ListExercise {
+	var dest []ListExercise
 
-	err := tx.Select(&dest, `SELECT * FROM exercise ORDER BY name, id`)
+	err := tx.Select(&dest, `SELECT e.id, e.name, u.name as createdbyuser FROM exercise e inner join useraccount u on u.id = e.createdbyuser_id  ORDER BY e.name`)
 	util.Check(err)
 
 	return dest
@@ -82,6 +88,24 @@ func CreateRoutine(tx *sqlx.Tx, name string, planificationId int64) *int64 {
 			PlanificationId: &planificationId,
 		})
 	return id
+}
+
+func CreateExercise(tx *sqlx.Tx, name string, userAccountId int64) *int {
+	id := Insert(
+		tx,
+		&Exercise{
+			Name:                &name,
+			TechnicalComplexity: util.PInt(0),
+			CreatedByUserId:     &userAccountId,
+			CreatedDate:         time.Now(),
+		})
+	return util.PInt(int(*id))
+}
+
+func CountExercisesCreatedByUser(tx *sqlx.Tx, userAccountId int64) *int {
+	var des int
+	tx.Get(&des, "select count(1) from exercise where createdbyuser_id=$1", userAccountId)
+	return &des
 }
 
 func SaveExercisesBlock(tx *sqlx.Tx, routineId int64, blockType, name string, duration, laps, lapRestInterval, exeRestInterval *int, exercises []ExerciseBlockGroup) *int64 {
@@ -107,9 +131,6 @@ func SaveExercisesBlock(tx *sqlx.Tx, routineId int64, blockType, name string, du
 				Secs:         ex.Secs,
 			})
 	}
-
-	err := tx.Commit()
-	util.Check(err)
 	return id
 }
 
@@ -126,8 +147,6 @@ func SaveUserDevicePushNotificationSubscription(tx *sqlx.Tx, userId int64, vapid
 			UserAccountId: &userId,
 		})
 	}
-	err = tx.Commit()
-	util.Check(err)
 }
 
 func SaveUserTrainedToday(tx *sqlx.Tx, userId int64, answer bool) {
@@ -136,8 +155,6 @@ func SaveUserTrainedToday(tx *sqlx.Tx, userId int64, answer bool) {
 		Answer:        &answer,
 		UserAccountId: &userId,
 	})
-	err := tx.Commit()
-	util.Check(err)
 }
 
 func GetUserLoadedTrainingToday(tx *sqlx.Tx, userId int64) bool {

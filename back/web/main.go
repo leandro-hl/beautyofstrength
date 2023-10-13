@@ -15,10 +15,12 @@ import (
 type Config struct {
 	VapidPublicKey *string `json:"vapidPublicKey"`
 	//VapidPrivateKey *string `json:"vapidPrivateKey"`
-	VapidDataKey   *string  `json:"vapidDataKey"`
-	DatasourceName *string  `json:"datasourceName"`
-	AllowedOrigins []string `json:"allowedOrigins"`
-	Address        *string  `json:"address"`
+	VapidDataKey                     *string  `json:"vapidDataKey"`
+	DatasourceName                   *string  `json:"datasourceName"`
+	AllowedOrigins                   []string `json:"allowedOrigins"`
+	Address                          *string  `json:"address"`
+	CustomExercisesPerUserLimit      *int     `json:"customExercisesPerUserLimit"`
+	CustomExerciseNameCharacterLimit *int     `json:"customExerciseNameCharacterLimit"`
 }
 
 func main() {

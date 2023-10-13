@@ -18,8 +18,8 @@ body > div {
 
 .list-item-icon {
   position: absolute !important;
-  right: 45px !important;
-  top: 15px !important;
+  right: 60px !important;
+  top: 20px !important;
   font-size: 2em !important;
 }
 
@@ -38,14 +38,14 @@ body > div {
 .chevron-up {
   position: absolute !important;
   right: 35px !important;
-  top: 0px !important;
+  top: 5px !important;
   font-size: 2em !important;
 }
 
 .chevron-down {
   position: absolute !important;
   right: 35px !important;
-  top: 29px !important;
+  top: 34px !important;
   font-size: 2em !important;
 }
 

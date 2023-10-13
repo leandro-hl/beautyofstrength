@@ -15,7 +15,7 @@ func PUint(o uint) *uint {
 
 func Check(err error) {
 	if err != nil {
-		fmt.Println(debug.Stack())
+		fmt.Println(string(debug.Stack()))
 		panic(err)
 	}
 }

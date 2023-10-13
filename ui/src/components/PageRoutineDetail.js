@@ -3,6 +3,7 @@ import {Accordion, Button, Header, List, Loader, Segment, Table} from "semantic-
 import {withRouter} from "react-router-dom";
 import {queryParam} from "../functions";
 import {getRoutineDetails} from "../service";
+import PageRoutineExecution from "./PageRoutineExecution";
 
 class PageRoutineDetail extends Component{
     constructor(props) {
@@ -32,11 +33,9 @@ class PageRoutineDetail extends Component{
         this.props.history.push('/planification?id='+planificationId)
     }
 
-    handleClick = (e, titleProps) => {
+    handleActiveBlocks = (e, titleProps) => {
         const { index } = titleProps
         const { activeIndexes } = this.state
-
-        //si ya esta dentro de los activos, lo saca, sino lo agrega.
         const indexOfIndex = activeIndexes.indexOf(index)
         if (indexOfIndex !== -1) {
             activeIndexes.splice(indexOfIndex, 1)
@@ -47,14 +46,14 @@ class PageRoutineDetail extends Component{
         this.setState({ activeIndexes: activeIndexes })
     }
 
-    render() {
+    renderRoutineExecution() {
+        //todo: in some iteration in the future when redux is in place this will probably be accessed by url
+        const {planificationId, routineId, name, blocks} = this.state;
+        return <PageRoutineExecution routine={{planificationId, routineId, name, blocks}}/>
+    }
+
+    renderRoutineDetails() {
         const {name, blocks, activeIndexes} = this.state;
-        const {loading} = this.state;
-
-        if (loading) {
-            return <Loader active/>
-        }
-
         return (
             <Segment basic style={{height: '100%'}}>
                 <Header as={'h3'}>{name}</Header>
@@ -67,7 +66,7 @@ class PageRoutineDetail extends Component{
                             style={{padding: 0}}
                             active={activeIndexes.indexOf(i) !== -1}
                             index={i}
-                            onClick={this.handleClick}>
+                            onClick={this.handleActiveBlocks}>
                             {b.name}
                         </Accordion.Title>
                         <Accordion.Content active={activeIndexes.indexOf(i) !== -1}>
@@ -94,12 +93,27 @@ class PageRoutineDetail extends Component{
                         </Accordion.Content>
                     </Segment>))}
                 </Accordion>
+                <Button primary fluid onClick={() => this.setState({renderExecution: true})}>Ejecutar Rutina</Button>
                 <Button.Group fluid style={{marginBottom: 50}}>
                     <Button secondary onClick={() => this.redirectToPlanification()}>Rutinas</Button>
                     <Button primary onClick={() => this.redirectToCreateBlock()}>Agregar un Bloque</Button>
                 </Button.Group>
             </Segment>
         )
+    }
+
+    render() {
+        const {loading, renderExecution} = this.state;
+
+        if (loading) {
+            return <Loader active/>
+        }
+
+        if (renderExecution) {
+            return this.renderRoutineExecution()
+        }
+
+        return this.renderRoutineDetails()
     }
 }
 

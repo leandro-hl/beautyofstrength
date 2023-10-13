@@ -10,6 +10,22 @@ drop table if exists planification;
 drop table if exists userdevice;
 drop table if exists useraccount;
 
+CREATE TABLE IF NOT EXISTS useraccount
+(
+    id       BIGINT      NOT NULL GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    name     VARCHAR(50) NOT NULL,
+    username VARCHAR(50) NOT NULL,
+    usertype CHAR        NOT NULL,
+    password VARCHAR(50) NOT NULL
+);
+
+INSERT INTO useraccount(name, username, usertype, password)
+VALUES ('Juan Solanilla', 'juan123', 'P', 'juan123'),
+       ('System', 'system', 'P', 'system'),
+       ('Estudiante 1', 'estudiante1_123', 'E', 'estudiante123'),
+       ('Estudiante 2', 'estudiante2_123', 'E', 'estudiante123');
+
+
 CREATE TABLE IF NOT EXISTS muscle
 (
     id   INT          NOT NULL GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
@@ -72,166 +88,168 @@ VALUES ('Pectoral mayor'),
 
 CREATE TABLE IF NOT EXISTS exercise
 (
-    id                  INT         NOT NULL GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
-    name                VARCHAR(70) NOT NULL UNIQUE, --lo pasamos a 70 por HS a rana que es muy largo
-    technicalcomplexity INT         NOT NULL
+    id                  INT                         NOT NULL GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    name                VARCHAR(70)                 NOT NULL UNIQUE, --lo pasamos a 70 por HS a rana que es muy largo
+    technicalcomplexity INT                         NOT NULL,
+    createdbyuser_id    INT                         NOT NULL REFERENCES useraccount (id),
+    createddate         TIMESTAMP WITHOUT TIME ZONE NOT NULL
 );
 
 
-INSERT INTO exercise(name, technicalcomplexity)
-VALUES ('Salto',0),
-       ('Salto Asistido',1),
-       ('Sentadilla',0),
-       ('Sentadilla Thruster a 1 Brazo',1),     --equipamiento
-       ('Sentadilla con Salto',1),
-       ('Sentadilla Lateral con Elevacion de Rodilla',1),
-       ('Sentadilla con Desplazamiento 1 mano abajo',1),
-       ('Burpees',0),
-       ('Trote',0),
-       ('Peso Muerto',0),
-       ('Peso Muerto Invertido Prono',1),
-       ('Peso Muerto Invertido en Paralelas',1),
-       ('Sentadilla Skater',0),
-       ('Sentadilla Skater con Salto',1),
-       ('Sentadilla Skater con Skipping',2),
-       ('Skipping',0),
-       ('Skipping Lateral',1),
-       ('Skipping Lateral con zarpazo',1),
-       ('Canguro',0),
-       ('Wall Sit',0),
-       ('Wall Ball',0),
-       ('Pistol con Tope',0),
-       ('Muscle Up',0),
-       ('Dominada Comando',0),
-       ('Dominada Neutra',0),
-       ('Dominada Prona',0),
-       ('Dominada Prona a 1 Brazo',0),
-       ('Dominada Prona Ancha',0),
-       ('Dominada Prona Escapular',0),
-       ('Dominada Prona Isometrica',0),
-       ('Dominada Prona Offset Pull Up',0),
-       ('Dominada Supina / Chin Up',0),
-       ('Dominada Supina a 1 Brazo',0),
-       ('Dominada Supina Ancha',0),
-       ('Dominada Supina Escapular',0),
-       ('Dominada Supina Isometrica',0),
-       ('Dominada Supina Offset Pull Up',0),
-       ('Dominada Asimetrica',0),
-       ('Dominada Explosiva',3),
-       ('Skull',0),
-       ('Australiana',0),
-       ('Cadera 90 90',0),
-       ('Escuadra',0),
-       ('Elevacion a 4 Tiempos',0),
-       ('Elevacion L Sit',0),
-       ('Elevacion V Sit',0),
-       ('Criminal',0),
-       ('Vertical / Handstand',0),
-       ('Vertical / Handstand Negativa',1),
-       ('Vertical / Handstand Straddle',2),
-       ('Vertical / Handstand Straddle Negativa',3),
-       ('Vertical / Handstand Straddle a 1 Mano',4),
-       ('Elevación a Front Lever',0),
-       ('Front Lever Negativa Press',1),
-       ('Front Lever Tuck',2),
-       ('Front Lever Tuck Advanced',3),
-       ('Front Lever Half',4),
-       ('Front Lever A 1 pierna',3),
-       ('Front Lever Frog / Rana',5),
-       ('Front Lever Straddle',6),
-       ('Front Lever Full',7),
-       ('Back Lever Tuck Pull Up',3),
-       ('Back Lever Negativa',0),
-       ('Back Lever Skin the Cat',1),
-       ('Back Lever Tuck',2),
-       ('Back Lever Advanced 1 pie',3),
-       ('Back Lever Advanced',4),
-       ('Back Lever Half',5),
-       ('Back Lever Straddle',6),
-       ('Back Lever Full',7),
-       ('Remo',0),
-       ('Remo Tuck',1),
-       ('Remo Pica',2),
-       ('Remo para Front Lever',3),
-       ('Dead Hang',0),
-       ('Victorian',0),
-       ('Colgado',0),
-       ('Colgado con 4 Dedos',1),
-       ('Colgado con 3 Dedos',2),
-       ('Colgado con 2 Dedos',3),
-       ('Colgado con 1 Dedo',4),
-       ('Colgado a 90 Grados',2),
-       ('Colgado a 1 Mano',4),
-       ('Elevación Rodilla',0),
-       ('Flexion',0),
-       ('Flexion Escapular',0),
-       ('Flexion Tuck',1),
-       ('Flexion Plancha Lean',2),
-       ('Flexion Lateral',2),
-       ('Flexion Hindu',2),
-       ('Flexion Abierta',3),
-       ('Flexion Pica',3),
-       ('Flexion Diamante',4),
-       ('Flexion Tigre',4),
-       ('Flexion Pica con Deficit',4),
-       ('Flexion en Vertical / Handstand Push Up',5),
-       ('Empuje en Flexion Pica',2),
-       ('Punteo Vela',0),
-       ('Vela',1),
-       ('Vela me paro',1),
-       ('Hollow Estático',0),
-       ('Hollow Dinámico',0),
-       ('Plegado',0),
-       ('Bicicleta',0),
-       ('Superman Estático',0),
-       ('Superman Estático Colgado',0),
-       ('Superman Dinámico',0),
-       ('V Up',0),
-       ('V Up Cruzado',0),
-       ('V Up Lateral',0),
-       ('V Up 1 brazo pegado',0),
-       ('Step Lateral a 1',0),
-       ('Postura en Anillas',0),                --equipamiento
-       ('Rotación Tronco Sentado',0),
-       ('Fondo',0),                             --equipamiento
-       ('Fondo en Paralelas',1),                --equipamiento
-       ('Fondo Tigre',2),
-       ('Fondo en Barra',2),                    --equipamiento
-       ('Fondo en Anillas / Bulgaro',2),        --equipamiento
-       ('Fondo con Hollow en Barra',3),         --equipamiento
-       ('Fondo Supino en Barra',3),             --equipamiento
-       ('Fondo con Hollow en Paralelas',3),     --equipamiento
-       ('Fondo con Hollow en Anillas',4),       --equipamiento
-       ('Alacran',2),
-       ('Subida a Soga',1),                     --equipamiento
-       ('Estocada',0),
-       ('Estocada Bulgara',1),
-       ('Estocada con Salto',1),
-       ('Estocada con Salto Cortas',1),
-       ('Elevación Talón',0),
-       ('Elevación Talón Colgado',0),
-       ('Elevación Frontal',0),
-       ('Elevación Frontal Disco Pared',0),     --equipamiento
-       ('Plancha Lean',0),
-       ('Plancha Tuck',1),
-       ('Plancha Advanced',2),
-       ('Plancha Half',3),
-       ('Plancha Frog / Rana',4),
-       ('Plancha Straddle',5),
-       ('Plancha Full',6),
-       ('Plancha Full Dragon',7),
-       ('Plancha Lateral con Disco Aductor',2), --equipamiento
-       ('Pull Over',1),
-       ('Caseta',0),
-       ('Roll',0),
-       ('Elbow Lever',1),
-       ('Squat Clean',1),
-       ('Front Squat',1),
-       ('Ice Cream Maker',1),
-       ('Sit Up',0),
-       ('Sit Up con Anclaje',0),                --equipamiento
-       ('Sit Up con Anclaje y Disco',0),        --equipamiento
-       ('Planchado',0);
+INSERT INTO exercise(createddate, createdbyuser_id, name, technicalcomplexity)
+VALUES (NOW(),(select id from useraccount where username = 'system'), 'Salto', 0),
+       (NOW(),(select id from useraccount where username = 'system'), 'Salto Asistido', 1),
+       (NOW(),(select id from useraccount where username = 'system'), 'Sentadilla', 0),
+       (NOW(),(select id from useraccount where username = 'system'), 'Sentadilla Thruster a 1 Brazo', 1),     --equipamiento
+       (NOW(),(select id from useraccount where username = 'system'), 'Sentadilla con Salto', 1),
+       (NOW(),(select id from useraccount where username = 'system'), 'Sentadilla Lateral con Elevacion de Rodilla', 1),
+       (NOW(),(select id from useraccount where username = 'system'), 'Sentadilla con Desplazamiento 1 mano abajo', 1),
+       (NOW(),(select id from useraccount where username = 'system'), 'Burpees', 0),
+       (NOW(),(select id from useraccount where username = 'system'), 'Trote', 0),
+       (NOW(),(select id from useraccount where username = 'system'), 'Peso Muerto', 0),
+       (NOW(),(select id from useraccount where username = 'system'), 'Peso Muerto Invertido Prono', 1),
+       (NOW(),(select id from useraccount where username = 'system'), 'Peso Muerto Invertido en Paralelas', 1),
+       (NOW(),(select id from useraccount where username = 'system'), 'Sentadilla Skater', 0),
+       (NOW(),(select id from useraccount where username = 'system'), 'Sentadilla Skater con Salto', 1),
+       (NOW(),(select id from useraccount where username = 'system'), 'Sentadilla Skater con Skipping', 2),
+       (NOW(),(select id from useraccount where username = 'system'), 'Skipping', 0),
+       (NOW(),(select id from useraccount where username = 'system'), 'Skipping Lateral', 1),
+       (NOW(),(select id from useraccount where username = 'system'), 'Skipping Lateral con zarpazo', 1),
+       (NOW(),(select id from useraccount where username = 'system'), 'Canguro', 0),
+       (NOW(),(select id from useraccount where username = 'system'), 'Wall Sit', 0),
+       (NOW(),(select id from useraccount where username = 'system'), 'Wall Ball', 0),
+       (NOW(),(select id from useraccount where username = 'system'), 'Pistol con Tope', 0),
+       (NOW(),(select id from useraccount where username = 'system'), 'Muscle Up', 0),
+       (NOW(),(select id from useraccount where username = 'system'), 'Dominada Comando', 0),
+       (NOW(),(select id from useraccount where username = 'system'), 'Dominada Neutra', 0),
+       (NOW(),(select id from useraccount where username = 'system'), 'Dominada Prona', 0),
+       (NOW(),(select id from useraccount where username = 'system'), 'Dominada Prona a 1 Brazo', 0),
+       (NOW(),(select id from useraccount where username = 'system'), 'Dominada Prona Ancha', 0),
+       (NOW(),(select id from useraccount where username = 'system'), 'Dominada Prona Escapular', 0),
+       (NOW(),(select id from useraccount where username = 'system'), 'Dominada Prona Isometrica', 0),
+       (NOW(),(select id from useraccount where username = 'system'), 'Dominada Prona Offset Pull Up', 0),
+       (NOW(),(select id from useraccount where username = 'system'), 'Dominada Supina / Chin Up', 0),
+       (NOW(),(select id from useraccount where username = 'system'), 'Dominada Supina a 1 Brazo', 0),
+       (NOW(),(select id from useraccount where username = 'system'), 'Dominada Supina Ancha', 0),
+       (NOW(),(select id from useraccount where username = 'system'), 'Dominada Supina Escapular', 0),
+       (NOW(),(select id from useraccount where username = 'system'), 'Dominada Supina Isometrica', 0),
+       (NOW(),(select id from useraccount where username = 'system'), 'Dominada Supina Offset Pull Up', 0),
+       (NOW(),(select id from useraccount where username = 'system'), 'Dominada Asimetrica', 0),
+       (NOW(),(select id from useraccount where username = 'system'), 'Dominada Explosiva', 3),
+       (NOW(),(select id from useraccount where username = 'system'), 'Skull', 0),
+       (NOW(),(select id from useraccount where username = 'system'), 'Australiana', 0),
+       (NOW(),(select id from useraccount where username = 'system'), 'Cadera 90 90', 0),
+       (NOW(),(select id from useraccount where username = 'system'), 'Escuadra', 0),
+       (NOW(),(select id from useraccount where username = 'system'), 'Elevacion a 4 Tiempos', 0),
+       (NOW(),(select id from useraccount where username = 'system'), 'Elevacion L Sit', 0),
+       (NOW(),(select id from useraccount where username = 'system'), 'Elevacion V Sit', 0),
+       (NOW(),(select id from useraccount where username = 'system'), 'Criminal', 0),
+       (NOW(),(select id from useraccount where username = 'system'), 'Vertical / Handstand', 0),
+       (NOW(),(select id from useraccount where username = 'system'), 'Vertical / Handstand Negativa', 1),
+       (NOW(),(select id from useraccount where username = 'system'), 'Vertical / Handstand Straddle', 2),
+       (NOW(),(select id from useraccount where username = 'system'), 'Vertical / Handstand Straddle Negativa', 3),
+       (NOW(),(select id from useraccount where username = 'system'), 'Vertical / Handstand Straddle a 1 Mano', 4),
+       (NOW(),(select id from useraccount where username = 'system'), 'Elevación a Front Lever', 0),
+       (NOW(),(select id from useraccount where username = 'system'), 'Front Lever Negativa Press', 1),
+       (NOW(),(select id from useraccount where username = 'system'), 'Front Lever Tuck', 2),
+       (NOW(),(select id from useraccount where username = 'system'), 'Front Lever Tuck Advanced', 3),
+       (NOW(),(select id from useraccount where username = 'system'), 'Front Lever Half', 4),
+       (NOW(),(select id from useraccount where username = 'system'), 'Front Lever A 1 pierna', 3),
+       (NOW(),(select id from useraccount where username = 'system'), 'Front Lever Frog / Rana', 5),
+       (NOW(),(select id from useraccount where username = 'system'), 'Front Lever Straddle', 6),
+       (NOW(),(select id from useraccount where username = 'system'), 'Front Lever Full', 7),
+       (NOW(),(select id from useraccount where username = 'system'), 'Back Lever Tuck Pull Up', 3),
+       (NOW(),(select id from useraccount where username = 'system'), 'Back Lever Negativa', 0),
+       (NOW(),(select id from useraccount where username = 'system'), 'Back Lever Skin the Cat', 1),
+       (NOW(),(select id from useraccount where username = 'system'), 'Back Lever Tuck', 2),
+       (NOW(),(select id from useraccount where username = 'system'), 'Back Lever Advanced 1 pie', 3),
+       (NOW(),(select id from useraccount where username = 'system'), 'Back Lever Advanced', 4),
+       (NOW(),(select id from useraccount where username = 'system'), 'Back Lever Half', 5),
+       (NOW(),(select id from useraccount where username = 'system'), 'Back Lever Straddle', 6),
+       (NOW(),(select id from useraccount where username = 'system'), 'Back Lever Full', 7),
+       (NOW(),(select id from useraccount where username = 'system'), 'Remo', 0),
+       (NOW(),(select id from useraccount where username = 'system'), 'Remo Tuck', 1),
+       (NOW(),(select id from useraccount where username = 'system'), 'Remo Pica', 2),
+       (NOW(),(select id from useraccount where username = 'system'), 'Remo para Front Lever', 3),
+       (NOW(),(select id from useraccount where username = 'system'), 'Dead Hang', 0),
+       (NOW(),(select id from useraccount where username = 'system'), 'Victorian', 0),
+       (NOW(),(select id from useraccount where username = 'system'), 'Colgado', 0),
+       (NOW(),(select id from useraccount where username = 'system'), 'Colgado con 4 Dedos', 1),
+       (NOW(),(select id from useraccount where username = 'system'), 'Colgado con 3 Dedos', 2),
+       (NOW(),(select id from useraccount where username = 'system'), 'Colgado con 2 Dedos', 3),
+       (NOW(),(select id from useraccount where username = 'system'), 'Colgado con 1 Dedo', 4),
+       (NOW(),(select id from useraccount where username = 'system'), 'Colgado a 90 Grados', 2),
+       (NOW(),(select id from useraccount where username = 'system'), 'Colgado a 1 Mano', 4),
+       (NOW(),(select id from useraccount where username = 'system'), 'Elevación Rodilla', 0),
+       (NOW(),(select id from useraccount where username = 'system'), 'Flexion', 0),
+       (NOW(),(select id from useraccount where username = 'system'), 'Flexion Escapular', 0),
+       (NOW(),(select id from useraccount where username = 'system'), 'Flexion Tuck', 1),
+       (NOW(),(select id from useraccount where username = 'system'), 'Flexion Plancha Lean', 2),
+       (NOW(),(select id from useraccount where username = 'system'), 'Flexion Lateral', 2),
+       (NOW(),(select id from useraccount where username = 'system'), 'Flexion Hindu', 2),
+       (NOW(),(select id from useraccount where username = 'system'), 'Flexion Abierta', 3),
+       (NOW(),(select id from useraccount where username = 'system'), 'Flexion Pica', 3),
+       (NOW(),(select id from useraccount where username = 'system'), 'Flexion Diamante', 4),
+       (NOW(),(select id from useraccount where username = 'system'), 'Flexion Tigre', 4),
+       (NOW(),(select id from useraccount where username = 'system'), 'Flexion Pica con Deficit', 4),
+       (NOW(),(select id from useraccount where username = 'system'), 'Flexion en Vertical / Handstand Push Up', 5),
+       (NOW(),(select id from useraccount where username = 'system'), 'Empuje en Flexion Pica', 2),
+       (NOW(),(select id from useraccount where username = 'system'), 'Punteo Vela', 0),
+       (NOW(),(select id from useraccount where username = 'system'), 'Vela', 1),
+       (NOW(),(select id from useraccount where username = 'system'), 'Vela me paro', 1),
+       (NOW(),(select id from useraccount where username = 'system'), 'Hollow Estático', 0),
+       (NOW(),(select id from useraccount where username = 'system'), 'Hollow Dinámico', 0),
+       (NOW(),(select id from useraccount where username = 'system'), 'Plegado', 0),
+       (NOW(),(select id from useraccount where username = 'system'), 'Bicicleta', 0),
+       (NOW(),(select id from useraccount where username = 'system'), 'Superman Estático', 0),
+       (NOW(),(select id from useraccount where username = 'system'), 'Superman Estático Colgado', 0),
+       (NOW(),(select id from useraccount where username = 'system'), 'Superman Dinámico', 0),
+       (NOW(),(select id from useraccount where username = 'system'), 'V Up', 0),
+       (NOW(),(select id from useraccount where username = 'system'), 'V Up Cruzado', 0),
+       (NOW(),(select id from useraccount where username = 'system'), 'V Up Lateral', 0),
+       (NOW(),(select id from useraccount where username = 'system'), 'V Up 1 brazo pegado', 0),
+       (NOW(),(select id from useraccount where username = 'system'), 'Step Lateral a 1', 0),
+       (NOW(),(select id from useraccount where username = 'system'), 'Postura en Anillas', 0),                --equipamiento
+       (NOW(),(select id from useraccount where username = 'system'), 'Rotación Tronco Sentado', 0),
+       (NOW(),(select id from useraccount where username = 'system'), 'Fondo', 0),                             --equipamiento
+       (NOW(),(select id from useraccount where username = 'system'), 'Fondo en Paralelas', 1),                --equipamiento
+       (NOW(),(select id from useraccount where username = 'system'), 'Fondo Tigre', 2),
+       (NOW(),(select id from useraccount where username = 'system'), 'Fondo en Barra', 2),                    --equipamiento
+       (NOW(),(select id from useraccount where username = 'system'), 'Fondo en Anillas / Bulgaro', 2),        --equipamiento
+       (NOW(),(select id from useraccount where username = 'system'), 'Fondo con Hollow en Barra', 3),         --equipamiento
+       (NOW(),(select id from useraccount where username = 'system'), 'Fondo Supino en Barra', 3),             --equipamiento
+       (NOW(),(select id from useraccount where username = 'system'), 'Fondo con Hollow en Paralelas', 3),     --equipamiento
+       (NOW(),(select id from useraccount where username = 'system'), 'Fondo con Hollow en Anillas', 4),       --equipamiento
+       (NOW(),(select id from useraccount where username = 'system'), 'Alacran', 2),
+       (NOW(),(select id from useraccount where username = 'system'), 'Subida a Soga', 1),                     --equipamiento
+       (NOW(),(select id from useraccount where username = 'system'), 'Estocada', 0),
+       (NOW(),(select id from useraccount where username = 'system'), 'Estocada Bulgara', 1),
+       (NOW(),(select id from useraccount where username = 'system'), 'Estocada con Salto', 1),
+       (NOW(),(select id from useraccount where username = 'system'), 'Estocada con Salto Cortas', 1),
+       (NOW(),(select id from useraccount where username = 'system'), 'Elevación Talón', 0),
+       (NOW(),(select id from useraccount where username = 'system'), 'Elevación Talón Colgado', 0),
+       (NOW(),(select id from useraccount where username = 'system'), 'Elevación Frontal', 0),
+       (NOW(),(select id from useraccount where username = 'system'), 'Elevación Frontal Disco Pared', 0),     --equipamiento
+       (NOW(),(select id from useraccount where username = 'system'), 'Plancha Lean', 0),
+       (NOW(),(select id from useraccount where username = 'system'), 'Plancha Tuck', 1),
+       (NOW(),(select id from useraccount where username = 'system'), 'Plancha Advanced', 2),
+       (NOW(),(select id from useraccount where username = 'system'), 'Plancha Half', 3),
+       (NOW(),(select id from useraccount where username = 'system'), 'Plancha Frog / Rana', 4),
+       (NOW(),(select id from useraccount where username = 'system'), 'Plancha Straddle', 5),
+       (NOW(),(select id from useraccount where username = 'system'), 'Plancha Full', 6),
+       (NOW(),(select id from useraccount where username = 'system'), 'Plancha Full Dragon', 7),
+       (NOW(),(select id from useraccount where username = 'system'), 'Plancha Lateral con Disco Aductor', 2), --equipamiento
+       (NOW(),(select id from useraccount where username = 'system'), 'Pull Over', 1),
+       (NOW(),(select id from useraccount where username = 'system'), 'Caseta', 0),
+       (NOW(),(select id from useraccount where username = 'system'), 'Roll', 0),
+       (NOW(),(select id from useraccount where username = 'system'), 'Elbow Lever', 1),
+       (NOW(),(select id from useraccount where username = 'system'), 'Squat Clean', 1),
+       (NOW(),(select id from useraccount where username = 'system'), 'Front Squat', 1),
+       (NOW(),(select id from useraccount where username = 'system'), 'Ice Cream Maker', 1),
+       (NOW(),(select id from useraccount where username = 'system'), 'Sit Up', 0),
+       (NOW(),(select id from useraccount where username = 'system'), 'Sit Up con Anclaje', 0),                --equipamiento
+       (NOW(),(select id from useraccount where username = 'system'), 'Sit Up con Anclaje y Disco', 0),        --equipamiento
+       (NOW(),(select id from useraccount where username = 'system'), 'Planchado', 0);
 
 CREATE TABLE IF NOT EXISTS exercisemuscle
 (
@@ -600,20 +618,6 @@ CREATE TABLE IF NOT EXISTS exerciseblockgroup
     reps          INT    NULL,
     secs          INT    NULL
 );
-
-CREATE TABLE IF NOT EXISTS useraccount
-(
-    id       BIGINT      NOT NULL GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
-    name     VARCHAR(50) NOT NULL,
-    username VARCHAR(50) NOT NULL,
-    usertype CHAR        NOT NULL,
-    password VARCHAR(50) NOT NULL
-);
-
-INSERT INTO useraccount(name, username, usertype, password)
-VALUES ('Juan Solanilla', 'juan123', 'P', 'juan123'),
-       ('Estudiante 1', 'estudiante1_123', 'E', 'estudiante123'),
-       ('Estudiante 2', 'estudiante2_123', 'E', 'estudiante123');
 
 CREATE TABLE IF NOT EXISTS userplanification
 (

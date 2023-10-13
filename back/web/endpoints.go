@@ -28,9 +28,128 @@ type Endpoints struct {
 	r    *mux.Router
 }
 
+type ExercisesComparerCache struct {
+	s  map[string]string
+	s2 map[int]bool
+	a  sync.Mutex
+}
+
+func (o *ExercisesComparerCache) Add(id int, name string) {
+	o.a.Lock()
+	defer o.a.Unlock()
+	key := strings.ToLower(strings.TrimSpace(strings.ReplaceAll(name, " ", "")))
+	o.s[key] = name
+	o.s2[id] = true
+}
+
+func (o *ExercisesComparerCache) FilterExercisesByIds(exs []ExerciseRequest) (yes []ExerciseRequest, no []ExerciseRequest) {
+	o.a.Lock()
+	defer o.a.Unlock()
+	yes = make([]ExerciseRequest, 0)
+	no = make([]ExerciseRequest, 0)
+	for _, k := range exs {
+		if _, ok := o.s2[*k.Id]; ok {
+			yes = append(yes, k)
+		} else {
+			no = append(no, k)
+		}
+	}
+
+	return
+}
+
+func (o *ExercisesComparerCache) FilterNamesByIds(keys []int, names []string) (yes []int, no []string) {
+	o.a.Lock()
+	defer o.a.Unlock()
+	yes = make([]int, 0)
+	no = make([]string, 0)
+	for i, k := range keys {
+		if _, ok := o.s2[k]; ok {
+			yes = append(yes, k)
+		} else {
+			no = append(no, names[i])
+		}
+	}
+
+	return
+}
+
+type ExerciseComparer struct {
+	SanitizedKey  *string
+	SanitizedName *string
+	ShouldCreate  *bool
+	ExerciseRequest
+}
+
+func (o *ExercisesComparerCache) Exist(exercises []ExerciseComparer) (yes, no []ExerciseComparer) {
+	o.a.Lock()
+	defer o.a.Unlock()
+	yes = make([]ExerciseComparer, 0)
+	no = make([]ExerciseComparer, 0)
+	for _, k := range exercises {
+		if _, ok := o.s[*k.SanitizedKey]; ok {
+			yes = append(yes, k)
+		} else {
+			no = append(no, k)
+		}
+	}
+
+	return
+}
+
+func NewExercisesComparerCache() *ExercisesComparerCache {
+	return &ExercisesComparerCache{
+		s:  make(map[string]string),
+		s2: make(map[int]bool),
+		a:  sync.Mutex{},
+	}
+}
+
+// todo: this will be Redis
+type SessionManager struct {
+	s         map[string]int64
+	a         sync.Mutex
+	lastAdded string
+}
+
+func (o *SessionManager) Read(token string) int64 {
+	o.a.Lock()
+	defer o.a.Unlock()
+	//todo should be token in prod
+	id, ok := o.s[o.lastAdded]
+	if !ok {
+		panic("Invalid session token")
+	}
+	return id
+}
+
+func (o *SessionManager) Write(token string, id int64) {
+	o.a.Lock()
+	defer o.a.Unlock()
+	o.s[token] = id
+	o.lastAdded = token
+}
+
+func NewSessionManager() *SessionManager {
+	return &SessionManager{
+		s: make(map[string]int64),
+		a: sync.Mutex{},
+	}
+}
+
+var sessionStore = NewSessionManager()
+var exercisesComparerCache = NewExercisesComparerCache()
+
 func NewEndpoints(conf *Config) *Endpoints {
+	dbs := db.InitDB(*conf.DatasourceName)
+
+	exercisesNames := db.ListExerciseNames(dbs)
+	for _, e := range exercisesNames {
+		exercisesComparerCache.Add(*e.Id, *e.Name)
+	}
+
 	return &Endpoints{
-		db:   db.InitDB(*conf.DatasourceName),
+		db:   dbs,
 		conf: conf,
 		r:    mux.NewRouter().PathPrefix("/api").Subrouter(),
 	}
@@ -44,7 +163,7 @@ func (o *Endpoints) Handle() http.Handler {
 	o.r.Path("/listPlanifications").HandlerFunc(o.HandleAuthenticatedTransactional(o.listPlanifications))
 	o.r.Path("/listRoutines").HandlerFunc(o.HandleAuthenticatedTransactional(o.listRoutines))
 	o.r.Path("/listExercises").HandlerFunc(o.HandleAuthenticatedTransactional(o.listExercises))
-	o.r.Path("/saveExercisesBlock").HandlerFunc(o.HandleAuthenticatedTransactional(o.saveExercisesBlockReps))
+	//o.r.Path("/saveExercisesBlock").HandlerFunc(o.HandleAuthenticatedTransactional(o.saveExercisesBlockReps))
 	o.r.Path("/saveExercisesBlockCpt").HandlerFunc(o.HandleAuthenticatedTransactional(o.saveExercisesBlockCpt))
 	o.r.Path("/saveExercisesBlockAmrap").HandlerFunc(o.HandleAuthenticatedTransactional(o.saveExercisesBlockAmrap))
 	o.r.Path("/saveExercisesBlockCombo").HandlerFunc(o.HandleAuthenticatedTransactional(o.saveExercisesBlockCombo))
@@ -116,6 +235,83 @@ func (o *Endpoints) listExercises(w http.ResponseWriter, r *http.Request, tx *sq
 	o.Respond(w, exercises, http.StatusOK)
 }
 
+func (o *Endpoints) saveExerciseBlockValidations(r *http.Request, tx *sqlx.Tx, routineId, planificationId *int64, exercises []ExerciseRequest) ([]ExerciseRequest, *int64) {
+	userId := util.UserId(r)
+
+	//todo: validate the planification exists for the user requesting
+	//todo: validate that the routine exists for the user requesting. If not exists, create.
+	if routineId == nil {
+		last := db.CountRoutinesInPlanification(tx, *planificationId)
+		routineId = db.CreateRoutine(tx, fmt.Sprintf("Dia %d", *last+1), *planificationId)
+	}
+
+	//todo: para speech de venta: routines up to 20 exercises per block! (how many blocks?) LOL
+	if len(exercises) == 0 || len(exercises) > 20 {
+		//todo: validation error
+		panic("La cantidad de ejercicios es incorrecta")
+	}
+
+	exercisesToAddToBlock, nonExistingExerciseNames := exercisesComparerCache.FilterExercisesByIds(exercises)
+	exerciseNamesComparer := make([]ExerciseComparer, 0)
+	sanitizedKeys := make([]string, 0)
+	re := regexp.MustCompile(`[^a-zA-Z0-9]`)
+	for _, e := range nonExistingExerciseNames {
+		if len(*e.Name) > *o.conf.CustomExerciseNameCharacterLimit {
+			//not supported
+			continue
+		}
+		sanitizedKey := strings.ToLower(string(re.ReplaceAll([]byte(*e.Name), []byte(""))))
+		avoid := false
+		for _, s := range sanitizedKeys {
+			if s == sanitizedKey {
+				avoid = true
+				continue
+			}
+		}
+		if !avoid {
+			sanitizedKeys = append(sanitizedKeys, sanitizedKey)
+		}
+		toSanitizeName := strings.Split(*e.Name, " ")
+		for _, word := range toSanitizeName {
+			word = string(re.ReplaceAll([]byte(word), []byte("")))
+		}
+		sanitizedName := strings.Join(toSanitizeName, " ")
+		exerciseNamesComparer = append(exerciseNamesComparer, ExerciseComparer{
+			SanitizedKey:    &sanitizedKey,
+			SanitizedName:   &sanitizedName,
+			ShouldCreate:    util.PBool(!avoid),
+			ExerciseRequest: e,
+		})
+	}
+	_, nonExistingExercises := exercisesComparerCache.Exist(exerciseNamesComparer)
+	for i, ex := range nonExistingExercises {
+		if !*ex.ShouldCreate {
+			for _, ex2 := range nonExistingExercises[0:i] {
+				if *ex2.SanitizedKey == *ex.SanitizedKey {
+					*ex.ExerciseRequest.Name = *ex2.SanitizedName
+					*ex.ExerciseRequest.Id = *ex2.Id
+					exercisesToAddToBlock = append(exercisesToAddToBlock, ex.ExerciseRequest)
+					break
+				}
+			}
+
+			continue
+		}
+		count := db.CountExercisesCreatedByUser(tx, userId)
+		if *count > *o.conf.CustomExercisesPerUserLimit {
+			//todo: Buy more exercises by $$$$
+			panic("No puedes crear mas ejercicios nuevos.")
+		}
+		exerciseId := db.CreateExercise(tx, *ex.SanitizedName, userId)
+		*ex.ExerciseRequest.Name = *ex.SanitizedName
+		*ex.ExerciseRequest.Id = *exerciseId
+		exercisesToAddToBlock = append(exercisesToAddToBlock, ex.ExerciseRequest)
+		exercisesComparerCache.Add(*exerciseId, *ex.SanitizedName)
+	}
+
+	return exercisesToAddToBlock, routineId
+}
+
 func (o *Endpoints) saveExercisesBlockReps(w http.ResponseWriter, r *http.Request, tx *sqlx.Tx) {
 	t := SaveExercisesBlockRequest{}
 	err := o.Decode(r, &t)
@@ -136,23 +332,16 @@ func (o *Endpoints) saveExercisesBlockCpt(w http.ResponseWriter, r *http.Request
 	err := o.Decode(r, &t)
 	util.Check(err)
 
-	//todo: validate the planification exists.
-	//todo: validate that the routine exists. If not exists, create.
-	if t.RoutineId == nil {
-		last := db.CountRoutinesInPlanification(tx, *t.PlanificationId)
-		t.RoutineId = db.CreateRoutine(tx, fmt.Sprintf("Dia %d", *last+1), *t.PlanificationId)
-	}
-
-	//todo: validate that the exercises exist
+	validExercises, routineId := o.saveExerciseBlockValidations(r, tx, t.RoutineId, t.PlanificationId, t.Exercises)
 	exercises := make([]db.ExerciseBlockGroup, 0)
-	for _, e := range t.Exercises {
+	for _, e := range validExercises {
 		exercises = append(exercises, db.ExerciseBlockGroup{
 			ExerciseId: e.Id,
 			Secs:       t.WorkingInterval,
 		})
 	}
-	db.SaveExercisesBlock(tx, *t.RoutineId, "cpt", *t.BlockName, nil, t.Laps, t.RestingInteval, t.RestingInteval, exercises)
-	o.Respond(w, &SaveExercisesBlockCptResponse{RoutineId: t.RoutineId}, http.StatusOK)
+	db.SaveExercisesBlock(tx, *routineId, "cpt", *t.BlockName, nil, t.Laps, t.RestingInteval, t.RestingInteval, exercises)
+	o.Respond(w, &SaveExercisesBlockCptResponse{RoutineId: routineId}, http.StatusOK)
 }
 
 func (o *Endpoints) saveExercisesBlockAmrap(w http.ResponseWriter, r *http.Request, tx *sqlx.Tx) {
@@ -160,23 +349,16 @@ func (o *Endpoints) saveExercisesBlockAmrap(w http.ResponseWriter, r *http.Reque
 	err := o.Decode(r, &t)
 	util.Check(err)
 
-	//todo: validate the planification exists.
-	//todo: validate that the routine exists. If not exists, create.
-	if t.RoutineId == nil {
-		last := db.CountRoutinesInPlanification(tx, *t.PlanificationId)
-		t.RoutineId = db.CreateRoutine(tx, fmt.Sprintf("Dia %d", *last+1), *t.PlanificationId)
-	}
-
-	//todo: validate that the exercises exist
+	validExercises, routineId := o.saveExerciseBlockValidations(r, tx, t.RoutineId, t.PlanificationId, t.Exercises)
 	exercises := make([]db.ExerciseBlockGroup, 0)
-	for _, e := range t.Exercises {
+	for _, e := range validExercises {
 		exercises = append(exercises, db.ExerciseBlockGroup{
 			ExerciseId: e.Id,
 			Reps:       e.Reps,
 		})
 	}
-	db.SaveExercisesBlock(tx, *t.RoutineId, "amrap", *t.BlockName, t.BlockDuration, nil, nil, nil, exercises)
-	o.Respond(w, &SaveExercisesBlockAmrapResponse{RoutineId: t.RoutineId}, http.StatusOK)
+	db.SaveExercisesBlock(tx, *routineId, "amrap", *t.BlockName, t.BlockDuration, nil, nil, nil, exercises)
+	o.Respond(w, &SaveExercisesBlockAmrapResponse{RoutineId: routineId}, http.StatusOK)
 }
 
 func (o *Endpoints) saveExercisesBlockCombo(w http.ResponseWriter, r *http.Request, tx *sqlx.Tx) {
@@ -184,22 +366,15 @@ func (o *Endpoints) saveExercisesBlockCombo(w http.ResponseWriter, r *http.Reque
 	err := o.Decode(r, &t)
 	util.Check(err)
 
-	//todo: validate the planification exists.
-	//todo: validate that the routine exists. If not exists, create.
-	if t.RoutineId == nil {
-		last := db.CountRoutinesInPlanification(tx, *t.PlanificationId)
-		t.RoutineId = db.CreateRoutine(tx, fmt.Sprintf("Dia %d", *last+1), *t.PlanificationId)
-	}
-
-	//todo: validate that the exercises exist
+	validExercises, routineId := o.saveExerciseBlockValidations(r, tx, t.RoutineId, t.PlanificationId, t.Exercises)
 	exercises := make([]db.ExerciseBlockGroup, 0)
-	for _, e := range t.Exercises {
+	for _, e := range validExercises {
 		exercises = append(exercises, db.ExerciseBlockGroup{
 			ExerciseId: e.Id,
 		})
 	}
-	db.SaveExercisesBlock(tx, *t.RoutineId, "combo", *t.BlockName, nil, t.Laps, nil, nil, exercises)
-	o.Respond(w, &SaveExercisesBlockComboResponse{RoutineId: t.RoutineId}, http.StatusOK)
+	db.SaveExercisesBlock(tx, *routineId, "combo", *t.BlockName, nil, t.Laps, nil, nil, exercises)
+	o.Respond(w, &SaveExercisesBlockComboResponse{RoutineId: routineId}, http.StatusOK)
 }
 
 func (o *Endpoints) saveExerciseBlockPir(w http.ResponseWriter, r *http.Request, tx *sqlx.Tx) {
@@ -207,23 +382,16 @@ func (o *Endpoints) saveExerciseBlockPir(w http.ResponseWriter, r *http.Request,
 	err := o.Decode(r, &t)
 	util.Check(err)
 
-	//todo: validate the planification exists.
-	//todo: validate that the routine exists. If not exists, create.
-	if t.RoutineId == nil {
-		last := db.CountRoutinesInPlanification(tx, *t.PlanificationId)
-		t.RoutineId = db.CreateRoutine(tx, fmt.Sprintf("Dia %d", *last+1), *t.PlanificationId)
-	}
-
-	//todo: validate that the exercises exist
+	validExercises, routineId := o.saveExerciseBlockValidations(r, tx, t.RoutineId, t.PlanificationId, t.Exercises)
 	exercises := make([]db.ExerciseBlockGroup, 0)
-	for _, e := range t.Exercises {
+	for _, e := range validExercises {
 		exercises = append(exercises, db.ExerciseBlockGroup{
 			ExerciseId: e.Id,
 			Reps:       e.Reps,
 		})
 	}
-	db.SaveExercisesBlock(tx, *t.RoutineId, "pir", *t.BlockName, nil, t.Laps, nil, nil, exercises)
-	o.Respond(w, &SaveExercisesBlockPirResponse{RoutineId: t.RoutineId}, http.StatusOK)
+	db.SaveExercisesBlock(tx, *routineId, "pir", *t.BlockName, nil, t.Laps, nil, nil, exercises)
+	o.Respond(w, &SaveExercisesBlockPirResponse{RoutineId: routineId}, http.StatusOK)
 }
 
 func (o *Endpoints) retrieveVapidPublicKey(w http.ResponseWriter, r *http.Request, tx *sqlx.Tx) {
@@ -388,7 +556,7 @@ func (o *Endpoints) Respond(w http.ResponseWriter, data interface{}, status int)
 
 	if data != nil {
 		if err := json.NewEncoder(w).Encode(data); err != nil {
-			//log
+			fmt.Println(err)
 		}
 	}
 }
@@ -396,40 +564,6 @@ func (o *Endpoints) Respond(w http.ResponseWriter, data interface{}, status int)
 func (o *Endpoints) Decode(r *http.Request, v interface{}) error {
 	return json.NewDecoder(r.Body).Decode(v)
 }
-
-// todo: this will be Redis
-type SessionManager struct {
-	s         map[string]int64
-	a         sync.Mutex
-	lastAdded string
-}
-
-func (o *SessionManager) Read(token string) int64 {
-	o.a.Lock()
-	defer o.a.Unlock()
-	//todo should be token in prod
-	id, ok := o.s[o.lastAdded]
-	if !ok {
-		panic("Invalid session token")
-	}
-	return id
-}
-
-func (o *SessionManager) Write(token string, id int64) {
-	o.a.Lock()
-	defer o.a.Unlock()
-	o.s[token] = id
-	o.lastAdded = token
-}
-
-func NewSessionManager() *SessionManager {
-	return &SessionManager{
-		s: make(map[string]int64),
-		a: sync.Mutex{},
-	}
-}
-
-var sessionStore = NewSessionManager()
 
 func (o *Endpoints) signUp(w http.ResponseWriter, r *http.Request, tx *sqlx.Tx) {
 	var request SignUpRequest
@@ -542,6 +676,12 @@ func (o *Endpoints) HandleTransactional(handlerFunc HandlerTransactional) http.H
 		tx, err := o.db.Beginx()
 		util.Check(err)
 		defer func() {
+			err = tx.Commit()
+			if err != nil && !(err.Error() == "sql: transaction has already been committed or rolled back") {
+				util.Check(err)
+			}
+		}()
+		defer func() {
 			if e := recover(); e != nil {
 				if rollbackErr := tx.Rollback(); rollbackErr != nil {
 					log.Printf("update failed: %v, unable to back: %v", e, rollbackErr)
@@ -565,7 +705,8 @@ func (o *Endpoints) HandleFatal(handlerFunc http.HandlerFunc) http.HandlerFunc {
 				case util.ValidationErrors:
 					o.Respond(w, e, http.StatusBadRequest)
 				default:
-					o.Respond(w, e, http.StatusInternalServerError)
+					fmt.Println(e)
+					o.Respond(w, nil, http.StatusInternalServerError)
 				}
 			}
 		}()

@@ -44,7 +44,13 @@ class PageBlockCreate extends Component {
             this.setState({loading: true})
             await signIn('juan123')
             const res = await listExercises()
-            this.setState({loading: false, exerciseOptions: res.data.map(e => ({key: e.id, value:e.id, text:e.name}))})
+            let biggerId = 0
+            for (let i = 0; i < res.data.length; i++) {
+                if (res.data[i].id > biggerId) {
+                    biggerId = res.data[i].id
+                }
+            }
+            this.setState({loading: false, biggerId, exerciseOptions: res.data.map(e => ({key: e.id, value:e.id, text:e.name, createdbyuser: e.createdbyuser.toLowerCase(), comparer: e.name.toLowerCase().trim().replaceAll(' ', '')}))})
         } catch (e) {
             console.error(e)
         }
@@ -71,7 +77,11 @@ class PageBlockCreate extends Component {
         this.setState({exercises, next: index+1})
     }
 
-    handleChange = (e, input) => {
+    handleExerciseSelection = (e, input) => {
+        if (typeof(input.value[input.value.length-1]) === 'string') {
+            return
+        }
+
         const exercises = input.value.map(v => (input.options.find(x => x.value === v)))
         this.setState({exercisesBuffer: [...exercises]})
     }
@@ -80,8 +90,8 @@ class PageBlockCreate extends Component {
         this.setState({[type]: {...this.state[type], ...obj}})
     }
 
-    redirectToParentRoutine() {
-        const {planificationId, routineId} = this.state;
+    redirectToParentRoutine(routineId) {
+        const {planificationId} = this.state;
         this.props.history.push('/routine?planificationId='+planificationId+'&routineId='+routineId)
     }
 
@@ -98,7 +108,7 @@ class PageBlockCreate extends Component {
                 planificationId: parseInt(planificationId,10),
                 routineId: !!routineId ? parseInt(routineId,10) : null,
                 blockName: blockName,
-                exercises: exercises.map(e => ({id:e.key})),
+                exercises: exercises.map(e => ({id:e.key, name:e.text})),
                 laps: parseInt(laps, 10),
                 workingInterval: parseInt(workingInterval, 10),
                 restingInteval: parseInt(restingInteval, 10)
@@ -123,7 +133,7 @@ class PageBlockCreate extends Component {
                 planificationId: parseInt(planificationId,10),
                 routineId: !!routineId ? parseInt(routineId,10) : null,
                 blockName: blockName,
-                exercises: exercises.map(e => ({id:e.key, reps: parseInt(e.reps, 10)})),
+                exercises: exercises.map(e => ({id:e.key, name:e.text, reps: parseInt(e.reps, 10)})),
                 blockDuration: parseInt(blockDuration,10),
                 laps: null,
                 workingInterval: null,
@@ -145,7 +155,7 @@ class PageBlockCreate extends Component {
                 planificationId: parseInt(planificationId,10),
                 routineId: !!routineId ? parseInt(routineId,10) : null,
                 blockName: blockName,
-                exercises: exercises.map(e => ({id:e.key})),
+                exercises: exercises.map(e => ({id:e.key, name:e.text})),
                 laps: parseInt(laps, 10),
             }
             const res = await saveExercisesBlockCombo(request)
@@ -164,7 +174,7 @@ class PageBlockCreate extends Component {
                 planificationId: parseInt(planificationId,10),
                 routineId: !!routineId ? parseInt(routineId,10) : null,
                 blockName: blockName,
-                exercises: exercises.map(e => ({id:e.key, reps: e.reps})),
+                exercises: exercises.map(e => ({id:e.key, name:e.text, reps: e.reps})),
                 laps: parseInt(laps, 10),
             }
             const res = await saveExerciseBlockPir(request)
@@ -395,8 +405,35 @@ class PageBlockCreate extends Component {
         }
     }
 
+    onAddUnexistingExercise(value) {
+        const {exercisesBuffer, exerciseOptions, biggerId} = this.state;
+
+        const sanitizedInput = value.replace(/[^a-zA-Z0-9]/g, "");
+        const ex = exerciseOptions.find(e => e.comparer === sanitizedInput)
+
+        if (!!ex) {
+            exercisesBuffer.push(ex)
+            this.setState({exercisesBuffer})
+        } else {
+            const words = value.split(' ')
+            for (let i = 0; i < words.length; i++) {
+                const sanitizedWord = words[i].replace(/[^a-zA-Z0-9]/g, "");
+                const firstLetter = sanitizedWord[0].toUpperCase()
+                const rest = sanitizedWord.substring(1,sanitizedWord.length).toLowerCase()
+                words[i] = firstLetter+rest
+            }
+
+            const name = words.join(' ')
+            const lastBiggerId = biggerId+1
+            const exercise = {text: name, key: lastBiggerId, value: lastBiggerId}
+            exerciseOptions.push(exercise)
+            exercisesBuffer.push(exercise)
+            this.setState({exerciseOptions, exercisesBuffer, biggerId: lastBiggerId})
+        }
+    }
+
     render() {
-        const {blockType, exerciseOptions, blockName, showModal} = this.state;
+        const {blockType, exerciseOptions, exercisesBuffer, blockName, showModal} = this.state;
 
         return (
             <Segment basic style={{height: '100%'}}>
@@ -404,7 +441,10 @@ class PageBlockCreate extends Component {
                 {
                     !blockType &&
                     <>
-                        <Message>Necesitas repetir un ejercicio? No te preocupes, podes hacerlo una vez generado el bloque. (Combos)</Message>
+                        <Message>
+                            <b>No encontras un ejercicio? Agregalo haciendo click en "Agregar"</b>
+                            <br/><br/>Necesitas repetir un ejercicio? Podes hacerlo una vez generado el bloque. (Combos)
+                        </Message>
                         <div ref={this.dropdownRef}>
                             <Dropdown
                                 placeholder='Elegi los ejercicios'
@@ -412,9 +452,13 @@ class PageBlockCreate extends Component {
                                 multiple
                                 search
                                 selection
+                                allowAdditions
+                                additionLabel='Agregar '
                                 options={exerciseOptions}
-                                onChange={this.handleChange}
+                                value={exercisesBuffer.map(e => e.value)}
+                                onChange={this.handleExerciseSelection}
                                 openOnFocus={true}
+                                onAddItem={(e, { value }) => this.onAddUnexistingExercise(value)}
                                 tabIndex={0}
                                 noResultsMessage={'No se encontro el ejercicio'}
                                 selectOnBlur={false}

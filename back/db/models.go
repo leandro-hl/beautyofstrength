@@ -14,9 +14,11 @@ type Routine struct {
 }
 
 type Exercise struct {
-	Id                  *int    `json:"id"`
-	Name                *string `json:"name"`
-	TechnicalComplexity *int    `json:"technicalcomplexity"`
+	Id                  *int      `json:"id"`
+	Name                *string   `json:"name"`
+	TechnicalComplexity *int      `json:"technicalcomplexity"`
+	CreatedByUserId     *int64    `json:"createdbyuser_id"`
+	CreatedDate         time.Time `json:"createddate"`
 }
 
 type BlockGroup struct {

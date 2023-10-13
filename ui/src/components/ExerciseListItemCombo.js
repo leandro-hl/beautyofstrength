@@ -14,10 +14,15 @@ export class ExerciseListItemCombo extends Component {
                     <Grid.Row>
                         <Grid.Column stretched>
                             <Label basic style={{padding: 20}} className={this.props.selected ? 'mine-selected' : ''}>
-                                <span className="chevron-up" onClick={() => this.props.moveUp()}>&#9650;</span>
-                                <span className="chevron-down" onClick={() => this.props.moveDown()}>&#9660;</span>
-                                {this.props.item.text}
-                                <Icon name={'sync'} className={'list-item-icon'} onClick={() => this.props.onRepeat(this.props.item)}/>
+                                <Grid.Row>
+                                    <span className="chevron-up" onClick={() => this.props.moveUp()}>&#9650;</span>
+                                    <span className="chevron-down" onClick={() => this.props.moveDown()}>&#9660;</span>
+                                    {this.props.item.text}
+                                    <Icon name={'sync'} className={'list-item-icon'} onClick={() => this.props.onRepeat(this.props.item)}/>
+                                </Grid.Row>
+                                <Grid.Row>
+                                    <span style={{fontSize: '0.6em'}}>creado por: {this.props.item.createdbyuser}</span>
+                                </Grid.Row>
                             </Label>
                         </Grid.Column>
                     </Grid.Row>

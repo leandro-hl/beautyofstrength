@@ -70,8 +70,9 @@ type SaveExercisesBlockAmrapResponse struct {
 }
 
 type ExerciseRequest struct {
-	Id   *int `json:"id"`
-	Reps *int `json:"reps"`
+	Id   *int    `json:"id"`
+	Name *string `json:"name"`
+	Reps *int    `json:"reps"`
 }
 
 type RestingTime struct {

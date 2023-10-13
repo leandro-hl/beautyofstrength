@@ -1,5 +1,16 @@
 package db
 
+type ListExerciseIdName struct {
+	Id   *int    `json:"id"`
+	Name *string `json:"name"`
+}
+
+type ListExercise struct {
+	Id            *int    `json:"id"`
+	Name          *string `json:"name"`
+	CreatedByUser *string `json:"createdbyuser"`
+}
+
 type GetRoutineDetailsQuery struct {
 	Routineid       *int64  `json:"routineid"`
 	Routinename     *string `json:"routinename"`
