@@ -12,6 +12,7 @@ import PagePlanificationDetail from "./components/PagePlanificationDetail";
 import PageRoutineCreate from "./components/PageRoutineCreate";
 import PageRoutineDetail from "./components/PageRoutineDetail";
 import PageBlockCreate from "./components/PageBlockCreate";
+import PageRoutineExecution from "./components/PageRoutineExecution";
 
 class App extends Component {
     render() {
@@ -22,9 +23,10 @@ class App extends Component {
                         <Route exact path={"/"} component={Home}/>
                         <Route exact path={"/professor"} component={HomeProfessor}/>
                         <Route exact path={"/planification"} component={PagePlanificationDetail}/>
+                        <Route exact path={"/routine/execution"} component={PageRoutineExecution}/>
                         <Route exact path={"/routine/create"} component={PageRoutineCreate}/>
-                        <Route exact path={"/block/create"} component={PageBlockCreate}/>
                         <Route exact path={"/routine"} component={PageRoutineDetail}/>
+                        <Route exact path={"/block/create"} component={PageBlockCreate}/>
                         <Route exact path={"/student"} component={HomeStudent}/>
                         <ElseRoute/>
                     </Switch>

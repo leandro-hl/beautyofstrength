@@ -2,8 +2,10 @@ import React, {Component} from "react";
 import {List, Loader, Segment} from "semantic-ui-react";
 import {listPlanifications} from "../service";
 import {withRouter} from "react-router-dom";
+import {AppContext, setData} from "../context";
 
 class PagePlanificationList extends Component {
+    static contextType = AppContext
     state = {loading: true, planifications: []}
 
     async componentDidMount() {
@@ -16,7 +18,8 @@ class PagePlanificationList extends Component {
     }
 
     redirectToPlanification(id) {
-        this.props.history.push('/planification?id='+id)
+        this.context.dispatch(setData({planificationId: id}))
+        this.props.history.push('/planification')
     }
 
     render() {

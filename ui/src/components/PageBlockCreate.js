@@ -1,5 +1,5 @@
 import React, {Component, createRef} from "react";
-import {Button, Divider, Dropdown, Grid, Header, Input, Label, List, Message, Segment} from "semantic-ui-react";
+import {Button, Divider, Dropdown, Grid, Header, Icon, Input, Label, List, Message, Segment} from "semantic-ui-react";
 import {ExerciseListItem} from "./ExerciseListItem";
 import {RestInput} from "./RestInput";
 import {
@@ -14,33 +14,32 @@ import {withRouter} from "react-router-dom";
 import {ModalTrainingBlockType} from "./ModalTrainingBlockType";
 import {ExerciseListItemCircuitInterval} from "./ExerciseListItemCircuitInterval";
 import {InputNumber} from "./InputNumber";
-import {queryParam} from "../functions";
 import {ExerciseListItemCombo} from "./ExerciseListItemCombo";
+import {AppContext, setData} from "../context";
 
 class PageBlockCreate extends Component {
+    static contextType = AppContext
     dropdownRef = createRef()
 
     constructor(props) {
         super(props);
-
-        const planificationId = queryParam(props, 'planificationId')
-        const routineId = queryParam(props, 'routineId')
-        const nextBlockNumber = queryParam(props, 'nextBlockNumber')
+        //todo: this config probably should come from the backend
         const defaultPiramidTop = 12
         const defaultIncrementPerSerie = 2
         const defaultPiramidSeries = Math.floor(defaultPiramidTop / defaultIncrementPerSerie)
         this.state = {
-            planificationId,
-            routineId,
+            planificationId: null,
+            routineId: null,
             defaultPiramidTop,
             defaultIncrementPerSerie,
             defaultPiramidSeries,
             next: 0,
-            exercisesBuffer: [], blockName: 'Bloque '+(nextBlockNumber??1), exercises: [], exerciseOptions: [], lapRestDefault: 'sec', exeRestDefault: 'sec'}
+            exercisesBuffer: [], defaultBlockName: '', blockName: '', exercises: [], exerciseOptions: [], lapRestDefault: 'sec', exeRestDefault: 'sec'}
     }
 
     async componentDidMount() {
         try {
+            const {state: {planificationId, routineId, routineDetails: {nextBlockNumber}}} = this.context
             this.setState({loading: true})
             await signIn('juan123')
             const res = await listExercises()
@@ -50,7 +49,14 @@ class PageBlockCreate extends Component {
                     biggerId = res.data[i].id
                 }
             }
-            this.setState({loading: false, biggerId, exerciseOptions: res.data.map(e => ({key: e.id, value:e.id, text:e.name, createdbyuser: e.createdbyuser.toLowerCase(), comparer: e.name.toLowerCase().trim().replaceAll(' ', '')}))})
+            const defaultBlockName = 'Bloque '+(nextBlockNumber??1)
+            this.setState({
+                loading: false,
+                biggerId,
+                planificationId,
+                routineId,
+                defaultBlockName, blockName: defaultBlockName,
+                exerciseOptions: res.data.map(e => ({key: e.id, value:e.id, text:e.name, createdbyuser: e.createdbyuser.toLowerCase(), comparer: e.name.toLowerCase().trim().replaceAll(' ', '')}))})
         } catch (e) {
             console.error(e)
         }
@@ -90,9 +96,12 @@ class PageBlockCreate extends Component {
         this.setState({[type]: {...this.state[type], ...obj}})
     }
 
-    redirectToParentRoutine(routineId) {
-        const {planificationId} = this.state;
-        this.props.history.push('/routine?planificationId='+planificationId+'&routineId='+routineId)
+    redirectToParentRoutine(addedToRoutineId) {
+        const {state: {routineId}} = this.context
+        if (routineId !== addedToRoutineId) {
+            this.context.dispatch(setData({routineId: addedToRoutineId}))
+        }
+        this.props.history.push('/routine')
     }
 
     async saveExercisesBlockCpt() {
@@ -432,12 +441,20 @@ class PageBlockCreate extends Component {
         }
     }
 
+    editBlock() {
+        const {defaultBlockName, exercises} = this.state
+        this.setState({blockType: null, blockName: defaultBlockName, exercises: [], exercisesBuffer: [...exercises]})
+    }
+
     render() {
         const {blockType, exerciseOptions, exercisesBuffer, blockName, showModal} = this.state;
 
         return (
             <Segment basic style={{height: '100%'}}>
-                <Header as={'h3'}>{blockName}</Header>
+                <Header as={'h3'}>
+                    {blockName}
+                    {blockType && <Icon name={'edit outline'} className={'header-icon'} onClick={() => this.editBlock()}/>}
+                </Header>
                 {
                     !blockType &&
                     <>

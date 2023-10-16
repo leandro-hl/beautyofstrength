@@ -42,9 +42,9 @@ func GetRoutineDetails(tx *sqlx.Tx, routineId int64) []GetRoutineDetailsQuery {
 			eb.secs,
 			e.name exercisename
 			from routine r
-		inner join blockgroup b on r.id = b.routine_id
-		inner join exerciseblockgroup eb on b.id = eb.blockgroup_id
-		inner join exercise e on e.id = eb.exercise_id
+		left join blockgroup b on r.id = b.routine_id
+		left join exerciseblockgroup eb on b.id = eb.blockgroup_id
+		left join exercise e on e.id = eb.exercise_id
 		where r.id=$1
 		order by b.id, eb.id;`, routineId)
 	util.Check(err)

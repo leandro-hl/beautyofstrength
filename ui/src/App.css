@@ -37,16 +37,22 @@ body > div {
 
 .chevron-up {
   position: absolute !important;
-  right: 35px !important;
+  right: 20px !important;
   top: 5px !important;
   font-size: 2em !important;
 }
 
 .chevron-down {
   position: absolute !important;
-  right: 35px !important;
+  right: 20px !important;
   top: 34px !important;
   font-size: 2em !important;
+}
+
+.header-icon {
+  float: right !important;
+  margin: 0px !important;
+  font-size: 1em !important;
 }
 
 .input-left-label > div.label {

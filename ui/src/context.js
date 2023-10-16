@@ -1,13 +1,8 @@
 import {createContext, useContext, useEffect, useReducer, useState} from "react";
 import axios from "axios";
-import {signIn} from "./service";
-
-export const STEPS = {
-    LOGGED: "LOGGED"
-}
 
 export const ACTIONS = {
-    DEFAULT: "DEFAULT"
+    DATA: "DATA"
 }
 
 export function setValidationError(error) {
@@ -17,23 +12,36 @@ export function setValidationError(error) {
     }
 }
 
-const initialState = {}
-
-const reducer = (state, action) => {
-    switch (action.type) {
-        case ACTIONS.DEFAULT:
-            return {
-                ...state
-            };
-        default:
-            return state;
+const initialState = {
+    planificationId: null,
+    routineId: null,
+    routineDetails: {
+        name: '',
+        blocks: [],
+        nextBlockNumber: null
     }
 }
 
-export function setStep(step) {
+const reducer = (state, action) => {
+    let newState = {}
+    switch (action.type) {
+        case ACTIONS.DATA:
+            newState = {
+                ...state,
+                ...action.payload
+            };
+            break
+        default:
+            newState = {...state};
+    }
+    localStorage.setItem('state', JSON.stringify(newState))
+    return newState
+}
+
+export function setData(data) {
     return {
-        type: ACTIONS.DEFAULT,
-        payload: STEPS.LOGGED
+        type: ACTIONS.DATA,
+        payload: data
     }
 }
 
@@ -86,7 +94,15 @@ function ResponseInterceptor({children}) {
 export const AppContext = createContext()
 
 export function ContextProvider({children}) {
-    const [state, dispatch] = useReducer(reducer, initialState);
+    const lastState = localStorage.getItem('state')
+    let currentState = {}
+    if (lastState) {
+        currentState = JSON.parse(lastState)
+    } else {
+        currentState = initialState
+    }
+
+    const [state, dispatch] = useReducer(reducer, currentState);
 
     return (
         <AppContext.Provider value={{state, dispatch}}>

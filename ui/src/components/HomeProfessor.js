@@ -1,5 +1,5 @@
 import React, {Component, createRef} from "react";
-import {Button, Divider, Dropdown, Input, Label, List, Loader, Segment} from "semantic-ui-react";
+import {Button, Divider, Dropdown, Input, Label, List, Loader, Menu, Segment} from "semantic-ui-react";
 import {ExerciseListItem} from "./ExerciseListItem";
 import {listExercises, saveExercisesBlock, signIn} from "../service"
 import {RestInput} from "./RestInput";
@@ -26,7 +26,11 @@ class HomeProfessor extends Component {
             return <Loader active/>
         }
 
-        return (<PagePlanificationList/>)
+        return (
+            <>
+                <PagePlanificationList/>
+            </>
+        )
     }
 }
 

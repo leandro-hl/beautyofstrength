@@ -4,20 +4,22 @@ import {withRouter} from "react-router-dom";
 import {queryParam} from "../functions";
 import {getRoutineDetails} from "../service";
 import PageRoutineExecution from "./PageRoutineExecution";
+import {AppContext, setData} from "../context";
 
 class PageRoutineDetail extends Component{
+    static contextType = AppContext
+
     constructor(props) {
         super(props);
-        const planificationId = queryParam(props, 'planificationId')
-        const routineId = queryParam(props, 'routineId')
-        this.state = {loading: true, name: '', blocks: [], planificationId, routineId, activeIndexes:[]}
+        this.state = {loading: true, name: '', blocks: [], planificationId: null, routineId: null, activeIndexes:[]}
     }
 
     async componentDidMount() {
         try {
-            const {routineId} = this.state
+            const {state: {routineId, planificationId}} = this.context
             const res = await getRoutineDetails(routineId);
-            this.setState({loading: false, blocks: res.data.blocks, name: res.data.name, nextBlockNumber: res.data.blocks.length+1})
+            this.context.dispatch(setData({routineDetails: {...res.data, nextBlockNumber: res.data.blocks.length+1}}))
+            this.setState({loading: false, planificationId, routineId, blocks: res.data.blocks, name: res.data.name, nextBlockNumber: res.data.blocks.length+1})
         } catch (e) {
             console.error(e)
         }
@@ -25,12 +27,16 @@ class PageRoutineDetail extends Component{
 
     redirectToCreateBlock() {
         const {planificationId, routineId, nextBlockNumber} = this.state;
-        this.props.history.push('/block/create?planificationId='+planificationId+'&routineId='+routineId+'&nextBlockNumber='+nextBlockNumber)
+        this.props.history.push('/block/create')
     }
 
     redirectToPlanification() {
         const {planificationId} = this.state;
-        this.props.history.push('/planification?id='+planificationId)
+        this.props.history.push('/planification')
+    }
+
+    redirectToRoutineExecution() {
+        this.props.history.push('/routine/execution')
     }
 
     handleActiveBlocks = (e, titleProps) => {
@@ -44,12 +50,6 @@ class PageRoutineDetail extends Component{
         }
 
         this.setState({ activeIndexes: activeIndexes })
-    }
-
-    renderRoutineExecution() {
-        //todo: in some iteration in the future when redux is in place this will probably be accessed by url
-        const {planificationId, routineId, name, blocks} = this.state;
-        return <PageRoutineExecution routine={{planificationId, routineId, name, blocks}}/>
     }
 
     renderRoutineDetails() {
@@ -93,7 +93,7 @@ class PageRoutineDetail extends Component{
                         </Accordion.Content>
                     </Segment>))}
                 </Accordion>
-                <Button primary fluid onClick={() => this.setState({renderExecution: true})}>Ejecutar Rutina</Button>
+                <Button primary fluid onClick={() => this.redirectToRoutineExecution()}>Ejecutar Rutina</Button>
                 <Button.Group fluid style={{marginBottom: 50}}>
                     <Button secondary onClick={() => this.redirectToPlanification()}>Rutinas</Button>
                     <Button primary onClick={() => this.redirectToCreateBlock()}>Agregar un Bloque</Button>
@@ -103,14 +103,10 @@ class PageRoutineDetail extends Component{
     }
 
     render() {
-        const {loading, renderExecution} = this.state;
+        const {loading} = this.state;
 
         if (loading) {
             return <Loader active/>
-        }
-
-        if (renderExecution) {
-            return this.renderRoutineExecution()
         }
 
         return this.renderRoutineDetails()
