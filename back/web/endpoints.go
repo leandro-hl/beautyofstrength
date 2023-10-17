@@ -20,6 +20,7 @@ import (
 	"strconv"
 	"strings"
 	"sync"
+	"time"
 )
 
 type Endpoints struct {
@@ -137,8 +138,37 @@ func NewSessionManager() *SessionManager {
 	}
 }
 
+type ShareTokenManager struct {
+	s map[string]bool
+	a sync.Mutex
+}
+
+func (o *ShareTokenManager) Read(token string) bool {
+	o.a.Lock()
+	defer o.a.Unlock()
+	id, ok := o.s[token]
+	if !ok {
+		panic("Invalid token")
+	}
+	return id
+}
+
+func (o *ShareTokenManager) Write(token string) {
+	o.a.Lock()
+	defer o.a.Unlock()
+	o.s[token] = true
+}
+
+func NewShareTokenManager() *ShareTokenManager {
+	return &ShareTokenManager{
+		s: make(map[string]bool),
+		a: sync.Mutex{},
+	}
+}
+
 var sessionStore = NewSessionManager()
 var exercisesComparerCache = NewExercisesComparerCache()
+var shareManager = NewShareTokenManager()
 
 func NewEndpoints(conf *Config) *Endpoints {
 	dbs := db.InitDB(*conf.DatasourceName)
@@ -179,44 +209,97 @@ func (o *Endpoints) Handle() http.Handler {
 	o.r.Path("/retrieveVapidPublicKey").HandlerFunc(o.HandleAuthenticatedTransactional(o.retrieveVapidPublicKey))
 	o.r.Path("/saveUserDevicePushNotificationSubscription").HandlerFunc(o.HandleAuthenticatedTransactional(o.saveUserDevicePushNotificationSubscription))
 	o.r.Path("/testPushNotificationWorks").HandlerFunc(o.HandleAuthenticatedTransactional(o.testPushNotificationWorks))
+	o.r.Path("/shareRoutine").HandlerFunc(o.HandleAuthenticatedTransactional(o.shareRoutine))
 	return o.r
 }
 
 func (o *Endpoints) getRoutineDetails(w http.ResponseWriter, r *http.Request, tx *sqlx.Tx) {
-	routineId, err := strconv.ParseInt(r.URL.Query().Get("routineId"), 10, 64)
-	util.Check(err)
+	shareEncrypted := r.URL.Query().Get("share")
+	if shareEncrypted != "" {
+		decoded, err := base64.RawURLEncoding.DecodeString(shareEncrypted)
+		util.Check(err)
+		decrypted, err := util.Decrypt(string(decoded), []byte(*o.conf.LinkSharingKey))
+		util.Check(err)
+		var t ShareEncrypted
+		err = json.Unmarshal([]byte(decrypted), &t)
+		util.Check(err)
 
-	result := db.GetRoutineDetails(tx, routineId)
-	res := &GetRoutineDetailsResponse{Id: result[0].Routineid, Name: result[0].Routinename, Blocks: make([]GetRoutineDetailsBlock, 0)}
+		metaData := db.GetUserSharingToken(tx, t.PlanificationId, t.RoutineId, t.CreatorId)
 
-	lastBlockId := int64(0)
-	var block *GetRoutineDetailsBlock
-	for _, r := range result {
-		if *r.Blockgroupid != lastBlockId {
-			lastBlockId = *r.Blockgroupid
-			if block != nil {
-				res.Blocks = append(res.Blocks, *block)
-			}
-			block = &GetRoutineDetailsBlock{
-				Id:              r.Blockgroupid,
-				Name:            r.Blockgroupname,
-				Duration:        r.BlockDuration,
-				Type:            r.Type,
-				Laps:            r.Laps,
-				Exerestinterval: r.Exerestinterval,
-				Laprestinterval: r.Laprestinterval,
-				Exercises: []GetRoutineDetailsBlockExercise{
-					{Name: r.Exercisename, Secs: r.Secs, Reps: r.Reps},
-				},
-			}
+		if metaData.Creationdate.Add(time.Hour * time.Duration(*o.conf.LinkSharingExpirationDays) * 24).Before(time.Now()) {
+			db.InvalidateSharingTokenForRoutine(tx, t.PlanificationId, t.RoutineId, t.CreatorId)
+			o.Respond(w, nil, http.StatusUnauthorized)
 		} else {
-			block.Exercises = append(block.Exercises, GetRoutineDetailsBlockExercise{Name: r.Exercisename, Secs: r.Secs, Reps: r.Reps})
-		}
-	}
-	//last block
-	res.Blocks = append(res.Blocks, *block)
+			//todo: we're missing quite some validations about the user here...
+			result := db.GetRoutineDetails(tx, t.RoutineId)
+			res := &GetRoutineDetailsResponse{Id: result[0].Routineid, Name: result[0].Routinename, Blocks: make([]GetRoutineDetailsBlock, 0)}
 
-	o.Respond(w, &res, http.StatusOK)
+			lastBlockId := int64(0)
+			var block *GetRoutineDetailsBlock
+			for _, r := range result {
+				if *r.Blockgroupid != lastBlockId {
+					lastBlockId = *r.Blockgroupid
+					if block != nil {
+						res.Blocks = append(res.Blocks, *block)
+					}
+					block = &GetRoutineDetailsBlock{
+						Id:              r.Blockgroupid,
+						Name:            r.Blockgroupname,
+						Duration:        r.BlockDuration,
+						Type:            r.Type,
+						Laps:            r.Laps,
+						Exerestinterval: r.Exerestinterval,
+						Laprestinterval: r.Laprestinterval,
+						Exercises: []GetRoutineDetailsBlockExercise{
+							{Name: r.Exercisename, Secs: r.Secs, Reps: r.Reps},
+						},
+					}
+				} else {
+					block.Exercises = append(block.Exercises, GetRoutineDetailsBlockExercise{Name: r.Exercisename, Secs: r.Secs, Reps: r.Reps})
+				}
+			}
+			//last block
+			res.Blocks = append(res.Blocks, *block)
+
+			o.Respond(w, &res, http.StatusOK)
+		}
+	} else {
+		//todo: we're missing quite some validations about the user here...
+		routineId, err := strconv.ParseInt(r.URL.Query().Get("routineId"), 10, 64)
+		util.Check(err)
+
+		result := db.GetRoutineDetails(tx, routineId)
+		res := &GetRoutineDetailsResponse{Id: result[0].Routineid, Name: result[0].Routinename, Blocks: make([]GetRoutineDetailsBlock, 0)}
+
+		lastBlockId := int64(0)
+		var block *GetRoutineDetailsBlock
+		for _, r := range result {
+			if *r.Blockgroupid != lastBlockId {
+				lastBlockId = *r.Blockgroupid
+				if block != nil {
+					res.Blocks = append(res.Blocks, *block)
+				}
+				block = &GetRoutineDetailsBlock{
+					Id:              r.Blockgroupid,
+					Name:            r.Blockgroupname,
+					Duration:        r.BlockDuration,
+					Type:            r.Type,
+					Laps:            r.Laps,
+					Exerestinterval: r.Exerestinterval,
+					Laprestinterval: r.Laprestinterval,
+					Exercises: []GetRoutineDetailsBlockExercise{
+						{Name: r.Exercisename, Secs: r.Secs, Reps: r.Reps},
+					},
+				}
+			} else {
+				block.Exercises = append(block.Exercises, GetRoutineDetailsBlockExercise{Name: r.Exercisename, Secs: r.Secs, Reps: r.Reps})
+			}
+		}
+		//last block
+		res.Blocks = append(res.Blocks, *block)
+
+		o.Respond(w, &res, http.StatusOK)
+	}
 }
 
 func (o *Endpoints) listRoutines(w http.ResponseWriter, r *http.Request, tx *sqlx.Tx) {
@@ -373,7 +456,7 @@ func (o *Endpoints) saveExercisesBlockCombo(w http.ResponseWriter, r *http.Reque
 			ExerciseId: e.Id,
 		})
 	}
-	db.SaveExercisesBlock(tx, *routineId, "combo", *t.BlockName, nil, t.Laps, nil, nil, exercises)
+	db.SaveExercisesBlock(tx, *routineId, "cbo", *t.BlockName, nil, t.Laps, nil, nil, exercises)
 	o.Respond(w, &SaveExercisesBlockComboResponse{RoutineId: routineId}, http.StatusOK)
 }
 
@@ -416,7 +499,7 @@ func (o *Endpoints) saveUserDevicePushNotificationSubscription(w http.ResponseWr
 }
 
 func (o *Endpoints) saveUserTrainedToday(w http.ResponseWriter, r *http.Request, tx *sqlx.Tx) {
-	t := SaveUserTrainedToday{}
+	t := SaveUserTrainedTodayRequest{}
 	err := o.Decode(r, &t)
 	util.Check(err)
 	userId := util.UserId(r)
@@ -431,6 +514,32 @@ func (o *Endpoints) getUserLoadedTrainingToday(w http.ResponseWriter, r *http.Re
 	}{
 		Loaded: &trained,
 	}, http.StatusOK)
+}
+
+func (o *Endpoints) shareRoutine(w http.ResponseWriter, r *http.Request, tx *sqlx.Tx) {
+	t := ShareRoutineRequest{}
+	err := o.Decode(r, &t)
+	util.Check(err)
+	userId := util.UserId(r)
+	if db.GetUserCreatedTheRoutine(tx, *t.PlanificationId, *t.RoutineId, userId) {
+		db.InvalidateSharingTokenForRoutine(tx, *t.PlanificationId, *t.RoutineId, userId)
+		key, err := base64.StdEncoding.DecodeString(*o.conf.LinkSharingKey)
+		util.Check(err)
+		str, err := json.Marshal(ShareEncrypted{
+			RoutineId:       *t.RoutineId,
+			PlanificationId: *t.PlanificationId,
+			CreatorId:       userId,
+		})
+		util.Check(err)
+
+		encrypted, err := util.Encrypt(string(str), key)
+		util.Check(err)
+
+		db.SaveUserSharingToken(tx, *t.PlanificationId, *t.RoutineId, userId)
+		o.Respond(w, fmt.Sprintf("/routine?share=%s", base64.RawURLEncoding.EncodeToString([]byte(encrypted))), http.StatusOK)
+	} else {
+		o.Respond(w, nil, http.StatusUnauthorized)
+	}
 }
 
 func (o *Endpoints) testPushNotificationWorks(w http.ResponseWriter, r *http.Request, tx *sqlx.Tx) {

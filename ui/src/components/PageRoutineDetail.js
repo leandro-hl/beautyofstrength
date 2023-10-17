@@ -1,10 +1,10 @@
 import React, {Component} from "react";
-import {Accordion, Button, Header, List, Loader, Segment, Table} from "semantic-ui-react";
+import {Accordion, Button, Header, Icon, List, Loader, Segment, Table} from "semantic-ui-react";
 import {withRouter} from "react-router-dom";
-import {queryParam} from "../functions";
-import {getRoutineDetails} from "../service";
-import PageRoutineExecution from "./PageRoutineExecution";
+import {getRoutineDetails, shareRoutine} from "../service";
 import {AppContext, setData} from "../context";
+import BottomMenuBar from "./BottomMenuBar";
+import LayoutMobile from "./LayoutMobile";
 
 class PageRoutineDetail extends Component{
     static contextType = AppContext
@@ -16,6 +16,12 @@ class PageRoutineDetail extends Component{
 
     async componentDidMount() {
         try {
+            //todo: if I share a routine, the flow would start here.
+            // given a token I should be able to retrieve the routine details to show and execute.
+            // if the user is not logged in, does not have acces to any other part of the app and is
+            // redirected to the login / sign up page.
+            // put using a valid token can stay here for let's say one or two days.
+            // this is an anonimous way of accessing the routine
             const {state: {routineId, planificationId}} = this.context
             const res = await getRoutineDetails(routineId);
             this.context.dispatch(setData({routineDetails: {...res.data, nextBlockNumber: res.data.blocks.length+1}}))
@@ -26,12 +32,10 @@ class PageRoutineDetail extends Component{
     }
 
     redirectToCreateBlock() {
-        const {planificationId, routineId, nextBlockNumber} = this.state;
         this.props.history.push('/block/create')
     }
 
     redirectToPlanification() {
-        const {planificationId} = this.state;
         this.props.history.push('/planification')
     }
 
@@ -52,11 +56,25 @@ class PageRoutineDetail extends Component{
         this.setState({ activeIndexes: activeIndexes })
     }
 
+    async shareRoutine() {
+        try {
+            const {planificationId, routineId} = this.state
+            const res = await shareRoutine({planificationId, routineId})
+            //todo: how the fuck set the domain here?
+            await navigator.clipboard.writeText(`localhost:3000${res.data}`);
+        } catch (e) {
+            console.error(e)
+        }
+    }
+
     renderRoutineDetails() {
         const {name, blocks, activeIndexes} = this.state;
         return (
-            <Segment basic style={{height: '100%'}}>
-                <Header as={'h3'}>{name}</Header>
+            <LayoutMobile>
+                <Header as={'h3'}>
+                    {name}
+                    <Icon name={'share square outline'} className={'header-icon'} onClick={() => this.shareRoutine()}/>
+                </Header>
                 <Accordion
                     style={{marginBottom: '1em'}}
                     exclusive={false}
@@ -98,7 +116,7 @@ class PageRoutineDetail extends Component{
                     <Button secondary onClick={() => this.redirectToPlanification()}>Rutinas</Button>
                     <Button primary onClick={() => this.redirectToCreateBlock()}>Agregar un Bloque</Button>
                 </Button.Group>
-            </Segment>
+            </LayoutMobile>
         )
     }
 

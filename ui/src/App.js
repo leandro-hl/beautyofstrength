@@ -13,6 +13,8 @@ import PageRoutineCreate from "./components/PageRoutineCreate";
 import PageRoutineDetail from "./components/PageRoutineDetail";
 import PageBlockCreate from "./components/PageBlockCreate";
 import PageRoutineExecution from "./components/PageRoutineExecution";
+import PageAccount from "./components/PageAccount";
+import PageProfessorContributions from "./components/PageProfessorContributions";
 
 class App extends Component {
     render() {
@@ -22,12 +24,15 @@ class App extends Component {
                     <Switch>
                         <Route exact path={"/"} component={Home}/>
                         <Route exact path={"/professor"} component={HomeProfessor}/>
+                        <Route exact path={"/my-planifications"} component={PagePlanificationList}/>
+                        <Route exact path={"/my-contributions"} component={PageProfessorContributions}/>
                         <Route exact path={"/planification"} component={PagePlanificationDetail}/>
                         <Route exact path={"/routine/execution"} component={PageRoutineExecution}/>
                         <Route exact path={"/routine/create"} component={PageRoutineCreate}/>
                         <Route exact path={"/routine"} component={PageRoutineDetail}/>
                         <Route exact path={"/block/create"} component={PageBlockCreate}/>
                         <Route exact path={"/student"} component={HomeStudent}/>
+                        <Route exact path={"/account"} component={PageAccount}/>
                         <ElseRoute/>
                     </Switch>
                 </BrowserRouter>

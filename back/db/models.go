@@ -70,3 +70,12 @@ type WebPushNotificationSubscription struct {
 		Auth   *string `json:"auth"`
 	} `json:"keys"`
 }
+
+type UserSharingToken struct {
+	Id              *int64    `json:"id"`
+	Creationdate    time.Time `json:"creationdate"`
+	CreatorId       *int64    `json:"creator_id"`
+	RoutineId       *int64    `json:"routine_id"`
+	PlanificationId *int64    `json:"planification_id"`
+	IsValid         *bool     `json:"isvalid"`
+}

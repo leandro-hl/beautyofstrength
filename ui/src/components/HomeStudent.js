@@ -4,6 +4,7 @@ import {ModalHaveTrained} from "./ModalHaveTrained";
 import {getUserLoadedTrainingToday, signIn} from "../service";
 import {ModalEnableNotifications} from "./ModalEnableNotifications";
 import {withRouter} from "react-router-dom";
+import LayoutMobile from "./LayoutMobile";
 
 class HomeStudent extends Component {
     state = {loadedTrainingToday: false, loading: true}
@@ -22,13 +23,13 @@ class HomeStudent extends Component {
         }
 
         return (
-            <Segment basic>
+            <LayoutMobile>
                 <ModalEnableNotifications onSubscribed={() => this.setState({showSecondModal: true})}/>
                 {
                     showSecondModal && !loadedTrainingToday  &&
                     <ModalHaveTrained/>
                 }
-            </Segment>
+            </LayoutMobile>
         )
     }
 }

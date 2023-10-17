@@ -5,6 +5,8 @@ import {listExercises, saveExercisesBlock, signIn} from "../service"
 import {RestInput} from "./RestInput";
 import {withRouter} from "react-router-dom";
 import PagePlanificationList from "./PagePlanificationList";
+import BottomMenuBar from "./BottomMenuBar";
+import LayoutMobile from "./LayoutMobile";
 
 class HomeProfessor extends Component {
     state = {loading: true, planifications: []}
@@ -27,9 +29,9 @@ class HomeProfessor extends Component {
         }
 
         return (
-            <>
-                <PagePlanificationList/>
-            </>
+            <LayoutMobile>
+                HOME MOSTRAR HJOME
+            </LayoutMobile>
         )
     }
 }

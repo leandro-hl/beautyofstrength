@@ -83,7 +83,7 @@ type SaveUserDevicePushNotificationSubscriptionRequest struct {
 	Subscription *string `json:"subscription"`
 }
 
-type SaveUserTrainedToday struct {
+type SaveUserTrainedTodayRequest struct {
 	Answer bool `json:"answer"`
 }
 
@@ -108,4 +108,15 @@ type GetRoutineDetailsBlockExercise struct {
 	Reps *int    `json:"reps"`
 	Secs *int    `json:"secs"`
 	Name *string `json:"name"`
+}
+
+type ShareRoutineRequest struct {
+	RoutineId       *int64 `json:"routineId"`
+	PlanificationId *int64 `json:"planificationId"`
+}
+
+type ShareEncrypted struct {
+	RoutineId       int64
+	PlanificationId int64
+	CreatorId       int64
 }

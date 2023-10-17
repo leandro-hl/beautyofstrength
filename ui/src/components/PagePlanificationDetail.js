@@ -3,8 +3,10 @@ import {Button, Loader, Message, Segment} from "semantic-ui-react";
 import {listRoutines} from "../service";
 import {withRouter} from "react-router-dom";
 import {queryParam} from "../functions";
-import {MenuBar} from "./MenuBar";
+import {TopMenuBar} from "./TopMenuBar";
 import {AppContext, setData} from "../context";
+import BottomMenuBar from "./BottomMenuBar";
+import LayoutMobile from "./LayoutMobile";
 
 class PagePlanificationDetail extends Component {
     static contextType = AppContext
@@ -45,23 +47,20 @@ class PagePlanificationDetail extends Component {
         }
 
         return (
-            <>
-                <MenuBar/>
-                <Segment basic style={{paddingTop: 20}}>
-                    {
-                        !routines.length &&
-                        <Message>
-                            <Message.Header>Sin Rutinas</Message.Header>
-                            <p>Comienza agregando una rutina a tu planificacion. Usualmente una rutina es un dia de la semana.</p>
-                        </Message>
-                    }
-                    {routines.map(p => (<Segment style={{width: '100%'}} key={p.id} onClick={() => this.redirectToRoutine(p.id)}>{p.name+' '+p.id}</Segment>))}
-                    <Button.Group fluid>
-                        <Button secondary onClick={() => this.props.history.push('/professor')}>Planificaciones</Button>
-                        <Button primary onClick={() => this.redirectToCreateRoutine()}>Agregar una Rutina</Button>
-                    </Button.Group>
-                </Segment>
-            </>
+            <LayoutMobile withTopBar>
+                {
+                    !routines.length &&
+                    <Message>
+                        <Message.Header>Sin Rutinas</Message.Header>
+                        <p>Comienza agregando una rutina a tu planificacion. Usualmente una rutina es un dia de la semana.</p>
+                    </Message>
+                }
+                {routines.map(p => (<Segment style={{width: '100%'}} key={p.id} onClick={() => this.redirectToRoutine(p.id)}>{p.name+' '+p.id}</Segment>))}
+                <Button.Group fluid>
+                    <Button secondary onClick={() => this.props.history.push('/my-planifications')}>Planificaciones</Button>
+                    <Button primary onClick={() => this.redirectToCreateRoutine()}>Agregar una Rutina</Button>
+                </Button.Group>
+            </LayoutMobile>
         )
     }
 }

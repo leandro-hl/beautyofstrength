@@ -184,3 +184,39 @@ func SelectAllUserDeviceSubscriptions(db *sqlx.DB) []UserDevice {
 	db.Select(&subs, "select * from userdevice")
 	return subs
 }
+
+func GetUserCreatedTheRoutine(tx *sqlx.Tx, planificationId, routineId, userId int64) bool {
+	var des int
+	tx.Get(&des, `
+		select count(1) from userplanification up 
+		inner join routine r on up.planification_id = r.planification_id
+		where up.planification_id = $1 
+		and up.useraccount_id = $2 
+		and up.relationshiptype = 'c' 
+		and r.id = $3`, planificationId, userId, routineId)
+	return des == 1
+}
+
+func SaveUserSharingToken(tx *sqlx.Tx, planificationId, routineId, userId int64) {
+	Insert(tx, &UserSharingToken{
+		Creationdate:    time.Now(),
+		CreatorId:       &userId,
+		RoutineId:       &routineId,
+		PlanificationId: &planificationId,
+		IsValid:         util.PBool(true),
+	})
+}
+
+func InvalidateSharingTokenForRoutine(tx *sqlx.Tx, planificationId, routineId, userId int64) {
+	tx.Exec(`update usersharingtoken 
+		set isvalid = false 
+		where creator_id = $1 and routine_id=$2 and planification_id=$3`, userId, routineId, planificationId)
+}
+
+func GetUserSharingToken(tx *sqlx.Tx, planificationId, routineId, userId int64) UserSharingToken {
+	var des UserSharingToken
+	tx.Get(&des, `
+		select * from usersharingtoken 
+		where creator_id = $1 and routine_id=$2 and planification_id=$3 and isvalid=true`, planificationId, userId, routineId)
+	return des
+}

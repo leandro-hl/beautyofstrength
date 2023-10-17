@@ -4,6 +4,8 @@ import {signIn} from "../service";
 import {withRouter} from "react-router-dom";
 import {queryParam} from "../functions";
 import {AppContext} from "../context";
+import BottomMenuBar from "./BottomMenuBar";
+import LayoutMobile from "./LayoutMobile";
 
 class PageRoutineCreate extends Component {
     static contextType = AppContext
@@ -38,12 +40,12 @@ class PageRoutineCreate extends Component {
         }
 
         return (
-            <Segment basic style={{height: '100%'}}>
+            <LayoutMobile>
                 <Header as={'h3'}>
                     {routineName}
                 </Header>
                 <Button fluid onClick={() => this.redirectToCreateBlock()}>Agregar Bloque</Button>
-            </Segment>
+            </LayoutMobile>
         )
     }
 }

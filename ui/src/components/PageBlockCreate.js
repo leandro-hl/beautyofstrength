@@ -16,6 +16,7 @@ import {ExerciseListItemCircuitInterval} from "./ExerciseListItemCircuitInterval
 import {InputNumber} from "./InputNumber";
 import {ExerciseListItemCombo} from "./ExerciseListItemCombo";
 import {AppContext, setData} from "../context";
+import BottomMenuBar from "./BottomMenuBar";
 
 class PageBlockCreate extends Component {
     static contextType = AppContext
@@ -183,7 +184,7 @@ class PageBlockCreate extends Component {
                 planificationId: parseInt(planificationId,10),
                 routineId: !!routineId ? parseInt(routineId,10) : null,
                 blockName: blockName,
-                exercises: exercises.map(e => ({id:e.key, name:e.text, reps: e.reps})),
+                exercises: exercises.map(e => ({id:e.key, name:e.text, reps: parseInt(e.reps, 10)})),
                 laps: parseInt(laps, 10),
             }
             const res = await saveExerciseBlockPir(request)
@@ -487,7 +488,7 @@ class PageBlockCreate extends Component {
                             bottom: 0,
                             left: 0
                         }}>
-                            <Button secondary onClick={() => this.props.history.push('/')}>Cancelar</Button>
+                            <Button secondary onClick={() => this.props.history.push('/planification')}>Cancelar</Button>
                             <Button primary onClick={() => this.setState({showModal: true})}>Generar</Button>
                         </Button.Group>
                     </>

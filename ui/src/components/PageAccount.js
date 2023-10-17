@@ -1,12 +1,12 @@
 import React, {Component} from "react";
-import {Button, List, Loader, Segment} from "semantic-ui-react";
-import {createPlanification, listPlanifications} from "../service";
+import {List, Loader, Segment} from "semantic-ui-react";
+import {listPlanifications} from "../service";
 import {withRouter} from "react-router-dom";
 import {AppContext, setData} from "../context";
 import BottomMenuBar from "./BottomMenuBar";
 import LayoutMobile from "./LayoutMobile";
 
-class PagePlanificationList extends Component {
+class PageAccount extends Component {
     static contextType = AppContext
     state = {loading: true, planifications: []}
 
@@ -24,16 +24,6 @@ class PagePlanificationList extends Component {
         this.props.history.push('/planification')
     }
 
-    async createPlanification() {
-        try {
-            //add name, go to backend, create, redirect to planification detaiil to start adding routines.
-            const res = await createPlanification();
-            this.setState({loading: false, planifications: res.data})
-        } catch (e) {
-            console.error(e)
-        }
-    }
-
     render() {
         const {planifications} = this.state;
         const {loading} = this.state;
@@ -44,11 +34,10 @@ class PagePlanificationList extends Component {
 
         return (
             <LayoutMobile>
-                {planifications.map(p => (<Segment style={{width: '100%'}} key={p.id} onClick={() => this.redirectToPlanification(p.id)}>{p.name}</Segment>))}
-                <Button primary fluid onClick={() => this.createPlanification()}>Agregar Planificacion</Button>
+                Account
             </LayoutMobile>
         )
     }
 }
 
-export default withRouter(PagePlanificationList);
+export default withRouter(PageAccount);

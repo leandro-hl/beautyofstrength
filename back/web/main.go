@@ -16,6 +16,8 @@ type Config struct {
 	VapidPublicKey *string `json:"vapidPublicKey"`
 	//VapidPrivateKey *string `json:"vapidPrivateKey"`
 	VapidDataKey                     *string  `json:"vapidDataKey"`
+	LinkSharingKey                   *string  `json:"linkSharingKey"`
+	LinkSharingExpirationDays        *int     `json:"linkSharingExpirationDays"`
 	DatasourceName                   *string  `json:"datasourceName"`
 	AllowedOrigins                   []string `json:"allowedOrigins"`
 	Address                          *string  `json:"address"`

@@ -59,6 +59,14 @@ export function saveUserTrainedToday(payload) {
     return axios.post("saveUserTrainedToday", payload)
 }
 
+export function shareRoutine(payload) {
+    return axios.post("shareRoutine", payload)
+}
+
+export function createPlanification(payload) {
+    return axios.post("createPlanification", payload)
+}
+
 export function getUserLoadedTrainingToday() {
     return axios.get("getUserLoadedTrainingToday")
 }

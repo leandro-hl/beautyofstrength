@@ -1,7 +1,7 @@
 import React, {Component} from "react";
 import {Loader, Menu} from "semantic-ui-react";
 
-export class MenuBar extends Component {
+export class TopMenuBar extends Component {
     state = {activeItem: 'Activas'}
 
     handleItemClick = (e, { name }) => this.setState({ activeItem: name })
