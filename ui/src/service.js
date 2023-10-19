@@ -1,14 +1,31 @@
 import axios from "axios";
+import {isLocalhost} from "./functions";
 
-const host = `http://localhost:3001/api/`
+let host = `http://productionhost/api/`
+if (isLocalhost()) {
+    host = `http://localhost:3001/api/`
+    axios.defaults.headers.common['ngrok-skip-browser-warning'] = 'test'
+}
 
 axios.interceptors.request.use((config) => {
     config.baseURL = host
     return config
 })
 
+export function getUserPermissions() {
+    return axios.post("getUserPermissions")
+}
+
+export function getLocalInfo() {
+    return axios.post("getLocalInfo")
+}
+
 export function signIn(username) {
-    return axios.post("signIn", {username: username, password:'password'})
+    return axios.post("signIn", {username: username, password: 'password'})
+}
+
+export function signUp(username) {
+    return axios.post("signUp", {username: username, password: 'password'})
 }
 
 export function listPlanifications() {
@@ -16,11 +33,15 @@ export function listPlanifications() {
 }
 
 export function listRoutines(planificationId) {
-    return axios.get("listRoutines?planificationId="+planificationId)
+    return axios.get("listRoutines?planificationId=" + planificationId)
 }
 
 export function getRoutineDetails(routineId) {
-    return axios.get("getRoutineDetails?routineId="+routineId)
+    return axios.get("getRoutineDetails?routineId=" + routineId)
+}
+
+export function getSharedRoutineDetails(share) {
+    return axios.get("getRoutineDetails?share=" + share)
 }
 
 export function listExercises() {
@@ -29,6 +50,10 @@ export function listExercises() {
 
 export function saveExercisesBlock(payload) {
     return axios.post("saveExercisesBlock", payload)
+}
+
+export function saveExercisesBlockFree(payload) {
+    return axios.post("saveExercisesBlockFree", payload)
 }
 
 export function saveExercisesBlockCpt(payload) {
@@ -69,9 +94,4 @@ export function createPlanification(payload) {
 
 export function getUserLoadedTrainingToday() {
     return axios.get("getUserLoadedTrainingToday")
-}
-
-//todo: delete
-export function testPushNotificationWorks() {
-    return axios.post("testPushNotificationWorks")
 }

@@ -1,7 +1,7 @@
 import React, {Component} from "react";
 import {withRouter} from "react-router-dom";
 import {Accordion, Button, Divider, Grid, Header, Label, List, Loader, Segment, Table} from "semantic-ui-react";
-import {AppContext} from "../context";
+import {AppContext, setData} from "../context";
 import {InputNumber} from "./InputNumber";
 import {Timer} from "./Timer";
 import {ExerciseListItemCircuitInterval} from "./ExerciseListItemCircuitInterval";
@@ -20,7 +20,12 @@ class PageRoutineExecution extends Component {
 
     componentDidMount() {
         const {state: {routineDetails}} = this.context
-        console.log(routineDetails)
+        this.context.dispatch(setData({
+            noBottomBar: true,
+            secondaryActions: [
+                {func: () => this.nextBlock(), description: 'Continuar Proximo Bloque'}
+            ]
+        }))
         const currentBlockIndex = 0
         const block = routineDetails.blocks[currentBlockIndex];
         if (block.type === 'cpt') {
@@ -100,6 +105,7 @@ class PageRoutineExecution extends Component {
     componentWillUnmount() {
         const {intervalId} = this.state
         clearInterval(intervalId)
+        this.context.dispatch(setData({noBottomBar: false}))
     }
 
     renderExecuteCpt() {
@@ -290,9 +296,13 @@ class PageRoutineExecution extends Component {
         clearInterval(intervalId)
         switch (block.type) {
             case 'cpt':
-                timerRef.stop()
-                const intervals = this.loadTimer(block)
-                timerRef.start(intervals)
+                if (timerRef) {
+                    timerRef.stop()
+                    const intervals = this.loadTimer(block)
+                    timerRef.start(intervals)
+                } else {
+                    this.loadTimer(block)
+                }
                 break
             case 'amrap':
                 this.setState({reset: true})
@@ -327,13 +337,12 @@ class PageRoutineExecution extends Component {
             )
         }
         return (
-            <LayoutMobile noBottomBar>
+            <>
                 <Header as={'h3'}>{name} - {currentBlock.name}</Header>
                 <Segment style={{height: '85%'}}>
                     {this.renderExecution()}
                 </Segment>
-                <Button primary fluid onClick={() => this.nextBlock()}>Continuar</Button>
-            </LayoutMobile>
+            </>
         )
     }
 }

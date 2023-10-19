@@ -5,26 +5,41 @@ drop table if exists usertraininghistory;
 drop table if exists blockgroup;
 drop table if exists exercise;
 drop table if exists muscle;
+drop table if exists usersharingtoken;
 drop table if exists routine;
 drop table if exists planification;
 drop table if exists userdevice;
 drop table if exists useraccount;
+drop table if exists accountplan;
+
+CREATE TABLE IF NOT EXISTS accountplan
+(
+    id         INT         NOT NULL GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    name       VARCHAR(50) NOT NULL,
+    identifier CHAR  NOT NULL
+);
+
+INSERT INTO accountplan(name, identifier)
+VALUES ('Estudiante Inicial', 's'),
+       ('Estudiante Avanzado', 'z'),
+       ('Profesor', 'p');
 
 CREATE TABLE IF NOT EXISTS useraccount
 (
-    id       BIGINT      NOT NULL GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
-    name     VARCHAR(50) NOT NULL,
-    username VARCHAR(50) NOT NULL,
-    usertype CHAR        NOT NULL,
-    password VARCHAR(50) NOT NULL
+    id             BIGINT        NOT NULL GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    name           VARCHAR(50)   NOT NULL,
+    username       VARCHAR(25)   NULL,
+    email          VARCHAR(25)   NOT NULL,
+    emailverified  BOOLEAN       NOT NULL,
+    usertype       CHAR          NOT NULL,
+    password       VARCHAR(50)   NOT NULL,
+    pictureurl     VARCHAR(2048) NULL,
+    locale         VARCHAR(10)   NULL,
+    accountplan_id INT           NOT NULL REFERENCES accountplan (id)
 );
 
-INSERT INTO useraccount(name, username, usertype, password)
-VALUES ('Juan Solanilla', 'juan123', 'P', 'juan123'),
-       ('System', 'system', 'P', 'system'),
-       ('Estudiante 1', 'estudiante1_123', 'E', 'estudiante123'),
-       ('Estudiante 2', 'estudiante2_123', 'E', 'estudiante123');
-
+INSERT INTO useraccount(name, username, email, emailverified, usertype, password, pictureurl, locale, accountplan_id)
+VALUES('system', 'system', 'system@system.com', true, 'p', '', null, null, (select id from accountplan where identifier='p'));
 
 CREATE TABLE IF NOT EXISTS muscle
 (
@@ -592,10 +607,6 @@ CREATE TABLE IF NOT EXISTS planification
     name VARCHAR(30) NOT NULL
 );
 
-INSERT INTO planification (name)
-VALUES ('El Coliseo'),
-       ('Esqualo');
-
 CREATE TABLE IF NOT EXISTS routine
 (
     id               BIGINT      NOT NULL GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
@@ -631,16 +642,6 @@ CREATE TABLE IF NOT EXISTS userplanification
     useraccount_id   BIGINT NOT NULL REFERENCES useraccount (id),
     relationshiptype CHAR   NOT NULL
 );
-
-INSERT INTO userplanification(planification_id, useraccount_id, relationshiptype)
-VALUES ((select id from planification where name = 'El Coliseo'),
-        (select id from useraccount where username = 'juan123'), 'c'),
-       ((select id from planification where name = 'Esqualo'),
-        (select id from useraccount where username = 'juan123'), 'c'),
-       ((select id from planification where name = 'El Coliseo'),
-        (select id from useraccount where username = 'estudiante1_123'), 's'),
-       ((select id from planification where name = 'El Coliseo'),
-        (select id from useraccount where username = 'estudiante2_123'), 's');
 
 CREATE TABLE IF NOT EXISTS userdevice
 (

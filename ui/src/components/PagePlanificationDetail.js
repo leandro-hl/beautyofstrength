@@ -18,8 +18,15 @@ class PagePlanificationDetail extends Component {
 
     async componentDidMount() {
         try {
-            const {state: {planificationId}} = this.context
+            const {state: {planificationId, permissions: {createManyRoutines}}} = this.context
             const res = await listRoutines(planificationId);
+
+            //todo: instead of not showing it, show it disabled + popup be premium.
+            const secondaryActions = [{func: () => this.props.history.push('/my-planifications'), description: 'Planificaciones'}]
+            if (res.data.length === 0 || createManyRoutines) {
+                secondaryActions.push({func: () => this.redirectToCreateRoutine(), description: 'Agregar una Rutina'})
+            }
+            this.context.dispatch(setData({secondaryActions: secondaryActions}))
             this.setState({loading: false, routines: res.data, planificationId})
         } catch (e) {
             console.error(e)
@@ -27,7 +34,6 @@ class PagePlanificationDetail extends Component {
     }
 
     redirectToRoutine(id) {
-        const {planificationId} = this.state;
         this.context.dispatch(setData({routineId: id}))
         this.props.history.push('/routine')
     }
@@ -47,7 +53,7 @@ class PagePlanificationDetail extends Component {
         }
 
         return (
-            <LayoutMobile withTopBar>
+            <>
                 {
                     !routines.length &&
                     <Message>
@@ -56,11 +62,7 @@ class PagePlanificationDetail extends Component {
                     </Message>
                 }
                 {routines.map(p => (<Segment style={{width: '100%'}} key={p.id} onClick={() => this.redirectToRoutine(p.id)}>{p.name+' '+p.id}</Segment>))}
-                <Button.Group fluid>
-                    <Button secondary onClick={() => this.props.history.push('/my-planifications')}>Planificaciones</Button>
-                    <Button primary onClick={() => this.redirectToCreateRoutine()}>Agregar una Rutina</Button>
-                </Button.Group>
-            </LayoutMobile>
+            </>
         )
     }
 }

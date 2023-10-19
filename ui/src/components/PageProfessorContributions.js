@@ -33,9 +33,9 @@ class PageProfessorContributions extends Component {
         }
 
         return (
-            <LayoutMobile>
+            <>
                 PageProfessorContributions
-            </LayoutMobile>
+            </>
         )
     }
 }

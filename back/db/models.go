@@ -2,6 +2,21 @@ package db
 
 import "time"
 
+type UserPlanificationRelationshipType rune
+
+const (
+	Creator UserPlanificationRelationshipType = 'c'
+	Student UserPlanificationRelationshipType = 's'
+)
+
+type AccountPlanType rune
+
+const (
+	Professor      AccountPlanType = 'p'
+	StudentFree    AccountPlanType = 's'
+	StudentPremium AccountPlanType = 'z'
+)
+
 type Planification struct {
 	Id   *int    `json:"id"`
 	Name *string `json:"name"`
@@ -40,12 +55,23 @@ type ExerciseBlockGroup struct {
 	Secs         *int   `json:"secs"`
 }
 
+type AccountPlan struct {
+	Id         *int    `json:"id"`
+	Name       *string `json:"name"`
+	Identifier *string `json:"identifier"`
+}
+
 type UserAccount struct {
-	Id       *int64  `json:"id"`
-	Name     *string `json:"name"`
-	Username *string `json:"username"`
-	UserType *rune   `json:"usertype"`
-	Password *string `json:"password"`
+	Id            *int64  `json:"id"`
+	Name          *string `json:"name"`
+	Username      *string `json:"username"`
+	Email         *string `json:"email"`
+	EmailVerified *bool   `json:"emailverified"`
+	UserType      *string `json:"usertype"`
+	Password      *string `json:"password"`
+	PictureUrl    *string `json:"pictureurl"`
+	Locale        *string `json:"locale"`
+	AccountPlanId *int    `json:"accountplan_id"`
 }
 
 type UserDevice struct {
@@ -60,6 +86,13 @@ type UserTrainingHistory struct {
 	Date          time.Time `json:"date"`
 	Answer        *bool     `json:"answer"`
 	UserAccountId *int64    `json:"useraccount_id"`
+}
+
+type UserPlanification struct {
+	Id               *int64  `json:"id"`
+	PlanificationId  *int64  `json:"planification_id"`
+	UserAccountId    *int64  `json:"useraccount_id"`
+	RelationshipType *string `json:"relationshiptype"`
 }
 
 type WebPushNotificationSubscription struct {

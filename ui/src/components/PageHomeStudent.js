@@ -5,14 +5,22 @@ import {getUserLoadedTrainingToday, signIn} from "../service";
 import {ModalEnableNotifications} from "./ModalEnableNotifications";
 import {withRouter} from "react-router-dom";
 import LayoutMobile from "./LayoutMobile";
+import {AppContext, setData} from "../context";
 
-class HomeStudent extends Component {
+class PageHomeStudent extends Component {
+    static contextType = AppContext
     state = {loadedTrainingToday: false, loading: true}
 
     async componentDidMount() {
-        await signIn('estudiante123');
-        const res = await getUserLoadedTrainingToday()
-        this.setState({loadedTrainingToday: res.data.loaded, loading: false})
+        try {
+            this.context.dispatch(setData({noBottomBar: false}))
+            const res = await getUserLoadedTrainingToday()
+            this.setState({loadedTrainingToday: res.data.loaded, loading: false})
+        } catch (e) {
+            console.error(e)
+        } finally {
+            this.setState({loading: false})
+        }
     }
 
     render() {
@@ -23,15 +31,15 @@ class HomeStudent extends Component {
         }
 
         return (
-            <LayoutMobile>
+            <>
                 <ModalEnableNotifications onSubscribed={() => this.setState({showSecondModal: true})}/>
                 {
                     showSecondModal && !loadedTrainingToday  &&
                     <ModalHaveTrained/>
                 }
-            </LayoutMobile>
+            </>
         )
     }
 }
 
-export default withRouter(HomeStudent);
+export default withRouter(PageHomeStudent);

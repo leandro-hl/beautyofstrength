@@ -4,8 +4,17 @@ body {
   background-color: #333333;
 }
 
-body > div {
+@media (min-width: 600px) {
+  body {
+    display: flex;
+    justify-content: center;
+  }
+}
+
+body > div#root {
   height: 100%;
+  max-width: 600px;
+  width: 100%;
 }
 
 .App {
@@ -28,6 +37,39 @@ body > div {
   right: 0px !important;
   top: 15px !important;
   font-size: 2em !important;
+}
+
+.list-item-icon-input-top-right {
+  position: absolute !important;
+  right: -8px !important;
+  top: 6px !important;
+  font-size: 1.4em !important;
+}
+
+.chevron-up-icon-stacked {
+  position: absolute !important;
+  right: -10px !important;
+  top: 30px !important;
+  font-size: 1.6em !important;
+}
+
+.chevron-down-icon-stacked {
+  position: absolute !important;
+  right: -10px !important;
+  top: 49px !important;
+  font-size: 1.6em !important;
+}
+
+.button-bottom-bar {
+  background-color: #3c3c3c !important;
+  color: #f9d118 !important;
+  box-shadow: unset !important;
+}
+
+.button-bottom-bar-selected {
+  background-color: #f9d118 !important;
+  color: #3c3c3c !important;
+  box-shadow: unset !important;
 }
 
 /*todo: how to use theme here?*/
@@ -143,4 +185,26 @@ body > div {
 
 .segment-basic-header {
   color: #212121 !important;
+}
+
+/*HIDE SCROLLBAR*/
+/* For the container that you want to have horizontal scrolling */
+.scrolling-no-scrollbar {
+  /* Hide default scrollbar across different browsers */
+  overflow-x: scroll !important;
+  scrollbar-width: none !important; /* Firefox */
+  -ms-overflow-style: none !important; /* Internet Explorer and Edge */
+}
+
+/* Hide scrollbar for Chrome, Safari */
+.scrolling-no-scrollbar::-webkit-scrollbar {
+  display: none !important;
+}
+
+.ui.search.dropdown .menu {
+  max-height: 14.3em !important;
+}
+
+div#g_id_onload, div.g_id_signin {
+  width: 100%;
 }

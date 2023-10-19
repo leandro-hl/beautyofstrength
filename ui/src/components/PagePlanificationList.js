@@ -1,5 +1,5 @@
 import React, {Component} from "react";
-import {Button, List, Loader, Segment} from "semantic-ui-react";
+import {Button, Input, List, Loader, Modal, Segment} from "semantic-ui-react";
 import {createPlanification, listPlanifications} from "../service";
 import {withRouter} from "react-router-dom";
 import {AppContext, setData} from "../context";
@@ -12,6 +12,14 @@ class PagePlanificationList extends Component {
 
     async componentDidMount() {
         try {
+            const {state: {permissions: {createPlanification}}} = this.context
+            if (createPlanification) {
+                this.context.dispatch(setData({secondaryActions: [
+                        {func: () => this.setState({showCreatePlanificationModal: true}), description: 'Agregar Planificacion'}
+                    ]}))
+            } else {
+                this.context.dispatch(setData({secondaryActions: []}))
+            }
             const res = await listPlanifications();
             this.setState({loading: false, planifications: res.data})
         } catch (e) {
@@ -26,15 +34,50 @@ class PagePlanificationList extends Component {
 
     async createPlanification() {
         try {
-            //add name, go to backend, create, redirect to planification detaiil to start adding routines.
-            const res = await createPlanification();
-            this.setState({loading: false, planifications: res.data})
+            const {newPlanificationName} = this.state
+            const res = await createPlanification({name: newPlanificationName});
+            this.redirectToPlanification(res.data.id)
         } catch (e) {
             console.error(e)
         }
     }
 
+    onNewPlanificationName(value) {
+        this.setState({newPlanificationName: value})
+    }
+
+    async handleConfirm() {
+        this.handleClose();
+        await this.createPlanification()
+    }
+
+    handleClose = () => {
+        this.setState({ showCreatePlanificationModal: false });
+    }
+
+    renderCreatePlanificationModal() {
+        const {showCreatePlanificationModal} = this.state
+        return (
+            <Modal
+                open={showCreatePlanificationModal}
+                size={"tiny"}
+            >
+                <Modal.Header>
+                    Crear Planificacion
+                </Modal.Header>
+                <Modal.Content>
+                    <Input fluid placeholder='Nombre' onChange={(e, {value}) => this.onNewPlanificationName(value)} />
+                </Modal.Content>
+                <Modal.Actions>
+                    <Button secondary onClick={() => this.handleClose()}>Cancelar</Button>
+                    <Button primary onClick={() => this.handleConfirm()}>Crear Planificacion</Button>
+                </Modal.Actions>
+            </Modal>
+        )
+    }
+
     render() {
+        const {state: {permissions: {createPlanification}}} = this.context
         const {planifications} = this.state;
         const {loading} = this.state;
 
@@ -43,10 +86,10 @@ class PagePlanificationList extends Component {
         }
 
         return (
-            <LayoutMobile>
+            <>
                 {planifications.map(p => (<Segment style={{width: '100%'}} key={p.id} onClick={() => this.redirectToPlanification(p.id)}>{p.name}</Segment>))}
-                <Button primary fluid onClick={() => this.createPlanification()}>Agregar Planificacion</Button>
-            </LayoutMobile>
+                {createPlanification && this.renderCreatePlanificationModal()}
+            </>
         )
     }
 }

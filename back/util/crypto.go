@@ -5,6 +5,7 @@ import (
 	"crypto/cipher"
 	"crypto/rand"
 	"encoding/hex"
+	"github.com/golang-jwt/jwt/v5"
 	"io"
 )
 
@@ -62,4 +63,15 @@ func Decrypt(cipherText string, key []byte) (string, error) {
 	}
 
 	return string(plainBytes), nil
+}
+
+type GoogleAuthClaims struct {
+	Email         string `json:"email"`
+	EmailVerified bool   `json:"email_verified"`
+	Name          string `json:"name"`
+	PictureUrl    string `json:"picture"`
+	Locale        string `json:"locale"`
+	FamilyName    string `json:"family_name"`
+	GivenName     string `json:"given_name"`
+	jwt.RegisteredClaims
 }

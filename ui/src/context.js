@@ -1,5 +1,7 @@
 import {createContext, useContext, useEffect, useReducer, useState} from "react";
 import axios from "axios";
+import {isLocalhost} from "./functions";
+import {useHistory} from "react-router-dom";
 
 export const ACTIONS = {
     DATA: "DATA"
@@ -13,8 +15,13 @@ export function setValidationError(error) {
 }
 
 const initialState = {
+    permissions: {},
+    noBottomBar: true,
+    withTopBar: false,
     planificationId: null,
     routineId: null,
+    noMenu: true,
+    secondaryActions: [],
     routineDetails: {
         name: '',
         blocks: [],
@@ -76,15 +83,18 @@ function RegisterServiceWorkers({children}) {
 
 function ResponseInterceptor({children}) {
     const {dispatch} = useContext(AppContext)
+    const history = useHistory();
 
     axios.interceptors.response.use(
         (r) => { return r },
         err => {
             if (err.response.status === 400) {
                 dispatch(setValidationError(err.response.data.errors))
+            } else if (err.response.status === 401) {
+                dispatch(setData({auth_token: null, noMenu: true, secondaryActions:[]}))
+                history?.push('/signin');
             }
-
-            return Promise.reject(err);
+            console.error(err)
         }
     )
 

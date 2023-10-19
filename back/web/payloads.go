@@ -29,6 +29,16 @@ type SaveExercisesBlockCptRequest struct {
 	RestingInteval  *int              `json:"restingInteval"`
 }
 
+type SaveExercisesBlockFreeRequest struct {
+	RoutineId         *int64            `json:"routineId"`
+	PlanificationId   *int64            `json:"planificationId"`
+	Exercises         []ExerciseRequest `json:"exercises"`
+	Laps              *int              `json:"laps"`
+	BlockName         *string           `json:"blockName"`
+	RestingInteval    *int              `json:"restingInteval"`
+	ExeRestingInteval *int              `json:"exeRestingInteval"`
+}
+
 type SaveExercisesBlockAmrapRequest struct {
 	RoutineId       *int64            `json:"routineId"`
 	PlanificationId *int64            `json:"planificationId"`
@@ -73,6 +83,7 @@ type ExerciseRequest struct {
 	Id   *int    `json:"id"`
 	Name *string `json:"name"`
 	Reps *int    `json:"reps"`
+	Type *string `json:"type"`
 }
 
 type RestingTime struct {
@@ -119,4 +130,20 @@ type ShareEncrypted struct {
 	RoutineId       int64
 	PlanificationId int64
 	CreatorId       int64
+}
+
+type CreatePlanificationRequest struct {
+	Name *string `json:"name"`
+}
+
+type CreatePlanificationResponse struct {
+	Id *int64 `json:"id"`
+}
+
+type GoogleSignInRequest struct {
+	ClientId  *string `json:"clientId"`
+	ClientId2 *string `json:"client_id"`
+	JWTToken  *string `json:"credential"`
+	SelectBy  *string `json:"select_by"`
+	CSRFToken *string `json:"g_csrf_token"`
 }

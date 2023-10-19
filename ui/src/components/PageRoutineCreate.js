@@ -3,7 +3,7 @@ import {Button, Divider, Dropdown, Grid, Header, Icon, Input, Label, List, Loade
 import {signIn} from "../service";
 import {withRouter} from "react-router-dom";
 import {queryParam} from "../functions";
-import {AppContext} from "../context";
+import {AppContext, setData} from "../context";
 import BottomMenuBar from "./BottomMenuBar";
 import LayoutMobile from "./LayoutMobile";
 
@@ -17,8 +17,11 @@ class PageRoutineCreate extends Component {
     async componentDidMount() {
         try {
             const {state: {routineNumber, planificationId}} = this.context
+            this.context.dispatch(setData({secondaryActions: [
+                    {func: () => this.redirectToPlanification(), description: 'Rutinas'},
+                    {func: () => this.redirectToCreateBlock(), description: 'Agregar Bloque'}
+                ]}))
             this.setState({loading: true})
-            await signIn('juan123')
             this.setState({planificationId: planificationId, routineName: 'Dia '+routineNumber, routineNumber})
         } catch (e) {
             console.error(e)
@@ -28,8 +31,11 @@ class PageRoutineCreate extends Component {
     }
 
     redirectToCreateBlock() {
-        const {planificationId,routineNumber} = this.state;
         this.props.history.push('/block/create')
+    }
+
+    redirectToPlanification() {
+        this.props.history.push('/planification')
     }
 
     render() {
@@ -40,12 +46,11 @@ class PageRoutineCreate extends Component {
         }
 
         return (
-            <LayoutMobile>
+            <>
                 <Header as={'h3'}>
                     {routineName}
                 </Header>
-                <Button fluid onClick={() => this.redirectToCreateBlock()}>Agregar Bloque</Button>
-            </LayoutMobile>
+            </>
         )
     }
 }

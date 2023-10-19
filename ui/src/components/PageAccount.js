@@ -33,9 +33,9 @@ class PageAccount extends Component {
         }
 
         return (
-            <LayoutMobile>
+            <>
                 Account
-            </LayoutMobile>
+            </>
         )
     }
 }

@@ -7,13 +7,15 @@ import {withRouter} from "react-router-dom";
 import PagePlanificationList from "./PagePlanificationList";
 import BottomMenuBar from "./BottomMenuBar";
 import LayoutMobile from "./LayoutMobile";
+import {AppContext, setData} from "../context";
 
-class HomeProfessor extends Component {
+class PageHomeProfessor extends Component {
+    static contextType = AppContext
     state = {loading: true, planifications: []}
 
     async componentDidMount() {
         try {
-            await signIn('juan123');
+            this.context.dispatch(setData({noBottomBar: false}))
         } catch (e) {
             console.error(e)
         } finally {
@@ -29,11 +31,11 @@ class HomeProfessor extends Component {
         }
 
         return (
-            <LayoutMobile>
+            <>
                 HOME MOSTRAR HJOME
-            </LayoutMobile>
+            </>
         )
     }
 }
 
-export default withRouter(HomeProfessor);
+export default withRouter(PageHomeProfessor);

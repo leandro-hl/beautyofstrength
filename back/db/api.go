@@ -24,7 +24,7 @@ func ListPlanifications(tx *sqlx.Tx, userId int64) []Planification {
 	return dest
 }
 
-func GetRoutineDetails(tx *sqlx.Tx, routineId int64) []GetRoutineDetailsQuery {
+func GetRoutineDetails(tx *sqlx.Tx, routineId int64, userId int64) []GetRoutineDetailsQuery {
 	dest := make([]GetRoutineDetailsQuery, 0)
 
 	err := tx.Select(&dest, `
@@ -42,11 +42,13 @@ func GetRoutineDetails(tx *sqlx.Tx, routineId int64) []GetRoutineDetailsQuery {
 			eb.secs,
 			e.name exercisename
 			from routine r
+		inner join planification p on p.id = r.planification_id
+		inner join userplanification u on r.planification_id = u.planification_id
 		left join blockgroup b on r.id = b.routine_id
 		left join exerciseblockgroup eb on b.id = eb.blockgroup_id
 		left join exercise e on e.id = eb.exercise_id
-		where r.id=$1
-		order by b.id, eb.id;`, routineId)
+		where r.id=$1 and u.useraccount_id=$2
+		order by b.id, eb.id;`, routineId, userId)
 	util.Check(err)
 
 	return dest
@@ -67,10 +69,8 @@ func ListRoutines(tx *sqlx.Tx, planificationId int64) []Routine {
 
 func ListExercises(tx *sqlx.Tx) []ListExercise {
 	var dest []ListExercise
-
 	err := tx.Select(&dest, `SELECT e.id, e.name, u.name as createdbyuser FROM exercise e inner join useraccount u on u.id = e.createdbyuser_id  ORDER BY e.name`)
 	util.Check(err)
-
 	return dest
 }
 
@@ -80,12 +80,36 @@ func CountRoutinesInPlanification(tx *sqlx.Tx, planificationId int64) *int {
 	return &des
 }
 
+func CreateUserAccount(tx *sqlx.Tx, user *UserAccount) *int64 {
+	id := Insert(
+		tx,
+		user)
+	return id
+}
+
 func CreateRoutine(tx *sqlx.Tx, name string, planificationId int64) *int64 {
 	id := Insert(
 		tx,
 		&Routine{
 			Name:            &name,
 			PlanificationId: &planificationId,
+		})
+	return id
+}
+
+func CreatePlanification(tx *sqlx.Tx, userId int64, name string) *int64 {
+	id := Insert(
+		tx,
+		&Planification{
+			Name: &name,
+		})
+
+	Insert(
+		tx,
+		&UserPlanification{
+			PlanificationId:  id,
+			UserAccountId:    &userId,
+			RelationshipType: util.PString(string(Creator)),
 		})
 	return id
 }
@@ -165,11 +189,53 @@ func GetUserLoadedTrainingToday(tx *sqlx.Tx, userId int64) bool {
 	return lastYear == year && lastMonth == month && lastDay == day
 }
 
+func CalculateUserOwnsPlanification(tx *sqlx.Tx, userId, planificationId int64) bool {
+	var des int
+	tx.Get(&des, "select count(1) from userplanification where useraccount_id=$1 and planification_id=$2", userId, planificationId)
+	return des > 0
+}
+
+func CalculateUserOwnsRoutine(tx *sqlx.Tx, userId, planificationId, routineId int64) bool {
+	var des int
+	tx.Get(&des, `select count(1) from userplanification 
+    inner join routine r on userplanification.planification_id = r.planification_id 
+	where useraccount_id=$1 and planification_id=$2 and r.id=$3`, userId, planificationId, routineId)
+	return des > 0
+}
+
+func CalculateRoutineBlocksAmount(tx *sqlx.Tx, routineId int64) int {
+	var des int
+	tx.Get(&des, `select count(1) from blockgroup where routine_id=$1`, routineId)
+	return des
+}
+
 func GetUserIdByUserName(tx *sqlx.Tx, userName string) int64 {
 	var userId int64
 	err := tx.Get(&userId, "select id from useraccount where username=$1", userName)
 	util.Check(err)
 	return userId
+}
+
+func GetUserIdByUserNameNoError(tx *sqlx.Tx, userName string) *int64 {
+	var userId *int64
+	tx.Get(&userId, "select id from useraccount where username=$1", userName)
+	return userId
+}
+
+func GetAccountPlanIdByIdentifier(tx *sqlx.Tx, iden AccountPlanType) *int {
+	var id *int
+	tx.Get(&id, "select id from accountplan where identifier=$1", string(iden))
+	return id
+}
+
+func GetAccountPlanIdentifierByUserId(tx *sqlx.Tx, userId int64) *AccountPlanType {
+	var des string
+	tx.Get(&des, `
+		select identifier from accountplan
+		inner join useraccount u on accountplan.id = u.accountplan_id
+	    where u.id=$1`, userId)
+	id := AccountPlanType(des[0])
+	return &id
 }
 
 func RetrieveUserDeviceNotifationSubscription(tx *sqlx.Tx, userId int64, deviceName string) string {

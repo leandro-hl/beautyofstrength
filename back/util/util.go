@@ -13,6 +13,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"runtime/debug"
 	"strconv"
 	"strings"
 	"time"
@@ -48,12 +49,6 @@ func FlagBool(name string, value bool, usage string) *bool {
 		flag.BoolVar(&p, name, value, usage)
 	}
 	return &p
-}
-
-func CheckErr(err error) {
-	if err != nil {
-		panic(err)
-	}
 }
 
 //
@@ -115,47 +110,47 @@ func FileExists(name string) bool {
 
 func LoadConfig(path string, config interface{}) {
 	abs, err := filepath.Abs(path)
-	CheckErr(err)
+	Check(err)
 	bytes, err := os.ReadFile(abs)
-	CheckErr(err)
+	Check(err)
 	err = json.Unmarshal(bytes, config)
-	CheckErr(err)
+	Check(err)
 }
 
 func ParseInt(s string) int64 {
 	i, err := strconv.ParseInt(s, 10, 64)
-	CheckErr(err)
+	Check(err)
 	return i
 }
 
 func ParseFloat(s string) float64 {
 	i, err := strconv.ParseFloat(s, 64)
-	CheckErr(err)
+	Check(err)
 	return i
 }
 
 func ParseBool(s string) bool {
 	b, err := strconv.ParseBool(s)
-	CheckErr(err)
+	Check(err)
 	return b
 }
 
 func JsonDecode(i interface{}, r io.Reader) interface{} {
 	err := json.NewDecoder(r).Decode(i)
-	CheckErr(err)
+	Check(err)
 	return i
 }
 
 func JsonEncode(i interface{}, w io.Writer) {
 	err := json.NewEncoder(w).Encode(i)
-	CheckErr(err)
+	Check(err)
 }
 
 func JsonPretty(i interface{}, w io.Writer) {
 	encoder := json.NewEncoder(w)
 	encoder.SetIndent("", "    ")
 	err := encoder.Encode(i)
-	CheckErr(err)
+	Check(err)
 }
 
 func RoundTo2Dec(value float32) float32 {
@@ -163,8 +158,21 @@ func RoundTo2Dec(value float32) float32 {
 	return float32(math.Round(value64*100) / 100)
 }
 
+func PBool(o bool) *bool {
+	return &o
+}
+
+func PUint(o uint) *uint {
+	return &o
+}
+
 func PString(s string) *string {
 	return &s
+}
+
+func PRune(s rune) *string {
+	a := string(s)
+	return &a
 }
 
 func PStringf(s string, values ...interface{}) *string {
@@ -231,9 +239,9 @@ func ValidateExecutable(hash string) {
 
 func HashExecutable() string {
 	spec, err := os.Executable()
-	CheckErr(err)
+	Check(err)
 	executable, err := os.ReadFile(spec)
-	CheckErr(err)
+	Check(err)
 	hasher := sha256.New()
 	hasher.Write(executable)
 	sum := hasher.Sum(nil)
@@ -267,4 +275,18 @@ func GenerateSessionID() (string, error) {
 
 func UserId(r *http.Request) int64 {
 	return r.Context().Value("userId").(int64)
+}
+
+func Check(err error) {
+	if err != nil {
+		fmt.Println(string(debug.Stack()))
+		panic(err)
+	}
+}
+
+func CheckNoPanic(err error) {
+	if err != nil {
+		fmt.Println(string(debug.Stack()))
+		fmt.Println(err)
+	}
 }

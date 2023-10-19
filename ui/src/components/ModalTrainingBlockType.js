@@ -8,6 +8,7 @@ export class ModalTrainingBlockType extends Component {
 
         this.state = {
             types: [
+                {id: 'free', name: 'LIBRE'},
                 {id: 'cpt', name: 'CIRCUITO POR INTERVALOS'},
                 {id: 'amrap', name: 'AMRAP'},
                 {id: 'cbo', name: 'COMBO'},
@@ -15,9 +16,6 @@ export class ModalTrainingBlockType extends Component {
                 {id: 'emom', name: 'EMOM'},
                 {id: 'hiit', name: 'HIIT'},
                 {id: 'drop', name: 'DROP SET'},
-                {id: 'free', name: 'LIBRE'},
-                //permite cargar una lista de ejercicios con repeticiones o segundos de laburo +
-                //tiempo de descanso entre ejercicios + tiempo de descanso entre vueltas + cantidad de vueltas + duracion general.
             ]
         }
     }
@@ -36,7 +34,7 @@ export class ModalTrainingBlockType extends Component {
 
     render() {
         const {types} = this.state;
-        const disabled = (p) => (p.id !== 'cpt' && p.id !== 'amrap' && p.id !== 'cbo' && p.id !== 'pir')
+        const disabled = (p) => (p.id !== 'cpt' && p.id !== 'amrap' && p.id !== 'cbo' && p.id !== 'pir' && p.id !== 'free')
         return (
             <Modal dimmer={'blurring'} size="mini" open={this.props.showModal} onClose={() => this.handleClose()}>
                 <Modal.Header>Elegi el tipo de bloque</Modal.Header>

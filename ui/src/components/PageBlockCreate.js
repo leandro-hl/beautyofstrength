@@ -7,7 +7,7 @@ import {
     saveExercisesBlock,
     saveExercisesBlockAmrap,
     saveExercisesBlockCombo,
-    saveExercisesBlockCpt,
+    saveExercisesBlockCpt, saveExercisesBlockFree,
     signIn
 } from "../service";
 import {withRouter} from "react-router-dom";
@@ -17,6 +17,7 @@ import {InputNumber} from "./InputNumber";
 import {ExerciseListItemCombo} from "./ExerciseListItemCombo";
 import {AppContext, setData} from "../context";
 import BottomMenuBar from "./BottomMenuBar";
+import {ExerciseListItemFree} from "./ExerciseListItemFree";
 
 class PageBlockCreate extends Component {
     static contextType = AppContext
@@ -41,8 +42,11 @@ class PageBlockCreate extends Component {
     async componentDidMount() {
         try {
             const {state: {planificationId, routineId, routineDetails: {nextBlockNumber}}} = this.context
+            this.context.dispatch(setData({secondaryActions: [
+                    {func: () => this.props.history.push('/routine/create'), description: 'Cancelar'},
+                    {func: () => this.setState({showModal: true}), description: 'Generar'}
+                ]}))
             this.setState({loading: true})
-            await signIn('juan123')
             const res = await listExercises()
             let biggerId = 0
             for (let i = 0; i < res.data.length; i++) {
@@ -63,25 +67,27 @@ class PageBlockCreate extends Component {
         }
     }
 
-    saveExerciseV1(i, reps) {
+    componentWillUnmount() {
+        this.context.dispatch(setData({secondaryActions: []}))
+    }
+
+    saveExercise(i, reps, goNext) {
         const {exercises} = this.state
         const index = exercises.indexOf(i)
         exercises[index].reps = reps
 
-        this.setState({exercises})
-        if (this.dropdownRef.current) {
-            const inputElement = this.dropdownRef.current.querySelector('input');
-            if (inputElement) {
-                inputElement.focus();
-            }
+        if (goNext) {
+            this.setState({exercises, next: index+1})
+        } else {
+            this.setState({exercises, next: index})
         }
     }
 
-    saveExercise(i, reps) {
+    onIntervalSelected(i, val) {
         const {exercises} = this.state
         const index = exercises.indexOf(i)
-        exercises[index].reps = reps
-        this.setState({exercises, next: index+1})
+        exercises[index].type = val
+        this.setState({exercises})
     }
 
     handleExerciseSelection = (e, input) => {
@@ -124,6 +130,31 @@ class PageBlockCreate extends Component {
                 restingInteval: parseInt(restingInteval, 10)
             }
             const res = await saveExercisesBlockCpt(request)
+            this.redirectToParentRoutine(res.data.routineId)
+        } catch (e) {
+            console.log(e)
+        }
+    }
+
+    async saveExercisesBlockFree() {
+        try {
+            const {exercises, laps, exeRestingInteval, restingInteval, blockName, planificationId, routineId} = this.state
+            this.setState({saving: true})
+
+            if(!exeRestingInteval || !restingInteval || !laps) {
+                //todo required validation.
+            }
+
+            const request = {
+                planificationId: parseInt(planificationId,10),
+                routineId: !!routineId ? parseInt(routineId,10) : null,
+                blockName: blockName,
+                exercises: exercises.map(e => ({id:e.key, name:e.text, reps: parseInt(e.reps, 10), type: e.type})),
+                laps: parseInt(laps, 10),
+                restingInteval: parseInt(restingInteval, 10),
+                exeRestingInteval: parseInt(exeRestingInteval, 10)
+            }
+            const res = await saveExercisesBlockFree(request)
             this.redirectToParentRoutine(res.data.routineId)
         } catch (e) {
             console.log(e)
@@ -232,14 +263,37 @@ class PageBlockCreate extends Component {
             defaultPiramidSeries
         } = this.state;
 
-        if (id === 'pir') {
-            exercisesBuffer.splice(1)
-            exercisesBuffer[0].reps = defaultPiramidTop
-            for (let i = 1; i < defaultPiramidSeries; i++) {
-                exercisesBuffer.push({...exercisesBuffer[0], reps: exercisesBuffer[i-1].reps-defaultIncrementPerSerie})
-            }
+        const secondaryActions = [
+            {func: () => this.props.history.goBack(), description: 'Cancelar'},
+            {func: () => this.saveExercisesBlock(), description: 'Guardar'},
+        ]
+
+        switch (id) {
+            case 'free':
+                secondaryActions[1].func = () => this.saveExercisesBlockFree()
+                break
+            case 'cpt':
+                secondaryActions[1].func = () => this.saveExercisesBlockCpt()
+                break
+            case 'amrap':
+                secondaryActions[1].func = () => this.saveExercisesBlockAmrap()
+                break
+            case 'cbo':
+                secondaryActions[1].func = () => this.saveExercisesBlockCombo()
+                break
+            case 'pir':
+                secondaryActions[1].func = () => this.saveExerciseBlockPir()
+                exercisesBuffer.splice(1)
+                exercisesBuffer[0].reps = defaultPiramidTop
+                for (let i = 1; i < defaultPiramidSeries; i++) {
+                    exercisesBuffer.push({...exercisesBuffer[0], reps: exercisesBuffer[i-1].reps-defaultIncrementPerSerie})
+                }
+                break
+            default:
+                console.error('invalid or unsupported block type')
         }
 
+        this.context.dispatch(setData({secondaryActions: secondaryActions}))
         this.setState({showModal: false, blockType: id, exercises: [...exercisesBuffer], exercisesBuffer: [], blockName: blockName+': '+name})
     }
 
@@ -287,6 +341,37 @@ class PageBlockCreate extends Component {
         const {blockType, lapRestDefault, exercises, next, currentSelectedIndex} = this.state;
 
         switch (blockType) {
+            case 'free':
+                return (
+                    <>
+                        <List>
+                            {
+                                exercises.map((i, index) => {
+                                    return (<ExerciseListItemFree
+                                        key={index}
+                                        item={i}
+                                        focus={index===next}
+                                        selected={currentSelectedIndex === index}
+                                        finished={(reps, goNext) => this.saveExercise(i, reps, goNext)}
+                                        onRepeat={(item) => this.repeatExercise(item)}
+                                        moveUp={() => this.moveUp(index)}
+                                        moveDown={() => this.moveDown(index)}
+                                        onIntervalSelected={(val) => this.onIntervalSelected(i,val)}
+                                    />)
+                                })
+                            }
+                        </List>
+                        <Divider hidden/>
+                        <Segment textAlign='center'>
+                            <Divider horizontal>Rondas</Divider>
+                            <InputNumber large onChange={({amount}) => this.setState({laps: amount, next: null})}/>
+                            <Divider horizontal>Descanso Entre Rondas</Divider>
+                            <InputNumber large onChange={({amount}) => this.setState({restingInteval: amount, next: null})}/>
+                            <Divider horizontal>Descanso Entre Ejercicios</Divider>
+                            <InputNumber large onChange={({amount}) => this.setState({exeRestingInteval: amount, next: null})}/>
+                        </Segment>
+                    </>
+                )
             case 'cpt':
                 return (
                     <>
@@ -316,12 +401,8 @@ class PageBlockCreate extends Component {
                                 <Divider vertical>X</Divider>
                             </Segment>
                             <Divider horizontal>Rondas</Divider>
-                            <InputNumber large onChange={({amount}) => this.setState({laps: amount})}/>
+                            <InputNumber large onChange={({amount}) => this.setState({laps: amount, next: null})}/>
                         </Segment>
-                        <Button.Group fluid>
-                            <Button secondary onClick={() => this.props.history.goBack()}>Cancelar</Button>
-                            <Button primary onClick={() => this.saveExercisesBlockCpt()}>Guardar</Button>
-                        </Button.Group>
                     </>
                 )
             case 'amrap':
@@ -338,10 +419,6 @@ class PageBlockCreate extends Component {
                         <Segment textAlign='center'>
                             <InputNumber label={'Duracion (Minutos)'} minutes large onChange={({amount}) => this.setState({blockDuration: amount})}/>
                         </Segment>
-                        <Button.Group fluid>
-                            <Button secondary onClick={() => this.props.history.goBack()}>Cancelar</Button>
-                            <Button primary onClick={() => this.saveExercisesBlockAmrap()}>Guardar</Button>
-                        </Button.Group>
                     </>
                 )
             case 'cbo':
@@ -364,12 +441,8 @@ class PageBlockCreate extends Component {
                         <Divider hidden/>
                         <Segment textAlign='center'>
                             <Divider horizontal>Rondas</Divider>
-                            <InputNumber large onChange={({amount}) => this.setState({laps: amount})}/>
+                            <InputNumber large onChange={({amount}) => this.setState({laps: amount, next: null})}/>
                         </Segment>
-                        <Button.Group fluid>
-                            <Button secondary onClick={() => this.props.history.goBack()}>Cancelar</Button>
-                            <Button primary onClick={() => this.saveExercisesBlockCombo()}>Guardar</Button>
-                        </Button.Group>
                     </>
                 )
             case 'pir':
@@ -391,12 +464,8 @@ class PageBlockCreate extends Component {
                         <Divider hidden/>
                         <Segment textAlign='center'>
                             <Divider horizontal>Rondas</Divider>
-                            <InputNumber large onChange={({amount}) => this.setState({laps: amount})}/>
+                            <InputNumber large onChange={({amount}) => this.setState({laps: amount, next: null})}/>
                         </Segment>
-                        <Button.Group fluid>
-                            <Button secondary onClick={() => this.props.history.goBack()}>Cancelar</Button>
-                            <Button primary onClick={() => this.saveExerciseBlockPir()}>Guardar</Button>
-                        </Button.Group>
                     </>
                 )
             default:
@@ -409,7 +478,6 @@ class PageBlockCreate extends Component {
                                 })
                             }
                         </List>
-                        <RestInput default={lapRestDefault} type={'lapRest'} onChange={(type, obj) => this.restUpdate(type, obj)}/>
                     </>
                 )
         }
@@ -444,14 +512,19 @@ class PageBlockCreate extends Component {
 
     editBlock() {
         const {defaultBlockName, exercises} = this.state
+        this.context.dispatch(setData({secondaryActions: [
+                {func: () => this.props.history.push('/routine/create'), description: 'Cancelar'},
+                {func: () => this.setState({showModal: true}), description: 'Generar'}
+            ]}))
         this.setState({blockType: null, blockName: defaultBlockName, exercises: [], exercisesBuffer: [...exercises]})
     }
 
     render() {
+        const {state: {permissions: {createNewExercises}}} = this.context
         const {blockType, exerciseOptions, exercisesBuffer, blockName, showModal} = this.state;
 
         return (
-            <Segment basic style={{height: '100%'}}>
+            <>
                 <Header as={'h3'}>
                     {blockName}
                     {blockType && <Icon name={'edit outline'} className={'header-icon'} onClick={() => this.editBlock()}/>}
@@ -459,43 +532,37 @@ class PageBlockCreate extends Component {
                 {
                     !blockType &&
                     <>
-                        <Message>
-                            <b>No encontras un ejercicio? Agregalo haciendo click en "Agregar"</b>
-                            <br/><br/>Necesitas repetir un ejercicio? Podes hacerlo una vez generado el bloque. (Combos)
-                        </Message>
-                        <div ref={this.dropdownRef}>
-                            <Dropdown
-                                placeholder='Elegi los ejercicios'
-                                fluid
-                                multiple
-                                search
-                                selection
-                                allowAdditions
-                                additionLabel='Agregar '
-                                options={exerciseOptions}
-                                value={exercisesBuffer.map(e => e.value)}
-                                onChange={this.handleExerciseSelection}
-                                openOnFocus={true}
-                                onAddItem={(e, { value }) => this.onAddUnexistingExercise(value)}
-                                tabIndex={0}
-                                noResultsMessage={'No se encontro el ejercicio'}
-                                selectOnBlur={false}
-                            />
+                        <div className={'scrolling-no-scrollbar'} style={{height: '90%'}}>
+                            {createNewExercises && <Message>
+                                <b>No encontras un ejercicio? Agregalo haciendo click en "Agregar"</b>
+                                <br/><br/>Necesitas repetir un ejercicio? Podes hacerlo una vez generado el bloque. (Combos)
+                            </Message>}
+                            <div ref={this.dropdownRef}>
+                                <Dropdown
+                                    placeholder='Elegi los ejercicios'
+                                    fluid
+                                    multiple
+                                    search
+                                    selection
+                                    allowAdditions={createNewExercises}
+                                    additionLabel='Agregar '
+                                    onAddItem={(e, { value }) => this.onAddUnexistingExercise(value)}
+                                    options={exerciseOptions}
+                                    value={exercisesBuffer.map(e => e.value)}
+                                    onChange={this.handleExerciseSelection}
+                                    openOnFocus={true}
+                                    tabIndex={0}
+                                    noResultsMessage={'No se encontro el ejercicio'}
+                                    selectOnBlur={false}
+                                />
+                            </div>
+                            <Divider hidden/>
                         </div>
-                        <Divider hidden/>
-                        <Button.Group fluid style={{
-                            position: 'absolute',
-                            bottom: 0,
-                            left: 0
-                        }}>
-                            <Button secondary onClick={() => this.props.history.push('/planification')}>Cancelar</Button>
-                            <Button primary onClick={() => this.setState({showModal: true})}>Generar</Button>
-                        </Button.Group>
                     </>
                 }
                 {blockType && this.renderBlockTypeUI()}
                 <ModalTrainingBlockType showModal={showModal} onClose={() => this.setState({showModal: false})} onTypeSelected={(id, name) => this.generateBlockTypeUI(id, name)}/>
-            </Segment>
+            </>
         )
     }
 }

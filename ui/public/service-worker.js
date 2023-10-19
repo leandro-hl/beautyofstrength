@@ -37,6 +37,7 @@ self.addEventListener('notificationclose', function (event) {
 
 //Not supported on Safari iOS
 self.addEventListener('push', function (event) {
+    //todo: refresh worker strategy to avoid caching old versions of the worker
     // Retrieve the textual payload from event.data (a PushMessageData object).
     // Other formats are supported (ArrayBuffer, Blob, JSON), check out the documentation
     // on https://developer.mozilla.org/en-US/docs/Web/API/PushMessageData.

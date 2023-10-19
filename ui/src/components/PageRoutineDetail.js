@@ -1,10 +1,11 @@
 import React, {Component} from "react";
-import {Accordion, Button, Header, Icon, List, Loader, Segment, Table} from "semantic-ui-react";
+import {Accordion, Button, Header, Icon, List, Loader, Popup, Segment, Table} from "semantic-ui-react";
 import {withRouter} from "react-router-dom";
-import {getRoutineDetails, shareRoutine} from "../service";
+import {getRoutineDetails, getSharedRoutineDetails, shareRoutine} from "../service";
 import {AppContext, setData} from "../context";
 import BottomMenuBar from "./BottomMenuBar";
 import LayoutMobile from "./LayoutMobile";
+import {queryParam} from "../functions";
 
 class PageRoutineDetail extends Component{
     static contextType = AppContext
@@ -16,16 +17,25 @@ class PageRoutineDetail extends Component{
 
     async componentDidMount() {
         try {
-            //todo: if I share a routine, the flow would start here.
-            // given a token I should be able to retrieve the routine details to show and execute.
-            // if the user is not logged in, does not have acces to any other part of the app and is
-            // redirected to the login / sign up page.
-            // put using a valid token can stay here for let's say one or two days.
-            // this is an anonimous way of accessing the routine
-            const {state: {routineId, planificationId}} = this.context
-            const res = await getRoutineDetails(routineId);
-            this.context.dispatch(setData({routineDetails: {...res.data, nextBlockNumber: res.data.blocks.length+1}}))
-            this.setState({loading: false, planificationId, routineId, blocks: res.data.blocks, name: res.data.name, nextBlockNumber: res.data.blocks.length+1})
+            const share = queryParam(this.props, 'share')
+            if (!!share) {
+                const res = await getSharedRoutineDetails(share)
+                this.context.dispatch(setData({routineDetails: {...res.data, nextBlockNumber: res.data.blocks.length+1}}))
+                this.setState({loading: false, isShared: true, routineId: res.data.id, blocks: res.data.blocks, name: res.data.name, nextBlockNumber: res.data.blocks.length+1})
+            } else {
+                const {state: {routineId, planificationId, permissions: {createManyExerciseBlocks}}} = this.context
+                const res = await getRoutineDetails(routineId);
+
+                const secondaryActions = [
+                    {func: () => this.redirectToPlanification(), description: 'Rutinas'}
+                ]
+                if (createManyExerciseBlocks) {
+                    secondaryActions.push({func: () => this.redirectToCreateBlock(), description: 'Agregar Bloque'})
+                }
+                this.context.dispatch(setData({secondaryActions: secondaryActions}))
+                this.context.dispatch(setData({routineDetails: {...res.data, nextBlockNumber: res.data.blocks.length+1}}))
+                this.setState({loading: false, planificationId, routineId, blocks: res.data.blocks, name: res.data.name, nextBlockNumber: res.data.blocks.length+1})
+            }
         } catch (e) {
             console.error(e)
         }
@@ -62,19 +72,26 @@ class PageRoutineDetail extends Component{
             const res = await shareRoutine({planificationId, routineId})
             //todo: how the fuck set the domain here?
             await navigator.clipboard.writeText(`localhost:3000${res.data}`);
+            this.setState({showPopUp: true})
+            const timeId = setTimeout(() => {
+                this.setState({showPopUp: false})
+                clearTimeout(timeId)
+            }, 1000)
         } catch (e) {
             console.error(e)
         }
     }
 
     renderRoutineDetails() {
-        const {name, blocks, activeIndexes} = this.state;
+        const {name, blocks, activeIndexes, isShared, showPopUp} = this.state;
         return (
-            <LayoutMobile>
+            <>
                 <Header as={'h3'}>
                     {name}
-                    <Icon name={'share square outline'} className={'header-icon'} onClick={() => this.shareRoutine()}/>
+                    {!isShared && <Popup size={'small'} trigger={<Icon name={'share square outline'} className={'header-icon'}
+                                                        onClick={() => this.shareRoutine()}/>} position={'bottom right'} open={showPopUp} content="Link copiado al portapapeles!" basic/>}
                 </Header>
+                <Button style={{marginBottom: '1em'}} primary fluid onClick={() => this.redirectToRoutineExecution()}>Ejecutar Rutina</Button>
                 <Accordion
                     style={{marginBottom: '1em'}}
                     exclusive={false}
@@ -111,12 +128,7 @@ class PageRoutineDetail extends Component{
                         </Accordion.Content>
                     </Segment>))}
                 </Accordion>
-                <Button primary fluid onClick={() => this.redirectToRoutineExecution()}>Ejecutar Rutina</Button>
-                <Button.Group fluid style={{marginBottom: 50}}>
-                    <Button secondary onClick={() => this.redirectToPlanification()}>Rutinas</Button>
-                    <Button primary onClick={() => this.redirectToCreateBlock()}>Agregar un Bloque</Button>
-                </Button.Group>
-            </LayoutMobile>
+            </>
         )
     }
 

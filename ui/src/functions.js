@@ -24,3 +24,7 @@ export function queryParam({location}, param) {
 export function queryParamAll({location}, param) {
     return parseSearch(location).getAll(param)
 }
+
+export function isLocalhost() {
+    return window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
+}
