@@ -1,5 +1,5 @@
 import React, { Component } from 'react';
-import {Button, Divider, Form, Grid, Header, Message, Segment} from 'semantic-ui-react';
+import {Button, Divider, Form, Grid, Header, Image, Message, Segment} from 'semantic-ui-react';
 import {AppContext} from "../context";
 import {Link, NavLink, withRouter} from "react-router-dom";
 import {signIn} from "../service";
@@ -33,24 +33,38 @@ class SignIn extends Component {
         // const { username, password } = this.state;
         return (
             <>
-                <Grid textAlign='center' style={{ height: '100vh' }} verticalAlign='middle'>
+                <Grid textAlign='center' verticalAlign='middle'>
                     <Grid.Row>
-                        <div id="g_id_onload"
-                             data-client_id="657396100962-5ndfs6l6o08m44ja0dbahb23oetd8134.apps.googleusercontent.com"
-                             data-context="use"
-                             data-ux_mode="redirect"
-                             data-login_uri="http://localhost:3001/api/googlesignin"
-                             data-auto_prompt="false">
-                        </div>
-                        <div className="g_id_signin"
-                             data-type="standard"
-                             data-shape="pill"
-                             data-theme="outline"
-                             data-text="continue_with"
-                             data-size="large"
-                             data-locale="es-419"
-                             data-logo_alignment="left">
-                        </div>
+                        <Image src={'logo.png'} size={'small'} circular style={{height: 150}}/>
+                    </Grid.Row>
+                    <Grid.Row>
+                        <Header as={'h1'}><b>bOS</b></Header>
+                    </Grid.Row>
+                    <Grid.Row className={'no-padding'}>
+                        <Header as={'h3'}>Beauty Of Strenght</Header>
+                    </Grid.Row>
+                    <Grid.Row>
+                        <Header textAlign={'center'} as={'h5'}>El Sistema Operativo de tu Entrenamiento</Header>
+                    </Grid.Row>
+                    <Grid.Row>
+                        <Segment basic>
+                            <div id="g_id_onload"
+                                 data-client_id="657396100962-5ndfs6l6o08m44ja0dbahb23oetd8134.apps.googleusercontent.com"
+                                 data-context="use"
+                                 data-ux_mode="redirect"
+                                 data-login_uri="http://localhost:3001/api/googlesignin"
+                                 data-auto_prompt="false">
+                            </div>
+                            <div className="g_id_signin"
+                                 data-type="standard"
+                                 data-shape="pill"
+                                 data-theme="outline"
+                                 data-text="continue_with"
+                                 data-size="large"
+                                 data-locale="es-419"
+                                 data-logo_alignment="left">
+                            </div>
+                        </Segment>
                     </Grid.Row>
                     {/*<Grid.Row style={{padding:20}}>*/}
                     {/*    <Grid.Column style={{ maxWidth: 450 }}>*/}

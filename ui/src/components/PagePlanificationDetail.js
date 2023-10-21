@@ -1,5 +1,5 @@
 import React, {Component} from "react";
-import {Button, Loader, Message, Segment} from "semantic-ui-react";
+import {Button, Header, Loader, Message, Segment} from "semantic-ui-react";
 import {listRoutines} from "../service";
 import {withRouter} from "react-router-dom";
 import {queryParam} from "../functions";
@@ -21,11 +21,10 @@ class PagePlanificationDetail extends Component {
             const {state: {planificationId, permissions: {createManyRoutines}}} = this.context
             const res = await listRoutines(planificationId);
 
-            //todo: instead of not showing it, show it disabled + popup be premium.
-            const secondaryActions = [{func: () => this.props.history.push('/my-planifications'), description: 'Planificaciones'}]
-            if (res.data.length === 0 || createManyRoutines) {
-                secondaryActions.push({func: () => this.redirectToCreateRoutine(), description: 'Agregar una Rutina'})
-            }
+            const secondaryActions = [
+                {func: () => this.props.history.push('/my-planifications'), description: 'Planificaciones'},
+                {disabled: !createManyRoutines && res.data.length>0,func: () => this.redirectToCreateRoutine(), description: 'Agregar una Rutina'}
+            ]
             this.context.dispatch(setData({secondaryActions: secondaryActions}))
             this.setState({loading: false, routines: res.data, planificationId})
         } catch (e) {
@@ -39,8 +38,12 @@ class PagePlanificationDetail extends Component {
     }
 
     redirectToCreateRoutine() {
-        const {planificationId, routines} = this.state;
-        this.context.dispatch(setData({routineId: null, routineNumber: routines.length+1}))
+        const {routines} = this.state;
+        this.context.dispatch(setData({routineId: null, routineNumber: routines.length+1, routineDetails: {
+                name: '',
+                blocks: [],
+                nextBlockNumber: null
+            }}))
         this.props.history.push('/routine/create')
     }
 
@@ -60,6 +63,10 @@ class PagePlanificationDetail extends Component {
                         <Message.Header>Sin Rutinas</Message.Header>
                         <p>Comienza agregando una rutina a tu planificacion. Usualmente una rutina es un dia de la semana.</p>
                     </Message>
+                }
+                {
+                    routines.length &&
+                    <Header as={'h3'}>Mis Rutinas</Header>
                 }
                 {routines.map(p => (<Segment style={{width: '100%'}} key={p.id} onClick={() => this.redirectToRoutine(p.id)}>{p.name+' '+p.id}</Segment>))}
             </>

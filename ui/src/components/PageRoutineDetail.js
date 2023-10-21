@@ -6,6 +6,7 @@ import {AppContext, setData} from "../context";
 import BottomMenuBar from "./BottomMenuBar";
 import LayoutMobile from "./LayoutMobile";
 import {queryParam} from "../functions";
+import {MENU} from "../enums";
 
 class PageRoutineDetail extends Component{
     static contextType = AppContext
@@ -17,23 +18,27 @@ class PageRoutineDetail extends Component{
 
     async componentDidMount() {
         try {
-            const share = queryParam(this.props, 'share')
+            let share = localStorage.getItem('routine-shared')
+            localStorage.removeItem('routine-shared')
+            if (!share) {
+                share = queryParam(this.props, 'share')
+            }
             if (!!share) {
                 const res = await getSharedRoutineDetails(share)
-                this.context.dispatch(setData({routineDetails: {...res.data, nextBlockNumber: res.data.blocks.length+1}}))
+                const secondaryActions = [
+                    {func: () => this.redirectToPlanifications(), description: 'Mis Planificaciones'}
+                ]
+                this.context.dispatch(setData({noBottomBar: false, menuButtonSelected: MENU.PLANIFICATIONS, secondaryActions: secondaryActions, routineDetails: {...res.data, nextBlockNumber: res.data.blocks.length+1}}))
                 this.setState({loading: false, isShared: true, routineId: res.data.id, blocks: res.data.blocks, name: res.data.name, nextBlockNumber: res.data.blocks.length+1})
             } else {
                 const {state: {routineId, planificationId, permissions: {createManyExerciseBlocks}}} = this.context
                 const res = await getRoutineDetails(routineId);
 
                 const secondaryActions = [
-                    {func: () => this.redirectToPlanification(), description: 'Rutinas'}
+                    {func: () => this.redirectToPlanification(), description: 'Mis Rutinas'},
+                    {disabled: !createManyExerciseBlocks, func: () => this.redirectToCreateBlock(), description: 'Agregar Bloque'}
                 ]
-                if (createManyExerciseBlocks) {
-                    secondaryActions.push({func: () => this.redirectToCreateBlock(), description: 'Agregar Bloque'})
-                }
-                this.context.dispatch(setData({secondaryActions: secondaryActions}))
-                this.context.dispatch(setData({routineDetails: {...res.data, nextBlockNumber: res.data.blocks.length+1}}))
+                this.context.dispatch(setData({secondaryActions: secondaryActions, noBottomBar: false, menuButtonSelected: MENU.PLANIFICATIONS, routineDetails: {...res.data, nextBlockNumber: res.data.blocks.length+1}}))
                 this.setState({loading: false, planificationId, routineId, blocks: res.data.blocks, name: res.data.name, nextBlockNumber: res.data.blocks.length+1})
             }
         } catch (e) {
@@ -47,6 +52,10 @@ class PageRoutineDetail extends Component{
 
     redirectToPlanification() {
         this.props.history.push('/planification')
+    }
+
+    redirectToPlanifications() {
+        this.props.history.push('/my-planifications')
     }
 
     redirectToRoutineExecution() {

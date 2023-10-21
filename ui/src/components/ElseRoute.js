@@ -9,6 +9,7 @@ class ElseRoute extends Component {
         const {component: Component, ...rest} = this.props;
         const {dispatch} = this.context
         return <Route {...rest} render={(props) => {
+            localStorage.removeItem("state")
             dispatch(setData({auth_token: null, noMenu: true, secondaryActions:[]}))
             return <Redirect to={{
                 pathname: '/signin',

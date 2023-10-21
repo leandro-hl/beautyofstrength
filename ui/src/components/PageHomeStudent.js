@@ -1,11 +1,12 @@
 import React, {Component} from "react";
-import {Loader, Segment} from "semantic-ui-react";
+import {Header, Loader, Segment} from "semantic-ui-react";
 import {ModalHaveTrained} from "./ModalHaveTrained";
 import {getUserLoadedTrainingToday, signIn} from "../service";
 import {ModalEnableNotifications} from "./ModalEnableNotifications";
 import {withRouter} from "react-router-dom";
 import LayoutMobile from "./LayoutMobile";
 import {AppContext, setData} from "../context";
+import {MENU} from "../enums";
 
 class PageHomeStudent extends Component {
     static contextType = AppContext
@@ -13,7 +14,12 @@ class PageHomeStudent extends Component {
 
     async componentDidMount() {
         try {
-            this.context.dispatch(setData({noBottomBar: false}))
+            const routineShared = localStorage.getItem('routine-shared')
+            if (routineShared) {
+                this.props.history.push('/routine')
+                return
+            }
+            this.context.dispatch(setData({noBottomBar: false, menuButtonSelected: MENU.HOME}))
             const res = await getUserLoadedTrainingToday()
             this.setState({loadedTrainingToday: res.data.loaded, loading: false})
         } catch (e) {
@@ -32,6 +38,10 @@ class PageHomeStudent extends Component {
 
         return (
             <>
+                <>
+                    <Header as={'h3'}>Proximamente</Header>
+                    <Segment>Proximamente la nueva home disponible</Segment>
+                </>
                 <ModalEnableNotifications onSubscribed={() => this.setState({showSecondModal: true})}/>
                 {
                     showSecondModal && !loadedTrainingToday  &&

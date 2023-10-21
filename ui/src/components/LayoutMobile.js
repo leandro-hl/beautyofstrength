@@ -3,15 +3,14 @@ import {Segment} from "semantic-ui-react";
 import withRouter from "react-router-dom/es/withRouter";
 import BottomMenuBar from "./BottomMenuBar";
 import {TopMenuBar} from "./TopMenuBar";
-import {AppContext} from "../context";
+import {AppContext, setData} from "../context";
+import {MENU} from "../enums";
 
 class LayoutMobile extends Component {
     static contextType = AppContext
-    state = {selected: 'home'}
     render() {
-        const {state: {loading, withTopBar, noBottomBar, noMenu, secondaryActions}} = this.context
+        const {state: {loading, withTopBar, noBottomBar, noMenu, secondaryActions, menuButtonSelected}} = this.context
         const {children} = this.props;
-        const {selected} = this.state
 
         return (
             <>
@@ -24,8 +23,8 @@ class LayoutMobile extends Component {
                 }}>
                     {children}
                 </Segment>
-                {!noMenu && <BottomMenuBar noBottomBar={noBottomBar} secondaryActions={secondaryActions} selected={selected}
-                                onSelected={(val) => this.setState({selected: val})}/>}
+                {!noMenu && <BottomMenuBar noBottomBar={noBottomBar} secondaryActions={secondaryActions} selected={menuButtonSelected}
+                                onSelected={(val) => this.context.dispatch(setData({menuButtonSelected: val, secondaryActions: []}))}/>}
             </>
         )
     }

@@ -1,10 +1,11 @@
 import React, {Component} from "react";
-import {Button, Input, List, Loader, Modal, Segment} from "semantic-ui-react";
+import {Button, Header, Input, List, Loader, Modal, Segment} from "semantic-ui-react";
 import {createPlanification, listPlanifications} from "../service";
 import {withRouter} from "react-router-dom";
 import {AppContext, setData} from "../context";
 import BottomMenuBar from "./BottomMenuBar";
 import LayoutMobile from "./LayoutMobile";
+import {MENU} from "../enums";
 
 class PagePlanificationList extends Component {
     static contextType = AppContext
@@ -16,9 +17,9 @@ class PagePlanificationList extends Component {
             if (createPlanification) {
                 this.context.dispatch(setData({secondaryActions: [
                         {func: () => this.setState({showCreatePlanificationModal: true}), description: 'Agregar Planificacion'}
-                    ]}))
+                    ], menuButtonSelected: MENU.PLANIFICATIONS}))
             } else {
-                this.context.dispatch(setData({secondaryActions: []}))
+                this.context.dispatch(setData({secondaryActions: [], menuButtonSelected: MENU.PLANIFICATIONS}))
             }
             const res = await listPlanifications();
             this.setState({loading: false, planifications: res.data})
@@ -87,6 +88,7 @@ class PagePlanificationList extends Component {
 
         return (
             <>
+                <Header as={'h3'}>Mis Planificaciones</Header>
                 {planifications.map(p => (<Segment style={{width: '100%'}} key={p.id} onClick={() => this.redirectToPlanification(p.id)}>{p.name}</Segment>))}
                 {createPlanification && this.renderCreatePlanificationModal()}
             </>

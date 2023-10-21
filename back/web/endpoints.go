@@ -222,6 +222,7 @@ func (o *Endpoints) Handle() http.Handler {
 	o.r.Path("/shareRoutine").HandlerFunc(o.HandleAuthenticatedTransactional(o.HandleAuthorization(o.shareRoutine, db.StudentFree, db.StudentPremium, db.Professor)))
 	o.r.Path("/getSharedRoutineDetails").HandlerFunc(o.HandleAuthenticatedTransactional(o.HandleAuthorization(o.getSharedRoutineDetails, db.StudentFree, db.StudentPremium, db.Professor)))
 	o.r.Path("/getRoutineDetails").HandlerFunc(o.HandleAuthenticatedTransactional(o.HandleAuthorization(o.getRoutineDetails, db.StudentFree, db.StudentPremium, db.Professor)))
+	o.r.Path("/getUserAccountDetails").HandlerFunc(o.HandleAuthenticatedTransactional(o.HandleAuthorization(o.getUserAccountDetails, db.StudentFree, db.StudentPremium, db.Professor)))
 	return o.r
 }
 
@@ -243,6 +244,7 @@ func (o *Endpoints) getUserPermissions(w http.ResponseWriter, r *http.Request, t
 
 	if *plan == db.StudentFree || *plan == db.StudentPremium {
 		permissions["menustatistics"] = true
+		permissions["menuhomestudent"] = true
 	}
 
 	if *plan == db.StudentPremium || *plan == db.Professor {
@@ -256,6 +258,7 @@ func (o *Endpoints) getUserPermissions(w http.ResponseWriter, r *http.Request, t
 
 	if *plan == db.Professor {
 		permissions["menudiscussions"] = true
+		permissions["menuhomeprofessor"] = true
 		permissions["createPlanification"] = true
 		permissions["createNewExercises"] = true
 		permissions["createNewMuscles"] = true
@@ -264,6 +267,12 @@ func (o *Endpoints) getUserPermissions(w http.ResponseWriter, r *http.Request, t
 	}
 
 	o.Respond(w, permissions, http.StatusOK)
+}
+
+func (o *Endpoints) getUserAccountDetails(w http.ResponseWriter, r *http.Request, tx *sqlx.Tx) {
+	userId := util.UserId(r)
+	user := db.GetUserAccountDetails(tx, userId)
+	o.Respond(w, user, http.StatusOK)
 }
 
 func (o *Endpoints) getRoutineDetails(w http.ResponseWriter, r *http.Request, tx *sqlx.Tx) {

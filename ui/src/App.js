@@ -33,7 +33,6 @@ class App extends Component {
                                 <Route exact path={"/signin"} component={SignIn}/>
                                 {/*<Route exact path={"/signup"} component={SignUp}/>*/}
                                 <PrivateRoute exact path={"/plans"} component={PagePlans}/>
-                                <PrivateRoute exact path={"/professor"} component={HomeProfessor}/>
                                 <PrivateRoute exact path={"/my-planifications"} component={PagePlanificationList}/>
                                 <PrivateRoute exact path={"/my-contributions"} component={PageProfessorContributions}/>
                                 <PrivateRoute exact path={"/my-stats"} component={PageStats}/>
@@ -42,6 +41,7 @@ class App extends Component {
                                 <PrivateRoute exact path={"/routine/create"} component={PageRoutineCreate}/>
                                 <PrivateRoute exact path={"/routine"} component={PageRoutineDetail}/>
                                 <PrivateRoute exact path={"/block/create"} component={PageBlockCreate}/>
+                                <PrivateRoute exact path={"/professor"} component={HomeProfessor}/>
                                 <PrivateRoute exact path={"/student"} component={HomeStudent}/>
                                 <PrivateRoute exact path={"/account"} component={PageAccount}/>
                                 <ElseRoute/>

@@ -264,7 +264,7 @@ class PageBlockCreate extends Component {
         } = this.state;
 
         const secondaryActions = [
-            {func: () => this.props.history.goBack(), description: 'Cancelar'},
+            {func: () => this.props.history.push('/routine/create'), description: 'Cancelar'},
             {func: () => this.saveExercisesBlock(), description: 'Guardar'},
         ]
 
@@ -392,10 +392,10 @@ class PageBlockCreate extends Component {
                             }}>
                                 <Grid columns={2} relaxed='very'>
                                     <Grid.Column>
-                                        <InputNumber label={'Trabajo'} seconds large onChange={({amount}) => this.setState({workingInterval: amount})}/>
+                                        <InputNumber label={'Trabajo'} seconds large onChange={({amount}) => this.setState({workingInterval: amount, next: null})}/>
                                     </Grid.Column>
                                     <Grid.Column>
-                                        <InputNumber label={'Descanso'} seconds large onChange={({amount}) => this.setState({restingInteval: amount})}/>
+                                        <InputNumber label={'Descanso'} seconds large onChange={({amount}) => this.setState({restingInteval: amount, next: null})}/>
                                     </Grid.Column>
                                 </Grid>
                                 <Divider vertical>X</Divider>
@@ -411,13 +411,13 @@ class PageBlockCreate extends Component {
                         <List>
                             {
                                 exercises.map((i, index) => {
-                                    return (<ExerciseListItem focus={index===next} key={index} item={i} finished={(reps) => this.saveExercise(i, reps)}/>)
+                                    return (<ExerciseListItem focus={index===next} key={index} item={i} finished={(reps, goNext) => this.saveExercise(i, reps, goNext)}/>)
                                 })
                             }
                         </List>
                         <Divider hidden/>
                         <Segment textAlign='center'>
-                            <InputNumber label={'Duracion (Minutos)'} minutes large onChange={({amount}) => this.setState({blockDuration: amount})}/>
+                            <InputNumber label={'Duracion (Minutos)'} minutes large onChange={({amount}) => this.setState({blockDuration: amount, next: null})}/>
                         </Segment>
                     </>
                 )

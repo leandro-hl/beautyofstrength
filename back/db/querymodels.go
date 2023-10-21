@@ -11,6 +11,12 @@ type ListExercise struct {
 	CreatedByUser *string `json:"createdbyuser"`
 }
 
+type GetUserAccountDetailsQuery struct {
+	Name       *string `json:"name"`
+	Email      *string `json:"email"`
+	PictureUrl *string `json:"pictureurl"`
+}
+
 type GetRoutineDetailsQuery struct {
 	Routineid       *int64  `json:"routineid"`
 	Routinename     *string `json:"routinename"`

@@ -4,7 +4,7 @@ import {AppContext, setData} from "../context";
 import {Loader} from "semantic-ui-react";
 import {withRouter} from "react-router-dom";
 import axios from "axios";
-import {isLocalhost} from "../functions";
+import {isLocalhost, queryParam} from "../functions";
 
 class StartUp extends Component {
     static contextType = AppContext
@@ -31,11 +31,16 @@ class StartUp extends Component {
             }
         } catch (e) {
             console.error(e)
+            localStorage.removeItem("state")
             this.props.history.push('/signin')
             this.context.dispatch(setData({auth_token: null, noMenu: true, secondaryActions:[]}))
         }
     }
     async componentDidMount() {
+        const shareParam = queryParam(this.props, 'share')
+        if (shareParam) {
+            localStorage.setItem('routine-shared', shareParam)
+        }
         if (isLocalhost()) {
             await this.loadLocalEnvironment()
             await this.loadUserPermissions()

@@ -41,7 +41,7 @@ export function getRoutineDetails(routineId) {
 }
 
 export function getSharedRoutineDetails(share) {
-    return axios.get("getRoutineDetails?share=" + share)
+    return axios.get("getSharedRoutineDetails?share=" + share)
 }
 
 export function listExercises() {
@@ -94,4 +94,8 @@ export function createPlanification(payload) {
 
 export function getUserLoadedTrainingToday() {
     return axios.get("getUserLoadedTrainingToday")
+}
+
+export function getUserAccountDetails() {
+    return axios.get("getUserAccountDetails")
 }

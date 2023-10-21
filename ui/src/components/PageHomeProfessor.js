@@ -1,5 +1,5 @@
 import React, {Component, createRef} from "react";
-import {Button, Divider, Dropdown, Input, Label, List, Loader, Menu, Segment} from "semantic-ui-react";
+import {Button, Divider, Dropdown, Header, Input, Label, List, Loader, Menu, Segment} from "semantic-ui-react";
 import {ExerciseListItem} from "./ExerciseListItem";
 import {listExercises, saveExercisesBlock, signIn} from "../service"
 import {RestInput} from "./RestInput";
@@ -8,6 +8,7 @@ import PagePlanificationList from "./PagePlanificationList";
 import BottomMenuBar from "./BottomMenuBar";
 import LayoutMobile from "./LayoutMobile";
 import {AppContext, setData} from "../context";
+import {MENU} from "../enums";
 
 class PageHomeProfessor extends Component {
     static contextType = AppContext
@@ -15,7 +16,12 @@ class PageHomeProfessor extends Component {
 
     async componentDidMount() {
         try {
-            this.context.dispatch(setData({noBottomBar: false}))
+            const routineShared = localStorage.getItem('routine-shared')
+            if (routineShared) {
+                this.props.history.push('/routine')
+                return
+            }
+            this.context.dispatch(setData({noBottomBar: false, menuButtonSelected: MENU.HOME}))
         } catch (e) {
             console.error(e)
         } finally {
@@ -32,7 +38,8 @@ class PageHomeProfessor extends Component {
 
         return (
             <>
-                HOME MOSTRAR HJOME
+                <Header as={'h3'}>Proximamente</Header>
+                <Segment>Proximamente la nueva home disponible</Segment>
             </>
         )
     }

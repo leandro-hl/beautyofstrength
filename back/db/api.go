@@ -199,7 +199,7 @@ func CalculateUserOwnsRoutine(tx *sqlx.Tx, userId, planificationId, routineId in
 	var des int
 	tx.Get(&des, `select count(1) from userplanification 
     inner join routine r on userplanification.planification_id = r.planification_id 
-	where useraccount_id=$1 and planification_id=$2 and r.id=$3`, userId, planificationId, routineId)
+	where useraccount_id=$1 and r.planification_id=$2 and r.id=$3`, userId, planificationId, routineId)
 	return des > 0
 }
 
@@ -236,6 +236,12 @@ func GetAccountPlanIdentifierByUserId(tx *sqlx.Tx, userId int64) *AccountPlanTyp
 	    where u.id=$1`, userId)
 	id := AccountPlanType(des[0])
 	return &id
+}
+
+func GetUserAccountDetails(tx *sqlx.Tx, userId int64) *GetUserAccountDetailsQuery {
+	var des GetUserAccountDetailsQuery
+	tx.Get(&des, `select name, email, pictureurl from useraccount where id=$1`, userId)
+	return &des
 }
 
 func RetrieveUserDeviceNotifationSubscription(tx *sqlx.Tx, userId int64, deviceName string) string {
@@ -283,6 +289,6 @@ func GetUserSharingToken(tx *sqlx.Tx, planificationId, routineId, userId int64) 
 	var des UserSharingToken
 	tx.Get(&des, `
 		select * from usersharingtoken 
-		where creator_id = $1 and routine_id=$2 and planification_id=$3 and isvalid=true`, planificationId, userId, routineId)
+		where creator_id = $1 and routine_id=$2 and planification_id=$3 and isvalid=true`, userId, routineId, planificationId)
 	return des
 }

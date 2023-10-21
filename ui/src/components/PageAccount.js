@@ -1,41 +1,55 @@
 import React, {Component} from "react";
-import {List, Loader, Segment} from "semantic-ui-react";
-import {listPlanifications} from "../service";
+import {Grid, List, Loader, Image, Segment, Table} from "semantic-ui-react";
+import {getUserAccountDetails} from "../service";
 import {withRouter} from "react-router-dom";
 import {AppContext, setData} from "../context";
-import BottomMenuBar from "./BottomMenuBar";
-import LayoutMobile from "./LayoutMobile";
+import {MENU} from "../enums";
 
 class PageAccount extends Component {
     static contextType = AppContext
-    state = {loading: true, planifications: []}
+    state = {loading: true, userAccount: {}}
 
     async componentDidMount() {
         try {
-            const res = await listPlanifications();
-            this.setState({loading: false, planifications: res.data})
+            this.context.dispatch(setData({noBottomBar: false, menuButtonSelected: MENU.ACCOUNT}))
+            const res = await getUserAccountDetails();
+            this.setState({loading: false, userAccount: res.data})
         } catch (e) {
             console.error(e)
         }
     }
 
-    redirectToPlanification(id) {
-        this.context.dispatch(setData({planificationId: id}))
-        this.props.history.push('/planification')
-    }
-
     render() {
-        const {planifications} = this.state;
-        const {loading} = this.state;
+        const {loading, userAccount} = this.state;
 
         if (loading) {
             return <Loader active/>
         }
 
         return (
-            <>
-                Account
-            </>
+            <Grid>
+                <Grid.Column>
+                    <Grid.Row className={'center-content'} style={{marginBottom: '1em'}}>
+                        <Image src={userAccount.pictureurl} size='tiny' circular/>
+                    </Grid.Row>
+                    <Grid.Row>
+                        <Segment className={'no-padding'}>
+                            <Table basic unstackable style={{border: 'unset'}}>
+                                <Table.Body>
+                                    <Table.Row>
+                                        <Table.Cell>Nombre</Table.Cell>
+                                        <Table.Cell>{userAccount.name}</Table.Cell>
+                                    </Table.Row>
+                                    <Table.Row>
+                                        <Table.Cell>Email</Table.Cell>
+                                        <Table.Cell>{userAccount.email}</Table.Cell>
+                                    </Table.Row>
+                                </Table.Body>
+                            </Table>
+                        </Segment>
+                    </Grid.Row>
+                </Grid.Column>
+            </Grid>
         )
     }
 }

@@ -1,7 +1,8 @@
 body {
   overflow-y: scroll;
   height: 100%;
-  background-color: #333333;
+  /*background-color: #333333;*/
+  background-color: #2f272a;
 }
 
 @media (min-width: 600px) {
@@ -19,6 +20,11 @@ body > div#root {
 
 .App {
   text-align: center;
+}
+
+.center-content {
+  display: flex !important;
+  justify-content: center !important;
 }
 
 .align-center > input {
@@ -61,14 +67,16 @@ body > div#root {
 }
 
 .button-bottom-bar {
-  background-color: #3c3c3c !important;
+  /*background-color: #3c3c3c !important;*/
+  background-color: #352c2f !important;
   color: #f9d118 !important;
   box-shadow: unset !important;
 }
 
 .button-bottom-bar-selected {
   background-color: #f9d118 !important;
-  color: #3c3c3c !important;
+  /*color: #3c3c3c !important;*/
+  color: #352c2f !important;
   box-shadow: unset !important;
 }
 
@@ -207,4 +215,9 @@ body > div#root {
 
 div#g_id_onload, div.g_id_signin {
   width: 100%;
+}
+
+.disabled-btn {
+  opacity: 0.45 !important;
+  background-image: none !important;
 }

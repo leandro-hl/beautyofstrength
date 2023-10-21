@@ -2,6 +2,7 @@ import {createContext, useContext, useEffect, useReducer, useState} from "react"
 import axios from "axios";
 import {isLocalhost} from "./functions";
 import {useHistory} from "react-router-dom";
+import {MENU} from "./enums";
 
 export const ACTIONS = {
     DATA: "DATA"
@@ -16,6 +17,7 @@ export function setValidationError(error) {
 
 const initialState = {
     permissions: {},
+    menuButtonSelected: MENU.HOME,
     noBottomBar: true,
     withTopBar: false,
     planificationId: null,
@@ -93,6 +95,7 @@ function ResponseInterceptor({children}) {
             } else if (err.response.status === 401) {
                 dispatch(setData({auth_token: null, noMenu: true, secondaryActions:[]}))
                 history?.push('/signin');
+                localStorage.removeItem("state")
             }
             console.error(err)
         }
