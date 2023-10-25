@@ -3,10 +3,20 @@ import {Button, Divider, Form, Grid, Header, Image, Message, Segment} from 'sema
 import {AppContext} from "../context";
 import {Link, NavLink, withRouter} from "react-router-dom";
 import {signIn} from "../service";
+import {isLocalhost} from "../functions";
 
 class SignIn extends Component {
     static contextType = AppContext
-    state = { username: '', password: '' }
+
+    constructor(props) {
+        super(props);
+
+        let signinUrl = "https://bos.team/api/googlesignin"
+        if (isLocalhost()) {
+           signinUrl = "http://localhost:3001/api/googlesignin"
+        }
+        this.state = {signinUrl, username: '', password: ''}
+    }
 
     componentDidMount() {
         const script = document.createElement('script');
@@ -30,7 +40,7 @@ class SignIn extends Component {
     // }
 
     render() {
-        // const { username, password } = this.state;
+        const { username, password, signinUrl } = this.state;
         return (
             <>
                 <Grid textAlign='center' verticalAlign='middle'>
@@ -52,7 +62,7 @@ class SignIn extends Component {
                                  data-client_id="657396100962-5ndfs6l6o08m44ja0dbahb23oetd8134.apps.googleusercontent.com"
                                  data-context="use"
                                  data-ux_mode="redirect"
-                                 data-login_uri="http://localhost:3001/api/googlesignin"
+                                 data-login_uri={signinUrl}
                                  data-auto_prompt="false">
                             </div>
                             <div className="g_id_signin"

@@ -1,7 +1,7 @@
 import axios from "axios";
 import {isLocalhost} from "./functions";
 
-let host = `http://productionhost/api/`
+let host = `https://bos.team/api/`
 if (isLocalhost()) {
     host = `http://localhost:3001/api/`
     axios.defaults.headers.common['ngrok-skip-browser-warning'] = 'test'

@@ -5,7 +5,7 @@ import {getRoutineDetails, getSharedRoutineDetails, shareRoutine} from "../servi
 import {AppContext, setData} from "../context";
 import BottomMenuBar from "./BottomMenuBar";
 import LayoutMobile from "./LayoutMobile";
-import {queryParam} from "../functions";
+import {isLocalhost, queryParam} from "../functions";
 import {MENU} from "../enums";
 
 class PageRoutineDetail extends Component{
@@ -79,8 +79,13 @@ class PageRoutineDetail extends Component{
         try {
             const {planificationId, routineId} = this.state
             const res = await shareRoutine({planificationId, routineId})
-            //todo: how the fuck set the domain here?
-            await navigator.clipboard.writeText(`localhost:3000${res.data}`);
+
+            if (isLocalhost()) {
+                await navigator.clipboard.writeText(`localhost:3000${res.data}`);
+            } else {
+                await navigator.clipboard.writeText(`https://bos.team${res.data}`);
+            }
+
             this.setState({showPopUp: true})
             const timeId = setTimeout(() => {
                 this.setState({showPopUp: false})

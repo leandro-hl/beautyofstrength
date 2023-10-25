@@ -26,6 +26,7 @@ type Config struct {
 	AllowedOrigins                       []string        `json:"allowedOrigins"`
 	Address                              *string         `json:"address"`
 	AddressUi                            *string         `json:"addressUi"`
+	WhiteListedIPs                       []string        `json:"whiteListedIPs"`
 	CustomExercisesPerUserLimit          *int            `json:"customExercisesPerUserLimit"`
 	CustomExerciseNameCharacterLimit     *int            `json:"customExerciseNameCharacterLimit"`
 	ExercisesPerBlockLimit               *int            `json:"exercisesPerBlockLimit"`
@@ -44,16 +45,19 @@ func (o *Config) Validate() {
 }
 
 func main() {
-	confSpec := util.FlagString("conf", "back/web/conf.json", "Config")
-	flag.Parse()
-
-	config := Config{}
-	util.LoadConfig(*confSpec, &config)
+	env := os.Getenv("ENV")
+	var config Config
+	if env == "PROD" {
+		confStr := os.Getenv("CONFIG")
+		err := json.Unmarshal([]byte(confStr), &config)
+		util.Check(err)
+	} else {
+		confSpec := util.FlagString("conf", "back/web/conf.json", "Config")
+		flag.Parse()
+		util.LoadConfig(*confSpec, &config)
+	}
 	config.Validate()
-	/*db := postgres.InitDB()
-	//postgres.Deploy(db)
-	postgres.PatchByGit(db)*/
-	l := log.New(os.Stdout, "api:", log.LstdFlags)
+	l := log.New(os.Stdout, "app:", log.LstdFlags)
 
 	func() {
 		req, err := http.NewRequest(http.MethodGet, *config.GooglePEMCertsURL, nil)
@@ -95,11 +99,12 @@ func main() {
 		l.Println("Starting server.")
 
 		var err error
-		if config.IsDevelopment() {
-			err = s.ListenAndServe()
-		} else {
-			err = s.ListenAndServeTLS("cert.pem", "key_no_pass.pem")
-		}
+		err = s.ListenAndServe()
+		//if config.IsDevelopment() {
+		//	err = s.ListenAndServe()
+		//} else {
+		//	err = s.ListenAndServeTLS("cert.pem", "key_no_pass.pem")
+		//}
 
 		if err != nil {
 			l.Printf("Error starting server: %s\n", err)

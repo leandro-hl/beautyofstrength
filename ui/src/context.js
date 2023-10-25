@@ -43,7 +43,10 @@ const reducer = (state, action) => {
         default:
             newState = {...state};
     }
-    localStorage.setItem('state', JSON.stringify(newState))
+    if (isLocalhost()) {
+        localStorage.setItem('state', JSON.stringify(newState))
+    }
+
     return newState
 }
 

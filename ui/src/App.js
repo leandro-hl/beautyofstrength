@@ -20,6 +20,8 @@ import SignUp from "./components/SignUp";
 import PagePlans from "./components/PagePlans";
 import StartUp from "./components/StartUp";
 import PageStats from "./components/PageStats";
+import PageTermsAndConditions from "./components/PageTermsAndConditions";
+import PagePrivacyPolicies from "./components/PagePrivacyPolicies";
 
 class App extends Component {
     render() {
@@ -31,6 +33,8 @@ class App extends Component {
                             <Switch>
                                 <Route exact path={"/"} component={SignIn}/>
                                 <Route exact path={"/signin"} component={SignIn}/>
+                                <Route exact path={"/terms"} component={PageTermsAndConditions}/>
+                                <Route exact path={"/privacy_policies"} component={PagePrivacyPolicies}/>
                                 {/*<Route exact path={"/signup"} component={SignUp}/>*/}
                                 <PrivateRoute exact path={"/plans"} component={PagePlans}/>
                                 <PrivateRoute exact path={"/my-planifications"} component={PagePlanificationList}/>
