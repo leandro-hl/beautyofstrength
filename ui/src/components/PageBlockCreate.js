@@ -38,12 +38,21 @@ class PageBlockCreate extends Component {
             next: 0,
             exercisesBuffer: [], defaultBlockName: '', blockName: '', exercises: [], exerciseOptions: [], lapRestDefault: 'sec', exeRestDefault: 'sec'}
     }
+    
+    redirectBackToRoutine() {
+        const {state: {routineId}} = this.context
+        if (routineId) {
+            this.props.history.push('/routine')
+        } else {
+            this.props.history.push('/routine/create')
+        }
+    }
 
     async componentDidMount() {
         try {
             const {state: {planificationId, routineId, routineDetails: {nextBlockNumber}}} = this.context
             this.context.dispatch(setData({secondaryActions: [
-                    {func: () => this.props.history.push('/routine/create'), description: 'Cancelar'},
+                    {func: () => this.redirectBackToRoutine(), description: 'Cancelar'},
                     {func: () => this.setState({showModal: true}), description: 'Generar'}
                 ]}))
             this.setState({loading: true})
@@ -264,7 +273,7 @@ class PageBlockCreate extends Component {
         } = this.state;
 
         const secondaryActions = [
-            {func: () => this.props.history.push('/routine/create'), description: 'Cancelar'},
+            {func: () => this.redirectBackToRoutine(), description: 'Cancelar'},
             {func: () => this.saveExercisesBlock(), description: 'Guardar'},
         ]
 
@@ -513,7 +522,7 @@ class PageBlockCreate extends Component {
     editBlock() {
         const {defaultBlockName, exercises} = this.state
         this.context.dispatch(setData({secondaryActions: [
-                {func: () => this.props.history.push('/routine/create'), description: 'Cancelar'},
+                {func: () => this.redirectBackToRoutine(), description: 'Cancelar'},
                 {func: () => this.setState({showModal: true}), description: 'Generar'}
             ]}))
         this.setState({blockType: null, blockName: defaultBlockName, exercises: [], exercisesBuffer: [...exercises]})

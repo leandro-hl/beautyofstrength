@@ -97,6 +97,7 @@ function ResponseInterceptor({children}) {
             if (err.response.status === 400) {
                 dispatch(setValidationError(err.response.data.errors))
             } else if (err.response.status === 401) {
+                //todo: separate test logic from productive one
                 dispatch(setData({auth_token: null, noMenu: true, secondaryActions:[]}))
                 history?.push('/signin');
                 localStorage.removeItem("state")

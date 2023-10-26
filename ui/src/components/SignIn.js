@@ -45,7 +45,7 @@ class SignIn extends Component {
             <>
                 <Grid textAlign='center' verticalAlign='middle'>
                     <Grid.Row>
-                        <Image src={'logo.png'} size={'small'} circular style={{height: 150}}/>
+                        <Image src={'logo.webp'} size={'small'} circular style={{height: 150}}/>
                     </Grid.Row>
                     <Grid.Row>
                         <Header as={'h1'}><b>bOS</b></Header>
