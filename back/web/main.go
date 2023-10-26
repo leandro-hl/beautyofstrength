@@ -76,7 +76,7 @@ func main() {
 		}
 	}()
 
-	o := NewEndpoints(&config)
+	o := NewEndpoints(&config, l)
 	allowedHeaders := []string{"Content-type", "Accept", "Content-Length", "Accept-Encoding", "X-CSRF-Token", "Authorization"}
 	if config.IsDevelopment() {
 		allowedHeaders = append(allowedHeaders, "ngrok-skip-browser-warning")
