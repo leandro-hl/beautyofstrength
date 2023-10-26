@@ -233,11 +233,11 @@ func (o *Endpoints) Handle() http.Handler {
 
 	//ui
 	if !o.conf.IsDevelopment() {
-		o.r.PathPrefix("/").Handler(http.FileServer(http.Dir("ui/build")))
 		o.r.NotFoundHandler = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			log.Println("trying to serve index.html")
 			http.ServeFile(w, r, "ui/build/index.html")
 		})
+		o.r.PathPrefix("/").Handler(http.FileServer(http.Dir("ui/build")))
 	}
 	return o.r
 }
