@@ -232,13 +232,19 @@ func (o *Endpoints) Handle() http.Handler {
 	api.Path("/getUserAccountDetails").HandlerFunc(o.HandleAuthenticatedTransactional(o.HandleAuthorization(o.getUserAccountDetails, db.StudentFree, db.StudentPremium, db.Professor)))
 
 	//ui
-	if !o.conf.IsDevelopment() {
-		o.r.NotFoundHandler = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			log.Println("trying to serve index.html")
-			http.ServeFile(w, r, "ui/build/index.html")
+	if !o.conf.IsDevelopment() || o.conf.ServeStaticUI() {
+		app := o.r.PathPrefix("/app").Subrouter()
+		app.Use(func(next http.Handler) http.Handler {
+			return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+				if !strings.Contains(r.URL.Path, ".") {
+					r.URL.Path = "/app/"
+				}
+				next.ServeHTTP(w, r)
+			})
 		})
-		o.r.PathPrefix("/").Handler(http.FileServer(http.Dir("ui/build")))
+		app.PathPrefix("/").Handler(http.StripPrefix("/app/", http.FileServer(http.Dir("ui/build"))))
 	}
+
 	return o.r
 }
 

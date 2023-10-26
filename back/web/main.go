@@ -27,6 +27,7 @@ type Config struct {
 	Address                              *string         `json:"address"`
 	AddressUi                            *string         `json:"addressUi"`
 	WhiteListedIPs                       []string        `json:"whiteListedIPs"`
+	ServerStaticUI                       *bool           `json:"serverStaticUI"`
 	CustomExercisesPerUserLimit          *int            `json:"customExercisesPerUserLimit"`
 	CustomExerciseNameCharacterLimit     *int            `json:"customExerciseNameCharacterLimit"`
 	ExercisesPerBlockLimit               *int            `json:"exercisesPerBlockLimit"`
@@ -39,6 +40,10 @@ type Config struct {
 
 func (o *Config) IsDevelopment() bool {
 	return strings.HasPrefix(*o.Address, "http://localhost")
+}
+
+func (o *Config) ServeStaticUI() bool {
+	return o.ServerStaticUI != nil && *o.ServerStaticUI
 }
 
 func (o *Config) Validate() {
