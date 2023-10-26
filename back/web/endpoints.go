@@ -189,6 +189,12 @@ func NewEndpoints(conf *Config, l *log.Logger) *Endpoints {
 }
 
 func (o *Endpoints) Handle() http.Handler {
+	o.r.Use(func(next http.Handler) http.Handler {
+		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			log.Printf("URL Path: %s", r.URL.Path)
+			next.ServeHTTP(w, r)
+		})
+	})
 	api := o.r.PathPrefix("/api").Subrouter()
 	//todo: para speech de venta: routines up to 20 exercises per block! (how many blocks?) LOL. Buy more exercises by $$$$
 	//o.r.Path("/signUp").HandlerFunc(o.HandleIPWhiteListing(o.HandleFatal(o.HandleTransactional(o.signUp))))
