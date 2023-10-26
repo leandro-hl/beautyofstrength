@@ -22,6 +22,7 @@ import StartUp from "./components/StartUp";
 import PageStats from "./components/PageStats";
 import PageTermsAndConditions from "./components/PageTermsAndConditions";
 import PagePrivacyPolicies from "./components/PagePrivacyPolicies";
+import PageRoot from "./components/PageRoot";
 
 class App extends Component {
     render() {
@@ -31,7 +32,7 @@ class App extends Component {
                     <StartUp>
                         <LayoutMobile>
                             <Switch>
-                                <Route exact path={"/"} component={SignIn}/>
+                                <Route exact path={"/"} component={PageRoot}/>
                                 <Route exact path={"/signin"} component={SignIn}/>
                                 <Route exact path={"/terms"} component={PageTermsAndConditions}/>
                                 <Route exact path={"/privacy_policies"} component={PagePrivacyPolicies}/>

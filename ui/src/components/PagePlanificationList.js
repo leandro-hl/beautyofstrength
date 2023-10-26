@@ -15,11 +15,14 @@ class PagePlanificationList extends Component {
         try {
             const {state: {permissions: {createPlanification}}} = this.context
             if (createPlanification) {
-                this.context.dispatch(setData({secondaryActions: [
+                this.context.dispatch(setData({
+                    noBottomBar: false,
+                    secondaryActions: [
                         {func: () => this.setState({showCreatePlanificationModal: true}), description: 'Agregar Planificacion'}
-                    ], menuButtonSelected: MENU.PLANIFICATIONS}))
+                    ],
+                    menuButtonSelected: MENU.PLANIFICATIONS}))
             } else {
-                this.context.dispatch(setData({secondaryActions: [], menuButtonSelected: MENU.PLANIFICATIONS}))
+                this.context.dispatch(setData({noBottomBar: false, secondaryActions: [], menuButtonSelected: MENU.PLANIFICATIONS}))
             }
             const res = await listPlanifications();
             this.setState({loading: false, planifications: res.data})

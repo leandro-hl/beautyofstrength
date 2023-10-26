@@ -246,6 +246,15 @@ func (o *Endpoints) Handle() http.Handler {
 			})
 		})
 		app.PathPrefix("/").Handler(http.StripPrefix("/app/", http.FileServer(http.Dir("ui/build"))))
+		o.r.Use(func(next http.Handler) http.Handler {
+			return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+				if r.URL.Path == "/" {
+					http.Redirect(w, r, "/app/", http.StatusMovedPermanently)
+					return
+				}
+				next.ServeHTTP(w, r)
+			})
+		})
 	}
 
 	return o.r
@@ -701,15 +710,15 @@ func (o *Endpoints) googleSignIn(w http.ResponseWriter, r *http.Request, tx *sql
 		o.storeSessionData(w, *userId)
 		plan := db.GetAccountPlanIdentifierByUserId(tx, *userId)
 		if plan == nil {
-			http.Redirect(w, r, *o.conf.AddressUi+"/plans", http.StatusFound)
+			http.Redirect(w, r, *o.conf.AddressUi+"/app"+"/plans", http.StatusFound)
 		} else if *plan == db.StudentFree {
-			http.Redirect(w, r, *o.conf.AddressUi+"/student", http.StatusFound)
+			http.Redirect(w, r, *o.conf.AddressUi+"/app"+"/student", http.StatusFound)
 		} else if *plan == db.StudentPremium {
-			http.Redirect(w, r, *o.conf.AddressUi+"/student", http.StatusFound)
+			http.Redirect(w, r, *o.conf.AddressUi+"/app"+"/student", http.StatusFound)
 		} else if *plan == db.Professor {
-			http.Redirect(w, r, *o.conf.AddressUi+"/professor", http.StatusFound)
+			http.Redirect(w, r, *o.conf.AddressUi+"/app"+"/professor", http.StatusFound)
 		} else {
-			http.Redirect(w, r, *o.conf.AddressUi+"/plans", http.StatusFound)
+			http.Redirect(w, r, *o.conf.AddressUi+"/app"+"/plans", http.StatusFound)
 		}
 	} else {
 		//todo: auto generate a password and send it over email
@@ -727,7 +736,7 @@ func (o *Endpoints) googleSignIn(w http.ResponseWriter, r *http.Request, tx *sql
 		})
 		db.CreatePlanification(tx, *userId, "Mi Planificacion")
 		o.storeSessionData(w, *userId)
-		http.Redirect(w, r, *o.conf.AddressUi+"/plans", http.StatusFound)
+		http.Redirect(w, r, *o.conf.AddressUi+"/app"+"/plans", http.StatusFound)
 	}
 }
 
