@@ -1,15 +1,22 @@
 import React, {Component} from "react"
 import {Redirect, Route} from "react-router-dom"
 import {AppContext} from "../context";
+import Cookies from "universal-cookie";
+import {isLocalhost} from "../functions";
 
 class PrivateRoute extends Component {
     static contextType = AppContext
 
     render() {
         const {component: Component, ...rest} = this.props;
-        // const {state: {authToken}} = this.context
-        //todo: this will be the session cookie...
-        const authToken = 'chaja'
+        let authToken = null
+        if (!isLocalhost()) {
+            const cookies = new Cookies({ path: '/' });
+            authToken = cookies.get("auth_token")
+        } else {
+            authToken = 'chaja'
+        }
+
         return <Route {...rest} render={(props) => (
             authToken
                 ? <Component {...props} />
