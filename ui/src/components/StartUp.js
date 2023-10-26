@@ -13,7 +13,7 @@ class StartUp extends Component {
     async loadUserPermissions() {
         try {
             const res = await getUserPermissions();
-            this.context.dispatch(setData({permissions: res.data}))
+            this.context.dispatch(setData({permissions: res.data, noMenu: false, secondaryActions:[]}))
         } catch (e) {
             console.error(e)
         }
@@ -25,7 +25,7 @@ class StartUp extends Component {
             if (!auth_token) {
                 const res = await getLocalInfo();
                 axios.defaults.headers.common['Authorization'] = `Bearer ${res.data}`;
-                this.context.dispatch(setData({auth_token: res.data, noMenu: false, secondaryActions:[]}))
+                this.context.dispatch(setData({auth_token: res.data}))
             } else {
                 axios.defaults.headers.common['Authorization'] = `Bearer ${auth_token}`;
             }
