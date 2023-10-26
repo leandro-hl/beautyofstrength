@@ -1,24 +1,35 @@
 import React, {Component} from "react"
 import {Redirect, Route} from "react-router-dom"
-import {AppContext} from "../context";
+import {AppContext, setData} from "../context";
 import Cookies from "universal-cookie";
 import {isLocalhost} from "../functions";
+import {checkAuth} from "../service";
 
 class PrivateRoute extends Component {
     static contextType = AppContext
 
+    async componentDidMount() {
+        try {
+            const {state: {isAuthenticated}} = this.context
+            if (isAuthenticated === undefined) {
+                if (isLocalhost()) {
+                    this.context.dispatch(setData({isAuthenticated: true}))
+                } else {
+                    const res = await checkAuth()
+                    this.context.dispatch(setData({isAuthenticated: res.data}))
+                }
+            }
+        } catch (e) {
+            console.error(e)
+        }
+    }
+
     render() {
         const {component: Component, ...rest} = this.props;
-        let authToken = null
-        if (!isLocalhost()) {
-            const cookies = new Cookies({ path: '/' });
-            authToken = cookies.get("auth_token")
-        } else {
-            authToken = 'chaja'
-        }
+        const {state: {isAuthenticated}} = this.context
 
         return <Route {...rest} render={(props) => (
-            authToken
+            isAuthenticated === undefined ? <></> : isAuthenticated
                 ? <Component {...props} />
                 : <Redirect to={{
                     pathname: '/signin',

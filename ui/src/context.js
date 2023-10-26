@@ -16,6 +16,7 @@ export function setValidationError(error) {
 }
 
 const initialState = {
+    isAuthenticated: undefined,
     permissions: {},
     menuButtonSelected: MENU.HOME,
     noBottomBar: true,

@@ -12,6 +12,10 @@ axios.interceptors.request.use((config) => {
     return config
 })
 
+export function checkAuth() {
+    return axios.post("checkAuth")
+}
+
 export function getUserPermissions() {
     return axios.post("getUserPermissions")
 }
