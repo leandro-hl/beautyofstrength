@@ -246,14 +246,11 @@ func (o *Endpoints) Handle() http.Handler {
 			})
 		})
 		app.PathPrefix("/").Handler(http.StripPrefix("/app/", http.FileServer(http.Dir("ui/build"))))
-		o.r.Use(func(next http.Handler) http.Handler {
-			return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-				if r.URL.Path == "/" {
-					http.Redirect(w, r, "/app/", http.StatusMovedPermanently)
-					return
-				}
-				next.ServeHTTP(w, r)
-			})
+		o.r.Path("/").HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			if r.URL.Path == "/" {
+				http.Redirect(w, r, "/app/", http.StatusMovedPermanently)
+				return
+			}
 		})
 	}
 
