@@ -30,6 +30,7 @@ type Endpoints struct {
 	db   *sqlx.DB
 	conf *Config
 	r    *mux.Router
+	l    *log.Logger
 }
 
 type ExercisesComparerCache struct {
@@ -171,7 +172,7 @@ var exercisesComparerCache = NewExercisesComparerCache()
 var shareManager = NewShareTokenManager()
 var developmentLastCreatedSessionTokenStack = make([]string, 0)
 
-func NewEndpoints(conf *Config) *Endpoints {
+func NewEndpoints(conf *Config, l *log.Logger) *Endpoints {
 	dbs := db.InitDB(*conf.DatasourceName)
 
 	exercisesNames := db.ListExerciseNames(dbs)
@@ -183,6 +184,7 @@ func NewEndpoints(conf *Config) *Endpoints {
 		db:   dbs,
 		conf: conf,
 		r:    mux.NewRouter(),
+		l:    l,
 	}
 }
 
@@ -227,7 +229,8 @@ func (o *Endpoints) Handle() http.Handler {
 	if !o.conf.IsDevelopment() {
 		o.r.PathPrefix("/").Handler(http.FileServer(http.Dir("ui/build")))
 		o.r.NotFoundHandler = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			http.ServeFile(w, r, "ui/build/index.html")
+			o.l.Println("trying to serve index.html")
+			http.ServeFile(w, r, "/root/ui/build/index.html")
 		})
 	}
 	return o.r
