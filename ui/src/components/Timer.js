@@ -4,7 +4,9 @@ import {Icon} from "semantic-ui-react";
 export class Timer extends Component {
     constructor(props) {
         super(props);
-        this.state = {tick: 0, finished: false}
+        const beep = new Audio("/beep.mp3")
+        beep.playbackRate = 1.5
+        this.state = {tick: 0, finished: false,beepStartsAt: 4, beep: beep}
     }
 
     componentWillUnmount() {
@@ -28,6 +30,7 @@ export class Timer extends Component {
     }
 
     start(intervals) {
+        const {beepStartsAt, beep} = this.state
         const intervalId = setInterval(() => {
             const {tick} = this.state
             if (tick-1 === -1) {
@@ -41,6 +44,9 @@ export class Timer extends Component {
                     this.props.onNextInterval()
                 }
             } else {
+                if (tick <= beepStartsAt && tick > 0) {
+                    beep.play()
+                }
                 this.setState({tick: tick-1})
             }
         }, 1000)
