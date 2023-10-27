@@ -16,7 +16,7 @@ CREATE TABLE IF NOT EXISTS accountplan
 (
     id         INT         NOT NULL GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
     name       VARCHAR(50) NOT NULL,
-    identifier CHAR  NOT NULL
+    identifier CHAR        NOT NULL
 );
 
 INSERT INTO accountplan(name, identifier)
@@ -39,7 +39,14 @@ CREATE TABLE IF NOT EXISTS useraccount
 );
 
 INSERT INTO useraccount(name, username, email, emailverified, usertype, password, pictureurl, locale, accountplan_id)
-VALUES('bOS', 'bOS', 'admin@bos.team', true, 'p', '', null, null, (select id from accountplan where identifier='p'));
+VALUES ('bOS', 'bOS', 'admin@bos.team', true, 'p', '', null, null, (select id from accountplan where identifier = 'p'));
+
+CREATE TABLE IF NOT EXISTS useraccountsession
+(
+    id             BIGINT      NOT NULL GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    token          VARCHAR(32) NOT NULL,
+    useraccount_id BIGINT      NOT NULL REFERENCES useraccount (id)
+);
 
 CREATE TABLE IF NOT EXISTS muscle
 (
@@ -116,7 +123,7 @@ VALUES (NOW(), (select id from useraccount where username = 'bOS'), 'Salto', 0),
        (NOW(), (select id from useraccount where username = 'bOS'), 'Salto Asistido', 1),
        (NOW(), (select id from useraccount where username = 'bOS'), 'Sentadilla', 0),
        (NOW(), (select id from useraccount where username = 'bOS'), 'Sentadilla Thruster a 1 Brazo',
-        1),                                                                                               --equipamiento
+        1),                                                                                            --equipamiento
        (NOW(), (select id from useraccount where username = 'bOS'), 'Sentadilla con Salto', 1),
        (NOW(), (select id from useraccount where username = 'bOS'), 'Sentadilla Lateral con Elevacion de Rodilla',
         1),
@@ -240,12 +247,12 @@ VALUES (NOW(), (select id from useraccount where username = 'bOS'), 'Salto', 0),
        (NOW(), (select id from useraccount where username = 'bOS'), 'Fondo en Paralelas', 1),          --equipamiento
        (NOW(), (select id from useraccount where username = 'bOS'), 'Fondo Tigre', 2),
        (NOW(), (select id from useraccount where username = 'bOS'), 'Fondo en Barra', 2),              --equipamiento
-       (NOW(), (select id from useraccount where username = 'bOS'), 'Fondo en Anillas', 2),  --equipamiento
-       (NOW(), (select id from useraccount where username = 'bOS'), 'Fondo Bulgaro', 2),  --equipamiento
+       (NOW(), (select id from useraccount where username = 'bOS'), 'Fondo en Anillas', 2),            --equipamiento
+       (NOW(), (select id from useraccount where username = 'bOS'), 'Fondo Bulgaro', 2),               --equipamiento
        (NOW(), (select id from useraccount where username = 'bOS'), 'Fondo con Hollow en Barra', 3),   --equipamiento
        (NOW(), (select id from useraccount where username = 'bOS'), 'Fondo Supino en Barra', 3),       --equipamiento
        (NOW(), (select id from useraccount where username = 'bOS'), 'Fondo con Hollow en Paralelas',
-        3),                                                                                               --equipamiento
+        3),                                                                                            --equipamiento
        (NOW(), (select id from useraccount where username = 'bOS'), 'Fondo con Hollow en Anillas', 4), --equipamiento
        (NOW(), (select id from useraccount where username = 'bOS'), 'Alacran', 2),
        (NOW(), (select id from useraccount where username = 'bOS'), 'Subida a Soga', 1),               --equipamiento
@@ -257,7 +264,7 @@ VALUES (NOW(), (select id from useraccount where username = 'bOS'), 'Salto', 0),
        (NOW(), (select id from useraccount where username = 'bOS'), 'Elevación Talón Colgado', 0),
        (NOW(), (select id from useraccount where username = 'bOS'), 'Elevación Frontal', 0),
        (NOW(), (select id from useraccount where username = 'bOS'), 'Elevación Frontal Disco Pared',
-        0),                                                                                               --equipamiento
+        0),                                                                                            --equipamiento
        (NOW(), (select id from useraccount where username = 'bOS'), 'Plancha Lean', 0),
        (NOW(), (select id from useraccount where username = 'bOS'), 'Plancha Tuck', 1),
        (NOW(), (select id from useraccount where username = 'bOS'), 'Plancha Advanced', 2),
@@ -267,7 +274,7 @@ VALUES (NOW(), (select id from useraccount where username = 'bOS'), 'Salto', 0),
        (NOW(), (select id from useraccount where username = 'bOS'), 'Plancha Full', 6),
        (NOW(), (select id from useraccount where username = 'bOS'), 'Plancha Full Dragon', 7),
        (NOW(), (select id from useraccount where username = 'bOS'), 'Plancha Lateral con Disco Aductor',
-        2),                                                                                               --equipamiento
+        2),                                                                                            --equipamiento
        (NOW(), (select id from useraccount where username = 'bOS'), 'Pull Over', 1),
        (NOW(), (select id from useraccount where username = 'bOS'), 'Caseta', 0),
        (NOW(), (select id from useraccount where username = 'bOS'), 'Roll', 0),

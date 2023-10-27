@@ -31,8 +31,8 @@ class PagePlanificationList extends Component {
         }
     }
 
-    redirectToPlanification(id) {
-        this.context.dispatch(setData({planificationId: id}))
+    redirectToPlanification(p) {
+        this.context.dispatch(setData({planificationId: p.id, planificationName: p.name}))
         this.props.history.push('/planification')
     }
 
@@ -40,7 +40,7 @@ class PagePlanificationList extends Component {
         try {
             const {newPlanificationName} = this.state
             const res = await createPlanification({name: newPlanificationName});
-            this.redirectToPlanification(res.data.id)
+            this.redirectToPlanification({id: res.data.id, name: newPlanificationName})
         } catch (e) {
             console.error(e)
         }
@@ -92,7 +92,7 @@ class PagePlanificationList extends Component {
         return (
             <>
                 <Header as={'h3'}>Mis Planificaciones</Header>
-                {planifications.map(p => (<Segment style={{width: '100%'}} key={p.id} onClick={() => this.redirectToPlanification(p.id)}>{p.name}</Segment>))}
+                {planifications.map(p => (<Segment style={{width: '100%'}} key={p.id} onClick={() => this.redirectToPlanification(p)}>{p.name}</Segment>))}
                 {createPlanification && this.renderCreatePlanificationModal()}
             </>
         )

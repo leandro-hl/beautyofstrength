@@ -2,7 +2,8 @@ body {
   overflow-y: scroll;
   height: 100%;
   /*background-color: #333333;*/
-  background-color: #2f272a;
+  /*background-color: #2f272a;*/
+  background-color: #121212;
 }
 
 @media (min-width: 600px) {
@@ -67,17 +68,78 @@ body > div#root {
 }
 
 .button-bottom-bar {
+  background-color: #252525 !important;
+  color: #cacaca !important;
+  box-shadow: unset !important;
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: center !important;
+}
+
+.button-bottom-bar i.icon:before {
+  padding: 5px 15px !important;
+  position: relative !important;
+  left: -13px !important;
+  top: 5px !important;
+}
+
+.button-bottom-bar-selected {
+  background-color: #252525 !important;
+  color: #cacaca !important;
+  box-shadow: unset !important;
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: center !important;
+}
+
+.button-bottom-bar > span, .button-bottom-bar-selected > span {
+  margin-top: 15px !important;
+}
+
+.button-bottom-bar-selected:hover{
+  box-shadow: unset !important;
+}
+
+.button-bottom-bar-selected i.icon:before {
+  padding: 5px 15px !important;
+  position: relative !important;
+  left: -13px !important;
+  top: 5px !important;
+  background-color: #b08f10 !important;
+  color: #ffffff !important;
+  border-radius: 20px !important;
+}
+
+.header-back-arrow {
+  background-color: #121212 !important;
+  color: #ffffff !important;
+  box-shadow: unset !important;
+  font-size: 0.8em !important;
+  padding: 6px 4px 0px 0px !important;
+}
+
+.button-bottom-bar-bk {
   /*background-color: #3c3c3c !important;*/
   background-color: #352c2f !important;
   color: #f9d118 !important;
   box-shadow: unset !important;
 }
 
-.button-bottom-bar-selected {
+.button-bottom-bar-selected-bk {
   background-color: #f9d118 !important;
   /*color: #3c3c3c !important;*/
   color: #352c2f !important;
   box-shadow: unset !important;
+}
+
+.button-secondary-action-alone {
+  position: absolute !important;
+  right: 10px !important;
+  bottom: 76px !important;
+  padding: 21px 18px !important;
+  border-radius: 16px !important;
+  background-color: #b08f10 !important;
+  color: #ffffff !important;
 }
 
 /*todo: how to use theme here?*/

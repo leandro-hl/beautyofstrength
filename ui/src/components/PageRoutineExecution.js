@@ -1,6 +1,6 @@
 import React, {Component} from "react";
 import {withRouter} from "react-router-dom";
-import {Accordion, Button, Divider, Grid, Header, Label, List, Loader, Segment, Table} from "semantic-ui-react";
+import {Accordion, Button, Divider, Grid, Header, Icon, Label, List, Loader, Segment, Table} from "semantic-ui-react";
 import {AppContext, setData} from "../context";
 import {InputNumber} from "./InputNumber";
 import {Timer} from "./Timer";
@@ -22,9 +22,7 @@ class PageRoutineExecution extends Component {
         const {state: {routineDetails}} = this.context
         this.context.dispatch(setData({
             noBottomBar: true,
-            secondaryActions: [
-                {func: () => this.nextBlock(), description: 'Continuar Proximo Bloque'}
-            ]
+            secondaryActions: []
         }))
         const currentBlockIndex = 0
         const block = routineDetails.blocks[currentBlockIndex];
@@ -338,7 +336,13 @@ class PageRoutineExecution extends Component {
         }
         return (
             <>
-                <Header as={'h3'}>{name} - {currentBlock.name}</Header>
+                <Header as={'h3'}>
+                    <Button className={'header-back-arrow'} icon onClick={() => this.props.history.push('/routine')}>
+                        <Icon name={'arrow left'}/>
+                    </Button>
+                    {name} - {currentBlock.name}
+                </Header>
+                <Button style={{marginBottom: '1em'}} primary fluid onClick={() => this.nextBlock()}>Continuar Proximo Bloque</Button>
                 <Segment style={{height: '85%'}}>
                     {this.renderExecution()}
                 </Segment>

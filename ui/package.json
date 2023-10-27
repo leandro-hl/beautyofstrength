@@ -16,7 +16,7 @@
     "web-vitals": "^2.1.2"
   },
   "scripts": {
-    "start": "craco start",
+    "start": "PUBLIC_URL=/app craco start",
     "build": "PUBLIC_URL=/app craco build",
     "test": "craco test",
     "eject": "craco eject"

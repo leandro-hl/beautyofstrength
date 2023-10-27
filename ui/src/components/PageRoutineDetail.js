@@ -25,17 +25,13 @@ class PageRoutineDetail extends Component{
             }
             if (!!share) {
                 const res = await getSharedRoutineDetails(share)
-                const secondaryActions = [
-                    {func: () => this.redirectToPlanifications(), description: 'Mis Planificaciones'}
-                ]
-                this.context.dispatch(setData({noBottomBar: false, menuButtonSelected: MENU.PLANIFICATIONS, secondaryActions: secondaryActions, routineDetails: {...res.data, nextBlockNumber: res.data.blocks.length+1}}))
+                this.context.dispatch(setData({noBottomBar: false, menuButtonSelected: MENU.PLANIFICATIONS, secondaryActions: [], routineDetails: {...res.data, nextBlockNumber: res.data.blocks.length+1}}))
                 this.setState({loading: false, isShared: true, routineId: res.data.id, blocks: res.data.blocks, name: res.data.name, nextBlockNumber: res.data.blocks.length+1})
             } else {
                 const {state: {routineId, planificationId, permissions: {createManyExerciseBlocks}}} = this.context
                 const res = await getRoutineDetails(routineId);
 
                 const secondaryActions = [
-                    {func: () => this.redirectToPlanification(), description: 'Mis Rutinas'},
                     {disabled: !createManyExerciseBlocks, func: () => this.redirectToCreateBlock(), description: 'Agregar Bloque'}
                 ]
                 this.context.dispatch(setData({secondaryActions: secondaryActions, noBottomBar: false, menuButtonSelected: MENU.PLANIFICATIONS, routineDetails: {...res.data, nextBlockNumber: res.data.blocks.length+1}}))
@@ -101,6 +97,9 @@ class PageRoutineDetail extends Component{
         return (
             <>
                 <Header as={'h3'}>
+                    <Button className={'header-back-arrow'} icon onClick={() => this.redirectToPlanifications()}>
+                        <Icon name={'arrow left'}/>
+                    </Button>
                     {name}
                     {!isShared && <Popup size={'small'} trigger={<Icon name={'share square outline'} className={'header-icon'}
                                                         onClick={() => this.shareRoutine()}/>} position={'bottom right'} open={showPopUp} content="Link copiado al portapapeles!" basic/>}

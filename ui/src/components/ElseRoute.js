@@ -12,7 +12,7 @@ class ElseRoute extends Component {
             localStorage.removeItem("state")
             dispatch(setData({auth_token: null, noMenu: true, secondaryActions:[]}))
             return <Redirect to={{
-                pathname: '/signin',
+                pathname: '/my-planifications',
                 search: props.location.search,
                 state: { from: props.location }
             }} />

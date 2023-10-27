@@ -74,6 +74,30 @@ func ListExercises(tx *sqlx.Tx) []ListExercise {
 	return dest
 }
 
+func ListActiveUserAccountSessions(db *sqlx.DB) []UserAccountSession {
+	dest := make([]UserAccountSession, 0)
+	err := db.Select(&dest, `SELECT * FROM useraccountsession`)
+	util.Check(err)
+	return dest
+}
+
+func GetUserActiveSession(tx *sqlx.Tx, userId int64) *UserAccountSession {
+	var des UserAccountSession
+	tx.Get(&des, `SELECT * FROM useraccountsession where useraccount_id=$1`, userId)
+	return &des
+}
+
+func SaveCreatedActiveSession(tx *sqlx.Tx, token string, userId int64) *int64 {
+	tx.Exec("delete from useraccountsession where useraccount_id=$1", userId)
+	id := Insert(
+		tx,
+		&UserAccountSession{
+			Token:         &token,
+			UserAccountId: &userId,
+		})
+	return id
+}
+
 func CountRoutinesInPlanification(tx *sqlx.Tx, planificationId int64) *int {
 	var des int
 	tx.Get(&des, "select count(1) from routine where planification_id=$1", planificationId)

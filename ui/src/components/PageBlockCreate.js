@@ -52,7 +52,6 @@ class PageBlockCreate extends Component {
         try {
             const {state: {planificationId, routineId, routineDetails: {nextBlockNumber}}} = this.context
             this.context.dispatch(setData({secondaryActions: [
-                    {func: () => this.redirectBackToRoutine(), description: 'Cancelar'},
                     {func: () => this.setState({showModal: true}), description: 'Generar'}
                 ]}))
             this.setState({loading: true})
@@ -273,25 +272,24 @@ class PageBlockCreate extends Component {
         } = this.state;
 
         const secondaryActions = [
-            {func: () => this.redirectBackToRoutine(), description: 'Cancelar'},
             {func: () => this.saveExercisesBlock(), description: 'Guardar'},
         ]
 
         switch (id) {
             case 'free':
-                secondaryActions[1].func = () => this.saveExercisesBlockFree()
+                secondaryActions[0].func = () => this.saveExercisesBlockFree()
                 break
             case 'cpt':
-                secondaryActions[1].func = () => this.saveExercisesBlockCpt()
+                secondaryActions[0].func = () => this.saveExercisesBlockCpt()
                 break
             case 'amrap':
-                secondaryActions[1].func = () => this.saveExercisesBlockAmrap()
+                secondaryActions[0].func = () => this.saveExercisesBlockAmrap()
                 break
             case 'cbo':
-                secondaryActions[1].func = () => this.saveExercisesBlockCombo()
+                secondaryActions[0].func = () => this.saveExercisesBlockCombo()
                 break
             case 'pir':
-                secondaryActions[1].func = () => this.saveExerciseBlockPir()
+                secondaryActions[0].func = () => this.saveExerciseBlockPir()
                 exercisesBuffer.splice(1)
                 exercisesBuffer[0].reps = defaultPiramidTop
                 for (let i = 1; i < defaultPiramidSeries; i++) {
@@ -522,7 +520,6 @@ class PageBlockCreate extends Component {
     editBlock() {
         const {defaultBlockName, exercises} = this.state
         this.context.dispatch(setData({secondaryActions: [
-                {func: () => this.redirectBackToRoutine(), description: 'Cancelar'},
                 {func: () => this.setState({showModal: true}), description: 'Generar'}
             ]}))
         this.setState({blockType: null, blockName: defaultBlockName, exercises: [], exercisesBuffer: [...exercises]})
@@ -535,6 +532,9 @@ class PageBlockCreate extends Component {
         return (
             <>
                 <Header as={'h3'}>
+                    <Button className={'header-back-arrow'} icon onClick={() => this.redirectBackToRoutine()}>
+                        <Icon name={'arrow left'}/>
+                    </Button>
                     {blockName}
                     {blockType && <Icon name={'edit outline'} className={'header-icon'} onClick={() => this.editBlock()}/>}
                 </Header>

@@ -74,6 +74,12 @@ type UserAccount struct {
 	AccountPlanId *int    `json:"accountplan_id"`
 }
 
+type UserAccountSession struct {
+	Id            *int64  `json:"id"`
+	Token         *string `json:"token"`
+	UserAccountId *int64  `json:"useraccount_id"`
+}
+
 type UserDevice struct {
 	Id            *int64  `json:"id"`
 	Name          *string `json:"name"`

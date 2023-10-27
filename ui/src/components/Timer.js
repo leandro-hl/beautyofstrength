@@ -4,7 +4,7 @@ import {Icon} from "semantic-ui-react";
 export class Timer extends Component {
     constructor(props) {
         super(props);
-        const beep = new Audio("/beep.mp3")
+        const beep = new Audio(`${process.env.PUBLIC_URL}`+"/beep.mp3")
         beep.playbackRate = 1.5
         this.state = {tick: 0, finished: false,beepStartsAt: 4, beep: beep}
     }

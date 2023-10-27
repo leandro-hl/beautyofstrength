@@ -149,7 +149,7 @@ func (o *ShareTokenManager) Read(token string) bool {
 	defer o.a.Unlock()
 	id, ok := o.s[token]
 	if !ok {
-		panic("Invalid token")
+		panic(errors.New("invalid token"))
 	}
 	return id
 }
@@ -178,6 +178,11 @@ func NewEndpoints(conf *Config, l *log.Logger) *Endpoints {
 	exercisesNames := db.ListExerciseNames(dbs)
 	for _, e := range exercisesNames {
 		exercisesComparerCache.Add(*e.Id, *e.Name)
+	}
+
+	sessions := db.ListActiveUserAccountSessions(dbs)
+	for _, s := range sessions {
+		sessionStore.Write(*s.Token, *s.UserAccountId)
 	}
 
 	return &Endpoints{
@@ -401,7 +406,11 @@ func (o *Endpoints) getSharedRoutineDetails(w http.ResponseWriter, r *http.Reque
 }
 
 func (o *Endpoints) listRoutines(w http.ResponseWriter, r *http.Request, tx *sqlx.Tx) {
-	planificationId, err := strconv.ParseInt(r.URL.Query().Get("planificationId"), 10, 64)
+	id := r.URL.Query().Get("planificationId")
+	if id == "" {
+		panic(errors.New("planification id is required"))
+	}
+	planificationId, err := strconv.ParseInt(id, 10, 64)
 	util.Check(err)
 	o.Respond(w, db.ListRoutines(tx, planificationId), http.StatusOK)
 }
@@ -423,27 +432,27 @@ func (o *Endpoints) saveExerciseBlockValidations(r *http.Request, tx *sqlx.Tx, r
 	plan := o.plan(r)
 
 	if !db.CalculateUserOwnsPlanification(tx, userId, *planificationId) {
-		panic("Unauthorized to modify the requested planification")
+		panic(errors.New("unauthorized to modify the requested planification"))
 	}
 
 	if len(exercises) == 0 || len(exercises) > *o.conf.ExercisesPerBlockLimit {
-		panic(fmt.Sprintf("You cannot add more than %d to an exercises block", *o.conf.ExercisesPerBlockLimit))
+		panic(fmt.Errorf("you cannot add more than %d to an exercises block", *o.conf.ExercisesPerBlockLimit))
 	}
 
 	if routineId == nil {
 		last := db.CountRoutinesInPlanification(tx, *planificationId)
 		if *plan == db.StudentFree && *last > 0 {
-			panic("Free accounts cannot have more than one routine")
+			panic(errors.New("free accounts cannot have more than one routine"))
 		}
 		routineId = db.CreateRoutine(tx, fmt.Sprintf("Dia %d", *last+1), *planificationId)
 	} else {
 		if !db.CalculateUserOwnsRoutine(tx, userId, *planificationId, *routineId) {
-			panic("Unauthorized to modify the requested routine")
+			panic(errors.New("unauthorized to modify the requested routine"))
 		}
 
 		blocks := db.CalculateRoutineBlocksAmount(tx, *routineId)
 		if *plan == db.StudentFree && blocks >= *o.conf.StudentFreeAccountRoutineBlocksLimit {
-			panic(fmt.Sprintf("You cannot add more than %d exercise blocks to a routine with a free account", *o.conf.StudentFreeAccountRoutineBlocksLimit))
+			panic(errors.New(fmt.Sprintf("You cannot add more than %d exercise blocks to a routine with a free account", *o.conf.StudentFreeAccountRoutineBlocksLimit)))
 		}
 	}
 
@@ -497,7 +506,7 @@ func (o *Endpoints) saveExerciseBlockValidations(r *http.Request, tx *sqlx.Tx, r
 			}
 			count := db.CountExercisesCreatedByUser(tx, userId)
 			if *count > *o.conf.CustomExercisesPerUserLimit {
-				panic("No puedes crear mas ejercicios nuevos.")
+				panic(errors.New("no puedes crear mas ejercicios nuevos"))
 			}
 			exerciseId := db.CreateExercise(tx, *ex.SanitizedName, userId)
 			*ex.ExerciseRequest.Name = *ex.SanitizedName
@@ -669,11 +678,11 @@ func (o *Endpoints) googleSignIn(w http.ResponseWriter, r *http.Request, tx *sql
 
 	csrfTokenPayload, ok := dataMap["g_csrf_token"]
 	if !ok {
-		panic("No CSRF token in post body")
+		panic(errors.New("no CSRF token in post body"))
 	}
 
 	if csrfTokenCookie.Value != csrfTokenPayload {
-		panic("Failed to verify double submit cookie")
+		panic(errors.New("failed to verify double submit cookie"))
 	}
 
 	jwtToken := dataMap["credential"]
@@ -684,7 +693,7 @@ func (o *Endpoints) googleSignIn(w http.ResponseWriter, r *http.Request, tx *sql
 	util.Check(err)
 
 	if !token.Valid {
-		panic("Invalid Token")
+		panic(errors.New("invalid token"))
 	}
 
 	claims := token.Claims.(*util.GoogleAuthClaims)
@@ -693,18 +702,18 @@ func (o *Endpoints) googleSignIn(w http.ResponseWriter, r *http.Request, tx *sql
 	util.Check(err)
 
 	if time.Now().After(exp.Time) {
-		panic("Invalid Token")
+		panic(errors.New("invalid token"))
 	}
 
 	iss, err := claims.GetIssuer()
 	util.Check(err)
 	if _, ok = o.conf.GoogleTokenValidIssuers[iss]; !ok {
-		panic("Invalid Token")
+		panic(errors.New("invalid token"))
 	}
 
 	userId := db.GetUserIdByUserNameNoError(tx, claims.Email)
 	if userId != nil {
-		o.storeSessionData(w, *userId)
+		o.storeSessionData(w, tx, *userId)
 		plan := db.GetAccountPlanIdentifierByUserId(tx, *userId)
 		if plan == nil {
 			http.Redirect(w, r, *o.conf.AddressUi+"/app"+"/plans", http.StatusFound)
@@ -732,7 +741,7 @@ func (o *Endpoints) googleSignIn(w http.ResponseWriter, r *http.Request, tx *sql
 			AccountPlanId: planId,
 		})
 		db.CreatePlanification(tx, *userId, "Mi Planificacion")
-		o.storeSessionData(w, *userId)
+		o.storeSessionData(w, tx, *userId)
 		http.Redirect(w, r, *o.conf.AddressUi+"/app"+"/plans", http.StatusFound)
 	}
 }
@@ -856,10 +865,12 @@ func (o *Endpoints) getLocalInfo(w http.ResponseWriter, r *http.Request) {
 	w.Write([]byte(last))
 }
 
-func (o *Endpoints) storeSessionData(w http.ResponseWriter, userId int64) {
+func (o *Endpoints) storeSessionData(w http.ResponseWriter, tx *sqlx.Tx, userId int64) {
+	//todo: maintain only one session per user per device type.
 	sessionID, err := util.GenerateSessionID()
 	util.Check(err)
 	sessionStore.Write(sessionID, userId)
+	db.SaveCreatedActiveSession(tx, sessionID, userId)
 	if o.conf.IsDevelopment() {
 		developmentLastCreatedSessionTokenStack = append(developmentLastCreatedSessionTokenStack, sessionID)
 	} else {

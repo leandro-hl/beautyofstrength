@@ -18,7 +18,6 @@ class PageRoutineCreate extends Component {
         try {
             const {state: {routineNumber, planificationId}} = this.context
             this.context.dispatch(setData({secondaryActions: [
-                    {func: () => this.redirectToPlanification(), description: 'Rutinas'},
                     {func: () => this.redirectToCreateBlock(), description: 'Agregar Bloque'}
                 ]}))
             this.setState({loading: true})
@@ -48,6 +47,9 @@ class PageRoutineCreate extends Component {
         return (
             <>
                 <Header as={'h3'}>
+                    <Button className={'header-back-arrow'} icon onClick={() => this.redirectToPlanification()}>
+                        <Icon name={'arrow left'}/>
+                    </Button>
                     {routineName}
                 </Header>
             </>

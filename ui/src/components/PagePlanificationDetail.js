@@ -1,5 +1,5 @@
 import React, {Component} from "react";
-import {Button, Header, Loader, Message, Segment} from "semantic-ui-react";
+import {Button, Header, Icon, Loader, Message, Segment} from "semantic-ui-react";
 import {listRoutines} from "../service";
 import {withRouter} from "react-router-dom";
 import {queryParam} from "../functions";
@@ -22,7 +22,6 @@ class PagePlanificationDetail extends Component {
             const res = await listRoutines(planificationId);
 
             const secondaryActions = [
-                {func: () => this.props.history.push('/my-planifications'), description: 'Planificaciones'},
                 {disabled: !createManyRoutines && res.data.length>0,func: () => this.redirectToCreateRoutine(), description: 'Agregar una Rutina'}
             ]
             this.context.dispatch(setData({secondaryActions: secondaryActions}))
@@ -48,6 +47,7 @@ class PagePlanificationDetail extends Component {
     }
 
     render() {
+        const {state: {planificationName}} = this.context
         const {routines} = this.state;
         const {loading} = this.state;
 
@@ -57,6 +57,12 @@ class PagePlanificationDetail extends Component {
 
         return (
             <>
+                <Header as={'h3'}>
+                    <Button className={'header-back-arrow'} icon onClick={() => this.props.history.push('/my-planifications')}>
+                        <Icon name={'arrow left'}/>
+                    </Button>
+                    <span>{planificationName ?? 'Mis Rutinas'}</span>
+                </Header>
                 {
                     !routines.length &&
                     <Message>
@@ -64,11 +70,7 @@ class PagePlanificationDetail extends Component {
                         <p>Comienza agregando una rutina a tu planificacion. Usualmente una rutina es un dia de la semana.</p>
                     </Message>
                 }
-                {
-                    routines.length &&
-                    <Header as={'h3'}>Mis Rutinas</Header>
-                }
-                {routines.map(p => (<Segment style={{width: '100%'}} key={p.id} onClick={() => this.redirectToRoutine(p.id)}>{p.name+' '+p.id}</Segment>))}
+                {routines.map(p => (<Segment style={{width: '100%'}} key={p.id} onClick={() => this.redirectToRoutine(p.id)}>{p.name}</Segment>))}
             </>
         )
     }

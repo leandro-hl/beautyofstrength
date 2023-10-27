@@ -50,31 +50,37 @@ class BottomMenuBar extends Component {
                 }
                 {
                     secondaryActions && secondaryActions.length == 1 &&
-                    <Button fluid primary onClick={() => secondaryActions[0].func()}>{secondaryActions[0].description}</Button>
+                    <Button className={'button-secondary-action-alone'} primary onClick={() => secondaryActions[0].func()}>{secondaryActions[0].description}</Button>
                 }
                 {
                     !noBottomBar &&
                     <Button.Group fluid style={{height: 65}}>
                         {menuhomestudent && <Button className={selected === MENU.HOME ? 'button-bottom-bar-selected' : 'button-bottom-bar'} icon onClick={() => this.onClick(MENU.HOME, '/student')}>
-                            <Icon name={MENU.HOME} size={'large'} />
+                            <Icon name={MENU.HOME}  />
+                            <span>Inicio</span>
                         </Button>}
                         {menuhomeprofessor && <Button className={selected === MENU.HOME ? 'button-bottom-bar-selected' : 'button-bottom-bar'} icon onClick={() => this.onClick(MENU.HOME, '/professor')}>
-                            <Icon name={MENU.HOME} size={'large'} />
+                            <Icon name={MENU.HOME}  />
+                            <span>Inicio</span>
                         </Button>}
                         {menuplanifications && <Button className={selected === MENU.PLANIFICATIONS ? 'button-bottom-bar-selected' : 'button-bottom-bar'}
                                  icon onClick={() => this.onClick(MENU.PLANIFICATIONS, '/my-planifications')}>
-                            <Icon name={MENU.PLANIFICATIONS} size={'large'}/>
+                            <Icon name={MENU.PLANIFICATIONS} />
+                            <span>Planificaciones</span>
                         </Button>}
                         {menudiscussions && <Button className={selected === MENU.CONTRIBUTIONS ? 'button-bottom-bar-selected' : 'button-bottom-bar'}
                                  icon onClick={() => this.onClick(MENU.CONTRIBUTIONS, '/my-contributions')}>
-                            <Icon name={MENU.CONTRIBUTIONS} size={'large'}/>
+                            <Icon name={MENU.CONTRIBUTIONS} />
+                            <span>Discusion</span>
                         </Button>}
                         {menustatistics && <Button className={selected === MENU.STATS ? 'button-bottom-bar-selected' : 'button-bottom-bar'}
                                                     icon onClick={() => this.onClick(MENU.STATS, '/my-stats')}>
-                            <Icon name={MENU.STATS} size={'large'}/>
+                            <Icon name={MENU.STATS} />
+                            <span>Estadisticas</span>
                         </Button>}
                         <Button className={selected === MENU.ACCOUNT ? 'button-bottom-bar-selected' : 'button-bottom-bar'} icon onClick={() => this.onClick(MENU.ACCOUNT, '/account')}>
-                            <Icon name={MENU.ACCOUNT} size={'large'} />
+                            <Icon name={MENU.ACCOUNT}  />
+                            <span>Perfil</span>
                         </Button>
                     </Button.Group>
                 }
