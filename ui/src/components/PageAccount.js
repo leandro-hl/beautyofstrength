@@ -1,6 +1,6 @@
 import React, {Component} from "react";
 import {Grid, List, Loader, Image, Segment, Table} from "semantic-ui-react";
-import {getUserAccountDetails} from "../service";
+import {getUserAccountDetails, signout} from "../service";
 import {withRouter} from "react-router-dom";
 import {AppContext, setData} from "../context";
 import {MENU} from "../enums";
@@ -11,9 +11,24 @@ class PageAccount extends Component {
 
     async componentDidMount() {
         try {
-            this.context.dispatch(setData({noBottomBar: false, menuButtonSelected: MENU.ACCOUNT}))
+            this.context.dispatch(setData({
+                noBottomBar: false,
+                menuButtonSelected: MENU.ACCOUNT,
+                secondaryActions: [{func: () => this.signout(), description: 'Salir'}]}))
             const res = await getUserAccountDetails();
             this.setState({loading: false, userAccount: res.data})
+        } catch (e) {
+            console.error(e)
+        }
+    }
+
+    componentWillUnmount() {
+        this.context.dispatch(setData({secondaryActions: []}))
+    }
+
+    async signout() {
+        try {
+            await signout();
         } catch (e) {
             console.error(e)
         }

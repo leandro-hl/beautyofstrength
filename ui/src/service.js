@@ -92,6 +92,10 @@ export function saveUserTrainedToday(payload) {
     return axios.post("saveUserTrainedToday", payload)
 }
 
+export function signout() {
+    return axios.post("signout")
+}
+
 export function shareRoutine(payload) {
     return axios.post("shareRoutine", payload)
 }
