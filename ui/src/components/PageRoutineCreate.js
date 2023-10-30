@@ -15,18 +15,19 @@ class PageRoutineCreate extends Component {
     }
 
     async componentDidMount() {
-        try {
-            const {state: {routineNumber, planificationId}} = this.context
-            this.context.dispatch(setData({secondaryActions: [
-                    {func: () => this.redirectToCreateBlock(), description: 'Agregar Bloque'}
-                ]}))
-            this.setState({loading: true})
-            this.setState({planificationId: planificationId, routineName: 'Dia '+routineNumber, routineNumber})
-        } catch (e) {
-            console.error(e)
-        } finally {
-            this.setState({loading: false})
-        }
+        this.redirectToCreateBlock()
+        // try {
+        //     const {state: {routineNumber, planificationId}} = this.context
+        //     this.context.dispatch(setData({secondaryActions: [
+        //             {func: () => this.redirectToCreateBlock(), description: 'Agregar Bloque'}
+        //         ]}))
+        //     this.setState({loading: true})
+        //     this.setState({planificationId: planificationId, routineName: 'Dia '+routineNumber, routineNumber})
+        // } catch (e) {
+        //     console.error(e)
+        // } finally {
+        //     this.setState({loading: false})
+        // }
     }
 
     redirectToCreateBlock() {

@@ -77,9 +77,9 @@ class PageRoutineDetail extends Component{
             const res = await shareRoutine({planificationId, routineId})
 
             if (isLocalhost()) {
-                await navigator.clipboard.writeText(`localhost:3000${res.data}`);
+                await navigator.clipboard.writeText(`localhost:3000/app${res.data}`);
             } else {
-                await navigator.clipboard.writeText(`https://bos.team${res.data}`);
+                await navigator.clipboard.writeText(`https://bos.team/app${res.data}`);
             }
 
             this.setState({showPopUp: true})

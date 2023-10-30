@@ -102,7 +102,7 @@ function ResponseInterceptor({children}) {
                 history?.push('/signin');
                 localStorage.removeItem("state")
             }
-            console.error(err)
+            throw err
         }
     )
 

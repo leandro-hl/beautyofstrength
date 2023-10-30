@@ -84,6 +84,10 @@ export function saveUserDevicePushNotificationSubscription(payload) {
     return axios.post("saveUserDevicePushNotificationSubscription", payload)
 }
 
+export function savePlanificationDays(payload) {
+    return axios.post("savePlanificationDays", payload)
+}
+
 export function saveUserTrainedToday(payload) {
     return axios.post("saveUserTrainedToday", payload)
 }

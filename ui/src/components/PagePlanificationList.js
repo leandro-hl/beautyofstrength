@@ -36,11 +36,16 @@ class PagePlanificationList extends Component {
         this.props.history.push('/planification')
     }
 
+    redirectToPlanificationDays(p) {
+        this.context.dispatch(setData({planificationId: p.id, planificationName: p.name}))
+        this.props.history.push('/planification-days')
+    }
+
     async createPlanification() {
         try {
             const {newPlanificationName} = this.state
             const res = await createPlanification({name: newPlanificationName});
-            this.redirectToPlanification({id: res.data.id, name: newPlanificationName})
+            this.redirectToPlanificationDays({id: res.data.id, name: newPlanificationName})
         } catch (e) {
             console.error(e)
         }
@@ -51,8 +56,8 @@ class PagePlanificationList extends Component {
     }
 
     async handleConfirm() {
-        this.handleClose();
         await this.createPlanification()
+        this.handleClose();
     }
 
     handleClose = () => {

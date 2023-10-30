@@ -13,6 +13,23 @@ export function urlBase64ToUint8Array(base64String) {
     return outputArray;
 }
 
+export function copyToClipboard(text) {
+    const textarea = document.createElement('textarea');
+    textarea.value = text;
+    document.body.appendChild(textarea);
+    textarea.select();
+
+    try {
+        const successful = document.execCommand('copy');
+        const msg = successful ? 'successful' : 'unsuccessful';
+        console.log('Copy command was ' + msg);
+    } catch (err) {
+        console.error('Unable to copy', err);
+    }
+
+    document.body.removeChild(textarea);
+}
+
 export function parseSearch(location) {
     return new URLSearchParams(location.search)
 }

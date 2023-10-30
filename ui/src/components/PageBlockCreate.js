@@ -519,9 +519,7 @@ class PageBlockCreate extends Component {
 
     editBlock() {
         const {defaultBlockName, exercises} = this.state
-        this.context.dispatch(setData({secondaryActions: [
-                {func: () => this.setState({showModal: true}), description: 'Generar'}
-            ]}))
+        this.context.dispatch(setData({secondaryActions: []}))
         this.setState({blockType: null, blockName: defaultBlockName, exercises: [], exercisesBuffer: [...exercises]})
     }
 
@@ -546,6 +544,7 @@ class PageBlockCreate extends Component {
                                 <b>No encontras un ejercicio? Agregalo haciendo click en "Agregar"</b>
                                 <br/><br/>Necesitas repetir un ejercicio? Podes hacerlo una vez generado el bloque. (Combos)
                             </Message>}
+                            <Button style={{marginBottom: '1em'}} primary fluid onClick={() => this.setState({showModal: true})}>Generar</Button>
                             <div ref={this.dropdownRef}>
                                 <Dropdown
                                     placeholder='Elegi los ejercicios'

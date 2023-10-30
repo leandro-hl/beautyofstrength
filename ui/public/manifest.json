@@ -1,6 +1,6 @@
 {
-  "name": "My Progressive Web App",
-  "short_name": "MyPWA",
+  "name": "Beauty Of Strenght",
+  "short_name": "bOS",
   "icons": [
     {
       "src": "favicon.ico",
@@ -21,6 +21,6 @@
   "start_url": ".",
   "display": "standalone",
   "theme_color": "#000000",
-  "background_color": "#2f272a",
-  "description": "A sample progressive web app"
+  "background_color": "#121212",
+  "description": "El sistema operativo del entrenamiento"
 }

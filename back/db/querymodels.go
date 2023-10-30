@@ -12,9 +12,10 @@ type ListExercise struct {
 }
 
 type GetUserAccountDetailsQuery struct {
-	Name       *string `json:"name"`
-	Email      *string `json:"email"`
-	PictureUrl *string `json:"pictureurl"`
+	Name        *string `json:"name"`
+	Email       *string `json:"email"`
+	PictureUrl  *string `json:"pictureurl"`
+	AccountType *string `json:"accounttype"`
 }
 
 type GetRoutineDetailsQuery struct {

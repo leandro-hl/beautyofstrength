@@ -42,7 +42,7 @@ class PageHomeStudent extends Component {
                     <Header as={'h3'}>Proximamente</Header>
                     <Segment>Proximamente la nueva home disponible</Segment>
                 </>
-                <ModalEnableNotifications onSubscribed={() => this.setState({showSecondModal: true})}/>
+                {/*{navigator.serviceWorker && <ModalEnableNotifications onSubscribed={() => this.setState({showSecondModal: true})}/>}*/}
                 {
                     showSecondModal && !loadedTrainingToday  &&
                     <ModalHaveTrained/>

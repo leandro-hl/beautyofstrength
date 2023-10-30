@@ -23,6 +23,7 @@ import PageStats from "./components/PageStats";
 import PageTermsAndConditions from "./components/PageTermsAndConditions";
 import PagePrivacyPolicies from "./components/PagePrivacyPolicies";
 import PageRoot from "./components/PageRoot";
+import PagePlanificationSelectDays from "./components/PagePlanificationSelectDays";
 
 class App extends Component {
     render() {
@@ -42,6 +43,7 @@ class App extends Component {
                                 <PrivateRoute exact path={"/my-contributions"} component={PageProfessorContributions}/>
                                 <PrivateRoute exact path={"/my-stats"} component={PageStats}/>
                                 <PrivateRoute exact path={"/planification"} component={PagePlanificationDetail}/>
+                                <PrivateRoute exact path={"/planification-days"} component={PagePlanificationSelectDays}/>
                                 <PrivateRoute exact path={"/routine/execution"} component={PageRoutineExecution}/>
                                 <PrivateRoute exact path={"/routine/create"} component={PageRoutineCreate}/>
                                 <PrivateRoute exact path={"/routine"} component={PageRoutineDetail}/>

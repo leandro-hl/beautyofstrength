@@ -17,10 +17,6 @@ import (
 )
 
 type Config struct {
-	VapidPublicKey *string `json:"vapidPublicKey"`
-	//VapidPrivateKey *string `json:"vapidPrivateKey"`
-	VapidDataKey                         *string         `json:"vapidDataKey"`
-	LinkSharingKey                       *string         `json:"linkSharingKey"`
 	LinkSharingExpirationDays            *int            `json:"linkSharingExpirationDays"`
 	DatasourceName                       *string         `json:"datasourceName"`
 	AllowedOrigins                       []string        `json:"allowedOrigins"`
@@ -32,7 +28,6 @@ type Config struct {
 	CustomExerciseNameCharacterLimit     *int            `json:"customExerciseNameCharacterLimit"`
 	ExercisesPerBlockLimit               *int            `json:"exercisesPerBlockLimit"`
 	StudentFreeAccountRoutineBlocksLimit *int            `json:"studentFreeAccountRoutineBlocksLimit"`
-	GoogleClientId                       *string         `json:"googleClientId"`
 	GooglePEMCertsURL                    *string         `json:"googlePEMCertsUrl"`
 	GoogleTokenValidIssuers              map[string]bool `json:"googleTokenValidIssuers"`
 	GooglePEMPublicKeys                  map[string]*rsa.PublicKey
@@ -49,19 +44,38 @@ func (o *Config) ServeStaticUI() bool {
 func (o *Config) Validate() {
 }
 
+type CryptoConfig struct {
+	//VapidPrivateKey *string `json:"vapidPrivateKey"`
+	VapidPublicKey *string `json:"vapidPublicKey"`
+	VapidDataKey   *string `json:"vapidDataKey"`
+	LinkSharingKey *string `json:"linkSharingKey"`
+	GoogleClientId *string `json:"googleClientId"`
+}
+
+func (o *CryptoConfig) Validate() {
+}
+
 func main() {
 	env := os.Getenv("ENV")
 	var config Config
+	var cryptoConf CryptoConfig
 	if env == "PROD" {
 		confStr := os.Getenv("CONFIG")
 		err := json.Unmarshal([]byte(confStr), &config)
 		util.Check(err)
+
+		confStr = os.Getenv("CRYPTO_CONFIG")
+		err = json.Unmarshal([]byte(confStr), &cryptoConf)
+		util.Check(err)
 	} else {
 		confSpec := util.FlagString("conf", "back/web/conf.json", "Config")
+		confSpec2 := util.FlagString("cryptoconf", "back/web/crypto-conf.json", "Config")
 		flag.Parse()
 		util.LoadConfig(*confSpec, &config)
+		util.LoadConfig(*confSpec2, &cryptoConf)
 	}
 	config.Validate()
+	cryptoConf.Validate()
 	l := log.New(os.Stdout, "app:", log.LstdFlags)
 
 	func() {
@@ -81,7 +95,7 @@ func main() {
 		}
 	}()
 
-	o := NewEndpoints(&config, l)
+	o := NewEndpoints(&config, &cryptoConf, l)
 	allowedHeaders := []string{"Content-type", "Accept", "Content-Length", "Accept-Encoding", "X-CSRF-Token", "Authorization"}
 	if config.IsDevelopment() {
 		allowedHeaders = append(allowedHeaders, "ngrok-skip-browser-warning")

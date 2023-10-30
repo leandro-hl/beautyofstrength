@@ -27,10 +27,11 @@ import (
 )
 
 type Endpoints struct {
-	db   *sqlx.DB
-	conf *Config
-	r    *mux.Router
-	l    *log.Logger
+	db         *sqlx.DB
+	conf       *Config
+	cryptoConf *CryptoConfig
+	r          *mux.Router
+	l          *log.Logger
 }
 
 type ExercisesComparerCache struct {
@@ -172,7 +173,7 @@ var exercisesComparerCache = NewExercisesComparerCache()
 var shareManager = NewShareTokenManager()
 var developmentLastCreatedSessionTokenStack = make([]string, 0)
 
-func NewEndpoints(conf *Config, l *log.Logger) *Endpoints {
+func NewEndpoints(conf *Config, cryptoConf *CryptoConfig, l *log.Logger) *Endpoints {
 	dbs := db.InitDB(*conf.DatasourceName)
 
 	exercisesNames := db.ListExerciseNames(dbs)
@@ -186,10 +187,11 @@ func NewEndpoints(conf *Config, l *log.Logger) *Endpoints {
 	}
 
 	return &Endpoints{
-		db:   dbs,
-		conf: conf,
-		r:    mux.NewRouter(),
-		l:    l,
+		db:         dbs,
+		conf:       conf,
+		cryptoConf: cryptoConf,
+		r:          mux.NewRouter(),
+		l:          l,
 	}
 }
 
@@ -204,6 +206,7 @@ func (o *Endpoints) Handle() http.Handler {
 
 	//Profesor services (all premium)
 	api.Path("/createPlanification").HandlerFunc(o.HandleAuthenticatedTransactional(o.HandleAuthorization(o.createPlanification, db.Professor)))
+	api.Path("/savePlanificationDays").HandlerFunc(o.HandleAuthenticatedTransactional(o.HandleAuthorization(o.savePlanificationDays, db.Professor)))
 
 	//Student services
 	//free tier
@@ -270,12 +273,13 @@ func (o *Endpoints) getUserPermissions(w http.ResponseWriter, r *http.Request, t
 		permissions["receiveNotifications"] = true
 		permissions["shareRoutine"] = true
 		permissions["getSharedRoutineDetails"] = true
-		permissions["createOneRoutine"] = true
-		permissions["editRoutinesICreated"] = true
-		permissions["executeRoutine"] = true
 		permissions["listPlanifications"] = true
 		permissions["menuplanifications"] = true
 		permissions["listExercises"] = true
+		//not implemented
+		permissions["createOneRoutine"] = true
+		permissions["editRoutinesICreated"] = true
+		permissions["executeRoutine"] = true
 	}
 
 	if *plan == db.StudentFree || *plan == db.StudentPremium {
@@ -354,7 +358,7 @@ func (o *Endpoints) getSharedRoutineDetails(w http.ResponseWriter, r *http.Reque
 	if shareEncrypted != "" {
 		decoded, err := base64.RawURLEncoding.DecodeString(shareEncrypted)
 		util.Check(err)
-		key, err := base64.StdEncoding.DecodeString(*o.conf.LinkSharingKey)
+		key, err := base64.StdEncoding.DecodeString(*o.cryptoConf.LinkSharingKey)
 		util.Check(err)
 		decrypted, err := util.Decrypt(string(decoded), key)
 		util.Check(err)
@@ -620,8 +624,23 @@ func (o *Endpoints) createPlanification(w http.ResponseWriter, r *http.Request, 
 	o.Respond(w, &CreatePlanificationResponse{Id: id}, http.StatusOK)
 }
 
+func (o *Endpoints) savePlanificationDays(w http.ResponseWriter, r *http.Request, tx *sqlx.Tx) {
+	t := SavePlanificationDaysRequest{}
+	err := o.Decode(r, &t)
+	util.Check(err)
+
+	userId := util.UserId(r)
+
+	if !db.CalculateUserOwnsPlanification(tx, userId, *t.PlanificationId) {
+		o.Respond(w, nil, http.StatusUnauthorized)
+	}
+
+	db.SavePlanificationDays(tx, *t.PlanificationId, *t.Days)
+	o.Respond(w, nil, http.StatusOK)
+}
+
 func (o *Endpoints) retrieveVapidPublicKey(w http.ResponseWriter, r *http.Request, tx *sqlx.Tx) {
-	w.Write([]byte(*o.conf.VapidPublicKey))
+	w.Write([]byte(*o.cryptoConf.VapidPublicKey))
 }
 
 func (o *Endpoints) saveUserDevicePushNotificationSubscription(w http.ResponseWriter, r *http.Request, tx *sqlx.Tx) {
@@ -633,7 +652,7 @@ func (o *Endpoints) saveUserDevicePushNotificationSubscription(w http.ResponseWr
 	reg := regexp.MustCompile(`\(([^)]+)\)`)
 	device := reg.FindString(r.Header.Get("User-Agent"))
 
-	key, err := base64.StdEncoding.DecodeString(*o.conf.VapidDataKey)
+	key, err := base64.StdEncoding.DecodeString(*o.cryptoConf.VapidDataKey)
 	util.Check(err)
 
 	encrypted, err := util.Encrypt(*t.Subscription, key)
@@ -689,7 +708,7 @@ func (o *Endpoints) googleSignIn(w http.ResponseWriter, r *http.Request, tx *sql
 	token, err := jwt.ParseWithClaims(jwtToken, &util.GoogleAuthClaims{}, func(token *jwt.Token) (interface{}, error) {
 		keyId := token.Header["kid"].(string)
 		return o.conf.GooglePEMPublicKeys[keyId], nil
-	}, jwt.WithAudience(*o.conf.GoogleClientId))
+	}, jwt.WithAudience(*o.cryptoConf.GoogleClientId))
 	util.Check(err)
 
 	if !token.Valid {
@@ -716,15 +735,15 @@ func (o *Endpoints) googleSignIn(w http.ResponseWriter, r *http.Request, tx *sql
 		o.storeSessionData(w, tx, *userId)
 		plan := db.GetAccountPlanIdentifierByUserId(tx, *userId)
 		if plan == nil {
-			http.Redirect(w, r, *o.conf.AddressUi+"/app"+"/plans", http.StatusFound)
+			http.Redirect(w, r, *o.conf.AddressUi+"/app"+"/my-planifications", http.StatusFound)
 		} else if *plan == db.StudentFree {
-			http.Redirect(w, r, *o.conf.AddressUi+"/app"+"/student", http.StatusFound)
+			http.Redirect(w, r, *o.conf.AddressUi+"/app"+"/my-planifications", http.StatusFound)
 		} else if *plan == db.StudentPremium {
-			http.Redirect(w, r, *o.conf.AddressUi+"/app"+"/student", http.StatusFound)
+			http.Redirect(w, r, *o.conf.AddressUi+"/app"+"/my-planifications", http.StatusFound)
 		} else if *plan == db.Professor {
-			http.Redirect(w, r, *o.conf.AddressUi+"/app"+"/professor", http.StatusFound)
+			http.Redirect(w, r, *o.conf.AddressUi+"/app"+"/my-planifications", http.StatusFound)
 		} else {
-			http.Redirect(w, r, *o.conf.AddressUi+"/app"+"/plans", http.StatusFound)
+			http.Redirect(w, r, *o.conf.AddressUi+"/app"+"/my-planifications", http.StatusFound)
 		}
 	} else {
 		//todo: auto generate a password and send it over email
@@ -742,7 +761,7 @@ func (o *Endpoints) googleSignIn(w http.ResponseWriter, r *http.Request, tx *sql
 		})
 		db.CreatePlanification(tx, *userId, "Mi Planificacion")
 		o.storeSessionData(w, tx, *userId)
-		http.Redirect(w, r, *o.conf.AddressUi+"/app"+"/plans", http.StatusFound)
+		http.Redirect(w, r, *o.conf.AddressUi+"/app"+"/my-planifications", http.StatusFound)
 	}
 }
 
@@ -753,7 +772,7 @@ func (o *Endpoints) shareRoutine(w http.ResponseWriter, r *http.Request, tx *sql
 	userId := util.UserId(r)
 	if db.GetUserCreatedTheRoutine(tx, *t.PlanificationId, *t.RoutineId, userId) {
 		db.InvalidateSharingTokenForRoutine(tx, *t.PlanificationId, *t.RoutineId, userId)
-		key, err := base64.StdEncoding.DecodeString(*o.conf.LinkSharingKey)
+		key, err := base64.StdEncoding.DecodeString(*o.cryptoConf.LinkSharingKey)
 		util.Check(err)
 		str, err := json.Marshal(ShareEncrypted{
 			RoutineId:       *t.RoutineId,
@@ -1039,7 +1058,7 @@ func (o *Endpoints) pushNotificationWorks(w http.ResponseWriter, r *http.Request
 	userId := util.UserId(r)
 	reg := regexp.MustCompile(`\(([^)]+)\)`)
 	device := reg.FindString(r.Header.Get("User-Agent"))
-	key, err := base64.StdEncoding.DecodeString(*o.conf.VapidDataKey)
+	key, err := base64.StdEncoding.DecodeString(*o.cryptoConf.VapidDataKey)
 	util.Check(err)
 	vapiddata, _ := util.Decrypt(db.RetrieveUserDeviceNotifationSubscription(tx, userId, device), key)
 	var sub webpush.Subscription
@@ -1050,7 +1069,7 @@ func (o *Endpoints) pushNotificationWorks(w http.ResponseWriter, r *http.Request
 		TTL:     60, //secs
 		Urgency: "medium",
 		VAPID: webpush.VAPID{
-			PublicKey: *o.conf.VapidPublicKey,
+			PublicKey: *o.cryptoConf.VapidPublicKey,
 			//PrivateKey: *o.conf.VapidPrivateKey,
 		},
 		//RecordSize: 0,

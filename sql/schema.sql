@@ -629,6 +629,13 @@ CREATE TABLE IF NOT EXISTS planification
     name VARCHAR(30) NOT NULL
 );
 
+CREATE TABLE IF NOT EXISTS planificationschedule
+(
+    id               BIGINT NOT NULL GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    planification_id BIGINT REFERENCES planification (id),
+    days              VARCHAR(7)    NOT NULL
+);
+
 CREATE TABLE IF NOT EXISTS routine
 (
     id               BIGINT      NOT NULL GENERATED ALWAYS AS IDENTITY PRIMARY KEY,

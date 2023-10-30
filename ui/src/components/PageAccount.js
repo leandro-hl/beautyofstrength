@@ -44,6 +44,10 @@ class PageAccount extends Component {
                                         <Table.Cell>Email</Table.Cell>
                                         <Table.Cell>{userAccount.email}</Table.Cell>
                                     </Table.Row>
+                                    <Table.Row>
+                                        <Table.Cell>Plan</Table.Cell>
+                                        <Table.Cell>{userAccount.accounttype}</Table.Cell>
+                                    </Table.Row>
                                 </Table.Body>
                             </Table>
                         </Segment>

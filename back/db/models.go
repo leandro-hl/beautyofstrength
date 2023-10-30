@@ -22,6 +22,12 @@ type Planification struct {
 	Name *string `json:"name"`
 }
 
+type PlanificationSchedule struct {
+	Id              *int64  `json:"id"`
+	PlanificationId *int64  `json:"planification_id"`
+	Days            *string `json:"days"`
+}
+
 type Routine struct {
 	Id              *int    `json:"id"`
 	Name            *string `json:"name"`

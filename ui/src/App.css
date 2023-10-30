@@ -147,6 +147,14 @@ body > div#root {
   background-color: #f9d118 !important;
 }
 
+.planification-checkbox-day {
+  display: block !important;
+}
+
+.planification-checkbox-day label {
+  color: white !important;
+}
+
 .chevron-up {
   position: absolute !important;
   right: 20px !important;

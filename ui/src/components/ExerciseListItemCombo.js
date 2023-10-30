@@ -21,7 +21,7 @@ export class ExerciseListItemCombo extends Component {
                                     <Icon name={'sync'} className={'list-item-icon'} onClick={() => this.props.onRepeat(this.props.item)}/>
                                 </Grid.Row>
                                 <Grid.Row>
-                                    <span style={{fontSize: '0.6em'}}>agregado por: {this.props.item.createdbyuser}</span>
+                                    {/*<span style={{fontSize: '0.6em'}}>agregado por: {this.props.item.createdbyuser}</span>*/}
                                 </Grid.Row>
                             </Label>
                         </Grid.Column>

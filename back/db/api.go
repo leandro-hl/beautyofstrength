@@ -138,6 +138,15 @@ func CreatePlanification(tx *sqlx.Tx, userId int64, name string) *int64 {
 	return id
 }
 
+func SavePlanificationDays(tx *sqlx.Tx, planificationId int64, days string) {
+	Insert(
+		tx,
+		&PlanificationSchedule{
+			PlanificationId: &planificationId,
+			Days:            &days,
+		})
+}
+
 func CreateExercise(tx *sqlx.Tx, name string, userAccountId int64) *int {
 	id := Insert(
 		tx,
@@ -264,7 +273,10 @@ func GetAccountPlanIdentifierByUserId(tx *sqlx.Tx, userId int64) *AccountPlanTyp
 
 func GetUserAccountDetails(tx *sqlx.Tx, userId int64) *GetUserAccountDetailsQuery {
 	var des GetUserAccountDetailsQuery
-	tx.Get(&des, `select name, email, pictureurl from useraccount where id=$1`, userId)
+	tx.Get(&des, `
+	   select u.name, u.email, u.pictureurl, a.name as accounttype from useraccount u
+	   inner join accountplan a on u.accountplan_id = a.id
+	   where u.id=$1`, userId)
 	return &des
 }
 

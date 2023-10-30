@@ -140,6 +140,15 @@ type CreatePlanificationResponse struct {
 	Id *int64 `json:"id"`
 }
 
+type SavePlanificationDaysRequest struct {
+	PlanificationId *int64  `json:"planificationId"`
+	Days            *string `json:"days"`
+}
+
+type SavePlanificationDaysResponse struct {
+	Id *int64 `json:"id"`
+}
+
 type GoogleSignInRequest struct {
 	ClientId  *string `json:"clientId"`
 	ClientId2 *string `json:"client_id"`
