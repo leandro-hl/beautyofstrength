@@ -29,6 +29,7 @@ class PageAccount extends Component {
     async signout() {
         try {
             await signout();
+            this.props.history.push('/signin')
         } catch (e) {
             console.error(e)
         }

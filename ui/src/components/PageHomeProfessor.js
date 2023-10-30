@@ -16,11 +16,6 @@ class PageHomeProfessor extends Component {
 
     async componentDidMount() {
         try {
-            const routineShared = localStorage.getItem('routine-shared')
-            if (routineShared) {
-                this.props.history.push('/routine')
-                return
-            }
             this.context.dispatch(setData({noBottomBar: false, menuButtonSelected: MENU.HOME}))
         } catch (e) {
             console.error(e)

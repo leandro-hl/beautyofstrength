@@ -788,7 +788,6 @@ func (o *Endpoints) signout(w http.ResponseWriter, r *http.Request, tx *sqlx.Tx)
 			SameSite: http.SameSiteStrictMode,
 			Secure:   true,
 		})
-		http.Redirect(w, r, *o.conf.AddressUi+"/app"+"/signin", http.StatusFound)
 	}
 }
 

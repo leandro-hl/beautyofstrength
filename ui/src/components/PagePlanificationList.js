@@ -13,6 +13,11 @@ class PagePlanificationList extends Component {
 
     async componentDidMount() {
         try {
+            const routineShared = localStorage.getItem('routine-shared')
+            if (routineShared) {
+                this.props.history.push('/routine')
+                return
+            }
             const {state: {permissions: {createPlanification}}} = this.context
             if (createPlanification) {
                 this.context.dispatch(setData({
