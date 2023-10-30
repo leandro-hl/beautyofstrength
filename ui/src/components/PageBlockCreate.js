@@ -51,9 +51,7 @@ class PageBlockCreate extends Component {
     async componentDidMount() {
         try {
             const {state: {planificationId, routineId, routineDetails: {nextBlockNumber}}} = this.context
-            this.context.dispatch(setData({secondaryActions: [
-                    {func: () => this.setState({showModal: true}), description: 'Generar'}
-                ]}))
+            this.context.dispatch(setData({secondaryActions: []}))
             this.setState({loading: true})
             const res = await listExercises()
             let biggerId = 0

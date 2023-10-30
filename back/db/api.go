@@ -8,7 +8,8 @@ import (
 
 func ListExerciseNames(db *sqlx.DB) []ListExerciseIdName {
 	var exercisesNames []ListExerciseIdName
-	db.Select(&exercisesNames, "select id, name from exercise")
+	err := db.Select(&exercisesNames, "select id, name from exercise")
+	util.Check(err)
 	return exercisesNames
 }
 
