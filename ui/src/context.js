@@ -29,7 +29,8 @@ const initialState = {
         name: '',
         blocks: [],
         nextBlockNumber: null
-    }
+    },
+    darkTheme: false
 }
 
 const reducer = (state, action) => {
@@ -119,6 +120,9 @@ export function ContextProvider({children}) {
     } else {
         currentState = initialState
     }
+
+    const darkTheme = localStorage.getItem('darkTheme')
+    currentState.darkTheme = darkTheme === "false" ? false : true
 
     const [state, dispatch] = useReducer(reducer, currentState);
 

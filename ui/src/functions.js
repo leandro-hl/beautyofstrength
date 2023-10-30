@@ -30,6 +30,14 @@ export function copyToClipboard(text) {
     document.body.removeChild(textarea);
 }
 
+export function setTheme(darkTheme) {
+    if (darkTheme) {
+        document.getElementById("root").classList.add("body-dark");
+    } else {
+        document.getElementById("root").classList.remove("body-dark");
+    }
+}
+
 export function parseSearch(location) {
     return new URLSearchParams(location.search)
 }

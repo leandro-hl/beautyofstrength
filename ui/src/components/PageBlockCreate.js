@@ -44,7 +44,7 @@ class PageBlockCreate extends Component {
         if (routineId) {
             this.props.history.push('/routine')
         } else {
-            this.props.history.push('/routine/create')
+            this.props.history.push('/planification')
         }
     }
 

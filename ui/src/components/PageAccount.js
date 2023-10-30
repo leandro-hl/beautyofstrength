@@ -1,9 +1,10 @@
 import React, {Component} from "react";
-import {Grid, List, Loader, Image, Segment, Table} from "semantic-ui-react";
+import {Grid, List, Loader, Image, Segment, Table, Checkbox} from "semantic-ui-react";
 import {getUserAccountDetails, signout} from "../service";
 import {withRouter} from "react-router-dom";
 import {AppContext, setData} from "../context";
 import {MENU} from "../enums";
+import {setTheme} from "../functions";
 
 class PageAccount extends Component {
     static contextType = AppContext
@@ -35,7 +36,16 @@ class PageAccount extends Component {
         }
     }
 
+    changeTheme() {
+        const {state: {darkTheme}} = this.context
+        const newChoice = !darkTheme
+        localStorage.setItem('darkTheme', newChoice.toString())
+        setTheme(newChoice)
+        this.context.dispatch(setData({darkTheme: newChoice}))
+    }
+
     render() {
+        const {state: {darkTheme}} = this.context
         const {loading, userAccount} = this.state;
 
         if (loading) {
@@ -59,6 +69,10 @@ class PageAccount extends Component {
                                     <Table.Row>
                                         <Table.Cell>Email</Table.Cell>
                                         <Table.Cell>{userAccount.email}</Table.Cell>
+                                    </Table.Row>
+                                    <Table.Row>
+                                        <Table.Cell>Tema oscuro</Table.Cell>
+                                        <Table.Cell><Checkbox toggle checked={darkTheme} onChange={() => this.changeTheme()} /></Table.Cell>
                                     </Table.Row>
                                     <Table.Row>
                                         <Table.Cell>Plan</Table.Cell>

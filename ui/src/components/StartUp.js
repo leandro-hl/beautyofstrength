@@ -4,19 +4,24 @@ import {AppContext, setData} from "../context";
 import {Loader} from "semantic-ui-react";
 import {withRouter} from "react-router-dom";
 import axios from "axios";
-import {isLocalhost, queryParam} from "../functions";
+import {isLocalhost, queryParam, setTheme} from "../functions";
 
 class StartUp extends Component {
     static contextType = AppContext
     state = {loading: true}
 
-    async loadUserPermissions() {
+    async loadUserData() {
         try {
             const res = await getUserPermissions();
             this.context.dispatch(setData({permissions: res.data, noMenu: false, secondaryActions:[]}))
         } catch (e) {
             console.error(e)
         }
+    }
+
+    setTheme() {
+        const {state: {darkTheme}} = this.context
+        setTheme(darkTheme)
     }
 
     async loadLocalEnvironment() {
@@ -43,10 +48,9 @@ class StartUp extends Component {
         }
         if (isLocalhost()) {
             await this.loadLocalEnvironment()
-            await this.loadUserPermissions()
-        } else {
-            await this.loadUserPermissions()
         }
+        this.setTheme()
+        await this.loadUserData()
         this.setState({loading: false})
     }
     render() {

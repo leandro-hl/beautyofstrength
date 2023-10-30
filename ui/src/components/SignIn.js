@@ -1,6 +1,6 @@
 import React, { Component } from 'react';
 import {Button, Divider, Form, Grid, Header, Image, Message, Segment} from 'semantic-ui-react';
-import {AppContext} from "../context";
+import {AppContext, setData} from "../context";
 import {Link, NavLink, withRouter} from "react-router-dom";
 import {signIn} from "../service";
 import {isLocalhost} from "../functions";
@@ -23,6 +23,7 @@ class SignIn extends Component {
         script.src = 'https://accounts.google.com/gsi/client';
         script.async = true;
         document.body.appendChild(script);
+        this.context.dispatch(setData({noBottomBar: true}))
     }
     // handleChange = (e, { name, value }) => {
     //     this.setState({ [name]: value });
@@ -45,7 +46,7 @@ class SignIn extends Component {
             <>
                 <Grid textAlign='center' verticalAlign='middle'>
                     <Grid.Row>
-                        <Image src={'logo.webp'} size={'small'} circular style={{height: 150}}/>
+                        <Image src={'logo.webp'} size={'small'} circular style={{height: 150, backgroundColor: '#000000'}}/>
                     </Grid.Row>
                     <Grid.Row>
                         <Header as={'h1'}><b>bOS</b></Header>
@@ -54,7 +55,9 @@ class SignIn extends Component {
                         <Header as={'h3'}>Beauty Of Strenght</Header>
                     </Grid.Row>
                     <Grid.Row>
-                        <Header textAlign={'center'} as={'h5'}>El Sistema Operativo del Entrenamiento<br/>(Version Beta)</Header>
+                        <Grid.Column>
+                            <Header textAlign={'center'} as={'h5'}>El Sistema Operativo del Entrenamiento<br/>(Version Beta)</Header>
+                        </Grid.Column>
                     </Grid.Row>
                     <Grid.Row>
                         <Segment basic>
