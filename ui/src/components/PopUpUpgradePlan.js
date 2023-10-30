@@ -23,7 +23,7 @@ export class PopUpUpgradePlan extends Component {
                 open={this.state.isOpen}
                 onClose={() => this.handleClose()}
                 onOpen={() => this.handleOpen()}
-                trigger={this.props.trigger} on={'click'} position={'top center'}>
+                trigger={this.props.trigger} on={'click'} position={'top left'}>
                 <Popup.Header>Pasate a Premium!</Popup.Header>
                 <Popup.Content>Con Premium obtene beneficios y desbloquea todas las funcionalidades</Popup.Content>
             </Popup>

@@ -50,7 +50,12 @@ class BottomMenuBar extends Component {
                 }
                 {
                     secondaryActions && secondaryActions.length == 1 &&
-                    <Button className={'button-secondary-action-alone'} primary onClick={() => secondaryActions[0].func()}>{secondaryActions[0].description}</Button>
+                    <>
+                        {secondaryActions[0].disabled &&
+                            <PopUpUpgradePlan trigger={<Button className={'button-secondary-action-alone disabled-btn'} primary>{secondaryActions[0].description}</Button>}/>}
+                        {!secondaryActions[0].disabled &&
+                            <Button className={'button-secondary-action-alone'} primary onClick={() => secondaryActions[0].func()}>{secondaryActions[0].description}</Button>}
+                    </>
                 }
                 {
                     !noBottomBar &&
