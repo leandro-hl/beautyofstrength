@@ -88,8 +88,12 @@ func GetUserActiveSession(tx *sqlx.Tx, userId int64) *UserAccountSession {
 	return &des
 }
 
-func SaveCreatedActiveSession(tx *sqlx.Tx, token string, userId int64) *int64 {
+func RemoveActiveSession(tx *sqlx.Tx, userId int64) {
 	tx.Exec("delete from useraccountsession where useraccount_id=$1", userId)
+}
+
+func SaveCreatedActiveSession(tx *sqlx.Tx, token string, userId int64) *int64 {
+	RemoveActiveSession(tx, userId)
 	id := Insert(
 		tx,
 		&UserAccountSession{

@@ -133,6 +133,12 @@ func (o *SessionManager) Write(token string, id int64) {
 	o.s[token] = id
 }
 
+func (o *SessionManager) Revoke(token string) {
+	o.a.Lock()
+	defer o.a.Unlock()
+	delete(o.s, token)
+}
+
 func NewSessionManager() *SessionManager {
 	return &SessionManager{
 		s: make(map[string]int64),
@@ -232,6 +238,7 @@ func (o *Endpoints) Handle() http.Handler {
 	api.Path("/getSharedRoutineDetails").HandlerFunc(o.HandleAuthenticatedTransactional(o.HandleAuthorization(o.getSharedRoutineDetails, db.StudentFree, db.StudentPremium, db.Professor)))
 	api.Path("/getRoutineDetails").HandlerFunc(o.HandleAuthenticatedTransactional(o.HandleAuthorization(o.getRoutineDetails, db.StudentFree, db.StudentPremium, db.Professor)))
 	api.Path("/getUserAccountDetails").HandlerFunc(o.HandleAuthenticatedTransactional(o.HandleAuthorization(o.getUserAccountDetails, db.StudentFree, db.StudentPremium, db.Professor)))
+	api.Path("/signout").HandlerFunc(o.HandleAuthenticatedTransactional(o.HandleAuthorization(o.signout, db.StudentFree, db.StudentPremium, db.Professor)))
 	api.Path("/checkAuth").HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		_, err := r.Cookie("auth_token")
 		if err != nil {
@@ -762,6 +769,26 @@ func (o *Endpoints) googleSignIn(w http.ResponseWriter, r *http.Request, tx *sql
 		db.CreatePlanification(tx, *userId, "Mi Planificacion")
 		o.storeSessionData(w, tx, *userId)
 		http.Redirect(w, r, *o.conf.AddressUi+"/app"+"/my-planifications", http.StatusFound)
+	}
+}
+
+func (o *Endpoints) signout(w http.ResponseWriter, r *http.Request, tx *sqlx.Tx) {
+	if !o.conf.IsDevelopment() {
+		cookie, _ := r.Cookie("auth_token")
+		sessionStore.Revoke(cookie.Value)
+		userId := util.UserId(r)
+		db.RemoveActiveSession(tx, userId)
+		http.SetCookie(w, &http.Cookie{
+			Name:     "auth_token",
+			Value:    "",
+			Domain:   ".bos.team",
+			MaxAge:   -1,
+			HttpOnly: true,
+			Path:     "/",
+			SameSite: http.SameSiteStrictMode,
+			Secure:   true,
+		})
+		http.Redirect(w, r, *o.conf.AddressUi+"/app"+"/signin", http.StatusFound)
 	}
 }
 
