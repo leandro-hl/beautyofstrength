@@ -287,6 +287,9 @@ class PageRoutineExecution extends Component {
 
         if (newIndex === blocks.length) {
             this.setState({routineFinished: true})
+            const {intervalId} = this.state
+            clearInterval(intervalId)
+            this.context.dispatch(setData({noBottomBar: false}))
             return
         }
 
