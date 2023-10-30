@@ -19,7 +19,7 @@ func ListPlanifications(tx *sqlx.Tx, userId int64) []Planification {
 	err := tx.Select(&dest, `
 		select p.* from planification p
 		inner join userplanification u on p.id = u.planification_id
-		where u.useraccount_id = $1`, userId)
+		where u.useraccount_id = $1 order by p.name`, userId)
 	util.Check(err)
 
 	return dest
