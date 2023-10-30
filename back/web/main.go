@@ -18,7 +18,6 @@ import (
 
 type Config struct {
 	LinkSharingExpirationDays            *int            `json:"linkSharingExpirationDays"`
-	DatasourceName                       *string         `json:"datasourceName"`
 	AllowedOrigins                       []string        `json:"allowedOrigins"`
 	Address                              *string         `json:"address"`
 	AddressUi                            *string         `json:"addressUi"`
@@ -45,6 +44,7 @@ func (o *Config) Validate() {
 }
 
 type CryptoConfig struct {
+	DatasourceName *string `json:"datasourceName"`
 	//VapidPrivateKey *string `json:"vapidPrivateKey"`
 	VapidPublicKey *string `json:"vapidPublicKey"`
 	VapidDataKey   *string `json:"vapidDataKey"`

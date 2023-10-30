@@ -174,7 +174,7 @@ var shareManager = NewShareTokenManager()
 var developmentLastCreatedSessionTokenStack = make([]string, 0)
 
 func NewEndpoints(conf *Config, cryptoConf *CryptoConfig, l *log.Logger) *Endpoints {
-	dbs := db.InitDB(*conf.DatasourceName)
+	dbs := db.InitDB(*cryptoConf.DatasourceName)
 
 	exercisesNames := db.ListExerciseNames(dbs)
 	for _, e := range exercisesNames {
