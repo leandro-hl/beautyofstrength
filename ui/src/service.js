@@ -96,8 +96,17 @@ export function signout() {
     return axios.post("signout")
 }
 
+export function requestAccessToSharedPlanification(payload) {
+    return axios.post("requestAccessToSharedPlanification", payload)
+}
+
+
 export function shareRoutine(payload) {
     return axios.post("shareRoutine", payload)
+}
+
+export function sharePlanification(payload) {
+    return axios.post("sharePlanification", payload)
 }
 
 export function createPlanification(payload) {

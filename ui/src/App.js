@@ -36,7 +36,7 @@ class App extends Component {
                                 <Route exact path={"/"} component={PageRoot}/>
                                 <Route exact path={"/signin"} component={SignIn}/>
                                 <Route exact path={"/terms"} component={PageTermsAndConditions}/>
-                                <Route exact path={"/privacy_policies"} component={PagePrivacyPolicies}/>
+                                <Route exact path={"/privacy-policies"} component={PagePrivacyPolicies}/>
                                 {/*<Route exact path={"/signup"} component={SignUp}/>*/}
                                 <PrivateRoute exact path={"/plans"} component={PagePlans}/>
                                 <PrivateRoute exact path={"/my-planifications"} component={PagePlanificationList}/>

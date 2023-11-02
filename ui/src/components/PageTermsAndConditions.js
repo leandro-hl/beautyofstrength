@@ -1,5 +1,6 @@
-import {Component} from "react";
-import {withRouter} from "react-router-dom";
+import React, {Component} from "react";
+import {withRouter, Link} from "react-router-dom";
+import {Button, Header, Icon} from "semantic-ui-react";
 
 class PageTermsAndConditions extends Component {
     render2() {
@@ -7,15 +8,15 @@ class PageTermsAndConditions extends Component {
                 <>
                         TÉRMINOS Y CONDICIONES GENERALES DE USO DEL SITIO
 
-                        Los presentes Términos y Condiciones Generales de Uso (en adelante, los “Términos y Condiciones”) regulan el acceso y utilización, por parte del Usuario (conforme se define más adelante), de la página web MIEMPRESA.app (en adelante, “la Página Web”), así como la contratación de productos y servicios a través de la misma.
+                        Los presentes Términos y Condiciones Generales de Uso (en adelante, los “Términos y Condiciones”) regulan el acceso y utilización, por parte del Usuario (conforme se define más adelante), de la página web Leandro Hereñu CUIT 20-38635468-6.app (en adelante, “la Página Web”), así como la contratación de productos y servicios a través de la misma.
 
-                        La Página Web es propiedad de MIEMPRESA (MIDIRECCION, CABA), CUIT MICUIT y es operada por él y/o por quién él designe (en adelante “los Administradores”, indistintamente).
+                        La Página Web es propiedad de Leandro Hereñu CUIT 20-38635468-6 (MIDIRECCION, CABA), CUIT MICUIT y es operada por él y/o por quién él designe (en adelante “los Administradores”, indistintamente).
 
                         El Usuario (conforme se define más adelante) deberá sujetarse a estos Términos y Condiciones, junto con todas las demás políticas y principios que rigen a la Página Web y que son incorporados al presente por referencia.
 
                         CUALQUIER PERSONA QUE NO ACEPTE ESTOS TÉRMINOS Y CONDICIONES Y LOS PARTICULARES QUE LE RESULTAREN APLICABLES, LOS CUALES TIENEN CARÁCTER DE OBLIGATORIOS Y VINCULANTES, DEBERÁ ABSTENERSE DE UTILIZAR LA PÁGINA WEB Y/O CUALQUIER OTRO SERVICIO DE LOS ADMINISTRADORES RELACIONADO CON LA PÁGINA WEB.
 
-                        El Usuario deberá leer, entender y aceptar todas las condiciones establecidas en los Términos y Condiciones y demás documentos incorporados a éstos por referencia, previo a su registro como Usuario de MIEMPRESA.
+                        El Usuario deberá leer, entender y aceptar todas las condiciones establecidas en los Términos y Condiciones y demás documentos incorporados a éstos por referencia, previo a su registro como Usuario de Leandro Hereñu CUIT 20-38635468-6.
 
                         A. Capacidad
 
@@ -29,7 +30,7 @@ class PageTermsAndConditions extends Component {
 
                         El Usuario deberá leer atenta y comprensivamente los presentes Términos y Condiciones cada vez que acceda a la Página Web, ya que ambos pueden sufrir modificaciones.
 
-                        La Página Web se reserva el derecho de modificar, a su sola discreción, los Términos y Condiciones en cualquier momento, o suspender, cambiar o terminar el Servicio, lo cual se publicará oportunamente en la Página Web. Toda modificación será comunicada con una antelación de 10 (diez) días a su entrada en vigencia. En caso de no estar de acuerdo con dichas modificaciones, dentro del plazo de 10 (diez) días de comunicada la modificación, el Usuario deberá comunicar vía e-mail a la casilla info@MIEMPRESA.app que no acepta las mismas; en ese caso quedará disuelto el vínculo contractual y será inhabilitado como Usuario. Vencido este plazo, se considerará que el Usuario acepta los nuevos Términos y Condiciones, los que regirán la relación contractual a partir de su entrada en vigencia.
+                        La Página Web se reserva el derecho de modificar, a su sola discreción, los Términos y Condiciones en cualquier momento, o suspender, cambiar o terminar el Servicio, lo cual se publicará oportunamente en la Página Web. Toda modificación será comunicada con una antelación de 10 (diez) días a su entrada en vigencia. En caso de no estar de acuerdo con dichas modificaciones, dentro del plazo de 10 (diez) días de comunicada la modificación, el Usuario deberá comunicar vía e-mail a la casilla info@Leandro Hereñu CUIT 20-38635468-6.app que no acepta las mismas; en ese caso quedará disuelto el vínculo contractual y será inhabilitado como Usuario. Vencido este plazo, se considerará que el Usuario acepta los nuevos Términos y Condiciones, los que regirán la relación contractual a partir de su entrada en vigencia.
 
                         C. Condiciones de Uso
 
@@ -69,7 +70,7 @@ class PageTermsAndConditions extends Component {
 
                         A título meramente enunciativo, y en ningún caso limitativo, taxativo o excluyente, el Usuario y/o el Usuario Registrado, se compromete a:
 
-                        (a) No introducir o difundir contenidos o propaganda de carácter racista, xenófobo o, en general, discriminatorio, pornográfico, de apología del terrorismo o que atenten, vulneren o pudieren atentar o vulnerar los derechos humanos. (b) No introducir o difundir en la red programas de datos (virus y/o software nocivos) susceptibles de provocar daños en los sistemas informáticos de MIEMPRESA, sus proveedores, terceros o, en general, cualquier usuario de la red Internet. (c) No difundir, transmitir o poner a disposición de terceros cualquier tipo de información, elemento o contenido que atente contra los derechos fundamentales y las libertades públicas reconocidos constitucionalmente y en los tratados internacionales. (d) No difundir, transmitir o poner a disposición de terceros cualquier tipo de información, elemento o contenido que constituya publicidad ilícita o desleal.(e) No introducir o difundir cualquier información y contenidos falsos, ambiguos o inexactos de forma que induzca a error a los receptores de la información. (f) No difundir, transmitir o poner a disposición de terceros cualquier tipo de información, elemento o contenido que suponga una violación de los derechos de propiedad intelectual e industrial, patentes, marcas o copyright que correspondan a la Compañía o a terceros. (h) No difundir, transmitir o poner a disposición de terceros cualquier tipo de información, elemento o contenido que suponga una violación del secreto de las comunicaciones y la legislación de datos de carácter personal y, en general, toda las normas jurídicas que regulen la protección y promoción del respeto a la vida privada e intimidad de las personas y sus familias.
+                        (a) No introducir o difundir contenidos o propaganda de carácter racista, xenófobo o, en general, discriminatorio, pornográfico, de apología del terrorismo o que atenten, vulneren o pudieren atentar o vulnerar los derechos humanos. (b) No introducir o difundir en la red programas de datos (virus y/o software nocivos) susceptibles de provocar daños en los sistemas informáticos de Leandro Hereñu CUIT 20-38635468-6, sus proveedores, terceros o, en general, cualquier usuario de la red Internet. (c) No difundir, transmitir o poner a disposición de terceros cualquier tipo de información, elemento o contenido que atente contra los derechos fundamentales y las libertades públicas reconocidos constitucionalmente y en los tratados internacionales. (d) No difundir, transmitir o poner a disposición de terceros cualquier tipo de información, elemento o contenido que constituya publicidad ilícita o desleal.(e) No introducir o difundir cualquier información y contenidos falsos, ambiguos o inexactos de forma que induzca a error a los receptores de la información. (f) No difundir, transmitir o poner a disposición de terceros cualquier tipo de información, elemento o contenido que suponga una violación de los derechos de propiedad intelectual e industrial, patentes, marcas o copyright que correspondan a la Compañía o a terceros. (h) No difundir, transmitir o poner a disposición de terceros cualquier tipo de información, elemento o contenido que suponga una violación del secreto de las comunicaciones y la legislación de datos de carácter personal y, en general, toda las normas jurídicas que regulen la protección y promoción del respeto a la vida privada e intimidad de las personas y sus familias.
 
                         El Usuario y/o el Usuario Registrado, se obliga a mantener indemne a los Administradores ante cualquier posible reclamación, multa, pena, sanción o indemnización que pueda venir obligada a soportar como consecuencia del incumplimiento por parte del Usuario de cualquiera de las normas de utilización antes indicadas, reservándose, además, la Página Web, el derecho a solicitar la indemnización por daños y perjuicios que corresponda. Asimismo, se reserva el derecho de anular la Cuenta de Usuarios Registrados.
 
@@ -79,7 +80,7 @@ class PageTermsAndConditions extends Component {
 
                         (a) La Página Web no asume ninguna responsabilidad sobre la actualización de la Página Web, en especial, respecto del contenido o información, ni garantiza que la información publicada contenida en la Página Web sea precisa ni completa. Por lo tanto, cada Usuario será responsable de confirmar que la información publicada en la Página Web sea precisa y completa antes de tomar alguna decisión relacionada con cualquier servicio o contenido descrito en la misma. (b) El acceso del Usuario a la Página Web no implica para los Administradores la obligación de informar, controlar o, actuación alguna referente a la ausencia o presencia de virus, gusanos o cualquier otro elemento informático dañino. Los Usuarios no podrán imputarle responsabilidad alguna a los Administradores, ni exigir indemnización bajo ningún concepto, por los perjuicios resultantes de dificultades técnicas o fallas en los sistemas o en internet. (c) Los Administradores no garantizan el acceso y uso continuado e ininterrumpido de la Página Web. La Página Web puede eventualmente no estar disponible debido a dificultades técnicas o fallas de internet, o por cualquier otra circunstancia ajena y no imputable a los Administradores. Los Administradores no serán responsables por ningún error u omisión contenidos en la Página Web. (d) Corresponde al Usuario, en todo caso, la disponibilidad de herramientas adecuadas para la detección y desinfección de programas informáticos dañinos. (e) Los Administradores no se responsabilizan de los daños o perjuicios de cualquier tipo producidos en el Usuario a causa de fallos o desconexiones en las redes de telecomunicaciones que produzcan la suspensión, cancelación o interrupción del servicio de la Página Web durante la prestación del mismo o con carácter previo. (f) Los Administradores no se hacen responsables de la actuación de los Usuarios Registradores que cargan sus Proyectos en la Página Web. Los Administradores no son propietarios ni poseedores de los Proyectos publicados, ni los ofrecen en venta. Los Administradores no intervienen en la entrega de las Recompensas por parte de los Usuarios Creadores ni en las características por ellos estipuladas para las mismas, por ello no serán responsables respecto de la existencia, calidad, cantidad, disponibilidad, estado, integridad, legitimidad o condiciones de entrega de las Recompensas ofrecidas, así como de la capacidad para contratar de los Usuarios Creadores o de la veracidad de los Datos Personales por ellos ingresados. El Usuario Registrado conoce y acepta ser el exclusivo responsable por los Proyectos que publica y que no existe ninguna restricción y/o que cuenta con las autorizaciones necesarias para su publicación. Asimismo los Administradores no intervienen en la entrega de Contribuciones por parte de los Usuarios Registrados, por lo que no será responsable respecto de la existencia, procedencia, cantidad, estado, integridad o legitimidad de los Contribuciones, así como de la capacidad para contratar de los Usuarios Registrados o de la veracidad de los Datos Personales por ellos ingresados.
 
-                        Debido a que los Administradores no tienen ninguna participación durante todo el tiempo en que el Proyecto se publica, difunde, promociona o publicita con la finalidad de recaudar fondos, no será responsable por el efectivo cumplimiento de las Recompensas ofrecidas por los Usuarios Registrados. El Usuario conoce y acepta que al realizar operaciones con otros Usuarios o terceros lo hace bajo su propio riesgo. En ningún caso los Administradores serán responsable por lucro cesante, o por cualquier otro daño y/o perjuicio que haya podido sufrir el Usuario, debido a los Proyectos publicados a través de MIEMPRESA.
+                        Debido a que los Administradores no tienen ninguna participación durante todo el tiempo en que el Proyecto se publica, difunde, promociona o publicita con la finalidad de recaudar fondos, no será responsable por el efectivo cumplimiento de las Recompensas ofrecidas por los Usuarios Registrados. El Usuario conoce y acepta que al realizar operaciones con otros Usuarios o terceros lo hace bajo su propio riesgo. En ningún caso los Administradores serán responsable por lucro cesante, o por cualquier otro daño y/o perjuicio que haya podido sufrir el Usuario, debido a los Proyectos publicados a través de Leandro Hereñu CUIT 20-38635468-6.
 
                         Dado que la Página Web es un medio para el encuentro entre Usuarios y/o Usuarios Registrados, y siendo que los Administradores no participan de las prestaciones que se realizan entre aquellos, el Usuario y/o Usuario Registrado será responsable por todas las obligaciones fiscales y cargas impositivas que correspondan por su Proyecto y las Recompensas ofrecidas, sin que pudiera imputársele a los Administradores algún tipo de responsabilidad por incumplimientos en tal sentido.
 
@@ -107,7 +108,7 @@ class PageTermsAndConditions extends Component {
 
                         9. Sanciones
 
-                        Sin perjuicio de otras medidas, los Administradores podrán advertir, suspender en forma temporal o inhabilitar definitivamente la cuenta de un Usuario Registrado, iniciar las acciones que estimen pertinentes y/o suspender la prestación de sus servicios, si; (a) se quebranta o incumple alguna ley, o cualquiera de las estipulaciones de los presentes Términos y Condiciones y/o demás políticas de MIEMPRESA; (b) incumple sus obligaciones como Usuario Registrado; (c) no pudiere verificarse la identidad del Usuario Registrado o cualquier información proporcionada por el mismo fuere errónea; o, (d) si se incurriera a criterio de los Administradores, en conductas o actos dolosos o fraudulentos. En el caso de suspensión o inhabilitación de un Usuario Registrado, todos sus Proyectos podrán ser removidos por los Administradores de la Página Web.
+                        Sin perjuicio de otras medidas, los Administradores podrán advertir, suspender en forma temporal o inhabilitar definitivamente la cuenta de un Usuario Registrado, iniciar las acciones que estimen pertinentes y/o suspender la prestación de sus servicios, si; (a) se quebranta o incumple alguna ley, o cualquiera de las estipulaciones de los presentes Términos y Condiciones y/o demás políticas de Leandro Hereñu CUIT 20-38635468-6; (b) incumple sus obligaciones como Usuario Registrado; (c) no pudiere verificarse la identidad del Usuario Registrado o cualquier información proporcionada por el mismo fuere errónea; o, (d) si se incurriera a criterio de los Administradores, en conductas o actos dolosos o fraudulentos. En el caso de suspensión o inhabilitación de un Usuario Registrado, todos sus Proyectos podrán ser removidos por los Administradores de la Página Web.
 
                         10. Tarifas
 
@@ -141,37 +142,42 @@ class PageTermsAndConditions extends Component {
 
                         Estos Términos y Condiciones se regirán o interpretarán conforme a la legislación de la República Argentina. Los Administradores y el Usuario podrán someter cualquier controversia que pudiera suscitarse de la prestación de los productos o servicios objeto de éstos Términos y Condiciones, a los Juzgados y Tribunales de la Ciudad Autónoma de Buenos Aires, a menos que legalmente se establezca lo contrario con carácter de orden público.
 
-                        © 2023 MIEMPRESA.
+                        © 2023 Leandro Hereñu CUIT 20-38635468-6.
                 </>
             )
     }
     render() {
         return (
             <>
-                <h1>Términos de uso</h1>
-                <p>Gracias por descargar una de nuestras aplicaciones. Lea esto detenidamente antes de utilizarla.</p>
+                <Header as={'h3'}>
+                    <Button className={'header-back-arrow'} icon onClick={() => this.props.history.goBack()}>
+                        <Icon name={'arrow left'}/>
+                    </Button>
+                    Términos de uso
+                </Header>
+                <p>Gracias por usar una de nuestras aplicaciones. Lea esto detenidamente antes de utilizarla.</p>
 
                 <p>Estos Términos de uso ("Términos") establecen información importante sobre sus derechos, obligaciones y las restricciones que pueden aplicarse cuando utiliza cualquier aplicación de Beauty Of Strenght Team ("Aplicación").</p>
 
-                <p>Estos Términos rigen la relación entre usted e MIEMPRESA cuando accede y utiliza nuestro Servicios. Cualquier referencia a "usted" o "su", significa usted como usuario de la Aplicación. Cualquier referencia a "nosotros", "Nosotros", "nuestro" es para el equipo de Beauty Of Strenght.</p>
+                <p>Estos Términos rigen la relación entre usted y Leandro Hereñu CUIT 20-38635468-6 cuando accede y utiliza nuestro Servicios. Cualquier referencia a "usted" o "su", significa usted como usuario de la Aplicación. Cualquier referencia a "nosotros", "Nosotros", "nuestro" es para el equipo de Beauty Of Strenght.</p>
 
                 <p>Le recomendamos que lea estos Términos detenidamente antes de usar la Aplicación. Al acceder y continuar utilizando la Aplicación, usted acepta las obligaciones legales de estos Términos. Si no esta de acuerdo con los Términos, debe descontinuar el uso de la Aplicación. Usted acepta cumplir con las leyes de propiedad intelectual, y todos los términos y condiciones de estos Términos.</p>
 
                 <p>Usted declara que tiene 18 años o más.</p>
 
-                <p>AVISO IMPORTANTE: Antes de participar en cualquier programa de ejercicios, consulte a su médico. No haga uso de este programa de ejercicios si está embarazada, tiene lesiones o una afección médica, o es mayor de 65 años de edad.</p>
+                <p>AVISO IMPORTANTE: Antes de participar en cualquier programa de ejercicios, consulte a su médico. No haga uso de los programas, planificaciones y rutinas de ejercicios si está embarazada, tiene lesiones o una afección médica, o es mayor de 65 años de edad.</p>
 
-                <p>Para aprovechar los beneficios de este programa, es importante que honre sus habilidades personales y limitaciones.</p>
+                <p>Para aprovechar los beneficios de la aplicación y los programas, planificaciones y rutinas cargadas en él, es importante que honre sus habilidades personales y limitaciones.</p>
 
                 <p>Si siente algún dolor o molestia mientras practica, tome un descanso o pare por completo. Si no estás seguro de su capacidad, consulte a un médico antes de comenzar.</p>
 
-                <p>El programa no proporciona orientación médica, sino que se basa en que usted escuche a su cuerpo y se mueva conscientemente y respetando sus capacidades.</p>
+                <p>Los programas, planificaciones y rutinas no proporcionan orientación médica, sino que se basan en que usted escuche a su cuerpo y se mueva conscientemente y respetando sus capacidades.</p>
 
-                <p>Los creadores, productores y distribuidores de este programa no aceptan ninguna responsabilidad por cualquier lesión o accidente incurrido como resultado de seguir los ejercicios en este programa.</p>
+                <p>Los creadores, productores y distribuidores de los programas, planificaciones y rutinas no aceptan ninguna responsabilidad por cualquier lesión o accidente incurrido como resultado de seguir los ejercicios en ellos descriptos.</p>
 
                 <p>Sujeto a los términos de estos Términos, Beauty Of Strenght Team le otorga una licencia limitada, no exclusiva, no transferible, revocable, de alcance limitado, sin derecho a sublicencia, para utilizar la Aplicación con el fin de ver y usar la Aplicación y el contenido de acuerdo con estos Términos.</p>
 
-                <p>Esta aplicación contiene material con derechos de autor, secretos comerciales y otro material patentado. Usted no deberá, y no deberá intentar en ningún momento, modificar, realizar ingeniería inversa, desmontar, descompilar, mostrar, transmitir o vender, en cualquier forma o por cualquier medio, la Aplicación. Tampoco puede crear trabajos derivados u otros trabajos basados ​​o derivados de la Aplicación en forma total o parcial, y cualquier tipo de reproducción o redistribución de materiales que no cumpla con estos Términos, se encuentra expresamente prohibido.</p>
+                <p>Esta aplicación contiene material con derechos de autor, secretos comerciales y otro material patentado. Usted no deberá, y no deberá intentar en ningún momento, modificar, realizar ingeniería inversa, desmontar, descompilar, mostrar, transmitir o vender, en cualquier forma o por cualquier medio, la Aplicación. Tampoco puede crear trabajos derivados u otros trabajos basados o derivados de la Aplicación en forma total o parcial, y cualquier tipo de reproducción o redistribución de materiales que no cumpla con estos Términos, se encuentra expresamente prohibido.</p>
 
                 <p>Todos los materiales que forman parte de la Aplicación (incluidos, entre otros, diseños, texto, gráficos, aplicaciones, software, música, sonido, video y otros archivos) están protegidos por la ley contra su uso no autorizado. La ley de derechos de autor y las disposiciones de los tratados internacionales de derechos de autor protegen todo el contenido de la aplicación.</p>
 
@@ -181,9 +187,9 @@ class PageTermsAndConditions extends Component {
 
                 <p>El equipo de Beauty Of Strenght tiene el derecho absoluto y exclusivo de administrar, regular, controlar, modificar y/o eliminar contenido audiovisual según lo considere conveniente, y el equipo de Beauty Of Strenght no será responsable ante usted por el ejercicio de tal derecho.</p>
 
-                <p>Deberá utilizar la Aplicación de conformidad con todas las leyes aplicables, y no con propósito ilegal. Los términos de uso de la tienda de aplicaciones que utilizó para descargar la aplicación, también se aplican a su uso de la Aplicación. Sin limitar lo anterior, cualquier uso, visualización o distribución de la Aplicación junto con material pornográfico, racista, vulgar, obsceno, difamatorio, calumnioso, abusivo, promoviendo el odio, discriminando o mostrando prejuicios basados en religión, etnia, raza, orientación sexual o edad, están estrictamente prohibidas.</p>
+                <p>Deberá utilizar la Aplicación de conformidad con todas las leyes aplicables, y no con propósito ilegal. Sin limitar lo anterior, cualquier uso, visualización o distribución de la Aplicación junto con material pornográfico, racista, vulgar, obsceno, difamatorio, calumnioso, abusivo, promoviendo el odio, discriminando o mostrando prejuicios basados en religión, etnia, raza, orientación sexual o edad, están estrictamente prohibidas.</p>
 
-                <p>El uso de la Aplicación también se rige por nuestra Política de privacidad, que se incorpora a estos términos y condiciones por esta referencia. Para ver la Política de privacidad, haga clic en este enlace.</p>
+                <p>El uso de la Aplicación también se rige por nuestra Política de privacidad, que se incorpora a estos términos y condiciones por esta referencia. Para ver la Política de privacidad, haga clic en {<Link to={'/privacy-policies'}>este enlace</Link>}.</p>
 
                 <p>Usted acepta que su uso de la Aplicación será bajo su propio riesgo. La solicitud se proporciona con base en "en el estado en el que se encuentra" y "según disponibilidad". La calidad de la visualización del contenido de video dentro de la aplicación varía de un dispositivo a otro y está sujeto a la calidad de la conectividad a Internet del dispositivo. Usted es responsable de todos los cargos de acceso a internet. De ser necesario, consulte con su proveedor de internet para información sobre posibles cargos por uso de datos de Internet.</p>
 
@@ -195,23 +201,23 @@ class PageTermsAndConditions extends Component {
 
                 <p>Usted indemnizará, mantendrá indemne y defenderá al equipo de Beauty Of Strenght, sus funcionarios, directores, empleados y agentes contra todos y cada uno de los reclamos, procedimientos, demandas y costos resultantes de, o de alguna manera conectados con su uso de la Aplicación.</p>
 
-                <p>Estos Términos están disponibles tanto en inglés como en español y se regirán e interpretarán de acuerdo con el leyes de España. Las disputas que surjan en relación con estos Términos de uso estarán sujetas a la exclusiva jurisdicción de los tribunales de España. Si alguna disposición se considera ilegal, nula o de otra manera inaplicable, entonces esa disposición se considerará separable de este Acuerdo y no afectará la validez y aplicabilidad de cualquier otra disposición.</p>
+                <p>Estos Términos están disponibles en español y se regirán e interpretarán de acuerdo con las leyes de Argentina. Las disputas que surjan en relación con estos Términos de uso estarán sujetas a la exclusiva jurisdicción de los tribunales de Argentina. Si alguna disposición se considera ilegal, nula o de otra manera inaplicable, entonces esa disposición se considerará separable de este Acuerdo y no afectará la validez y aplicabilidad de cualquier otra disposición.</p>
 
                 <p>El equipo de Beauty Of Strenght se reserva el derecho, a su exclusivo criterio, de modificar estos Términos en cualquier momento, y es su responsabilidad de revisar estos Términos para cualquier cambio. Notificaremos cualquier cambio en la parte superior de estos Condiciones. Su uso de la Aplicación después de cualquier modificación de estos Términos significará su consentimiento y aceptación de sus términos revisados.</p>
 
-                <h2>Suscripción a Beauty Of Strenght PRO</h2>
+                <h2>Suscripciones a los planes pagos de Beauty Of Strenght</h2>
 
-                <p>La descarga de Beauty Of Strenght es gratuita. Para desbloquear el acceso a todo el contenido obtenga la suscripción a Beauty Of Strenght Pro.</p>
+                <p>Para desbloquear el acceso a todo el contenido obtenga alguna de las suscripciones ofrecidas de Beauty Of Strenght.</p>
 
                 <p>El pago de la suscripción se facturará de forma mensual o anual en el día calendario correspondiente con la fecha de inicio de su suscripción paga. Si un pago no se realiza con éxito, podemos suspender su acceso a la Aplicación o su contenido hasta que recibamos un pago válido.</p>
 
-                <p>La suscripciones se renuevan automáticamente al finalizar por un periodo igual al de la suscripción elegida.</p>
+                <p>Las suscripciones se renuevan automáticamente al finalizar por un periodo igual al de la suscripción elegida.</p>
 
-                <p>Usted puede cancelar su suscripción en cualquier momento (desde la gestión de susripciones de App Store o Google Play, según corresponda), hasta 24h antes de la fecha de renovación automática de la suscripción. No proporcionamos reembolsos por períodos parciales de suscripción ni en caso de compras accidentales. Para cancelar, siga las instrucciones correspondientes según su plataforma (Android o iOS), más info en el Centro de ayuda y soporte.</p>
+                <p>Usted puede cancelar su suscripción en cualquier momento comunicandose con el equipo de Beauty Of Strenght o según corresponda, hasta 24h antes de la fecha de renovación automática de la suscripción. No proporcionamos reembolsos por períodos parciales de suscripción ni en caso de compras accidentales. Para cancelar, siga las instrucciones correspondientes. Más info en el Centro de ayuda y soporte.</p>
 
-                <p>Los precios de Beauty Of Strenght Pro pueden variar según la ubicación geográfica y en cualquier momento.</p>
+                <p>Los precios de los planes pagos de Beauty Of Strenght pueden variar según la ubicación geográfica y en cualquier momento.</p>
 
-                <p>Última edición: 25/10/2023</p>
+                <p>Última edición: 02/11/2023</p>
                 <p>Copyright © 2023 Beauty Of Strenght bOS</p>
             </>
         )

@@ -1,5 +1,6 @@
-import {Component} from "react";
+import React, {Component} from "react";
 import {withRouter} from "react-router-dom";
+import {Button, Header, Icon} from "semantic-ui-react";
 
 class PagePrivacyPolicies extends Component {
     render2() {
@@ -23,23 +24,27 @@ class PagePrivacyPolicies extends Component {
     render() {
         return (
             <>
-                Política de Privacidad
+                <Header as={'h3'}>
+                    <Button className={'header-back-arrow'} icon onClick={() => this.props.history.goBack()}>
+                        <Icon name={'arrow left'}/>
+                    </Button>
+                    Política de Privacidad
+                </Header>
+                <h2>1. Disponibilidad</h2>
 
-                1. Disponibilidad
+                Beauty of Strenght pone a tu disposición esta Política de Privacidad (en adelante la “Política de Privacidad”), en la que puedes consultar las características del uso que realizamos sobre tus datos personales para poder prestar nuestro Servicio y otros fines.
 
-                Cafecito pone a tu disposición esta Política de Privacidad (en adelante la “Política de Privacidad”), en la que puedes consultar las características del uso que realizamos sobre tus datos personales para poder prestar nuestro Servicio y otros fines.
+                Puedes acceder a esta Política de Privacidad en cualquier momento, ya que se encuentra a tu disposición en el apartado “Privacidad” de la web de Beauty of Strenght https://bos.team/app (en adelante, el “Sitio Web”). En el Sitio Web, el apartado “Privacidad” se encuentra en https://bos.team/app/privacy-policies. Cuando utilizamos el término “Plataforma”, nos referimos al Sitio Web.
 
-                Puedes acceder a esta Política de Privacidad en cualquier momento, ya que se encuentra a tu disposición en el apartado “Privacidad” de la web de Cafecito https://cafecito.app (en adelante, el “Sitio Web”). En el Sitio Web, el apartado “Privacidad” se encuentra en https://cafecito.app/privacy_policies. Cuando utilizamos el término “Plataforma”, nos referimos al Sitio Web.
+                <h2>2. El Responsable de tus Datos Personales</h2>
 
-                2. El Responsable de tus Datos Personales
+                El Responsable del Tratamiento de tus Datos Personales es Leandro Hereñu CUIT 20-38635468-6 (en adelante, “Beauty of Strenght” o “nosotros”, indistintamente). Beauty of Strenght es responsable de tus Datos Personales porque decidimos cómo protegemos y utilizamos tus Datos Personales.
 
-                El Responsable del Tratamiento de tus Datos Personales es MicroCoffee S.R.L (Allende 4407, 1419, CABA) (en adelante, “Cafecito” o “nosotros”, indistintamente). Cafecito es responsable de tus Datos Personales porque decidimos cómo protegemos y utilizamos tus Datos Personales.
+                <h2>3. Obtención y uso de tus Datos Personales</h2>
 
-                3. Obtención y uso de tus Datos Personales
+                Para que puedas acceder a los Servicios que ofrecemos en Beauty of Strenght, utilizaremos algunos datos sobre ti obtenidos a través de diferentes formas y en diferentes momentos. A continuación, puedes verlo en detalle:
 
-                Para que puedas acceder a los Servicios que ofrecemos en Cafecito, utilizaremos algunos datos sobre ti obtenidos a través de diferentes formas y en diferentes momentos. A continuación, puedes verlo en detalle:
-
-                Utilizaremos los datos personales que nos entregas al crearte una cuenta de usuario: nombres y apellidos, contraseña, dirección de correo electrónico, número de teléfono, dirección postal, país, información bancaria y fecha de nacimiento, imágenes y copias de documentación personal.
+                Utilizaremos los datos personales que nos entregas al crearte una cuenta de usuario: nombres y apellidos, contraseña, dirección de correo electrónico, número de teléfono, dirección postal, país y fecha de nacimiento, imágenes.
 
                 También utilizaremos otra información sobre ti que podamos llegar a conocer gracias al uso que realizas del Servicio: tu ubicación; tu dirección IP; los Servicios que utilizas; el código de identificación que te asignamos internamente; tu navegación por la Plataforma (fechas y horas en las que accedes, clics que realizas, etc.) y el hardware, software y navegador que utilizas.
 
@@ -47,11 +52,11 @@ class PagePrivacyPolicies extends Component {
 
                 Para referirnos a toda la información anterior y a cualquier otra que tengamos sobre ti utilizaremos el término “Datos Personales”.
 
-                4. El uso que le daremos a tus Datos Personales
+                <h2>4. El uso que le daremos a tus Datos Personales</h2>
 
                 Utilizaremos tus Datos Personales para lo siguiente:
 
-                1. Prestar el Servicio
+                <h2>1. Prestar el Servicio</h2>
 
                 El tratamiento de tus Datos Personales es necesario para que podamos prestar nuestro Servicio. Con este fin, utilizaremos tus Datos Personales hasta que nos comuniques que has dejado de utilizar nuestro Servicio y elimines tu cuenta de Usuario. De lo contrario, no podrías disfrutar del mismo. La prestación del Servicio comprende las siguientes cuestiones:
 
@@ -61,51 +66,50 @@ class PagePrivacyPolicies extends Component {
 
                 Contactar contigo para darte información relativa a un servicio. Estas comunicaciones podrán ser realizadas mediante correo electrónico o a través de la Plataforma.
 
-                Permitirte consultar un histórico de todos los servicios que has utilizado. Para ello, simplemente debes acceder al apartado “Perfil”.
-
                 Ofrecer atención y asistencia. A través de nuestros medios de contacto te ofrecemos asistencia para eventuales dudas, comentarios, sugerencias o incidencias relativas al Servicio que nos quieras plantear. La referida ayuda solo puede ser facilitada si disponemos de tus Datos Personales.
 
-                2. Realizar acciones de marketing
+                <h2>2. Realizar acciones de marketing</h2>
 
-                Utilizaremos tus Datos Personales para enviarte noticias, ofertas y promociones relacionados con Cafecito y con terceros relacionados con los sectores relativos a productos y consumos hasta que nos solicites que dejemos de hacerlo, independientemente de que continúes utilizando nuestro Servicio o te hayas dado de baja. A tal fin, analizaremos tus Datos Personales y crearemos un perfil sobre ti para que las noticias, ofertas y promociones que te enviemos sean personalizadas, de forma que se adapten en cada momento a tus necesidades y preferencias personales. Puedes pedirnos en cualquier momento que dejemos de analizar tu perfil, aunque ello supondrá que no recibirás más noticias, ofertas y promociones.
+                Utilizaremos tus Datos Personales para enviarte noticias, ofertas y promociones relacionados con Beauty of Strenght y con terceros relacionados con los sectores relativos a productos y consumos hasta que nos solicites que dejemos de hacerlo, independientemente de que continúes utilizando nuestro Servicio o te hayas dado de baja. A tal fin, analizaremos tus Datos Personales y crearemos un perfil sobre ti para que las noticias, ofertas y promociones que te enviemos sean personalizadas, de forma que se adapten en cada momento a tus necesidades y preferencias personales.
+                Puedes pedirnos en cualquier momento que dejemos de analizar tu perfil, aunque ello supondrá que no recibirás más noticias, ofertas y promociones.
 
-                3. Mejorar nuestro servicio
+                <h2>3. Mejorar nuestro servicio</h2>
 
-                En Cafecito trabajamos en el perfeccionamiento de la Plataforma. Ese trabajo requiere en muchas ocasiones el uso de algunos de tus Datos Personales. Los utilizaremos hasta que elimines tu cuenta de Usuario.
+                En Beauty of Strenght trabajamos en el perfeccionamiento de la Plataforma. Ese trabajo requiere en muchas ocasiones el uso de algunos de tus Datos Personales. Los utilizaremos hasta que elimines tu cuenta de Usuario.
 
-                4. Prevenir fraudes
+                <h2>4. Prevenir fraudes</h2>
 
-                Para prevenir potenciales delitos o fraudes contra terceros, contra ti y contra Cafecito, en algunos casos, tendremos que revelar tus Datos Personales a terceros. Los utilizaremos hasta que elimines tu cuenta de Usuario.
+                Para prevenir potenciales delitos o fraudes contra terceros, contra ti y contra Beauty of Strenght, en algunos casos, tendremos que revelar tus Datos Personales a terceros. Los utilizaremos hasta que elimines tu cuenta de Usuario.
 
-                5. Consultarte tu opinión sobre Cafecito
+                <h2>5. Consultarte tu opinión sobre Beauty of Strenght</h2>
 
                 En algunos momentos podremos pedirte que nos respondas a una encuesta para conocer cuál es tu percepción sobre nosotros. No tendrás que darnos tu opinión si no quieres. Si lo haces, utilizaremos tus respuestas hasta que elimines tu cuenta de Usuario.
 
-                5. Base jurídica para el uso de tus Datos Personales
+                <h2>5. Base jurídica para el uso de tus Datos Personales</h2>
 
-                En Cafecito utilizamos tus Datos Personales de forma lícita. Para ello, necesitamos contar con una base jurídica suficiente. A continuación te indicamos cuál es la base jurídica para que utilicemos tus Datos Personales respecto de cada una de las finalidades descritas en el apartado anterior.
+                En Beauty of Strenght utilizamos tus Datos Personales de forma lícita. Para ello, necesitamos contar con una base jurídica suficiente. A continuación te indicamos cuál es la base jurídica para que utilicemos tus Datos Personales respecto de cada una de las finalidades descritas en el apartado anterior.
 
-                1. Prestarte el Servicio
+                <h2>1. Prestarte el Servicio</h2>
 
                 Utilizar tus Datos Personales es necesario para poder ejecutar el contrato que nos une contigo desde el momento en que aceptas nuestros Términos y Condiciones. De lo contrario, no podrás disfrutar del Servicio.
 
-                2. Realizar acciones de marketing
+                <h2>2. Realizar acciones de marketing</h2>
 
                 Utilizaremos tus Datos Personales para enviarte noticias, ofertas y promociones basadas en tu perfil únicamente si nos has dado tu consentimiento para ello. Consideramos que tenemos un interés legítimo para promover dichos productos de este modo.
 
-                3. Mejorar nuestro servicio
+                <h2>3. Mejorar nuestro servicio</h2>
 
-                Consideramos que Cafecito tiene un interés legítimo para realizar pruebas, investigaciones y estudios analíticos que mejoren la calidad del Servicio.
+                Consideramos que Beauty of Strenght tiene un interés legítimo para realizar pruebas, investigaciones y estudios analíticos que mejoren la calidad del Servicio.
 
-                4. Prevenir fraudes
+                <h2>4. Prevenir fraudes</h2>
 
-                Consideramos que Cafecito tiene un interés legítimo para tratar de prevenir potenciales fraudes relacionados con el Servicio.
+                Consideramos que Beauty of Strenght tiene un interés legítimo para tratar de prevenir potenciales fraudes relacionados con el Servicio.
 
-                5. Consultarte tu opinión
+                <h2>5. Consultarte tu opinión</h2>
 
-                Creemos que Cafecito tiene un interés legítimo para conocer la percepción que tienes sobre Cafecito, que le permitirá tomar decisiones estratégicas que se adapten a las necesidades y preocupaciones de todos los usuarios.
+                Creemos que Beauty of Strenght tiene un interés legítimo para conocer la percepción que tienes sobre Beauty of Strenght, que le permitirá tomar decisiones estratégicas que se adapten a las necesidades y preocupaciones de todos los usuarios.
 
-                6. Compartiremos tus Datos Personales con terceros
+                <h2>6. Compartiremos tus Datos Personales con terceros</h2>
 
                 Para poder prestarte el Servicio necesitamos compartir tus Datos Personales con otros usuarios, con proveedores externos que nos ayudan con diferentes cuestiones relacionadas con el Servicio y con terceras partes. A continuación te indicamos quiénes son estos terceros:
 
@@ -115,27 +119,27 @@ class PagePrivacyPolicies extends Component {
 
                 Autoridades u organismos públicos para el desarrollo de sus funciones. En algunas ocasiones, la normativa nos obliga a ceder tus Datos Personales a autoridades u organismos públicos para que puedan desarrollar sus funciones, por ejemplo, autoridades fiscales o judiciales. De este modo, los utilizarán para sus propios fines.
 
-                7. Tus derechos en cuestiones de Protección de datos
+                <h2>7. Tus derechos en cuestiones de Protección de datos</h2>
 
-                Como usuario de Cafecito dispones de los siguientes derechos:
+                Como usuario de Beauty of Strenght dispones de los siguientes derechos:
 
-                Acceso. Puedes solicitarnos que te indiquemos si estamos utilizando o no tus Datos Personales; en caso de que sí los estemos utilizando, también te trasladaremos información adicional como qué datos personales tenemos sobre ti, para qué los estamos utilizando, las entidades con las que los compartimos, el periodo durante el que vamos a conservar tus datos o si estamos realizando perfiles, entre otras cuestiones.
+                <p>Acceso. Puedes solicitarnos que te indiquemos si estamos utilizando o no tus Datos Personales; en caso de que sí los estemos utilizando, también te trasladaremos información adicional como qué datos personales tenemos sobre ti, para qué los estamos utilizando, las entidades con las que los compartimos, el periodo durante el que vamos a conservar tus datos o si estamos realizando perfiles, entre otras cuestiones.</p>
 
-                Rectificación. Puedes pedirnos que modifiquemos alguno de los Datos Personales que tenemos sobre ti para que sean exactos y estén actualizados. De hecho, ten en cuenta que debes mantener actualizados en todo momento los Datos Personales que figuran en tu cuenta de usuario. Puedes hacerlo en el apartado “Editar Perfil”.
+                <p>Rectificación. Puedes pedirnos que modifiquemos alguno de los Datos Personales que tenemos sobre ti para que sean exactos y estén actualizados. De hecho, ten en cuenta que debes mantener actualizados en todo momento los Datos Personales que figuran en tu cuenta de usuario. Puedes hacerlo en el apartado “Editar Perfil”.</p>
 
-                Supresión. Puedes solicitarnos que eliminemos los Datos Personales que tenemos sobre ti (i) cuando ya no sean necesarios para la finalidad para la que los utilizamos, (ii) cuando nos retires tu consentimiento, en el caso de que sólo los tratemos para desarrollar finalidades basadas en el mismo.
+                <p>Supresión. Puedes solicitarnos que eliminemos los Datos Personales que tenemos sobre ti (i) cuando ya no sean necesarios para la finalidad para la que los utilizamos, (ii) cuando nos retires tu consentimiento, en el caso de que sólo los tratemos para desarrollar finalidades basadas en el mismo.</p>
 
-                Limitación. Puedes pedirnos que restrinjamos temporalmente la utilización de tus Datos Personales (i) cuando consideres que tus datos son inexactos, hasta que los verifiquemos o actualicemos (mientras tanto, no podrás disfrutar del Servicio); (ii) cuando ya no los necesitemos para llevar a cabo las finalidades indicadas en el apartado 4 anterior pero tú prefieras que los conservemos para que puedas ejercitar o defenderte ante reclamaciones y (iii) cuando te opongas a que utilicemos tus datos, mientras valoramos si el interés legítimo que tiene Cafecito prevalece sobre tu derecho a oponerte a que los utilicemos (iv) cuando tus Datos Personales hayan sido procesados ilegítimamente.
+                <p>Limitación. Puedes pedirnos que restrinjamos temporalmente la utilización de tus Datos Personales (i) cuando consideres que tus datos son inexactos, hasta que los verifiquemos o actualicemos (mientras tanto, no podrás disfrutar del Servicio); (ii) cuando ya no los necesitemos para llevar a cabo las finalidades indicadas en el apartado 4 anterior pero tú prefieras que los conservemos para que puedas ejercitar o defenderte ante reclamaciones y (iii) cuando te opongas a que utilicemos tus datos, mientras valoramos si el interés legítimo que tiene Beauty of Strenght prevalece sobre tu derecho a oponerte a que los utilicemos (iv) cuando tus Datos Personales hayan sido procesados ilegítimamente.</p>
 
-                Portabilidad. Puedes solicitarnos que te entreguemos directamente o que entreguemos a otra entidad, siempre que sea posible técnicamente, un archivo estructurado, de uso común y legible por un sistema informático, que contenga los Datos Personales relativos a los servicios que has utilizado, así como cualquier otra información relacionada con la prestación del Servicio.
+                <p>Portabilidad. Puedes solicitarnos que te entreguemos directamente o que entreguemos a otra entidad, siempre que sea posible técnicamente, un archivo estructurado, de uso común y legible por un sistema informático, que contenga los Datos Personales relativos a los servicios que has utilizado, así como cualquier otra información relacionada con la prestación del Servicio.</p>
 
-                Reclamación. Puedes presentar una reclamación ante la autoridad de control competente en materia de protección de datos.
+                <p>Reclamación. Puedes presentar una reclamación ante la autoridad de control competente en materia de protección de datos.</p>
 
-                Oposición. Puedes oponerte a que utilicemos tus datos para alguna de las finalidades recogidas en el número 2 del apartado 4 de esta Política de Privacidad.
+                <p>Oposición. Puedes oponerte a que utilicemos tus datos para alguna de las finalidades recogidas en el número 2 del apartado 4 de esta Política de Privacidad.</p>
 
-                Puedes ejercitar estos derechos en cualquier momento y de forma gratuita (salvo que tu solicitud sea excesiva o infundada). Para ejercitar uno de tus derechos, simplemente debes hacerlo a través de nuestros medios de contacto de la Plataforma.
+                <p>Puedes ejercitar estos derechos en cualquier momento y de forma gratuita (salvo que tu solicitud sea excesiva o infundada). Para ejercitar uno de tus derechos, simplemente debes hacerlo a través de nuestros medios de contacto de la Plataforma.</p>
 
-                8. ¿Actualizaremos esta Política de Privacidad?
+                <h2>8. ¿Actualizaremos esta Política de Privacidad?</h2>
 
                 Es posible. Si decidimos realizar algún cambio en nuestra Política de Privacidad, te informaremos previamente.
             </>

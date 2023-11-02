@@ -1,5 +1,5 @@
 import React, { Component } from 'react';
-import {Button, Divider, Form, Grid, Header, Image, Message, Segment} from 'semantic-ui-react';
+import {Button, Checkbox, Divider, Form, Grid, Header, Image, Label, Message, Segment} from 'semantic-ui-react';
 import {AppContext, setData} from "../context";
 import {Link, NavLink, withRouter} from "react-router-dom";
 import {signIn} from "../service";
@@ -40,8 +40,13 @@ class SignIn extends Component {
     //     }
     // }
 
+    onAcceptTermsAndConditions() {
+        const {termsAccepted} = this.state;
+        this.setState({termsAccepted: !termsAccepted})
+    }
+
     render() {
-        const { username, password, signinUrl } = this.state;
+        const { username, password, signinUrl, termsAccepted } = this.state;
         return (
             <>
                 <Grid textAlign='center' verticalAlign='middle'>
@@ -57,6 +62,16 @@ class SignIn extends Component {
                     <Grid.Row>
                         <Grid.Column>
                             <Header textAlign={'center'} as={'h5'}>El Sistema Operativo del Entrenamiento<br/>(Version Beta)</Header>
+                        </Grid.Column>
+                    </Grid.Row>
+                    <Grid.Row>
+                        <Grid.Column>
+                            {/*<Checkbox*/}
+                            {/*    checked={termsAccepted}*/}
+                            {/*    onChange={() => this.onAcceptTermsAndConditions()}*/}
+                            {/*    label={<label>Al crear una cuenta acepto los <Link to={'/terms'}>Términos y condiciones</Link> y autorizo el uso de mis datos de acuerdo a la <Link to={'/privacy-policies'}>Declaración de Privacidad</Link>.</label>}*/}
+                            {/*/>*/}
+                            <p>Al crear una cuenta acepto los <Link to={'/terms'}>Términos y condiciones</Link> y autorizo el uso de mis datos de acuerdo a la <Link to={'/privacy-policies'}>Declaración de Privacidad</Link>.</p>
                         </Grid.Column>
                     </Grid.Row>
                     <Grid.Row>

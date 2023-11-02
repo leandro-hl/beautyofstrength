@@ -1,7 +1,7 @@
 import React, {Component} from "react";
 import {Grid, List, Loader, Image, Segment, Table, Checkbox} from "semantic-ui-react";
 import {getUserAccountDetails, signout} from "../service";
-import {withRouter} from "react-router-dom";
+import {Link, withRouter} from "react-router-dom";
 import {AppContext, setData} from "../context";
 import {MENU} from "../enums";
 import {setTheme} from "../functions";
@@ -80,6 +80,18 @@ class PageAccount extends Component {
                                     </Table.Row>
                                 </Table.Body>
                             </Table>
+                            <Grid padded>
+                                <Grid.Row className={'no-top-padding'}>
+                                    <Grid.Column>
+                                        <Link to={'/terms'}>Términos y condiciones</Link>
+                                    </Grid.Column>
+                                </Grid.Row>
+                                <Grid.Row className={'no-top-padding'}>
+                                    <Grid.Column>
+                                        <Link to={'/privacy-policies'}>Declaración de Privacidad</Link>
+                                    </Grid.Column>
+                                </Grid.Row>
+                            </Grid>
                         </Segment>
                     </Grid.Row>
                 </Grid.Column>
