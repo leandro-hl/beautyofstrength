@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"crypto/rand"
 	"encoding/base64"
 	"encoding/json"
 	"errors"
@@ -14,6 +15,7 @@ import (
 	"github.com/leandro-hl/beautyofstrength/back/webpush"
 	"io"
 	"log"
+	"math/big"
 	"mime/multipart"
 	"net/http"
 	"os"
@@ -207,12 +209,20 @@ func (o *Endpoints) Handle() http.Handler {
 	//o.r.Path("/signUp").HandlerFunc(o.HandleIPWhiteListing(o.HandleFatal(o.HandleTransactional(o.signUp))))
 	//o.r.Path("/signIn").HandlerFunc(o.HandleIPWhiteListing(o.HandleFatal(o.HandleTransactional(o.signIn))))
 	//o.r.Path("/testPushNotificationWorks").HandlerFunc(o.HandleAuthenticatedTransactional(o.HandleAuthorization(o.testPushNotificationWorks, db.Professor)))
-	api.Path("/getLocalInfo").HandlerFunc(o.HandleOptionsRequest(o.HandleIPWhiteListing(o.HandleFatal(o.getLocalInfo))))
+
+	if o.conf.IsDevelopment() {
+		api.Path("/getLocalInfo").HandlerFunc(o.HandleOptionsRequest(o.HandleIPWhiteListing(o.HandleFatal(o.getLocalInfo))))
+		api.Path("/createTestUser").HandlerFunc(o.HandleOptionsRequest(o.HandleIPWhiteListing(o.HandleFatal(o.HandleTransactional(o.createTestUser)))))
+	}
 	api.Path("/googlesignin").HandlerFunc(o.HandleOptionsRequest(o.HandleIPWhiteListing(o.HandleFatal(o.HandleTransactional(o.googleSignIn)))))
 
-	//Profesor services (all premium)
+	//Instructor services (all premium)
+	api.Path("/sharePlanification").HandlerFunc(o.HandleAuthenticatedTransactional(o.HandleAuthorization(o.sharePlanification, db.Professor)))
 	api.Path("/createPlanification").HandlerFunc(o.HandleAuthenticatedTransactional(o.HandleAuthorization(o.createPlanification, db.Professor)))
 	api.Path("/savePlanificationDays").HandlerFunc(o.HandleAuthenticatedTransactional(o.HandleAuthorization(o.savePlanificationDays, db.Professor)))
+	api.Path("/listQueuedPlanificationAccessRequests").HandlerFunc(o.HandleAuthenticatedTransactional(o.HandleAuthorization(o.listQueuedPlanificationAccessRequests, db.Professor)))
+	api.Path("/acceptPlanificationAccessRequest").HandlerFunc(o.HandleAuthenticatedTransactional(o.HandleAuthorization(o.acceptPlanificationAccessRequest, db.Professor)))
+	api.Path("/declinePlanificationAccessRequest").HandlerFunc(o.HandleAuthenticatedTransactional(o.HandleAuthorization(o.declinePlanificationAccessRequest, db.Professor)))
 
 	//Student services
 	//free tier
@@ -223,6 +233,9 @@ func (o *Endpoints) Handle() http.Handler {
 
 	//General Services
 	//o.r.Path("/serveImage").HandlerFunc(o.HandleAuthenticatedTransactional(o.serveImage))
+	//redirect directly to the api. check the domain is mercado pago. implement some shit like google auth sec
+	api.Path("/teacherSubscriptionApproved").HandlerFunc(o.HandleAuthenticatedTransactional(o.HandleAuthorization(o.teacherSubscriptionApproved, db.StudentFree, db.StudentPremium, db.Professor)))
+	api.Path("/eliteSubscriptionApproved").HandlerFunc(o.HandleAuthenticatedTransactional(o.HandleAuthorization(o.eliteSubscriptionApproved, db.StudentFree, db.StudentPremium, db.Professor)))
 	api.Path("/saveExercisesBlockFree").HandlerFunc(o.HandleAuthenticatedTransactional(o.HandleAuthorization(o.saveExercisesBlockFree, db.StudentFree, db.StudentPremium, db.Professor)))
 	api.Path("/saveExercisesBlockCpt").HandlerFunc(o.HandleAuthenticatedTransactional(o.HandleAuthorization(o.saveExercisesBlockCpt, db.StudentFree, db.StudentPremium, db.Professor)))
 	api.Path("/saveExercisesBlockAmrap").HandlerFunc(o.HandleAuthenticatedTransactional(o.HandleAuthorization(o.saveExercisesBlockAmrap, db.StudentFree, db.StudentPremium, db.Professor)))
@@ -236,8 +249,10 @@ func (o *Endpoints) Handle() http.Handler {
 	api.Path("/saveUserDevicePushNotificationSubscription").HandlerFunc(o.HandleAuthenticatedTransactional(o.HandleAuthorization(o.saveUserDevicePushNotificationSubscription, db.StudentFree, db.StudentPremium, db.Professor)))
 	api.Path("/shareRoutine").HandlerFunc(o.HandleAuthenticatedTransactional(o.HandleAuthorization(o.shareRoutine, db.StudentFree, db.StudentPremium, db.Professor)))
 	api.Path("/getSharedRoutineDetails").HandlerFunc(o.HandleAuthenticatedTransactional(o.HandleAuthorization(o.getSharedRoutineDetails, db.StudentFree, db.StudentPremium, db.Professor)))
+	api.Path("/requestAccessToSharedPlanification").HandlerFunc(o.HandleAuthenticatedTransactional(o.HandleAuthorization(o.requestAccessToSharedPlanification, db.StudentFree, db.StudentPremium, db.Professor)))
 	api.Path("/getRoutineDetails").HandlerFunc(o.HandleAuthenticatedTransactional(o.HandleAuthorization(o.getRoutineDetails, db.StudentFree, db.StudentPremium, db.Professor)))
 	api.Path("/getUserAccountDetails").HandlerFunc(o.HandleAuthenticatedTransactional(o.HandleAuthorization(o.getUserAccountDetails, db.StudentFree, db.StudentPremium, db.Professor)))
+	api.Path("/actionateRoutine").HandlerFunc(o.HandleAuthenticatedTransactional(o.HandleAuthorization(o.actionateRoutine, db.StudentFree, db.StudentPremium, db.Professor)))
 	api.Path("/signout").HandlerFunc(o.HandleAuthenticatedTransactional(o.HandleAuthorization(o.signout, db.StudentFree, db.StudentPremium, db.Professor)))
 	api.Path("/checkAuth").HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		_, err := r.Cookie("auth_token")
@@ -286,7 +301,6 @@ func (o *Endpoints) getUserPermissions(w http.ResponseWriter, r *http.Request, t
 		//not implemented
 		permissions["createOneRoutine"] = true
 		permissions["editRoutinesICreated"] = true
-		permissions["executeRoutine"] = true
 	}
 
 	if *plan == db.StudentFree || *plan == db.StudentPremium {
@@ -297,6 +311,7 @@ func (o *Endpoints) getUserPermissions(w http.ResponseWriter, r *http.Request, t
 	if *plan == db.StudentPremium || *plan == db.Professor {
 		permissions["createManyRoutines"] = true
 		permissions["createManyExerciseBlocks"] = true
+		permissions["executeRoutine"] = true
 	}
 
 	if *plan == db.StudentPremium {
@@ -373,7 +388,7 @@ func (o *Endpoints) getSharedRoutineDetails(w http.ResponseWriter, r *http.Reque
 		err = json.Unmarshal([]byte(decrypted), &t)
 		util.Check(err)
 
-		metaData := db.GetUserSharingToken(tx, t.PlanificationId, t.RoutineId, t.CreatorId)
+		metaData := db.GetRoutineUserSharingToken(tx, t.PlanificationId, t.RoutineId, t.CreatorId)
 
 		if metaData.Creationdate.Add(time.Hour * time.Duration(*o.conf.LinkSharingExpirationDays) * 24).Before(time.Now()) {
 			db.InvalidateSharingTokenForRoutine(tx, t.PlanificationId, t.RoutineId, t.CreatorId)
@@ -416,6 +431,32 @@ func (o *Endpoints) getSharedRoutineDetails(w http.ResponseWriter, r *http.Reque
 	}
 }
 
+func (o *Endpoints) actionateRoutine(w http.ResponseWriter, r *http.Request, tx *sqlx.Tx) {
+	t := ActionateRoutineRequest{}
+	err := o.Decode(r, &t)
+	util.Check(err)
+
+	usr := util.UserId(r)
+	if !db.CalculateUserHasNoAccessToPlanification(tx, *t.PlanificationId, usr) {
+		plan := db.GetAccountPlanIdentifierByUserId(tx, usr)
+		iAmPremium := *plan == db.StudentPremium || *plan == db.Professor
+		if !iAmPremium {
+			if db.CalculateUserAlreadyActionatedARoutineToday(tx, *t.PlanificationId, usr) {
+				panic(errors.New("you already actionate a routine today"))
+			}
+			schedule := db.GetPlanificationScheduleByUser(tx, *t.PlanificationId, usr)
+			db.UpdateUserPlanificationRoutineAccess(tx, *t.PlanificationId, usr, *schedule.AccessUpToRoutine+1)
+		}
+
+		if *t.ActionatedRoutineAction == "skip" {
+			db.InsertUserRoutineHistory(tx, false, *t.PlanificationId, *t.ActionatedRoutineId, usr)
+		} else if *t.ActionatedRoutineAction == "finished" {
+			db.InsertUserRoutineHistory(tx, true, *t.PlanificationId, *t.ActionatedRoutineId, usr)
+		}
+	}
+	o.Respond(w, nil, http.StatusOK)
+}
+
 func (o *Endpoints) listRoutines(w http.ResponseWriter, r *http.Request, tx *sqlx.Tx) {
 	id := r.URL.Query().Get("planificationId")
 	if id == "" {
@@ -423,13 +464,80 @@ func (o *Endpoints) listRoutines(w http.ResponseWriter, r *http.Request, tx *sql
 	}
 	planificationId, err := strconv.ParseInt(id, 10, 64)
 	util.Check(err)
-	o.Respond(w, db.ListRoutines(tx, planificationId), http.StatusOK)
+
+	usr := util.UserId(r)
+	routines := make([]db.ListRoutinesQuery, 0)
+	plan := db.GetAccountPlanIdentifierByUserId(tx, usr)
+	iAmPremium := *plan == db.StudentPremium || *plan == db.Professor
+	iAmOwner := db.CalculateUserOwnsPlanification(tx, usr, planificationId)
+	if iAmOwner {
+		routines = db.ListActiveRoutinesICreated(tx, planificationId, usr)
+	} else {
+		routines = db.ListActiveRoutines(tx, planificationId, usr)
+	}
+
+	schedule := db.GetPlanificationScheduleByUser(tx, planificationId, usr)
+	week := len(*schedule.Days)
+	accessUpToRoutine := *schedule.AccessUpToRoutine
+	userActionatedRoutineToday := false
+	if iAmPremium {
+		//todo this could be in a cron job
+		//premium users can access the whole training week every week
+		if schedule.AccessLastUpdated.Sub(time.Now()).Hours() > 6*24 {
+			accessUpToRoutine = *schedule.AccessUpToRoutine + week
+			db.UpdateUserPlanificationRoutineAccess(tx, planificationId, usr, accessUpToRoutine)
+		}
+	} else {
+		userActionatedRoutineToday = db.CalculateUserAlreadyActionatedARoutineToday(tx, planificationId, usr)
+	}
+
+	scheduleDaysBuf := strings.Split(*schedule.Days, "")
+	scheduleDays := make([]int, 0)
+	for _, d := range scheduleDaysBuf {
+		i, _ := strconv.Atoi(d)
+		scheduleDays = append(scheduleDays, i)
+	}
+
+	scheduleDaysIterator := 0
+	weekStarts := true
+	dayNames := []string{"Lunes", "Martes", "Miercoles", "Jueves", "Viernes", "Sabado", "Domingo"}
+	today := int(time.Now().Weekday()) - 1
+
+	for i := 0; i < len(routines); i++ {
+		if routines[i].Completed != nil {
+			if !iAmOwner && !iAmPremium {
+				routines[i].Id = nil
+			}
+		} else {
+			if iAmOwner && iAmPremium {
+				routines[i].IsActionable = true
+			} else if !userActionatedRoutineToday && scheduleDays[scheduleDaysIterator] <= today && i < accessUpToRoutine {
+				routines[i].IsActionable = true
+			} else if i >= accessUpToRoutine {
+				routines[i].Id = nil
+			}
+		}
+
+		if week > 0 {
+			*routines[i].Name = *routines[i].Name + ": " + dayNames[scheduleDays[scheduleDaysIterator]]
+			if scheduleDaysIterator == week-1 {
+				scheduleDaysIterator = 0
+				weekStarts = true
+			} else {
+				if weekStarts {
+					routines[i].IsStartOfWeek = true
+					weekStarts = false
+				}
+				scheduleDaysIterator++
+			}
+		}
+	}
+	o.Respond(w, routines, http.StatusOK)
 }
 
 func (o *Endpoints) listPlanifications(w http.ResponseWriter, r *http.Request, tx *sqlx.Tx) {
 	userId := util.UserId(r)
-	//todo: use a Response struct to not expose db data.
-	o.Respond(w, db.ListPlanifications(tx, userId), http.StatusOK)
+	o.Respond(w, db.ListMyPlanifications(tx, userId), http.StatusOK)
 }
 
 func (o *Endpoints) listExercises(w http.ResponseWriter, r *http.Request, tx *sqlx.Tx) {
@@ -687,6 +795,20 @@ func (o *Endpoints) getUserLoadedTrainingToday(w http.ResponseWriter, r *http.Re
 	}, http.StatusOK)
 }
 
+func (o *Endpoints) teacherSubscriptionApproved(w http.ResponseWriter, r *http.Request, tx *sqlx.Tx) {
+	//todo: teacherSubscriptionApproved make sure they did paid
+	//make sure domain is meli
+	//set plan to user
+	//ver si viene la cookie en este caso...
+	//userId := util.UserId(r)
+	//can only be called once per user. if they want another subscription they should first communicate to
+	//cancel the previous one.
+}
+
+func (o *Endpoints) eliteSubscriptionApproved(w http.ResponseWriter, r *http.Request, tx *sqlx.Tx) {
+	//todo: eliteSubscriptionApproved
+}
+
 func (o *Endpoints) googleSignIn(w http.ResponseWriter, r *http.Request, tx *sqlx.Tx) {
 	bodyBytes, err := io.ReadAll(r.Body)
 	util.Check(err)
@@ -766,7 +888,8 @@ func (o *Endpoints) googleSignIn(w http.ResponseWriter, r *http.Request, tx *sql
 			Locale:        util.PString(claims.Locale),
 			AccountPlanId: planId,
 		})
-		db.CreatePlanification(tx, *userId, "Mi Planificacion")
+		planificationId := db.CreatePlanification(tx, *userId, "Mi Planificacion")
+		db.SavePlanificationDays(tx, *planificationId, "01234")
 		o.storeSessionData(w, tx, *userId)
 		http.Redirect(w, r, *o.conf.AddressUi+"/app"+"/my-planifications", http.StatusFound)
 	}
@@ -796,7 +919,7 @@ func (o *Endpoints) shareRoutine(w http.ResponseWriter, r *http.Request, tx *sql
 	err := o.Decode(r, &t)
 	util.Check(err)
 	userId := util.UserId(r)
-	if db.GetUserCreatedTheRoutine(tx, *t.PlanificationId, *t.RoutineId, userId) {
+	if db.CalculateUserOwnsRoutine(tx, userId, *t.PlanificationId, *t.RoutineId) {
 		db.InvalidateSharingTokenForRoutine(tx, *t.PlanificationId, *t.RoutineId, userId)
 		key, err := base64.StdEncoding.DecodeString(*o.cryptoConf.LinkSharingKey)
 		util.Check(err)
@@ -810,8 +933,83 @@ func (o *Endpoints) shareRoutine(w http.ResponseWriter, r *http.Request, tx *sql
 		encrypted, err := util.Encrypt(string(str), key)
 		util.Check(err)
 
-		db.SaveUserSharingToken(tx, *t.PlanificationId, *t.RoutineId, userId)
+		db.SaveUserSharingToken(tx, *t.PlanificationId, userId, t.RoutineId)
 		o.Respond(w, fmt.Sprintf("/routine?share=%s", base64.RawURLEncoding.EncodeToString([]byte(encrypted))), http.StatusOK)
+	} else {
+		o.Respond(w, nil, http.StatusUnauthorized)
+	}
+}
+
+func (o *Endpoints) requestAccessToSharedPlanification(w http.ResponseWriter, r *http.Request, tx *sqlx.Tx) {
+	p := RequestAccessToSharedPlanificationRequest{}
+	err := o.Decode(r, &p)
+	util.Check(err)
+	userId := util.UserId(r)
+
+	decoded, err := base64.RawURLEncoding.DecodeString(*p.SharedPlanification)
+	util.Check(err)
+	key, err := base64.StdEncoding.DecodeString(*o.cryptoConf.LinkSharingKey)
+	util.Check(err)
+	decrypted, err := util.Decrypt(string(decoded), key)
+	util.Check(err)
+	var t ShareEncrypted
+	err = json.Unmarshal([]byte(decrypted), &t)
+	util.Check(err)
+
+	metaData := db.GetPlanificationUserSharingToken(tx, t.PlanificationId, t.CreatorId)
+
+	if !db.UserAlreadyRequestedAccessToSharedPlanification(tx, *metaData.PlanificationId, userId) {
+		if db.CalculateUserHasNoAccessToPlanification(tx, *metaData.PlanificationId, userId) {
+			db.QueueAccessRequestToSharedPlanification(tx, *metaData.PlanificationId, userId)
+		}
+	}
+}
+
+func (o *Endpoints) listQueuedPlanificationAccessRequests(w http.ResponseWriter, r *http.Request, tx *sqlx.Tx) {
+	o.Respond(w, db.ListQueuedPlanificationAccessRequests(tx, util.UserId(r)), http.StatusOK)
+}
+
+func (o *Endpoints) acceptPlanificationAccessRequest(w http.ResponseWriter, r *http.Request, tx *sqlx.Tx) {
+	p := AcceptPlanificationAccessRequest{}
+	err := o.Decode(r, &p)
+	util.Check(err)
+	userId := util.UserId(r)
+	if db.CalculateUserOwnsPlanification(tx, userId, *p.PlanificationId) &&
+		db.CalculateUserHasNoAccessToPlanification(tx, *p.PlanificationId, *p.RequesterUserId) {
+		plan := db.GetAccountPlanIdentifierByUserId(tx, *p.RequesterUserId)
+		db.AcceptPlanificationAccessRequest(tx, *p.PlanificationId, *p.RequesterUserId, userId, plan)
+	}
+}
+
+func (o *Endpoints) declinePlanificationAccessRequest(w http.ResponseWriter, r *http.Request, tx *sqlx.Tx) {
+	p := DeclinePlanificationAccessRequest{}
+	err := o.Decode(r, &p)
+	util.Check(err)
+	userId := util.UserId(r)
+	if db.CalculateUserOwnsPlanification(tx, userId, *p.PlanificationId) {
+		db.DeclinePlanificationAccessRequest(tx, *p.PlanificationId, *p.RequesterUserId, userId)
+	}
+}
+
+func (o *Endpoints) sharePlanification(w http.ResponseWriter, r *http.Request, tx *sqlx.Tx) {
+	t := SharePlanificationRequest{}
+	err := o.Decode(r, &t)
+	util.Check(err)
+	userId := util.UserId(r)
+	if db.CalculateUserOwnsPlanification(tx, userId, *t.PlanificationId) {
+		key, err := base64.StdEncoding.DecodeString(*o.cryptoConf.LinkSharingKey)
+		util.Check(err)
+		str, err := json.Marshal(ShareEncrypted{
+			PlanificationId: *t.PlanificationId,
+			CreatorId:       userId,
+		})
+		util.Check(err)
+
+		encrypted, err := util.Encrypt(string(str), key)
+		util.Check(err)
+
+		db.SaveUserSharingToken(tx, *t.PlanificationId, userId, nil)
+		o.Respond(w, fmt.Sprintf("/my-planifications?teacher=%s&pshare=%s", "Tu Instructor", base64.RawURLEncoding.EncodeToString([]byte(encrypted))), http.StatusOK)
 	} else {
 		o.Respond(w, nil, http.StatusUnauthorized)
 	}
@@ -908,6 +1106,43 @@ func (o *Endpoints) getLocalInfo(w http.ResponseWriter, r *http.Request) {
 	last := developmentLastCreatedSessionTokenStack[len(developmentLastCreatedSessionTokenStack)-1]
 	developmentLastCreatedSessionTokenStack = developmentLastCreatedSessionTokenStack[:len(developmentLastCreatedSessionTokenStack)-1]
 	w.Write([]byte(last))
+}
+
+func (o *Endpoints) createTestUser(w http.ResponseWriter, r *http.Request, tx *sqlx.Tx) {
+	if !o.conf.IsDevelopment() {
+		o.Respond(w, nil, http.StatusUnauthorized)
+		return
+	}
+	const letters = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
+	const n = 10
+	var result string
+	for i := 0; i < n; i++ {
+		letter, err := rand.Int(rand.Reader, big.NewInt(int64(len(letters))))
+		if err != nil {
+			panic(err)
+		}
+		result += string(letters[letter.Int64()])
+	}
+
+	email := fmt.Sprintf("%s@%s", result, "test.com")
+	accountType := r.URL.Query().Get("accountType")
+	acc := db.AccountPlanType(rune(accountType[0]))
+	planId := db.GetAccountPlanIdByIdentifier(tx, acc)
+	userId := db.CreateUserAccount(tx, &db.UserAccount{
+		Name:          util.PString("Test " + result),
+		Username:      util.PString(email),
+		Email:         util.PString(email),
+		EmailVerified: util.PBool(false),
+		UserType:      util.PString(accountType),
+		Password:      util.PString("autogenerated"),
+		PictureUrl:    util.PString(""),
+		Locale:        util.PString(""),
+		AccountPlanId: planId,
+	})
+	planificationId := db.CreatePlanification(tx, *userId, "Mi Planificacion")
+	db.SavePlanificationDays(tx, *planificationId, "01234")
+	o.storeSessionData(w, tx, *userId)
+	http.Redirect(w, r, *o.conf.AddressUi+"/app"+"/my-planifications", http.StatusFound)
 }
 
 func (o *Endpoints) storeSessionData(w http.ResponseWriter, tx *sqlx.Tx, userId int64) {

@@ -52,6 +52,10 @@ export function listExercises() {
     return axios.get("listExercises")
 }
 
+export function listQueuedPlanificationAccessRequests() {
+    return axios.get("listQueuedPlanificationAccessRequests")
+}
+
 export function saveExercisesBlock(payload) {
     return axios.post("saveExercisesBlock", payload)
 }
@@ -109,6 +113,10 @@ export function sharePlanification(payload) {
     return axios.post("sharePlanification", payload)
 }
 
+export function actionateRoutine(payload) {
+    return axios.post("actionateRoutine", payload)
+}
+
 export function createPlanification(payload) {
     return axios.post("createPlanification", payload)
 }
@@ -119,4 +127,12 @@ export function getUserLoadedTrainingToday() {
 
 export function getUserAccountDetails() {
     return axios.get("getUserAccountDetails")
+}
+
+export function acceptPlanificationAccessRequest(payload) {
+    return axios.post("acceptPlanificationAccessRequest", payload)
+}
+
+export function declinePlanificationAccessRequest(payload) {
+    return axios.post("declinePlanificationAccessRequest", payload)
 }

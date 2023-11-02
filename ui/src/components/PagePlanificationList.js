@@ -1,15 +1,23 @@
 import React, {Component} from "react";
-import {Button, Header, Input, List, Loader, Modal, Segment} from "semantic-ui-react";
-import {createPlanification, listPlanifications} from "../service";
+import {Advertisement, Button, Header, Icon, Input, List, Loader, Message, Modal, Segment} from "semantic-ui-react";
+import {
+    createPlanification, getUserPermissions,
+    listPlanifications,
+    listQueuedPlanificationAccessRequests,
+    requestAccessToSharedPlanification
+} from "../service";
 import {withRouter} from "react-router-dom";
 import {AppContext, setData} from "../context";
 import BottomMenuBar from "./BottomMenuBar";
 import LayoutMobile from "./LayoutMobile";
 import {MENU} from "../enums";
+import {ModalPlanificationCreate} from "./ModalPlanificationCreate";
+import {ModalPlanificationRequestAccess} from "./ModalPlanificationRequestAccess";
+import {ModalPlanificationsPendingRequests} from "./ModalPlanificationsPendingRequests";
 
 class PagePlanificationList extends Component {
     static contextType = AppContext
-    state = {loading: true, planifications: []}
+    state = {loading: true, planifications: [], requests:[], planificationShared: false}
 
     async componentDidMount() {
         try {
@@ -18,6 +26,11 @@ class PagePlanificationList extends Component {
                 this.props.history.push('/routine')
                 return
             }
+            const planificationShared = localStorage.getItem('planification-shared')
+            if(planificationShared) {
+                this.setState({planificationShared: true, sharedPlanification: planificationShared})
+            }
+
             const {state: {permissions: {createPlanification}}} = this.context
             if (createPlanification) {
                 this.context.dispatch(setData({
@@ -37,7 +50,7 @@ class PagePlanificationList extends Component {
     }
 
     redirectToPlanification(p) {
-        this.context.dispatch(setData({planificationId: p.id, planificationName: p.name}))
+        this.context.dispatch(setData({planificationId: p.id, planificationName: p.name, isOwner: p.owner}))
         this.props.history.push('/planification')
     }
 
@@ -71,39 +84,103 @@ class PagePlanificationList extends Component {
 
     renderCreatePlanificationModal() {
         const {showCreatePlanificationModal} = this.state
-        return (
-            <Modal
-                open={showCreatePlanificationModal}
-                size={"tiny"}
-            >
-                <Modal.Header>
-                    Crear Planificacion
-                </Modal.Header>
-                <Modal.Content>
-                    <Input fluid placeholder='Nombre' onChange={(e, {value}) => this.onNewPlanificationName(value)} />
-                </Modal.Content>
-                <Modal.Actions>
-                    <Button secondary onClick={() => this.handleClose()}>Cancelar</Button>
-                    <Button primary onClick={() => this.handleConfirm()}>Crear Planificacion</Button>
-                </Modal.Actions>
-            </Modal>
-        )
+        return <ModalPlanificationCreate
+            open={showCreatePlanificationModal}
+            handleClose={() => this.handleClose()}
+            handleConfirm={() => this.handleConfirm()}
+            onNewPlanificationName={(v) => this.onNewPlanificationName(v)}/>
+    }
+
+    async requestAccessToSharedPlanification() {
+        try {
+            const {sharedPlanification} = this.state
+            await requestAccessToSharedPlanification({sharedPlanification})
+            localStorage.removeItem('planification-shared')
+        } catch (e) {
+            console.error(e)
+        }
+    }
+
+    async fetchPendingRequests() {
+        try {
+            const res = await listQueuedPlanificationAccessRequests()
+            this.setState({showPendingRequests: true, requests: res.data})
+        } catch (e) {
+            console.error(e)
+        }
+    }
+
+    async refreshPlanifications() {
+        try {
+            this.setState({refreshing: true})
+            const res = await listPlanifications();
+            this.setState({refreshing: false, planifications: res.data})
+        } catch (e) {
+            console.error(e)
+        }
+    }
+
+    onRemoveRequest(i) {
+        const {requests} = this.state
+        const buffer = [...requests]
+        buffer.splice(i, 1)
+        this.setState({requests: [...buffer]})
     }
 
     render() {
-        const {state: {permissions: {createPlanification}}} = this.context
-        const {planifications} = this.state;
+        const {state: {permissions: {createPlanification, sharePlanification}}} = this.context
+        const {planifications, planificationShared, showPendingRequests, requests, refreshing} = this.state;
         const {loading} = this.state;
 
         if (loading) {
             return <Loader active/>
         }
 
+        const ownedPlanifications = planifications.filter(p => p.owner);
+        const sharedPlanifications = planifications.filter(p => !p.owner)
         return (
             <>
-                <Header as={'h3'}>Mis Planificaciones</Header>
-                {planifications.map(p => (<Segment style={{width: '100%'}} key={p.id} onClick={() => this.redirectToPlanification(p)}>{p.name}</Segment>))}
+                <Header as={'h3'}>
+                    Mis Planificaciones
+                    <Icon disabled={refreshing} name={'refresh'} className={'header-icon'} onClick={() => this.refreshPlanifications()}/>
+                </Header>
+                {sharePlanification && <Button primary fluid onClick={() => this.fetchPendingRequests()}>Revisar solicitudes pendientes</Button>}
+                {refreshing && <Loader active/>}
+                {
+                    !refreshing &&
+                    <>
+                        <Header as={'h5'}>Compartidas conmigo</Header>
+                        {
+                            sharedPlanifications.length === 0 &&
+                            <Message>
+                                <Message.Header>Aun no te han compartido ninguna planificacion</Message.Header>
+                                <p>Cuando un instructor comparta una planificacion con vos, la veras aqui.</p>
+                            </Message>
+                        }
+                        {sharedPlanifications.map((p,i) => {
+                            return (
+                                <Segment style={{width: '100%'}} key={p.id}
+                                         onClick={() => this.redirectToPlanification(p)}>
+                                    <Header sub>{p.name}</Header>
+                                    <span>Rutinas: {p.routinescount}</span>
+                                </Segment>
+                            )
+                        })}
+                        <Header as={'h5'}>Creadas</Header>
+                        {ownedPlanifications.map(p => {
+                            return (
+                                <Segment style={{width: '100%'}} key={p.id}
+                                         onClick={() => this.redirectToPlanification(p)}>
+                                    <Header sub>{p.name}</Header>
+                                    <span>Rutinas: {p.routinescount}</span>
+                                </Segment>
+                            )
+                        })}
+                    </>
+                }
                 {createPlanification && this.renderCreatePlanificationModal()}
+                {planificationShared && <ModalPlanificationRequestAccess onRequestAccess={() => this.requestAccessToSharedPlanification()}/>}
+                {showPendingRequests && <ModalPlanificationsPendingRequests requests={requests} onRemove={(i) => this.onRemoveRequest(i)} onClose={() => this.setState({showPendingRequests: false})}/>}
             </>
         )
     }

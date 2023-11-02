@@ -18,8 +18,9 @@ const (
 )
 
 type Planification struct {
-	Id   *int    `json:"id"`
-	Name *string `json:"name"`
+	Id        *int    `json:"id"`
+	Name      *string `json:"name"`
+	CreatorId *int64  `json:"creator_id"`
 }
 
 type PlanificationSchedule struct {
@@ -101,10 +102,20 @@ type UserTrainingHistory struct {
 }
 
 type UserPlanification struct {
-	Id               *int64  `json:"id"`
-	PlanificationId  *int64  `json:"planification_id"`
-	UserAccountId    *int64  `json:"useraccount_id"`
-	RelationshipType *string `json:"relationshiptype"`
+	Id                *int64    `json:"id"`
+	PlanificationId   *int64    `json:"planification_id"`
+	UserAccountId     *int64    `json:"useraccount_id"`
+	AccessUpToRoutine *int      `json:"accessuptoroutine"`
+	AccessLastUpdated time.Time `json:"accesslastupdated"`
+}
+
+type UserRoutineHistory struct {
+	Id              *int64    `json:"id"`
+	PlanificationId *int64    `json:"planification_id"`
+	RoutineId       *int64    `json:"routine_id"`
+	UserAccountId   *int64    `json:"useraccount_id"`
+	Completed       *bool     `json:"completed"`
+	CreatedDate     time.Time `json:"createddate"`
 }
 
 type WebPushNotificationSubscription struct {
@@ -123,4 +134,10 @@ type UserSharingToken struct {
 	RoutineId       *int64    `json:"routine_id"`
 	PlanificationId *int64    `json:"planification_id"`
 	IsValid         *bool     `json:"isvalid"`
+}
+
+type QueuePlanificationAccess struct {
+	Id              *int64 `json:"id"`
+	PlanificationId *int64 `json:"planification_id"`
+	UserAccountId   *int64 `json:"useraccount_id"`
 }

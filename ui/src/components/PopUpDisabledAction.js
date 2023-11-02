@@ -1,8 +1,16 @@
 import {Component} from "react";
 import {Popup} from "semantic-ui-react";
 
-export class PopUpUpgradePlan extends Component {
-    state = { isOpen: false }
+export class PopUpDisabledAction extends Component {
+    constructor(props) {
+        super(props);
+
+        this.state = {
+            isOpen: false,
+            header: props.disableHeader ?? 'Pasate a Premium!',
+            description: props.disableDescription ?? 'Con Premium obtene beneficios y desbloquea todas las funcionalidades'
+        }
+    }
 
     handleOpen = () => {
         this.setState({ isOpen: true })
@@ -24,8 +32,8 @@ export class PopUpUpgradePlan extends Component {
                 onClose={() => this.handleClose()}
                 onOpen={() => this.handleOpen()}
                 trigger={this.props.trigger} on={'click'} position={'top left'}>
-                <Popup.Header>Pasate a Premium!</Popup.Header>
-                <Popup.Content>Con Premium obtene beneficios y desbloquea todas las funcionalidades</Popup.Content>
+                <Popup.Header>{this.state.header}</Popup.Header>
+                <Popup.Content>{this.state.description}</Popup.Content>
             </Popup>
         )
     }

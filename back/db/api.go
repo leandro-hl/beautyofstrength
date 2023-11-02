@@ -13,15 +13,24 @@ func ListExerciseNames(db *sqlx.DB) []ListExerciseIdName {
 	return exercisesNames
 }
 
-func ListPlanifications(tx *sqlx.Tx, userId int64) []Planification {
-	dest := make([]Planification, 0)
-
+func ListMyPlanifications(tx *sqlx.Tx, userId int64) []ListPlanificationsQuery {
+	dest := make([]ListPlanificationsQuery, 0)
 	err := tx.Select(&dest, `
-		select p.* from planification p
+		select 
+		    p.id, 
+		    p.name,
+			CASE
+			WHEN p.creator_id = u.useraccount_id THEN TRUE
+			ELSE FALSE
+			END as owner,
+		    count(r.id) as routinescount
+		from planification p
 		inner join userplanification u on p.id = u.planification_id
-		where u.useraccount_id = $1 order by p.name`, userId)
+		left join routine r on p.id = r.planification_id
+		where u.useraccount_id = $1 
+		group by p.id, p.starred, p.name, p.creator_id, u.useraccount_id 
+		order by p.starred desc, owner desc, p.name`, userId)
 	util.Check(err)
-
 	return dest
 }
 
@@ -49,23 +58,75 @@ func GetRoutineDetails(tx *sqlx.Tx, routineId int64, userId int64) []GetRoutineD
 		left join exerciseblockgroup eb on b.id = eb.blockgroup_id
 		left join exercise e on e.id = eb.exercise_id
 		where r.id=$1 and u.useraccount_id=$2
-		order by b.id, eb.id;`, routineId, userId)
+		order by b.id, eb.id`, routineId, userId)
 	util.Check(err)
 
 	return dest
 }
 
-func ListRoutines(tx *sqlx.Tx, planificationId int64) []Routine {
-	dest := make([]Routine, 0)
+func ListActiveRoutinesICreated(tx *sqlx.Tx, planificationId int64, userId int64) []ListRoutinesQuery {
+	dest := make([]ListRoutinesQuery, 0)
 
 	err := tx.Select(&dest, `
-		select r.* from routine r 
+		select 
+		    r.id, 
+		    r.name, 
+		    r.planification_id, 
+		    count(b.id) as blockcount, 
+		    u2.completed from routine r 
 		inner join planification p on r.planification_id = p.id
-		where p.id = $1
-		order by r.id`, planificationId)
+	    inner join blockgroup b on r.id = b.routine_id
+		left outer join userroutinehistory u2 on r.id = u2.routine_id and u2.useraccount_id = p.creator_id                                                                 
+		where p.id = $1 and p.creator_id=$2
+		group by r.id, u2.completed  order by r.id`, planificationId, userId)
 	util.Check(err)
 
 	return dest
+}
+
+func ListActiveRoutines(tx *sqlx.Tx, planificationId, userId int64) []ListRoutinesQuery {
+	dest := make([]ListRoutinesQuery, 0)
+
+	err := tx.Select(&dest, `
+		select 
+		    r.id, 
+		    r.name, 
+		    r.planification_id, 
+		    count(b.id) as blockcount, 
+		    u2.completed from routine r 
+		inner join planification p on r.planification_id = p.id
+		inner join userplanification u on p.id = u.planification_id
+		inner join blockgroup b on r.id = b.routine_id    
+		left outer join userroutinehistory u2 on r.id = u2.routine_id and u.useraccount_id = u2.useraccount_id                                                                
+		where p.id = $1 and u.useraccount_id = $2
+		group by r.id, u2.completed order by r.id`, planificationId, userId)
+	util.Check(err)
+
+	return dest
+}
+
+func GetPlanificationSchedule(tx *sqlx.Tx, planificationId int64) *PlanificationSchedule {
+	var des PlanificationSchedule
+	tx.Get(&des, `select * from planificationschedule where planification_id=$1`, planificationId)
+	return &des
+}
+
+func GetPlanificationScheduleByUser(tx *sqlx.Tx, planificationId, userId int64) *GetPlanificationScheduleQuery {
+	var des GetPlanificationScheduleQuery
+	tx.Get(&des, `select 
+		ps.*,
+		u.accessuptoroutine,
+		u.accesslastupdated 
+		from planificationschedule ps
+		inner join userplanification u on ps.planification_id = u.planification_id
+		where ps.planification_id=$1 and u.useraccount_id = $2`, planificationId, userId)
+	return &des
+}
+
+func UpdateUserPlanificationRoutineAccess(tx *sqlx.Tx, planificationId, userId int64, newUpToRoutineAccess int) {
+	tx.Exec(`update userplanification 
+		set accessuptoroutine=$1, accesslastupdated=now() 
+		where planification_id=$2 and useraccount_id=$3`, newUpToRoutineAccess, planificationId, userId)
 }
 
 func ListExercises(tx *sqlx.Tx) []ListExercise {
@@ -130,15 +191,17 @@ func CreatePlanification(tx *sqlx.Tx, userId int64, name string) *int64 {
 	id := Insert(
 		tx,
 		&Planification{
-			Name: &name,
+			Name:      &name,
+			CreatorId: &userId,
 		})
 
 	Insert(
 		tx,
 		&UserPlanification{
-			PlanificationId:  id,
-			UserAccountId:    &userId,
-			RelationshipType: util.PString(string(Creator)),
+			PlanificationId:   id,
+			UserAccountId:     &userId,
+			AccessUpToRoutine: util.PInt(30),
+			AccessLastUpdated: time.Now(),
 		})
 	return id
 }
@@ -227,17 +290,18 @@ func GetUserLoadedTrainingToday(tx *sqlx.Tx, userId int64) bool {
 	return lastYear == year && lastMonth == month && lastDay == day
 }
 
-func CalculateUserOwnsPlanification(tx *sqlx.Tx, userId, planificationId int64) bool {
+func CalculateUserOwnsRoutine(tx *sqlx.Tx, userId, planificationId, routineId int64) bool {
 	var des int
-	tx.Get(&des, "select count(1) from userplanification where useraccount_id=$1 and planification_id=$2", userId, planificationId)
+	tx.Get(&des, `
+	select count(1) from planification p 
+    inner join routine r on p.id = r.planification_id 
+	where p.creator_id=$1 and r.planification_id=$2 and r.id=$3`, userId, planificationId, routineId)
 	return des > 0
 }
 
-func CalculateUserOwnsRoutine(tx *sqlx.Tx, userId, planificationId, routineId int64) bool {
+func CalculateUserOwnsPlanification(tx *sqlx.Tx, userId, planificationId int64) bool {
 	var des int
-	tx.Get(&des, `select count(1) from userplanification 
-    inner join routine r on userplanification.planification_id = r.planification_id 
-	where useraccount_id=$1 and r.planification_id=$2 and r.id=$3`, userId, planificationId, routineId)
+	tx.Get(&des, "select count(1) from planification p where p.creator_id=$1 and p.id=$2", userId, planificationId)
 	return des > 0
 }
 
@@ -298,23 +362,11 @@ func SelectAllUserDeviceSubscriptions(db *sqlx.DB) []UserDevice {
 	return subs
 }
 
-func GetUserCreatedTheRoutine(tx *sqlx.Tx, planificationId, routineId, userId int64) bool {
-	var des int
-	tx.Get(&des, `
-		select count(1) from userplanification up 
-		inner join routine r on up.planification_id = r.planification_id
-		where up.planification_id = $1 
-		and up.useraccount_id = $2 
-		and up.relationshiptype = 'c' 
-		and r.id = $3`, planificationId, userId, routineId)
-	return des == 1
-}
-
-func SaveUserSharingToken(tx *sqlx.Tx, planificationId, routineId, userId int64) {
+func SaveUserSharingToken(tx *sqlx.Tx, planificationId, userId int64, routineId *int64) {
 	Insert(tx, &UserSharingToken{
 		Creationdate:    time.Now(),
 		CreatorId:       &userId,
-		RoutineId:       &routineId,
+		RoutineId:       routineId,
 		PlanificationId: &planificationId,
 		IsValid:         util.PBool(true),
 	})
@@ -323,13 +375,101 @@ func SaveUserSharingToken(tx *sqlx.Tx, planificationId, routineId, userId int64)
 func InvalidateSharingTokenForRoutine(tx *sqlx.Tx, planificationId, routineId, userId int64) {
 	tx.Exec(`update usersharingtoken 
 		set isvalid = false 
-		where creator_id = $1 and routine_id=$2 and planification_id=$3`, userId, routineId, planificationId)
+		where creator_id = $1 and routine_id is not null and routine_id=$2 and planification_id=$3`, userId, routineId, planificationId)
 }
 
-func GetUserSharingToken(tx *sqlx.Tx, planificationId, routineId, userId int64) UserSharingToken {
+func GetRoutineUserSharingToken(tx *sqlx.Tx, planificationId, routineId, userId int64) UserSharingToken {
 	var des UserSharingToken
 	tx.Get(&des, `
 		select * from usersharingtoken 
-		where creator_id = $1 and routine_id=$2 and planification_id=$3 and isvalid=true`, userId, routineId, planificationId)
+		where creator_id = $1 and routine_id is not null and routine_id=$2 and planification_id=$3 and isvalid=true`, userId, routineId, planificationId)
 	return des
+}
+
+func GetPlanificationUserSharingToken(tx *sqlx.Tx, planificationId, userId int64) UserSharingToken {
+	var des UserSharingToken
+	tx.Get(&des, `
+		select * from usersharingtoken 
+		where creator_id = $1 and planification_id=$2 and isvalid=true`, userId, planificationId)
+	return des
+}
+
+func UserAlreadyRequestedAccessToSharedPlanification(tx *sqlx.Tx, planificationId, userId int64) bool {
+	var des int
+	tx.Get(&des, `
+	select count(1) from queueplanificationaccess 
+	where useraccount_id=$1 and planification_id=$2`, userId, planificationId)
+	return des > 0
+}
+
+func QueueAccessRequestToSharedPlanification(tx *sqlx.Tx, planificationId, userId int64) {
+	Insert(
+		tx,
+		&QueuePlanificationAccess{
+			PlanificationId: &planificationId,
+			UserAccountId:   &userId,
+		})
+}
+
+func ListQueuedPlanificationAccessRequests(tx *sqlx.Tx, userId int64) []ListQueuedPlanificationAccessRequestsQuery {
+	dest := make([]ListQueuedPlanificationAccessRequestsQuery, 0)
+	tx.Select(&dest, `
+		select
+			u.name as requestername,
+			p.name as planificationname,
+			q.planification_id,
+			q.useraccount_id from planification p
+		inner join queueplanificationaccess q on p.id = q.planification_id
+		inner join useraccount u on q.useraccount_id = u.id
+		where p.creator_id=$1`, userId)
+	return dest
+}
+
+func CalculateUserHasNoAccessToPlanification(tx *sqlx.Tx, planificationId, userId int64) bool {
+	var des int
+	tx.Get(&des, "select count(1) from userplanification u where u.planification_id=$1 and u.useraccount_id=$2", planificationId, userId)
+	return des == 0
+}
+
+func CalculateUserAlreadyActionatedARoutineToday(tx *sqlx.Tx, planificationId, userId int64) bool {
+	var des int
+	tx.Get(&des, `
+		select count(1) from userroutinehistory u 
+		where u.planification_id=$1 and u.useraccount_id=$2 and u.createddate::date = CURRENT_DATE`,
+		planificationId, userId)
+	return des > 0
+}
+
+func InsertUserRoutineHistory(tx *sqlx.Tx, completed bool, planificationId, routineId, userId int64) {
+	Insert(
+		tx,
+		&UserRoutineHistory{
+			PlanificationId: &planificationId,
+			RoutineId:       &routineId,
+			UserAccountId:   &userId,
+			Completed:       &completed,
+			CreatedDate:     time.Now(),
+		})
+}
+
+func AcceptPlanificationAccessRequest(tx *sqlx.Tx, planificationId, requesterUserId, userId int64, plan *AccountPlanType) {
+	tx.Exec("delete from queueplanificationaccess where useraccount_id=$1 and planification_id=$2", requesterUserId, planificationId)
+	accessUpTo := 1
+	if *plan == StudentPremium || *plan == Professor {
+		schedule := GetPlanificationSchedule(tx, planificationId)
+		accessUpTo = len(*schedule.Days)
+	}
+
+	Insert(
+		tx,
+		&UserPlanification{
+			PlanificationId:   &planificationId,
+			UserAccountId:     &requesterUserId,
+			AccessUpToRoutine: &accessUpTo,
+			AccessLastUpdated: time.Now(),
+		})
+}
+
+func DeclinePlanificationAccessRequest(tx *sqlx.Tx, planificationId, requesterUserId, userId int64) {
+	tx.Exec("delete from queueplanificationaccess where useraccount_id=$1 and planification_id=$2", requesterUserId, planificationId)
 }

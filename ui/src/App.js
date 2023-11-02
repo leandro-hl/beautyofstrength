@@ -24,6 +24,7 @@ import PageTermsAndConditions from "./components/PageTermsAndConditions";
 import PagePrivacyPolicies from "./components/PagePrivacyPolicies";
 import PageRoot from "./components/PageRoot";
 import PagePlanificationSelectDays from "./components/PagePlanificationSelectDays";
+import PageSubscriptionApproved from "./components/PageSubscriptionApproved";
 
 class App extends Component {
     render() {
@@ -39,6 +40,7 @@ class App extends Component {
                                 <Route exact path={"/privacy-policies"} component={PagePrivacyPolicies}/>
                                 {/*<Route exact path={"/signup"} component={SignUp}/>*/}
                                 <PrivateRoute exact path={"/plans"} component={PagePlans}/>
+                                <PrivateRoute exact path={"/subscription-approved"} component={PageSubscriptionApproved}/>
                                 <PrivateRoute exact path={"/my-planifications"} component={PagePlanificationList}/>
                                 <PrivateRoute exact path={"/my-contributions"} component={PageProfessorContributions}/>
                                 <PrivateRoute exact path={"/my-stats"} component={PageStats}/>

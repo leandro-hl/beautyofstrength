@@ -132,6 +132,14 @@ type ShareEncrypted struct {
 	CreatorId       int64
 }
 
+type SharePlanificationRequest struct {
+	PlanificationId *int64 `json:"planificationId"`
+}
+
+type RequestAccessToSharedPlanificationRequest struct {
+	SharedPlanification *string `json:"sharedPlanification"`
+}
+
 type CreatePlanificationRequest struct {
 	Name *string `json:"name"`
 }
@@ -143,6 +151,22 @@ type CreatePlanificationResponse struct {
 type SavePlanificationDaysRequest struct {
 	PlanificationId *int64  `json:"planificationId"`
 	Days            *string `json:"days"`
+}
+
+type AcceptPlanificationAccessRequest struct {
+	PlanificationId *int64 `json:"planificationId"`
+	RequesterUserId *int64 `json:"requesterUserId"`
+}
+
+type DeclinePlanificationAccessRequest struct {
+	PlanificationId *int64 `json:"planificationId"`
+	RequesterUserId *int64 `json:"requesterUserId"`
+}
+
+type ActionateRoutineRequest struct {
+	PlanificationId         *int64  `json:"planificationId"`
+	ActionatedRoutineId     *int64  `json:"actionatedRoutineId"`
+	ActionatedRoutineAction *string `json:"actionatedRoutineAction"`
 }
 
 type SavePlanificationDaysResponse struct {

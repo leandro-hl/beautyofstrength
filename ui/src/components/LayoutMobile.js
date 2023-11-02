@@ -1,5 +1,5 @@
 import React, {Component} from "react";
-import {Segment} from "semantic-ui-react";
+import {Advertisement, Segment} from "semantic-ui-react";
 import withRouter from "react-router-dom/es/withRouter";
 import BottomMenuBar from "./BottomMenuBar";
 import {TopMenuBar} from "./TopMenuBar";
@@ -22,6 +22,7 @@ class LayoutMobile extends Component {
                     paddingTop: 20
                 }}>
                     {children}
+                    <div style={{marginBottom: 100}}></div>
                 </Segment>
                 {!noMenu && <BottomMenuBar noBottomBar={noBottomBar} secondaryActions={secondaryActions} selected={menuButtonSelected}
                                 onSelected={(val) => this.context.dispatch(setData({menuButtonSelected: val, secondaryActions: []}))}/>}
