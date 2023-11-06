@@ -17,9 +17,7 @@ export class ExerciseListItem extends Component {
 
     handleChange(value) {
         this.setState({value: value})
-        if (10 / value <= 1) {
-            this.props.finished(value)
-        }
+        this.props.finished(value)
     }
 
     handleKeyDown(event) {
