@@ -34,9 +34,13 @@ type GetUserAccountDetailsQuery struct {
 	AccountType *string `json:"accounttype"`
 }
 
+type GetRoutineHeaderQuery struct {
+	Routineid   *int64  `json:"routineid"`
+	Routinename *string `json:"routinename"`
+	TimesMarked *int    `json:"timesmarked"`
+}
+
 type GetRoutineDetailsQuery struct {
-	Routineid       *int64  `json:"routineid"`
-	Routinename     *string `json:"routinename"`
 	Blockgroupid    *int64  `json:"blockgroupid"`
 	Blockgroupname  *string `json:"blockgroupname"`
 	BlockDuration   *int    `json:"blockgroupduration"`

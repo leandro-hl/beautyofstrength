@@ -48,6 +48,10 @@ class StartUp extends Component {
             localStorage.setItem('routine-shared', shareParam)
         }
         if (planShareParam) {
+            const url = new URL(window.location);
+            const params = new URLSearchParams(url.search);
+            params.delete('pshare');
+            window.history.replaceState({}, '', `${url.pathname}?${params}${url.hash}`);
             localStorage.setItem('planification-shared', planShareParam)
         }
         if (isLocalhost()) {

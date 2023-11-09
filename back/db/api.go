@@ -34,13 +34,27 @@ func ListMyPlanifications(tx *sqlx.Tx, userId int64) []ListPlanificationsQuery {
 	return dest
 }
 
+func GetRoutineHeader(tx *sqlx.Tx, routineId int64, userId int64) *GetRoutineHeaderQuery {
+	var dest GetRoutineHeaderQuery
+	tx.Get(&dest, `
+		select
+			r.id routineid,
+			r.name routinename,
+			count(uh.id) timesmarked
+			from routine r
+		inner join planification p on p.id = r.planification_id
+		inner join userplanification u on r.planification_id = u.planification_id
+		left join userroutinehistory uh on r.id = uh.routine_id
+		where r.id=$1 and u.useraccount_id=$2
+		group by r.id, r.name`, routineId, userId)
+	return &dest
+}
+
 func GetRoutineDetails(tx *sqlx.Tx, routineId int64, userId int64) []GetRoutineDetailsQuery {
 	dest := make([]GetRoutineDetailsQuery, 0)
 
 	err := tx.Select(&dest, `
 		select
-			r.id routineid,
-			r.name routinename,
 			b.id blockgroupid,
 			b.name blockgroupname,
 			b.duration blockgroupduration,

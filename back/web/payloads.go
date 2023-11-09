@@ -99,9 +99,10 @@ type SaveUserTrainedTodayRequest struct {
 }
 
 type GetRoutineDetailsResponse struct {
-	Id     *int64                   `json:"id"`
-	Name   *string                  `json:"name"`
-	Blocks []GetRoutineDetailsBlock `json:"blocks"`
+	Id                      *int64                   `json:"id"`
+	Name                    *string                  `json:"name"`
+	AlreadyMarkedByAthetles *bool                    `json:"alreadyMarkedByAthetles"`
+	Blocks                  []GetRoutineDetailsBlock `json:"blocks"`
 }
 
 type GetRoutineDetailsBlock struct {

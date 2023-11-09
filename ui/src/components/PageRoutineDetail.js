@@ -33,7 +33,7 @@ class PageRoutineDetail extends Component{
                 const res = await getRoutineDetails(routineId);
 
                 const secondaryActions = []
-                if (isOwner) {
+                if (isOwner && !res.data.alreadyMarkedByAthetles) {
                     secondaryActions.push({disabled: !createManyExerciseBlocks, func: () => this.redirectToCreateBlock(), description: 'Agregar Bloque'})
                 }
 

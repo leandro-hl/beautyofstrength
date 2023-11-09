@@ -15,6 +15,7 @@ export class ModalPlanificationRequestAccess extends Component {
     }
 
     handleClose = () => {
+        this.props.onCancelRequest()
         this.setState({ showModal: false });
     }
 

@@ -340,10 +340,16 @@ func (o *Endpoints) getUserAccountDetails(w http.ResponseWriter, r *http.Request
 func (o *Endpoints) getRoutineDetails(w http.ResponseWriter, r *http.Request, tx *sqlx.Tx) {
 	routineId, err := strconv.ParseInt(r.URL.Query().Get("routineId"), 10, 64)
 	util.Check(err)
-
 	userId := util.UserId(r)
+
+	header := db.GetRoutineHeader(tx, routineId, userId)
 	result := db.GetRoutineDetails(tx, routineId, userId)
-	res := &GetRoutineDetailsResponse{Id: result[0].Routineid, Name: result[0].Routinename, Blocks: make([]GetRoutineDetailsBlock, 0)}
+	res := &GetRoutineDetailsResponse{
+		Id:                      header.Routineid,
+		Name:                    header.Routinename,
+		AlreadyMarkedByAthetles: util.PBool(*header.TimesMarked > 0),
+		Blocks:                  make([]GetRoutineDetailsBlock, 0),
+	}
 
 	lastBlockId := int64(0)
 	var block *GetRoutineDetailsBlock
@@ -394,8 +400,14 @@ func (o *Endpoints) getSharedRoutineDetails(w http.ResponseWriter, r *http.Reque
 			db.InvalidateSharingTokenForRoutine(tx, t.PlanificationId, t.RoutineId, t.CreatorId)
 			o.Respond(w, nil, http.StatusUnauthorized)
 		} else {
+			header := db.GetRoutineHeader(tx, t.RoutineId, t.CreatorId)
 			result := db.GetRoutineDetails(tx, t.RoutineId, t.CreatorId)
-			res := &GetRoutineDetailsResponse{Id: result[0].Routineid, Name: result[0].Routinename, Blocks: make([]GetRoutineDetailsBlock, 0)}
+			res := &GetRoutineDetailsResponse{
+				Id:                      header.Routineid,
+				Name:                    header.Routinename,
+				AlreadyMarkedByAthetles: util.PBool(*header.TimesMarked > 0),
+				Blocks:                  make([]GetRoutineDetailsBlock, 0),
+			}
 
 			lastBlockId := int64(0)
 			var block *GetRoutineDetailsBlock
@@ -569,9 +581,14 @@ func (o *Endpoints) saveExerciseBlockValidations(r *http.Request, tx *sqlx.Tx, r
 			panic(errors.New("unauthorized to modify the requested routine"))
 		}
 
+		header := db.GetRoutineHeader(tx, *routineId, userId)
+		if *header.TimesMarked > 0 {
+			panic(errors.New("you cannot add more exercise blocks to a routine that was already marked by any athetle"))
+		}
+
 		blocks := db.CalculateRoutineBlocksAmount(tx, *routineId)
 		if *plan == db.StudentFree && blocks >= *o.conf.StudentFreeAccountRoutineBlocksLimit {
-			panic(errors.New(fmt.Sprintf("You cannot add more than %d exercise blocks to a routine with a free account", *o.conf.StudentFreeAccountRoutineBlocksLimit)))
+			panic(errors.New(fmt.Sprintf("you cannot add more than %d exercise blocks to a routine with a free account", *o.conf.StudentFreeAccountRoutineBlocksLimit)))
 		}
 	}
 

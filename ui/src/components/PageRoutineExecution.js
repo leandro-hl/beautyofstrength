@@ -200,14 +200,14 @@ class PageRoutineExecution extends Component {
                         <Table.Header>
                             <Table.Row>
                                 <Table.HeaderCell>Ejercicio</Table.HeaderCell>
-                                <Table.HeaderCell>Trabajo</Table.HeaderCell>
+                                {/*<Table.HeaderCell>Trabajo</Table.HeaderCell>*/}
                             </Table.Row>
                         </Table.Header>
                         <Table.Body>
                             {block.exercises.map((e, i) => (
                                 <Table.Row key={i}>
                                     <Table.Cell>{e.name}</Table.Cell>
-                                    <Table.Cell>{e.reps+' Reps'}</Table.Cell>
+                                    {/*<Table.Cell>{e.reps+' Reps'}</Table.Cell>*/}
                                 </Table.Row>
                             ))}
                         </Table.Body>

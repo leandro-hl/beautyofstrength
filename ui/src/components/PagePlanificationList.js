@@ -101,6 +101,10 @@ class PagePlanificationList extends Component {
         }
     }
 
+    onCancelRequest() {
+        localStorage.removeItem('planification-shared')
+    }
+
     async fetchPendingRequests() {
         try {
             const res = await listQueuedPlanificationAccessRequests()
@@ -179,7 +183,7 @@ class PagePlanificationList extends Component {
                     </>
                 }
                 {createPlanification && this.renderCreatePlanificationModal()}
-                {planificationShared && <ModalPlanificationRequestAccess onRequestAccess={() => this.requestAccessToSharedPlanification()}/>}
+                {planificationShared && <ModalPlanificationRequestAccess onCancelRequest={() => this.onCancelRequest()} onRequestAccess={() => this.requestAccessToSharedPlanification()}/>}
                 {showPendingRequests && <ModalPlanificationsPendingRequests requests={requests} onRemove={(i) => this.onRemoveRequest(i)} onClose={() => this.setState({showPendingRequests: false})}/>}
             </>
         )
