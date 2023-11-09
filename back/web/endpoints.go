@@ -1009,7 +1009,7 @@ func (o *Endpoints) sharePlanification(w http.ResponseWriter, r *http.Request, t
 		util.Check(err)
 
 		db.SaveUserSharingToken(tx, *t.PlanificationId, userId, nil)
-		o.Respond(w, fmt.Sprintf("/my-planifications?teacher=%s&pshare=%s", "Tu Instructor", base64.RawURLEncoding.EncodeToString([]byte(encrypted))), http.StatusOK)
+		o.Respond(w, fmt.Sprintf("/my-planifications?pshare=%s", base64.RawURLEncoding.EncodeToString([]byte(encrypted))), http.StatusOK)
 	} else {
 		o.Respond(w, nil, http.StatusUnauthorized)
 	}
