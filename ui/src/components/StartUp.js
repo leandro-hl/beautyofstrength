@@ -42,9 +42,13 @@ class StartUp extends Component {
         }
     }
     async componentDidMount() {
+        const planShareParam = queryParam(this.props, 'pshare')
         const shareParam = queryParam(this.props, 'share')
         if (shareParam) {
             localStorage.setItem('routine-shared', shareParam)
+        }
+        if (planShareParam) {
+            localStorage.setItem('planification-shared', planShareParam)
         }
         if (isLocalhost()) {
             await this.loadLocalEnvironment()

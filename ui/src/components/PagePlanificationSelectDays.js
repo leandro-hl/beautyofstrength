@@ -26,8 +26,19 @@ class PagePlanificationSelectDays extends Component {
         }
     }
 
+    setSaveButtonStatus(disabled) {
+        this.context.dispatch(setData({
+            secondaryActions: [{
+                disabled: disabled,
+                disableHeader: 'Elegir un dia es requerido',
+                disableDescription: 'Debes elegir al menos un dia para crear la planificacion',
+                func: () => this.savePlanificationDays(),
+                description: 'Guardar'}
+            ]}))
+    }
+
     componentDidMount() {
-        this.context.dispatch(setData({secondaryActions: [{func: () => this.savePlanificationDays(), description: 'Guardar'}]}))
+        this.setSaveButtonStatus(true)
         this.setState({loading:false})
     }
 
@@ -35,6 +46,7 @@ class PagePlanificationSelectDays extends Component {
         const buffer = {...this.state.selectedDays}
         buffer[i] = !buffer[i]
         this.setState({selectedDays: buffer})
+        this.setSaveButtonStatus(Object.entries(buffer).filter(([key, value]) => value === true).length === 0)
     }
 
     render() {
@@ -54,7 +66,9 @@ class PagePlanificationSelectDays extends Component {
                 </Header>
                 <Message>
                     <Message.Header>Semana</Message.Header>
-                    <p>Elige los dias de la planificacion. Los estudiantes lo veran reflejado en sus calendarios.</p>
+                    <p>
+                        Elige los dias de la planificacion. Los atletas lo veran reflejado en sus calendarios. Ademas, los atletas que pagan la cuenta élite pueden ver el detalle de las rutinas de toda la semana. Por ejemplo, de una semana con tres dias de entrenamiento, el detalle de las proximas 3 rutinas.
+                    </p>
                 </Message>
                 {days.map((d,i) => <Checkbox checked={this.state.selectedDays[i]} onChange={() => this.onChange(i)} className={'planification-checkbox-day'} key={i} as={Header} label={d} />)}
             </>

@@ -122,7 +122,7 @@ export function ContextProvider({children}) {
     }
 
     const darkTheme = localStorage.getItem('darkTheme')
-    currentState.darkTheme = darkTheme === "false" ? false : true
+    currentState.darkTheme = darkTheme === "true" ? true : false
 
     const [state, dispatch] = useReducer(reducer, currentState);
 

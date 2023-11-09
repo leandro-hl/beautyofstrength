@@ -7,6 +7,7 @@ import BottomMenuBar from "./BottomMenuBar";
 import LayoutMobile from "./LayoutMobile";
 import {isLocalhost, queryParam} from "../functions";
 import {MENU} from "../enums";
+import {PopUpDisabledAction} from "./PopUpDisabledAction";
 
 class PageRoutineDetail extends Component{
     static contextType = AppContext
@@ -28,14 +29,16 @@ class PageRoutineDetail extends Component{
                 this.context.dispatch(setData({noBottomBar: false, menuButtonSelected: MENU.PLANIFICATIONS, secondaryActions: [], routineDetails: {...res.data, nextBlockNumber: res.data.blocks.length+1}}))
                 this.setState({loading: false, isShared: true, routineId: res.data.id, blocks: res.data.blocks, name: res.data.name, nextBlockNumber: res.data.blocks.length+1})
             } else {
-                const {state: {routineId, planificationId, permissions: {createManyExerciseBlocks}}} = this.context
+                const {state: {routineId, planificationId, isOwner, permissions: {createManyExerciseBlocks}}} = this.context
                 const res = await getRoutineDetails(routineId);
 
-                const secondaryActions = [
-                    {disabled: !createManyExerciseBlocks, func: () => this.redirectToCreateBlock(), description: 'Agregar Bloque'}
-                ]
+                const secondaryActions = []
+                if (isOwner) {
+                    secondaryActions.push({disabled: !createManyExerciseBlocks, func: () => this.redirectToCreateBlock(), description: 'Agregar Bloque'})
+                }
+
                 this.context.dispatch(setData({secondaryActions: secondaryActions, noBottomBar: false, menuButtonSelected: MENU.PLANIFICATIONS, routineDetails: {...res.data, nextBlockNumber: res.data.blocks.length+1}}))
-                this.setState({loading: false, planificationId, routineId, blocks: res.data.blocks, name: res.data.name, nextBlockNumber: res.data.blocks.length+1})
+                this.setState({loading: false, planificationId, isOwner, routineId, blocks: res.data.blocks, name: res.data.name, nextBlockNumber: res.data.blocks.length+1})
             }
         } catch (e) {
             console.error(e)
@@ -93,18 +96,38 @@ class PageRoutineDetail extends Component{
     }
 
     renderRoutineDetails() {
-        const {name, blocks, activeIndexes, isShared, showPopUp} = this.state;
+        const {state: {permissions: {executeRoutine}}} = this.context
+        const {name, blocks, activeIndexes, isShared, showPopUp, isOwner} = this.state;
         return (
             <>
                 <Header as={'h3'}>
-                    <Button className={'header-back-arrow'} icon onClick={() => this.redirectToPlanifications()}>
+                    <Button className={'header-back-arrow'} icon onClick={() => isShared? this.redirectToPlanifications() : this.redirectToPlanification()}>
                         <Icon name={'arrow left'}/>
                     </Button>
                     {name}
-                    {!isShared && <Popup size={'small'} trigger={<Icon name={'share square outline'} className={'header-icon'}
-                                                        onClick={() => this.shareRoutine()}/>} position={'bottom right'} open={showPopUp} content="Link copiado al portapapeles!" basic/>}
+                    {
+                        (!isShared && isOwner) &&
+                        <Popup size={'small'}
+                               trigger={<Icon name={'share square outline'} className={'header-icon'} onClick={() => this.shareRoutine()}/>}
+                               position={'bottom right'}
+                               open={showPopUp} content="Link copiado al portapapeles!" basic/>
+                    }
                 </Header>
-                <Button style={{marginBottom: '1em'}} primary fluid onClick={() => this.redirectToRoutineExecution()}>Ejecutar Rutina</Button>
+                {
+                    (isOwner || executeRoutine || isShared) &&
+                    <Button
+                        style={{marginBottom: '1em'}}
+                        primary fluid
+                        onClick={() => this.redirectToRoutineExecution()}>
+                        Ejecutar Rutina
+                    </Button>
+                }
+                {
+                    (!isOwner && !executeRoutine && !isShared) &&
+                    <PopUpDisabledAction trigger={<Button className={'disabled-btn'} style={{marginBottom: '1em'}} primary fluid>
+                        Ejecutar Rutina
+                    </Button>}/>
+                }
                 <Accordion
                     style={{marginBottom: '1em'}}
                     exclusive={false}

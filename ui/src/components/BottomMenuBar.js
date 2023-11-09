@@ -3,7 +3,7 @@ import {Button, Icon} from "semantic-ui-react";
 import {withRouter} from "react-router-dom";
 import {AppContext} from "../context";
 import {MENU} from "../enums";
-import {PopUpUpgradePlan} from "./PopUpUpgradePlan";
+import {PopUpDisabledAction} from "./PopUpDisabledAction";
 
 class BottomMenuBar extends Component {
     static contextType = AppContext
@@ -38,7 +38,7 @@ class BottomMenuBar extends Component {
                         <Button secondary onClick={() => secondaryActions[0].func()}>{secondaryActions[0].description}</Button>
                         {
                             secondaryActions[1].disabled &&
-                            <PopUpUpgradePlan trigger={<Button className={'disabled-btn'} primary>
+                            <PopUpDisabledAction {...secondaryActions[1]} trigger={<Button className={'disabled-btn'} primary>
                                 {secondaryActions[1].description}
                             </Button>}/>
                         }
@@ -52,7 +52,7 @@ class BottomMenuBar extends Component {
                     secondaryActions && secondaryActions.length == 1 &&
                     <>
                         {secondaryActions[0].disabled &&
-                            <PopUpUpgradePlan trigger={<Button className={'button-secondary-action-alone disabled-btn'} primary>{secondaryActions[0].description}</Button>}/>}
+                            <PopUpDisabledAction {...secondaryActions[0]} trigger={<Button className={'button-secondary-action-alone disabled-btn'} primary>{secondaryActions[0].description}</Button>}/>}
                         {!secondaryActions[0].disabled &&
                             <Button className={'button-secondary-action-alone'} primary onClick={() => secondaryActions[0].func()}>{secondaryActions[0].description}</Button>}
                     </>

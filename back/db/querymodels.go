@@ -1,5 +1,7 @@
 package db
 
+import "time"
+
 type ListExerciseIdName struct {
 	Id   *int    `json:"id"`
 	Name *string `json:"name"`
@@ -9,6 +11,20 @@ type ListExercise struct {
 	Id            *int    `json:"id"`
 	Name          *string `json:"name"`
 	CreatedByUser *string `json:"createdbyuser"`
+}
+
+type ListQueuedPlanificationAccessRequestsQuery struct {
+	RequesterName     *string `json:"requestername"`
+	PlanificationName *string `json:"planificationname"`
+	PlanificationId   *int64  `json:"planification_id"`
+	UserAccountId     *int64  `json:"useraccount_id"`
+}
+
+type ListPlanificationsQuery struct {
+	Id            *int    `json:"id"`
+	Name          *string `json:"name"`
+	Owner         *bool   `json:"owner"`
+	RoutinesCount *int    `json:"routinescount"`
 }
 
 type GetUserAccountDetailsQuery struct {
@@ -31,4 +47,22 @@ type GetRoutineDetailsQuery struct {
 	Reps            *int    `json:"reps"`
 	Secs            *int    `json:"secs"`
 	Exercisename    *string `json:"exercisename"`
+}
+
+type ListRoutinesQuery struct {
+	Id              *int    `json:"id"`
+	Name            *string `json:"name"`
+	PlanificationId *int64  `json:"planification_id"`
+	BlockCount      *int    `json:"blockcount"`
+	Completed       *bool   `json:"completed"`
+	IsActionable    bool    `json:"isActionable"`
+	IsStartOfWeek   bool    `json:"isStartOfWeek"`
+}
+
+type GetPlanificationScheduleQuery struct {
+	Id                *int64    `json:"id"`
+	PlanificationId   *int64    `json:"planification_id"`
+	Days              *string   `json:"days"`
+	AccessUpToRoutine *int      `json:"accessuptoroutine"`
+	AccessLastUpdated time.Time `json:"accesslastupdated"`
 }
