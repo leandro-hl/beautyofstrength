@@ -167,6 +167,10 @@ class PageBlockCreate extends Component {
         }
     }
 
+    async saveExercisesBlockSpr() {
+        await this.saveExercisesBlockFree()
+    }
+
     async saveExercisesBlockAmrap() {
         try {
             const {exercises, blockName, blockDuration, planificationId, routineId} = this.state
@@ -277,6 +281,9 @@ class PageBlockCreate extends Component {
             case 'free':
                 secondaryActions[0].func = () => this.saveExercisesBlockFree()
                 break
+            case 'spr':
+                secondaryActions[0].func = () => this.saveExercisesBlockSpr()
+                break
             case 'cpt':
                 secondaryActions[0].func = () => this.saveExercisesBlockCpt()
                 break
@@ -342,41 +349,47 @@ class PageBlockCreate extends Component {
         this.setState({exercises: [...buffer], currentSelectedIndex: currentIndex+1})
     }
 
+    renderFree(blockType, lapRestDefault, exercises, next, currentSelectedIndex) {
+        return (
+            <>
+                <List>
+                    {
+                        exercises.map((i, index) => {
+                            return (<ExerciseListItemFree
+                                key={index}
+                                item={i}
+                                focus={index===next}
+                                selected={currentSelectedIndex === index}
+                                finished={(reps, goNext) => this.saveExercise(i, reps, goNext)}
+                                onRepeat={(item) => this.repeatExercise(item)}
+                                moveUp={() => this.moveUp(index)}
+                                moveDown={() => this.moveDown(index)}
+                                onIntervalSelected={(val) => this.onIntervalSelected(i,val)}
+                            />)
+                        })
+                    }
+                </List>
+                <Divider hidden/>
+                <Segment textAlign='center'>
+                    <Divider horizontal>Descanso Entre Ejercicios<br/>(Segundos)</Divider>
+                    <InputNumber seconds large onChange={({amount}) => this.setState({exeRestingInteval: amount, next: null})}/>
+                    <Divider horizontal>Rondas</Divider>
+                    <InputNumber large onChange={({amount}) => this.setState({laps: amount, next: null})}/>
+                    <Divider horizontal>Descanso Entre Rondas<br/>(Segundos)</Divider>
+                    <InputNumber seconds large onChange={({amount}) => this.setState({restingInteval: amount, next: null})}/>
+                </Segment>
+            </>
+        )
+    }
+
     renderBlockTypeUI() {
         const {blockType, lapRestDefault, exercises, next, currentSelectedIndex} = this.state;
 
         switch (blockType) {
             case 'free':
-                return (
-                    <>
-                        <List>
-                            {
-                                exercises.map((i, index) => {
-                                    return (<ExerciseListItemFree
-                                        key={index}
-                                        item={i}
-                                        focus={index===next}
-                                        selected={currentSelectedIndex === index}
-                                        finished={(reps, goNext) => this.saveExercise(i, reps, goNext)}
-                                        onRepeat={(item) => this.repeatExercise(item)}
-                                        moveUp={() => this.moveUp(index)}
-                                        moveDown={() => this.moveDown(index)}
-                                        onIntervalSelected={(val) => this.onIntervalSelected(i,val)}
-                                    />)
-                                })
-                            }
-                        </List>
-                        <Divider hidden/>
-                        <Segment textAlign='center'>
-                            <Divider horizontal>Rondas</Divider>
-                            <InputNumber large onChange={({amount}) => this.setState({laps: amount, next: null})}/>
-                            <Divider horizontal>Descanso Entre Rondas</Divider>
-                            <InputNumber large onChange={({amount}) => this.setState({restingInteval: amount, next: null})}/>
-                            <Divider horizontal>Descanso Entre Ejercicios</Divider>
-                            <InputNumber large onChange={({amount}) => this.setState({exeRestingInteval: amount, next: null})}/>
-                        </Segment>
-                    </>
-                )
+                return this.renderFree(blockType, lapRestDefault, exercises, next, currentSelectedIndex)
+            case 'spr':
+                return this.renderFree(blockType, lapRestDefault, exercises, next, currentSelectedIndex)
             case 'cpt':
                 return (
                     <>

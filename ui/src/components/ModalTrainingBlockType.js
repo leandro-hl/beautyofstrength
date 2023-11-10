@@ -9,6 +9,7 @@ export class ModalTrainingBlockType extends Component {
         this.state = {
             types: [
                 {id: 'free', name: 'LIBRE'},
+                {id: 'spr', name: 'SERIE POR REPETICIONES'},
                 {id: 'cpt', name: 'CIRCUITO POR INTERVALOS'},
                 {id: 'amrap', name: 'AMRAP'},
                 {id: 'cbo', name: 'COMBO'},
@@ -34,7 +35,7 @@ export class ModalTrainingBlockType extends Component {
 
     render() {
         const {types} = this.state;
-        const disabled = (p) => (p.id !== 'cpt' && p.id !== 'amrap' && p.id !== 'cbo' && p.id !== 'pir' && p.id !== 'free')
+        const disabled = (p) => (p.id !== 'cpt' && p.id !== 'amrap' && p.id !== 'cbo' && p.id !== 'pir' && p.id !== 'free' && p.id !== 'spr')
         return (
             <Modal dimmer={'blurring'} size="mini" open={this.props.showModal} onClose={() => this.handleClose()}>
                 <Modal.Header>Elegi el tipo de bloque</Modal.Header>
