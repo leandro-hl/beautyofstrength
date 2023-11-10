@@ -224,10 +224,10 @@ func (o *Endpoints) Handle() http.Handler {
 	api.Path("/acceptPlanificationAccessRequest").HandlerFunc(o.HandleAuthenticatedTransactional(o.HandleAuthorization(o.acceptPlanificationAccessRequest, db.Professor)))
 	api.Path("/declinePlanificationAccessRequest").HandlerFunc(o.HandleAuthenticatedTransactional(o.HandleAuthorization(o.declinePlanificationAccessRequest, db.Professor)))
 
+	//Premium services
+	api.Path("/savePlanificationEditions").HandlerFunc(o.HandleAuthenticatedTransactional(o.HandleAuthorization(o.savePlanificationEditions, db.Professor)))
+
 	//Student services
-	//free tier
-	//premium tier
-	//both
 	api.Path("/saveUserTrainedToday").HandlerFunc(o.HandleAuthenticatedTransactional(o.HandleAuthorization(o.saveUserTrainedToday, db.StudentFree, db.StudentPremium)))
 	api.Path("/getUserLoadedTrainingToday").HandlerFunc(o.HandleAuthenticatedTransactional(o.HandleAuthorization(o.getUserLoadedTrainingToday, db.StudentFree, db.StudentPremium)))
 
@@ -312,6 +312,7 @@ func (o *Endpoints) getUserPermissions(w http.ResponseWriter, r *http.Request, t
 		permissions["createManyRoutines"] = true
 		permissions["createManyExerciseBlocks"] = true
 		permissions["executeRoutine"] = true
+		permissions["editPlanification"] = true
 	}
 
 	if *plan == db.StudentPremium {
@@ -482,8 +483,10 @@ func (o *Endpoints) listRoutines(w http.ResponseWriter, r *http.Request, tx *sql
 	plan := db.GetAccountPlanIdentifierByUserId(tx, usr)
 	iAmPremium := *plan == db.StudentPremium || *plan == db.Professor
 	iAmOwner := db.CalculateUserOwnsPlanification(tx, usr, planificationId)
+	isEditable := false
 	if iAmOwner {
 		routines = db.ListActiveRoutinesICreated(tx, planificationId, usr)
+		isEditable = iAmPremium && !db.CalculatePlanificationAlreadyExecutedBySomeone(tx, planificationId)
 	} else {
 		routines = db.ListActiveRoutines(tx, planificationId, usr)
 	}
@@ -515,18 +518,28 @@ func (o *Endpoints) listRoutines(w http.ResponseWriter, r *http.Request, tx *sql
 	dayNames := []string{"Lunes", "Martes", "Miercoles", "Jueves", "Viernes", "Sabado", "Domingo"}
 	today := int(time.Now().Weekday()) - 1
 
+	routinesResponse := make([]ListRoutinesRoutineResponse, 0)
 	for i := 0; i < len(routines); i++ {
+		routineResponse := ListRoutinesRoutineResponse{
+			Id:              routines[i].Id,
+			Name:            routines[i].Name,
+			PlanificationId: routines[i].PlanificationId,
+			BlockCount:      routines[i].BlockCount,
+			Completed:       routines[i].Completed,
+		}
+
 		if routines[i].Completed != nil {
 			if !iAmOwner && !iAmPremium {
-				routines[i].Id = nil
+				routineResponse.Id = nil
 			}
 		} else {
 			if iAmOwner && iAmPremium {
-				routines[i].IsActionable = true
+				//todo: and is a planification for myself (otherwise I can simplify the UI removing unuseful actions)
+				routineResponse.IsActionable = true
 			} else if !userActionatedRoutineToday && scheduleDays[scheduleDaysIterator] <= today && i < accessUpToRoutine {
-				routines[i].IsActionable = true
+				routineResponse.IsActionable = true
 			} else if i >= accessUpToRoutine {
-				routines[i].Id = nil
+				routineResponse.Id = nil
 			}
 		}
 
@@ -537,14 +550,20 @@ func (o *Endpoints) listRoutines(w http.ResponseWriter, r *http.Request, tx *sql
 				weekStarts = true
 			} else {
 				if weekStarts {
-					routines[i].IsStartOfWeek = true
+					routineResponse.IsStartOfWeek = true
 					weekStarts = false
 				}
 				scheduleDaysIterator++
 			}
 		}
+		routinesResponse = append(routinesResponse, routineResponse)
 	}
-	o.Respond(w, routines, http.StatusOK)
+
+	o.Respond(w, &ListRoutinesResponse{
+		IsEditable: &isEditable,
+		Week:       schedule.Days,
+		Routines:   routinesResponse,
+	}, http.StatusOK)
 }
 
 func (o *Endpoints) listPlanifications(w http.ResponseWriter, r *http.Request, tx *sqlx.Tx) {
@@ -761,13 +780,18 @@ func (o *Endpoints) savePlanificationDays(w http.ResponseWriter, r *http.Request
 	err := o.Decode(r, &t)
 	util.Check(err)
 
-	userId := util.UserId(r)
-
-	if !db.CalculateUserOwnsPlanification(tx, userId, *t.PlanificationId) {
-		o.Respond(w, nil, http.StatusUnauthorized)
+	if len(*t.Days) <= 0 {
+		//todo: validation message
+		return
 	}
 
-	db.SavePlanificationDays(tx, *t.PlanificationId, *t.Days)
+	userId := util.UserId(r)
+	if !db.CalculateUserOwnsPlanification(tx, userId, *t.PlanificationId) {
+		o.Respond(w, nil, http.StatusUnauthorized)
+		return
+	}
+
+	db.InsertPlanificationDays(tx, *t.PlanificationId, *t.Days)
 	o.Respond(w, nil, http.StatusOK)
 }
 
@@ -906,7 +930,7 @@ func (o *Endpoints) googleSignIn(w http.ResponseWriter, r *http.Request, tx *sql
 			AccountPlanId: planId,
 		})
 		planificationId := db.CreatePlanification(tx, *userId, "Mi Planificacion")
-		db.SavePlanificationDays(tx, *planificationId, "01234")
+		db.InsertPlanificationDays(tx, *planificationId, "01234")
 		o.storeSessionData(w, tx, *userId)
 		http.Redirect(w, r, *o.conf.AddressUi+"/app"+"/my-planifications", http.StatusFound)
 	}
@@ -1005,6 +1029,38 @@ func (o *Endpoints) declinePlanificationAccessRequest(w http.ResponseWriter, r *
 	userId := util.UserId(r)
 	if db.CalculateUserOwnsPlanification(tx, userId, *p.PlanificationId) {
 		db.DeclinePlanificationAccessRequest(tx, *p.PlanificationId, *p.RequesterUserId, userId)
+	}
+}
+
+func (o *Endpoints) savePlanificationEditions(w http.ResponseWriter, r *http.Request, tx *sqlx.Tx) {
+	p := SavePlanificationEditionsRequest{}
+	err := o.Decode(r, &p)
+	util.Check(err)
+	userId := util.UserId(r)
+	if len(p.Week) <= 0 {
+		//todo: validation message
+		return
+	}
+
+	if !db.CalculateUserOwnsPlanification(tx, userId, *p.PlanificationId) {
+		//todo: validation message
+		return
+	}
+
+	if db.CalculatePlanificationAlreadyExecutedBySomeone(tx, *p.PlanificationId) {
+		//todo: validation message
+		return
+	}
+
+	plan := db.GetAccountPlanIdentifierByUserId(tx, userId)
+	if *plan != db.StudentPremium && *plan != db.Professor {
+		//todo: validation message
+		return
+	}
+
+	db.UpdatePlanificationDays(tx, *p.PlanificationId, strings.Join(p.Week, ""))
+	for i := 0; i < len(p.RoutinesToDelete); i++ {
+		db.DeleteRoutine(tx, p.RoutinesToDelete[i])
 	}
 }
 
@@ -1157,7 +1213,7 @@ func (o *Endpoints) createTestUser(w http.ResponseWriter, r *http.Request, tx *s
 		AccountPlanId: planId,
 	})
 	planificationId := db.CreatePlanification(tx, *userId, "Mi Planificacion")
-	db.SavePlanificationDays(tx, *planificationId, "01234")
+	db.InsertPlanificationDays(tx, *planificationId, "01234")
 	o.storeSessionData(w, tx, *userId)
 	http.Redirect(w, r, *o.conf.AddressUi+"/app"+"/my-planifications", http.StatusFound)
 }

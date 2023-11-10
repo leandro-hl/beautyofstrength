@@ -164,6 +164,12 @@ type DeclinePlanificationAccessRequest struct {
 	RequesterUserId *int64 `json:"requesterUserId"`
 }
 
+type SavePlanificationEditionsRequest struct {
+	PlanificationId  *int64   `json:"planificationId"`
+	RoutinesToDelete []int64  `json:"routinesToDelete"`
+	Week             []string `json:"week"`
+}
+
 type ActionateRoutineRequest struct {
 	PlanificationId         *int64  `json:"planificationId"`
 	ActionatedRoutineId     *int64  `json:"actionatedRoutineId"`
@@ -180,4 +186,20 @@ type GoogleSignInRequest struct {
 	JWTToken  *string `json:"credential"`
 	SelectBy  *string `json:"select_by"`
 	CSRFToken *string `json:"g_csrf_token"`
+}
+
+type ListRoutinesResponse struct {
+	IsEditable *bool                         `json:"isEditable"`
+	Week       *string                       `json:"week"`
+	Routines   []ListRoutinesRoutineResponse `json:"routines"`
+}
+
+type ListRoutinesRoutineResponse struct {
+	Id              *int    `json:"id"`
+	Name            *string `json:"name"`
+	PlanificationId *int64  `json:"planification_id"`
+	BlockCount      *int    `json:"blockcount"`
+	Completed       *bool   `json:"completed"`
+	IsActionable    bool    `json:"isActionable"`
+	IsStartOfWeek   bool    `json:"isStartOfWeek"`
 }
