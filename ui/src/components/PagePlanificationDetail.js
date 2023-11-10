@@ -282,8 +282,8 @@ class PagePlanificationDetail extends Component {
                         <Grid.Row columns={7}>
                             {days.map((d,i) => {
                                 return (
-                                    <Grid.Column>
-                                        <Header sub style={{textAlign: 'right'}}>{d.n}</Header>
+                                    <Grid.Column style={{textAlign: 'center'}}>
+                                        <Header sub>{d.n}</Header>
                                         <span><Checkbox disabled={!editionMode} checked={d.checked} onChange={()=> editionMode ? this.editDay(d,i) : null}/></span>
                                     </Grid.Column>
                                 )
