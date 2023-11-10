@@ -195,6 +195,7 @@ class PagePlanificationDetail extends Component {
             routines: routinesBackup.map(d => ({...d})),
             days: daysBackup.map(d => ({...d})),
             routinesToDelete: []})
+        this.setSecondaryActions()
     }
 
     render() {
