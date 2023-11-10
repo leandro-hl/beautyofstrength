@@ -59,8 +59,6 @@ type ListRoutinesQuery struct {
 	PlanificationId *int64  `json:"planification_id"`
 	BlockCount      *int    `json:"blockcount"`
 	Completed       *bool   `json:"completed"`
-	IsActionable    bool    `json:"isActionable"`
-	IsStartOfWeek   bool    `json:"isStartOfWeek"`
 }
 
 type GetPlanificationScheduleQuery struct {

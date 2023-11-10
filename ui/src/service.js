@@ -56,6 +56,10 @@ export function listQueuedPlanificationAccessRequests() {
     return axios.get("listQueuedPlanificationAccessRequests")
 }
 
+export function savePlanificationEditions(payload) {
+    return axios.post("savePlanificationEditions", payload)
+}
+
 export function saveExercisesBlock(payload) {
     return axios.post("saveExercisesBlock", payload)
 }
