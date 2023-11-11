@@ -26,8 +26,8 @@ func ListMyPlanifications(tx *sqlx.Tx, userId int64) []ListPlanificationsQuery {
 		    count(r.id) as routinescount
 		from planification p
 		inner join userplanification u on p.id = u.planification_id
-		left join routine r on p.id = r.planification_id
-		where r.active=true and u.useraccount_id = $1 
+		left join routine r on (p.id = r.planification_id and r.active=true)
+		where u.useraccount_id = $1 
 		group by p.id, p.starred, p.name, p.creator_id, u.useraccount_id 
 		order by p.starred desc, owner desc, p.name`, userId)
 	util.Check(err)
