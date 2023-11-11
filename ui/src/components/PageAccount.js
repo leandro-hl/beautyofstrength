@@ -1,10 +1,10 @@
 import React, {Component} from "react";
-import {Grid, List, Loader, Image, Segment, Table, Checkbox} from "semantic-ui-react";
+import {Grid, List, Loader, Image, Segment, Table, Checkbox, Icon} from "semantic-ui-react";
 import {getUserAccountDetails, signout} from "../service";
 import {Link, withRouter} from "react-router-dom";
 import {AppContext, setData} from "../context";
 import {MENU} from "../enums";
-import {setTheme} from "../functions";
+import {contactByWhatsapp, setTheme} from "../functions";
 
 class PageAccount extends Component {
     static contextType = AppContext
@@ -80,6 +80,12 @@ class PageAccount extends Component {
                                         <Table.Cell>Plan</Table.Cell>
                                         <Table.Cell>{userAccount.accounttype}</Table.Cell>
                                     </Table.Row>
+                                    <Table.Row>
+                                        <Table.Cell>Contacto</Table.Cell>
+                                        <Table.Cell>
+                                            <Icon name={'whatsapp'} size={'large'} className={'icon-pointer'}
+                                                  onClick={() => contactByWhatsapp(userAccount.accounttype)}/></Table.Cell>
+                                    </Table.Row>
                                 </Table.Body>
                             </Table>
                             <Grid padded>
@@ -91,6 +97,11 @@ class PageAccount extends Component {
                                 <Grid.Row className={'no-top-padding'}>
                                     <Grid.Column>
                                         <Link to={'/privacy-policies'}>Declaración de Privacidad</Link>
+                                    </Grid.Column>
+                                </Grid.Row>
+                                <Grid.Row className={'no-top-padding'}>
+                                    <Grid.Column>
+                                        <Link to={'/plans'}>Planes disponibles</Link>
                                     </Grid.Column>
                                 </Grid.Row>
                             </Grid>

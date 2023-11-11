@@ -905,7 +905,7 @@ func (o *Endpoints) googleSignIn(w http.ResponseWriter, r *http.Request, tx *sql
 		o.storeSessionData(w, tx, *userId)
 		plan := db.GetAccountPlanIdentifierByUserId(tx, *userId)
 		if plan == nil {
-			http.Redirect(w, r, *o.conf.AddressUi+"/app"+"/my-planifications", http.StatusFound)
+			http.Redirect(w, r, *o.conf.AddressUi+"/app"+"/plans", http.StatusFound)
 		} else if *plan == db.StudentFree {
 			http.Redirect(w, r, *o.conf.AddressUi+"/app"+"/my-planifications", http.StatusFound)
 		} else if *plan == db.StudentPremium {
@@ -913,7 +913,7 @@ func (o *Endpoints) googleSignIn(w http.ResponseWriter, r *http.Request, tx *sql
 		} else if *plan == db.Professor {
 			http.Redirect(w, r, *o.conf.AddressUi+"/app"+"/my-planifications", http.StatusFound)
 		} else {
-			http.Redirect(w, r, *o.conf.AddressUi+"/app"+"/my-planifications", http.StatusFound)
+			http.Redirect(w, r, *o.conf.AddressUi+"/app"+"/plans", http.StatusFound)
 		}
 	} else {
 		//todo: auto generate a password and send it over email
@@ -932,7 +932,7 @@ func (o *Endpoints) googleSignIn(w http.ResponseWriter, r *http.Request, tx *sql
 		planificationId := db.CreatePlanification(tx, *userId, "Mi Planificacion")
 		db.InsertPlanificationDays(tx, *planificationId, "01234")
 		o.storeSessionData(w, tx, *userId)
-		http.Redirect(w, r, *o.conf.AddressUi+"/app"+"/my-planifications", http.StatusFound)
+		http.Redirect(w, r, *o.conf.AddressUi+"/app"+"/plans", http.StatusFound)
 	}
 }
 

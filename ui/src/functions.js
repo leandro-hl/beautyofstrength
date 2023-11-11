@@ -42,6 +42,26 @@ export function parseSearch(location) {
     return new URLSearchParams(location.search)
 }
 
+export function contactByWhatsapp(type) {
+    const domain = 'https://api.whatsapp.com/send/?type=phone_number&app_absent=0'
+    const phone = '&phone=5492494284369'
+
+    let link = ''
+    if (type === 'athlete') {
+        const athleteText = 'Hola! Soy Atleta. Ya tengo cuenta en https://bos.team/app/ y me gustaria pasarme a Atleta Élite. Mi email es:'
+        link = domain+phone+'&text='+encodeURIComponent(athleteText)
+    } else if (type === 'instructor') {
+        const instructorText = 'Hola! Soy Instructor. Ya tengo cuenta en https://bos.team/app/ y me gustaria pasarme a Atleta Élite Instructor. Mi email es:'
+        link = domain+phone+'&text='+encodeURIComponent(instructorText)
+    } else {
+        const genericContactText = `Hola! soy ${type}. Queria hacerte una consulta. Mi email es:`
+        link = domain+phone+'&text='+encodeURIComponent(genericContactText)
+    }
+    window.open(
+        link,
+        '_blank').focus()
+}
+
 export function queryParam({location}, param) {
     return parseSearch(location).get(param)
 }
