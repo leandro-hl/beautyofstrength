@@ -1,6 +1,6 @@
 import React, {Component} from "react";
 import {Accordion, Button, Header, Icon, List, Loader, Popup, Segment, Table} from "semantic-ui-react";
-import {withRouter} from "react-router-dom";
+import {Link, withRouter} from "react-router-dom";
 import {getRoutineDetails, getSharedRoutineDetails, shareRoutine} from "../service";
 import {AppContext, setData} from "../context";
 import BottomMenuBar from "./BottomMenuBar";
@@ -95,6 +95,10 @@ class PageRoutineDetail extends Component{
         }
     }
 
+    openExerciseVideo(videoCode) {
+        this.context.dispatch(setData({videoCode: videoCode}))
+    }
+
     renderRoutineDetails() {
         const {state: {permissions: {executeRoutine}}} = this.context
         const {name, blocks, activeIndexes, isShared, showPopUp, isOwner} = this.state;
@@ -155,7 +159,9 @@ class PageRoutineDetail extends Component{
                                 <Table.Body>
                                     {b.exercises.map((e, i) => (
                                         <Table.Row key={i}>
-                                            <Table.Cell>{e.name}</Table.Cell>
+                                            <Table.Cell>
+                                                {e.videoCode ? <Link to={'#'} onClick={() => this.openExerciseVideo(e.videoCode)}>{e.name}</Link> : e.name}
+                                            </Table.Cell>
                                             {(e.reps || e.secs) && <Table.Cell>{e.reps ? e.reps+' Reps' : e.secs+' Segs'}</Table.Cell>}
                                         </Table.Row>
                                     ))}

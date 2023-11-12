@@ -64,13 +64,15 @@ func GetRoutineDetails(tx *sqlx.Tx, routineId int64, userId int64) []GetRoutineD
 			b.laprestinterval,
 			eb.reps,
 			eb.secs,
-			e.name exercisename
+			e.name exercisename,
+			ie.video_code videocode
 			from routine r
 		inner join planification p on p.id = r.planification_id
 		inner join userplanification u on r.planification_id = u.planification_id
 		left join blockgroup b on r.id = b.routine_id
 		left join exerciseblockgroup eb on b.id = eb.blockgroup_id
 		left join exercise e on e.id = eb.exercise_id
+		left join instructorexercise ie on e.id = ie.exercise_id and p.creator_id = ie.useraccount_id
 		where r.active=true and r.id=$1 and u.useraccount_id=$2
 		order by b.id, eb.id`, routineId, userId)
 	util.Check(err)

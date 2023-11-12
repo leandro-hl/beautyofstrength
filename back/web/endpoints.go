@@ -354,26 +354,31 @@ func (o *Endpoints) getRoutineDetails(w http.ResponseWriter, r *http.Request, tx
 
 	lastBlockId := int64(0)
 	var block *GetRoutineDetailsBlock
-	for _, r := range result {
-		if *r.Blockgroupid != lastBlockId {
-			lastBlockId = *r.Blockgroupid
+	for _, re := range result {
+		if *re.Blockgroupid != lastBlockId {
+			lastBlockId = *re.Blockgroupid
 			if block != nil {
 				res.Blocks = append(res.Blocks, *block)
 			}
 			block = &GetRoutineDetailsBlock{
-				Id:              r.Blockgroupid,
-				Name:            r.Blockgroupname,
-				Duration:        r.BlockDuration,
-				Type:            r.Type,
-				Laps:            r.Laps,
-				Exerestinterval: r.Exerestinterval,
-				Laprestinterval: r.Laprestinterval,
+				Id:              re.Blockgroupid,
+				Name:            re.Blockgroupname,
+				Duration:        re.BlockDuration,
+				Type:            re.Type,
+				Laps:            re.Laps,
+				Exerestinterval: re.Exerestinterval,
+				Laprestinterval: re.Laprestinterval,
 				Exercises: []GetRoutineDetailsBlockExercise{
-					{Name: r.Exercisename, Secs: r.Secs, Reps: r.Reps},
+					{Name: re.Exercisename, Secs: re.Secs, Reps: re.Reps, VideoCode: re.VideoCode},
 				},
 			}
 		} else {
-			block.Exercises = append(block.Exercises, GetRoutineDetailsBlockExercise{Name: r.Exercisename, Secs: r.Secs, Reps: r.Reps})
+			block.Exercises = append(block.Exercises, GetRoutineDetailsBlockExercise{
+				Name:      re.Exercisename,
+				Secs:      re.Secs,
+				Reps:      re.Reps,
+				VideoCode: re.VideoCode,
+			})
 		}
 	}
 	//last block
@@ -412,26 +417,26 @@ func (o *Endpoints) getSharedRoutineDetails(w http.ResponseWriter, r *http.Reque
 
 			lastBlockId := int64(0)
 			var block *GetRoutineDetailsBlock
-			for _, r := range result {
-				if *r.Blockgroupid != lastBlockId {
-					lastBlockId = *r.Blockgroupid
+			for _, re := range result {
+				if *re.Blockgroupid != lastBlockId {
+					lastBlockId = *re.Blockgroupid
 					if block != nil {
 						res.Blocks = append(res.Blocks, *block)
 					}
 					block = &GetRoutineDetailsBlock{
-						Id:              r.Blockgroupid,
-						Name:            r.Blockgroupname,
-						Duration:        r.BlockDuration,
-						Type:            r.Type,
-						Laps:            r.Laps,
-						Exerestinterval: r.Exerestinterval,
-						Laprestinterval: r.Laprestinterval,
+						Id:              re.Blockgroupid,
+						Name:            re.Blockgroupname,
+						Duration:        re.BlockDuration,
+						Type:            re.Type,
+						Laps:            re.Laps,
+						Exerestinterval: re.Exerestinterval,
+						Laprestinterval: re.Laprestinterval,
 						Exercises: []GetRoutineDetailsBlockExercise{
-							{Name: r.Exercisename, Secs: r.Secs, Reps: r.Reps},
+							{Name: re.Exercisename, Secs: re.Secs, Reps: re.Reps},
 						},
 					}
 				} else {
-					block.Exercises = append(block.Exercises, GetRoutineDetailsBlockExercise{Name: r.Exercisename, Secs: r.Secs, Reps: r.Reps})
+					block.Exercises = append(block.Exercises, GetRoutineDetailsBlockExercise{Name: re.Exercisename, Secs: re.Secs, Reps: re.Reps})
 				}
 			}
 			//last block

@@ -25,6 +25,7 @@ import PagePrivacyPolicies from "./components/PagePrivacyPolicies";
 import PageRoot from "./components/PageRoot";
 import PagePlanificationSelectDays from "./components/PagePlanificationSelectDays";
 import PageSubscriptionApproved from "./components/PageSubscriptionApproved";
+import ModalExerciseVideo from "./components/ModalExerciseVideo";
 
 class App extends Component {
     render() {
@@ -56,6 +57,7 @@ class App extends Component {
                                 <ElseRoute/>
                             </Switch>
                         </LayoutMobile>
+                        <ModalExerciseVideo/>
                     </StartUp>
                 </ContextProvider>
             </BrowserRouter>

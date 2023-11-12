@@ -51,6 +51,7 @@ type GetRoutineDetailsQuery struct {
 	Reps            *int    `json:"reps"`
 	Secs            *int    `json:"secs"`
 	Exercisename    *string `json:"exercisename"`
+	VideoCode       *string `json:"videocode"`
 }
 
 type ListRoutinesQuery struct {

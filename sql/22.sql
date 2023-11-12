@@ -1,0 +1,2 @@
+ALTER TABLE useraccount ALTER COLUMN email TYPE VARCHAR (50);
+ALTER TABLE useraccount ALTER COLUMN username TYPE VARCHAR (50);

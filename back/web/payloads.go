@@ -117,9 +117,10 @@ type GetRoutineDetailsBlock struct {
 }
 
 type GetRoutineDetailsBlockExercise struct {
-	Reps *int    `json:"reps"`
-	Secs *int    `json:"secs"`
-	Name *string `json:"name"`
+	Reps      *int    `json:"reps"`
+	Secs      *int    `json:"secs"`
+	Name      *string `json:"name"`
+	VideoCode *string `json:"videoCode"`
 }
 
 type ShareRoutineRequest struct {

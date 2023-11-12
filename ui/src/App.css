@@ -341,3 +341,14 @@ div#g_id_onload, div.g_id_signin {
   opacity: 0.45 !important;
   background-image: none !important;
 }
+
+.ui.modal.embeded-video {
+  margin-top: 2rem !important;
+}
+
+.ui.modal.embeded-video > .close.icon {
+  position: absolute !important;
+  top: -30px !important;
+  right: -12px !important;
+  color: #eee !important;
+}
