@@ -7,6 +7,7 @@ import (
 	"flag"
 	"github.com/golang-jwt/jwt"
 	"github.com/gorilla/handlers"
+	"github.com/leandro-hl/beautyofstrength/back/db"
 	"github.com/leandro-hl/beautyofstrength/back/util"
 	"log"
 	"net/http"
@@ -95,7 +96,8 @@ func main() {
 		}
 	}()
 
-	o := NewEndpoints(&config, &cryptoConf, l)
+	dbs := db.InitDB(*cryptoConf.DatasourceName)
+	o := NewEndpoints(&config, &cryptoConf, l, dbs)
 	allowedHeaders := []string{"Content-type", "Accept", "Content-Length", "Accept-Encoding", "X-CSRF-Token", "Authorization"}
 	if config.IsDevelopment() {
 		allowedHeaders = append(allowedHeaders, "ngrok-skip-browser-warning")
@@ -129,6 +131,7 @@ func main() {
 			l.Printf("Error starting server: %s\n", err)
 			os.Exit(1)
 		}
+		db.Close(dbs)
 	}()
 
 	// trap sigterm or interrupt and gracefully shutdown the server

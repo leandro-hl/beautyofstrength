@@ -3,19 +3,72 @@ package db
 import (
 	"github.com/jmoiron/sqlx"
 	"github.com/leandro-hl/beautyofstrength/back/util"
+	"sync"
 	"time"
 )
 
+var (
+	stmtsMutex    sync.RWMutex
+	dbMutex       sync.Mutex
+	preparedStmts map[string]*sqlx.Stmt
+)
+
+func getTxPreparedStmt(db *sqlx.DB, tx *sqlx.Tx, query string) (*sqlx.Stmt, error) {
+	stmtsMutex.RLock()
+	stmt, ok := preparedStmts[query]
+	stmtsMutex.RUnlock()
+
+	if ok {
+		if tx != nil {
+			return tx.Stmtx(stmt), nil
+		}
+		return stmt, nil
+	}
+
+	// Double check locking
+	stmtsMutex.Lock()
+	// Check again if the statement was prepared while acquiring the lock
+	stmt, ok = preparedStmts[query]
+	if !ok {
+		var err error
+		dbMutex.Lock()
+		stmt, err = db.Preparex(query)
+		dbMutex.Unlock()
+		if err != nil {
+			return nil, err
+		}
+		preparedStmts[query] = stmt
+	}
+	stmtsMutex.Unlock()
+
+	if tx != nil {
+		return tx.Stmtx(stmt), nil
+	}
+	return stmt, nil
+}
+
+func Close(db *sqlx.DB) {
+	stmtsMutex.Lock()
+	defer stmtsMutex.Unlock()
+
+	for _, stmt := range preparedStmts {
+		stmt.Close()
+	}
+	db.Close()
+}
+
 func ListExerciseNames(db *sqlx.DB) []ListExerciseIdName {
+	query := "select id, name from exercise"
+	stmt, err := getTxPreparedStmt(db, nil, query)
+	defer stmt.Close()
 	var exercisesNames []ListExerciseIdName
-	err := db.Select(&exercisesNames, "select id, name from exercise")
+	err = stmt.Select(&exercisesNames)
 	util.Check(err)
 	return exercisesNames
 }
 
-func ListMyPlanifications(tx *sqlx.Tx, userId int64) []ListPlanificationsQuery {
-	dest := make([]ListPlanificationsQuery, 0)
-	err := tx.Select(&dest, `
+func ListMyPlanifications(db *sqlx.DB, tx *sqlx.Tx, userId int64) []ListPlanificationsQuery {
+	query := `
 		select 
 		    p.id, 
 		    p.name,
@@ -29,14 +82,16 @@ func ListMyPlanifications(tx *sqlx.Tx, userId int64) []ListPlanificationsQuery {
 		left join routine r on (p.id = r.planification_id and r.active=true)
 		where u.useraccount_id = $1 
 		group by p.id, p.starred, p.name, p.creator_id, u.useraccount_id 
-		order by p.starred desc, owner desc, p.name`, userId)
+		order by p.starred desc, owner desc, p.name`
+	stmt, err := getTxPreparedStmt(db, tx, query)
+	dest := make([]ListPlanificationsQuery, 0)
+	err = stmt.Select(&dest, userId)
 	util.Check(err)
 	return dest
 }
 
-func GetRoutineHeader(tx *sqlx.Tx, routineId int64, userId int64) *GetRoutineHeaderQuery {
-	var dest GetRoutineHeaderQuery
-	tx.Get(&dest, `
+func GetRoutineHeader(db *sqlx.DB, tx *sqlx.Tx, routineId int64, userId int64) *GetRoutineHeaderQuery {
+	query := `
 		select
 			r.id routineid,
 			r.name routinename,
@@ -46,14 +101,16 @@ func GetRoutineHeader(tx *sqlx.Tx, routineId int64, userId int64) *GetRoutineHea
 		inner join userplanification u on r.planification_id = u.planification_id
 		left join userroutinehistory uh on r.id = uh.routine_id
 		where r.active=true and r.id=$1 and u.useraccount_id=$2
-		group by r.id, r.name`, routineId, userId)
+		group by r.id, r.name`
+	stmt, err := getTxPreparedStmt(db, tx, query)
+	util.Check(err)
+	var dest GetRoutineHeaderQuery
+	stmt.Get(&dest, routineId, userId)
 	return &dest
 }
 
-func GetRoutineDetails(tx *sqlx.Tx, routineId int64, userId int64) []GetRoutineDetailsQuery {
-	dest := make([]GetRoutineDetailsQuery, 0)
-
-	err := tx.Select(&dest, `
+func GetRoutineDetails(db *sqlx.DB, tx *sqlx.Tx, routineId int64, userId int64) []GetRoutineDetailsQuery {
+	query := `
 		select
 			b.id blockgroupid,
 			b.name blockgroupname,
@@ -74,16 +131,18 @@ func GetRoutineDetails(tx *sqlx.Tx, routineId int64, userId int64) []GetRoutineD
 		left join exercise e on e.id = eb.exercise_id
 		left join instructorexercise ie on e.id = ie.exercise_id and p.creator_id = ie.useraccount_id
 		where r.active=true and r.id=$1 and u.useraccount_id=$2
-		order by b.id, eb.id`, routineId, userId)
+		order by b.id, eb.id`
+	stmt, err := getTxPreparedStmt(db, tx, query)
+	util.Check(err)
+	dest := make([]GetRoutineDetailsQuery, 0)
+	err = stmt.Select(&dest, routineId, userId)
 	util.Check(err)
 
 	return dest
 }
 
-func ListActiveRoutinesICreated(tx *sqlx.Tx, planificationId int64, userId int64) []ListRoutinesQuery {
-	dest := make([]ListRoutinesQuery, 0)
-
-	err := tx.Select(&dest, `
+func ListActiveRoutinesICreated(db *sqlx.DB, tx *sqlx.Tx, planificationId int64, userId int64) []ListRoutinesQuery {
+	query := `
 		select 
 		    r.id, 
 		    r.name, 
@@ -94,16 +153,19 @@ func ListActiveRoutinesICreated(tx *sqlx.Tx, planificationId int64, userId int64
 	    inner join blockgroup b on r.id = b.routine_id
 		left outer join userroutinehistory u2 on r.id = u2.routine_id and u2.useraccount_id = p.creator_id                                                                 
 		where r.active=true and p.id = $1 and p.creator_id=$2
-		group by r.id, u2.completed  order by r.id`, planificationId, userId)
+		group by r.id, u2.completed  order by r.id`
+	stmt, err := getTxPreparedStmt(db, tx, query)
+	util.Check(err)
+	dest := make([]ListRoutinesQuery, 0)
+
+	err = stmt.Select(&dest, planificationId, userId)
 	util.Check(err)
 
 	return dest
 }
 
-func ListActiveRoutines(tx *sqlx.Tx, planificationId, userId int64) []ListRoutinesQuery {
-	dest := make([]ListRoutinesQuery, 0)
-
-	err := tx.Select(&dest, `
+func ListActiveRoutines(db *sqlx.DB, tx *sqlx.Tx, planificationId, userId int64) []ListRoutinesQuery {
+	query := `
 		select 
 		    r.id, 
 		    r.name, 
@@ -115,62 +177,95 @@ func ListActiveRoutines(tx *sqlx.Tx, planificationId, userId int64) []ListRoutin
 		inner join blockgroup b on r.id = b.routine_id    
 		left outer join userroutinehistory u2 on r.id = u2.routine_id and u.useraccount_id = u2.useraccount_id                                                                
 		where r.active=true and p.id = $1 and u.useraccount_id = $2
-		group by r.id, u2.completed order by r.id`, planificationId, userId)
+		group by r.id, u2.completed order by r.id`
+	stmt, err := getTxPreparedStmt(db, tx, query)
+	util.Check(err)
+
+	dest := make([]ListRoutinesQuery, 0)
+	err = stmt.Select(&dest, planificationId, userId)
 	util.Check(err)
 
 	return dest
 }
 
-func GetPlanificationSchedule(tx *sqlx.Tx, planificationId int64) *PlanificationSchedule {
+func GetPlanificationSchedule(db *sqlx.DB, tx *sqlx.Tx, planificationId int64) *PlanificationSchedule {
+	query := `select * from planificationschedule where planification_id=$1`
+	stmt, err := getTxPreparedStmt(db, tx, query)
+	util.Check(err)
+
 	var des PlanificationSchedule
-	tx.Get(&des, `select * from planificationschedule where planification_id=$1`, planificationId)
+	stmt.Get(&des, planificationId)
 	return &des
 }
 
-func GetPlanificationScheduleByUser(tx *sqlx.Tx, planificationId, userId int64) *GetPlanificationScheduleQuery {
-	var des GetPlanificationScheduleQuery
-	tx.Get(&des, `select 
+func GetPlanificationScheduleByUser(db *sqlx.DB, tx *sqlx.Tx, planificationId, userId int64) *GetPlanificationScheduleQuery {
+	query := `select 
 		ps.*,
 		u.accessuptoroutine,
 		u.accesslastupdated 
 		from planificationschedule ps
 		inner join userplanification u on ps.planification_id = u.planification_id
-		where ps.planification_id=$1 and u.useraccount_id = $2`, planificationId, userId)
+		where ps.planification_id=$1 and u.useraccount_id = $2`
+	stmt, err := getTxPreparedStmt(db, tx, query)
+	util.Check(err)
+
+	var des GetPlanificationScheduleQuery
+	stmt.Get(&des, planificationId, userId)
 	return &des
 }
 
-func UpdateUserPlanificationRoutineAccess(tx *sqlx.Tx, planificationId, userId int64, newUpToRoutineAccess int) {
-	tx.Exec(`update userplanification 
+func UpdateUserPlanificationRoutineAccess(db *sqlx.DB, tx *sqlx.Tx, planificationId, userId int64, newUpToRoutineAccess int) {
+	query := `update userplanification 
 		set accessuptoroutine=$1, accesslastupdated=now() 
-		where planification_id=$2 and useraccount_id=$3`, newUpToRoutineAccess, planificationId, userId)
+		where planification_id=$2 and useraccount_id=$3`
+	stmt, err := getTxPreparedStmt(db, tx, query)
+	util.Check(err)
+	stmt.Exec(newUpToRoutineAccess, planificationId, userId)
 }
 
-func ListExercises(tx *sqlx.Tx) []ListExercise {
+func ListExercises(db *sqlx.DB, tx *sqlx.Tx) []ListExercise {
+	query := `SELECT e.id, e.name, u.name as createdbyuser FROM exercise e inner join useraccount u on u.id = e.createdbyuser_id  ORDER BY e.name`
+	stmt, err := getTxPreparedStmt(db, tx, query)
+	util.Check(err)
+
 	var dest []ListExercise
-	err := tx.Select(&dest, `SELECT e.id, e.name, u.name as createdbyuser FROM exercise e inner join useraccount u on u.id = e.createdbyuser_id  ORDER BY e.name`)
+	err = stmt.Select(&dest)
 	util.Check(err)
 	return dest
 }
 
 func ListActiveUserAccountSessions(db *sqlx.DB) []UserAccountSession {
+	query := `SELECT * FROM useraccountsession`
+	stmt, err := getTxPreparedStmt(db, nil, query)
+	defer stmt.Close()
+	util.Check(err)
+
 	dest := make([]UserAccountSession, 0)
-	err := db.Select(&dest, `SELECT * FROM useraccountsession`)
+	err = stmt.Select(&dest)
 	util.Check(err)
 	return dest
 }
 
-func GetUserActiveSession(tx *sqlx.Tx, userId int64) *UserAccountSession {
+func GetUserActiveSession(db *sqlx.DB, tx *sqlx.Tx, userId int64) *UserAccountSession {
+	query := `SELECT * FROM useraccountsession where useraccount_id=$1`
+	stmt, err := getTxPreparedStmt(db, tx, query)
+	util.Check(err)
+
 	var des UserAccountSession
-	tx.Get(&des, `SELECT * FROM useraccountsession where useraccount_id=$1`, userId)
+	stmt.Get(&des, userId)
 	return &des
 }
 
-func RemoveActiveSession(tx *sqlx.Tx, userId int64) {
-	tx.Exec("delete from useraccountsession where useraccount_id=$1", userId)
+func RemoveActiveSession(db *sqlx.DB, tx *sqlx.Tx, userId int64) {
+	query := "delete from useraccountsession where useraccount_id=$1"
+	stmt, err := getTxPreparedStmt(db, tx, query)
+	util.Check(err)
+
+	stmt.Exec(userId)
 }
 
-func SaveCreatedActiveSession(tx *sqlx.Tx, token string, userId int64) *int64 {
-	RemoveActiveSession(tx, userId)
+func SaveCreatedActiveSession(db *sqlx.DB, tx *sqlx.Tx, token string, userId int64) *int64 {
+	RemoveActiveSession(db, tx, userId)
 	id := Insert(
 		tx,
 		&UserAccountSession{
@@ -180,20 +275,24 @@ func SaveCreatedActiveSession(tx *sqlx.Tx, token string, userId int64) *int64 {
 	return id
 }
 
-func CountRoutinesInPlanification(tx *sqlx.Tx, planificationId int64) *int {
+func CountRoutinesInPlanification(db *sqlx.DB, tx *sqlx.Tx, planificationId int64) *int {
+	query := "select count(1) from routine r where r.active=true and r.planification_id=$1"
+	stmt, err := getTxPreparedStmt(db, tx, query)
+	util.Check(err)
+
 	var des int
-	tx.Get(&des, "select count(1) from routine r where r.active=true and r.planification_id=$1", planificationId)
+	stmt.Get(&des, planificationId)
 	return &des
 }
 
-func CreateUserAccount(tx *sqlx.Tx, user *UserAccount) *int64 {
+func CreateUserAccount(db *sqlx.DB, tx *sqlx.Tx, user *UserAccount) *int64 {
 	id := Insert(
 		tx,
 		user)
 	return id
 }
 
-func CreateRoutine(tx *sqlx.Tx, name string, planificationId int64) *int64 {
+func CreateRoutine(db *sqlx.DB, tx *sqlx.Tx, name string, planificationId int64) *int64 {
 	id := Insert(
 		tx,
 		&Routine{
@@ -203,7 +302,7 @@ func CreateRoutine(tx *sqlx.Tx, name string, planificationId int64) *int64 {
 	return id
 }
 
-func CreatePlanification(tx *sqlx.Tx, userId int64, name string) *int64 {
+func CreatePlanification(db *sqlx.DB, tx *sqlx.Tx, userId int64, name string) *int64 {
 	id := Insert(
 		tx,
 		&Planification{
@@ -222,7 +321,7 @@ func CreatePlanification(tx *sqlx.Tx, userId int64, name string) *int64 {
 	return id
 }
 
-func InsertPlanificationDays(tx *sqlx.Tx, planificationId int64, days string) {
+func InsertPlanificationDays(db *sqlx.DB, tx *sqlx.Tx, planificationId int64, days string) {
 	Insert(
 		tx,
 		&PlanificationSchedule{
@@ -231,11 +330,15 @@ func InsertPlanificationDays(tx *sqlx.Tx, planificationId int64, days string) {
 		})
 }
 
-func UpdatePlanificationDays(tx *sqlx.Tx, planificationId int64, days string) {
-	tx.Exec(`update planificationschedule set days=$1 where planification_id=$2`, days, planificationId)
+func UpdatePlanificationDays(db *sqlx.DB, tx *sqlx.Tx, planificationId int64, days string) {
+	query := `update planificationschedule set days=$1 where planification_id=$2`
+	stmt, err := getTxPreparedStmt(db, tx, query)
+	util.Check(err)
+
+	stmt.Exec(days, planificationId)
 }
 
-func CreateExercise(tx *sqlx.Tx, name string, userAccountId int64) *int {
+func CreateExercise(db *sqlx.DB, tx *sqlx.Tx, name string, userAccountId int64) *int {
 	id := Insert(
 		tx,
 		&Exercise{
@@ -247,13 +350,17 @@ func CreateExercise(tx *sqlx.Tx, name string, userAccountId int64) *int {
 	return util.PInt(int(*id))
 }
 
-func CountExercisesCreatedByUser(tx *sqlx.Tx, userAccountId int64) *int {
+func CountExercisesCreatedByUser(db *sqlx.DB, tx *sqlx.Tx, userAccountId int64) *int {
+	query := "select count(1) from exercise where createdbyuser_id=$1"
+	stmt, err := getTxPreparedStmt(db, tx, query)
+	util.Check(err)
+
 	var des int
-	tx.Get(&des, "select count(1) from exercise where createdbyuser_id=$1", userAccountId)
+	stmt.Get(&des, userAccountId)
 	return &des
 }
 
-func SaveExercisesBlock(tx *sqlx.Tx, routineId int64, blockType, name string, duration, laps, lapRestInterval, exeRestInterval *int, exercises []ExerciseBlockGroup) *int64 {
+func SaveExercisesBlock(db *sqlx.DB, tx *sqlx.Tx, routineId int64, blockType, name string, duration, laps, lapRestInterval, exeRestInterval *int, exercises []ExerciseBlockGroup) *int64 {
 	id := Insert(
 		tx,
 		&BlockGroup{
@@ -279,14 +386,20 @@ func SaveExercisesBlock(tx *sqlx.Tx, routineId int64, blockType, name string, du
 	return id
 }
 
-func SaveUserDevicePushNotificationSubscription(tx *sqlx.Tx, userId int64, vapiddata string, deviceName string) {
+func SaveUserDevicePushNotificationSubscription(db *sqlx.DB, tx *sqlx.Tx, userId int64, vapiddata string, deviceName string) {
+	query := "select id from userdevice where useraccount_id = $1 and name = $2"
+	stmt, err := getTxPreparedStmt(db, tx, query)
+	util.Check(err)
+
 	var userDeviceId int64
-	err := tx.Get(&userDeviceId, "select id from userdevice where useraccount_id = $1 and name = $2", userId, deviceName)
+	err = stmt.Get(&userDeviceId, userId, deviceName)
 	if err == nil {
-		tx.Exec("update userdevice set vapiddata = $1 where id = $2", vapiddata, userDeviceId)
+		q2 := "update userdevice set vapiddata = $1 where id = $2"
+		stmt2, err := getTxPreparedStmt(db, tx, q2)
+		util.Check(err)
+		stmt2.Exec(vapiddata, userDeviceId)
 	} else if err.Error() == "sql: no rows in result set" {
 		Insert(tx, &UserDevice{
-
 			Name:          &deviceName,
 			VapidData:     &vapiddata,
 			UserAccountId: &userId,
@@ -294,7 +407,7 @@ func SaveUserDevicePushNotificationSubscription(tx *sqlx.Tx, userId int64, vapid
 	}
 }
 
-func SaveUserTrainedToday(tx *sqlx.Tx, userId int64, answer bool) {
+func SaveUserTrainedToday(db *sqlx.DB, tx *sqlx.Tx, userId int64, answer bool) {
 	Insert(tx, &UserTrainingHistory{
 		Date:          time.Now(),
 		Answer:        &answer,
@@ -302,87 +415,132 @@ func SaveUserTrainedToday(tx *sqlx.Tx, userId int64, answer bool) {
 	})
 }
 
-func GetUserLoadedTrainingToday(tx *sqlx.Tx, userId int64) bool {
+func GetUserLoadedTrainingToday(db *sqlx.DB, tx *sqlx.Tx, userId int64) bool {
+	query := "select date from usertraininghistory where useraccount_id=$1 order by id desc limit 1"
+	stmt, err := getTxPreparedStmt(db, tx, query)
+	util.Check(err)
+
 	var lastTime time.Time
-	tx.Get(&lastTime, "select date from usertraininghistory where useraccount_id=$1 order by id desc limit 1", userId)
+	stmt.Get(&lastTime, userId)
 	lastYear, lastMonth, lastDay := lastTime.Date()
 	year, month, day := time.Now().Date()
 	return lastYear == year && lastMonth == month && lastDay == day
 }
 
-func CalculateUserOwnsRoutine(tx *sqlx.Tx, userId, planificationId, routineId int64) bool {
+func CalculateUserOwnsRoutine(db *sqlx.DB, tx *sqlx.Tx, userId, planificationId, routineId int64) bool {
+	query := `
+		select count(1) from planification p 
+		inner join routine r on p.id = r.planification_id 
+		where r.active=true and p.creator_id=$1 and r.planification_id=$2 and r.id=$3`
+	stmt, err := getTxPreparedStmt(db, tx, query)
+	util.Check(err)
+
 	var des int
-	tx.Get(&des, `
-	select count(1) from planification p 
-    inner join routine r on p.id = r.planification_id 
-	where r.active=true and p.creator_id=$1 and r.planification_id=$2 and r.id=$3`, userId, planificationId, routineId)
+	stmt.Get(&des, userId, planificationId, routineId)
 	return des > 0
 }
 
-func CalculateUserOwnsPlanification(tx *sqlx.Tx, userId, planificationId int64) bool {
+func CalculateUserOwnsPlanification(db *sqlx.DB, tx *sqlx.Tx, userId, planificationId int64) bool {
+	query := "select count(1) from planification p where p.creator_id=$1 and p.id=$2"
+	stmt, err := getTxPreparedStmt(db, tx, query)
+	util.Check(err)
+
 	var des int
-	tx.Get(&des, "select count(1) from planification p where p.creator_id=$1 and p.id=$2", userId, planificationId)
+	stmt.Get(&des, userId, planificationId)
 	return des > 0
 }
 
-func CalculateRoutineBlocksAmount(tx *sqlx.Tx, routineId int64) int {
+func CalculateRoutineBlocksAmount(db *sqlx.DB, tx *sqlx.Tx, routineId int64) int {
+	query := `select count(1) from blockgroup where routine_id=$1`
+	stmt, err := getTxPreparedStmt(db, tx, query)
+	util.Check(err)
+
 	var des int
-	tx.Get(&des, `select count(1) from blockgroup where routine_id=$1`, routineId)
+	stmt.Get(&des, routineId)
 	return des
 }
 
-func GetUserIdByUserName(tx *sqlx.Tx, userName string) int64 {
+func GetUserIdByUserName(db *sqlx.DB, tx *sqlx.Tx, userName string) int64 {
+	query := "select id from useraccount where username=$1"
+	stmt, err := getTxPreparedStmt(db, tx, query)
+	util.Check(err)
+
 	var userId int64
-	err := tx.Get(&userId, "select id from useraccount where username=$1", userName)
+	err = stmt.Get(&userId, userName)
 	util.Check(err)
 	return userId
 }
 
-func GetUserIdByUserNameNoError(tx *sqlx.Tx, userName string) *int64 {
+func GetUserIdByUserNameNoError(db *sqlx.DB, tx *sqlx.Tx, userName string) *int64 {
+	query := "select id from useraccount where username=$1"
+	stmt, err := getTxPreparedStmt(db, tx, query)
+	util.Check(err)
+
 	var userId *int64
-	tx.Get(&userId, "select id from useraccount where username=$1", userName)
+	stmt.Get(&userId, userName)
 	return userId
 }
 
-func GetAccountPlanIdByIdentifier(tx *sqlx.Tx, iden AccountPlanType) *int {
+func GetAccountPlanIdByIdentifier(db *sqlx.DB, tx *sqlx.Tx, iden AccountPlanType) *int {
+	query := "select id from accountplan where identifier=$1"
+	stmt, err := getTxPreparedStmt(db, tx, query)
+	util.Check(err)
+
 	var id *int
-	tx.Get(&id, "select id from accountplan where identifier=$1", string(iden))
+	stmt.Get(&id, string(iden))
 	return id
 }
 
-func GetAccountPlanIdentifierByUserId(tx *sqlx.Tx, userId int64) *AccountPlanType {
-	var des string
-	tx.Get(&des, `
+func GetAccountPlanIdentifierByUserId(db *sqlx.DB, tx *sqlx.Tx, userId int64) *AccountPlanType {
+	query := `
 		select identifier from accountplan
 		inner join useraccount u on accountplan.id = u.accountplan_id
-	    where u.id=$1`, userId)
+	    where u.id=$1`
+	stmt, err := getTxPreparedStmt(db, tx, query)
+	util.Check(err)
+
+	var des string
+	stmt.Get(&des, userId)
 	id := AccountPlanType(des[0])
 	return &id
 }
 
-func GetUserAccountDetails(tx *sqlx.Tx, userId int64) *GetUserAccountDetailsQuery {
-	var des GetUserAccountDetailsQuery
-	tx.Get(&des, `
+func GetUserAccountDetails(db *sqlx.DB, tx *sqlx.Tx, userId int64) *GetUserAccountDetailsQuery {
+	query := `
 	   select u.name, u.email, u.pictureurl, a.name as accounttype from useraccount u
 	   inner join accountplan a on u.accountplan_id = a.id
-	   where u.id=$1`, userId)
+	   where u.id=$1`
+	stmt, err := getTxPreparedStmt(db, tx, query)
+	util.Check(err)
+
+	var des GetUserAccountDetailsQuery
+	stmt.Get(&des, userId)
 	return &des
 }
 
-func RetrieveUserDeviceNotifationSubscription(tx *sqlx.Tx, userId int64, deviceName string) string {
+func RetrieveUserDeviceNotifationSubscription(db *sqlx.DB, tx *sqlx.Tx, userId int64, deviceName string) string {
+	query := "select vapiddata from userdevice where useraccount_id = $1 and name = $2"
+	stmt, err := getTxPreparedStmt(db, tx, query)
+	util.Check(err)
+
 	var subscription string
-	err := tx.Get(&subscription, "select vapiddata from userdevice where useraccount_id = $1 and name = $2", userId, deviceName)
+	err = stmt.Get(&subscription, userId, deviceName)
 	util.Check(err)
 	return subscription
 }
 
 func SelectAllUserDeviceSubscriptions(db *sqlx.DB) []UserDevice {
+	query := "select * from userdevice"
+	stmt, err := getTxPreparedStmt(db, nil, query)
+	defer stmt.Close()
+	util.Check(err)
+
 	var subs []UserDevice
-	db.Select(&subs, "select * from userdevice")
+	stmt.Select(&subs)
 	return subs
 }
 
-func SaveUserSharingToken(tx *sqlx.Tx, planificationId, userId int64, routineId *int64) {
+func SaveUserSharingToken(db *sqlx.DB, tx *sqlx.Tx, planificationId, userId int64, routineId *int64) {
 	Insert(tx, &UserSharingToken{
 		Creationdate:    time.Now(),
 		CreatorId:       &userId,
@@ -392,37 +550,53 @@ func SaveUserSharingToken(tx *sqlx.Tx, planificationId, userId int64, routineId 
 	})
 }
 
-func InvalidateSharingTokenForRoutine(tx *sqlx.Tx, planificationId, routineId, userId int64) {
-	tx.Exec(`update usersharingtoken 
+func InvalidateSharingTokenForRoutine(db *sqlx.DB, tx *sqlx.Tx, planificationId, routineId, userId int64) {
+	query := `update usersharingtoken 
 		set isvalid = false 
-		where creator_id = $1 and routine_id is not null and routine_id=$2 and planification_id=$3`, userId, routineId, planificationId)
+		where creator_id = $1 and routine_id is not null and routine_id=$2 and planification_id=$3`
+	stmt, err := getTxPreparedStmt(db, tx, query)
+	util.Check(err)
+
+	stmt.Exec(userId, routineId, planificationId)
 }
 
-func GetRoutineUserSharingToken(tx *sqlx.Tx, planificationId, routineId, userId int64) UserSharingToken {
-	var des UserSharingToken
-	tx.Get(&des, `
+func GetRoutineUserSharingToken(db *sqlx.DB, tx *sqlx.Tx, planificationId, routineId, userId int64) UserSharingToken {
+	query := `
 		select * from usersharingtoken 
-		where creator_id = $1 and routine_id is not null and routine_id=$2 and planification_id=$3 and isvalid=true`, userId, routineId, planificationId)
+		where creator_id = $1 and routine_id is not null and routine_id=$2 and planification_id=$3 and isvalid=true`
+	stmt, err := getTxPreparedStmt(db, tx, query)
+	util.Check(err)
+
+	var des UserSharingToken
+	stmt.Get(&des, userId, routineId, planificationId)
 	return des
 }
 
-func GetPlanificationUserSharingToken(tx *sqlx.Tx, planificationId, userId int64) UserSharingToken {
-	var des UserSharingToken
-	tx.Get(&des, `
+func GetPlanificationUserSharingToken(db *sqlx.DB, tx *sqlx.Tx, planificationId, userId int64) UserSharingToken {
+	query := `
 		select * from usersharingtoken 
-		where creator_id = $1 and planification_id=$2 and isvalid=true`, userId, planificationId)
+		where creator_id = $1 and planification_id=$2 and isvalid=true`
+	stmt, err := getTxPreparedStmt(db, tx, query)
+	util.Check(err)
+
+	var des UserSharingToken
+	stmt.Get(&des, userId, planificationId)
 	return des
 }
 
-func UserAlreadyRequestedAccessToSharedPlanification(tx *sqlx.Tx, planificationId, userId int64) bool {
+func UserAlreadyRequestedAccessToSharedPlanification(db *sqlx.DB, tx *sqlx.Tx, planificationId, userId int64) bool {
+	query := `
+		select count(1) from queueplanificationaccess 
+		where useraccount_id=$1 and planification_id=$2`
+	stmt, err := getTxPreparedStmt(db, tx, query)
+	util.Check(err)
+
 	var des int
-	tx.Get(&des, `
-	select count(1) from queueplanificationaccess 
-	where useraccount_id=$1 and planification_id=$2`, userId, planificationId)
+	stmt.Get(&des, userId, planificationId)
 	return des > 0
 }
 
-func QueueAccessRequestToSharedPlanification(tx *sqlx.Tx, planificationId, userId int64) {
+func QueueAccessRequestToSharedPlanification(db *sqlx.DB, tx *sqlx.Tx, planificationId, userId int64) {
 	Insert(
 		tx,
 		&QueuePlanificationAccess{
@@ -431,9 +605,8 @@ func QueueAccessRequestToSharedPlanification(tx *sqlx.Tx, planificationId, userI
 		})
 }
 
-func ListQueuedPlanificationAccessRequests(tx *sqlx.Tx, userId int64) []ListQueuedPlanificationAccessRequestsQuery {
-	dest := make([]ListQueuedPlanificationAccessRequestsQuery, 0)
-	tx.Select(&dest, `
+func ListQueuedPlanificationAccessRequests(db *sqlx.DB, tx *sqlx.Tx, userId int64) []ListQueuedPlanificationAccessRequestsQuery {
+	query := `
 		select
 			u.name as requestername,
 			p.name as planificationname,
@@ -441,34 +614,50 @@ func ListQueuedPlanificationAccessRequests(tx *sqlx.Tx, userId int64) []ListQueu
 			q.useraccount_id from planification p
 		inner join queueplanificationaccess q on p.id = q.planification_id
 		inner join useraccount u on q.useraccount_id = u.id
-		where p.creator_id=$1`, userId)
+		where p.creator_id=$1`
+	stmt, err := getTxPreparedStmt(db, tx, query)
+	util.Check(err)
+
+	dest := make([]ListQueuedPlanificationAccessRequestsQuery, 0)
+	stmt.Select(&dest, userId)
 	return dest
 }
 
-func CalculateUserHasNoAccessToPlanification(tx *sqlx.Tx, planificationId, userId int64) bool {
+func CalculateUserHasNoAccessToPlanification(db *sqlx.DB, tx *sqlx.Tx, planificationId, userId int64) bool {
+	query := "select count(1) from userplanification u where u.planification_id=$1 and u.useraccount_id=$2"
+	stmt, err := getTxPreparedStmt(db, tx, query)
+	util.Check(err)
+
 	var des int
-	tx.Get(&des, "select count(1) from userplanification u where u.planification_id=$1 and u.useraccount_id=$2", planificationId, userId)
+	stmt.Get(&des, planificationId, userId)
 	return des == 0
 }
 
-func CalculateUserAlreadyActionatedARoutineToday(tx *sqlx.Tx, planificationId, userId int64) bool {
-	var des int
-	tx.Get(&des, `
+func CalculateUserAlreadyActionatedARoutineToday(db *sqlx.DB, tx *sqlx.Tx, planificationId, userId int64) bool {
+	query := `
 		select count(1) from userroutinehistory u 
-		where u.planification_id=$1 and u.useraccount_id=$2 and u.createddate::date = CURRENT_DATE`,
-		planificationId, userId)
+		where u.planification_id=$1 and u.useraccount_id=$2 and u.createddate::date = CURRENT_DATE`
+	stmt, err := getTxPreparedStmt(db, tx, query)
+	util.Check(err)
+
+	var des int
+	stmt.Get(&des, planificationId, userId)
 	return des > 0
 }
 
-func CalculatePlanificationAlreadyExecutedBySomeone(tx *sqlx.Tx, planificationId int64) bool {
-	var des int
-	tx.Get(&des, `
+func CalculatePlanificationAlreadyExecutedBySomeone(db *sqlx.DB, tx *sqlx.Tx, planificationId int64) bool {
+	query := `
 		select count(1) from userroutinehistory u 
-		where u.planification_id=$1`, planificationId)
+		where u.planification_id=$1`
+	stmt, err := getTxPreparedStmt(db, tx, query)
+	util.Check(err)
+
+	var des int
+	stmt.Get(&des, planificationId)
 	return des > 0
 }
 
-func InsertUserRoutineHistory(tx *sqlx.Tx, completed bool, planificationId, routineId, userId int64) {
+func InsertUserRoutineHistory(db *sqlx.DB, tx *sqlx.Tx, completed bool, planificationId, routineId, userId int64) {
 	Insert(
 		tx,
 		&UserRoutineHistory{
@@ -480,11 +669,15 @@ func InsertUserRoutineHistory(tx *sqlx.Tx, completed bool, planificationId, rout
 		})
 }
 
-func AcceptPlanificationAccessRequest(tx *sqlx.Tx, planificationId, requesterUserId, userId int64, plan *AccountPlanType) {
-	tx.Exec("delete from queueplanificationaccess where useraccount_id=$1 and planification_id=$2", requesterUserId, planificationId)
+func AcceptPlanificationAccessRequest(db *sqlx.DB, tx *sqlx.Tx, planificationId, requesterUserId, userId int64, plan *AccountPlanType) {
+	query := "delete from queueplanificationaccess where useraccount_id=$1 and planification_id=$2"
+	stmt, err := getTxPreparedStmt(db, tx, query)
+	util.Check(err)
+
+	stmt.Exec(requesterUserId, planificationId)
 	accessUpTo := 1
 	if *plan == StudentPremium || *plan == Professor {
-		schedule := GetPlanificationSchedule(tx, planificationId)
+		schedule := GetPlanificationSchedule(db, tx, planificationId)
 		accessUpTo = len(*schedule.Days)
 	}
 
@@ -498,10 +691,16 @@ func AcceptPlanificationAccessRequest(tx *sqlx.Tx, planificationId, requesterUse
 		})
 }
 
-func DeclinePlanificationAccessRequest(tx *sqlx.Tx, planificationId, requesterUserId, userId int64) {
-	tx.Exec("delete from queueplanificationaccess where useraccount_id=$1 and planification_id=$2", requesterUserId, planificationId)
+func DeclinePlanificationAccessRequest(db *sqlx.DB, tx *sqlx.Tx, planificationId, requesterUserId, userId int64) {
+	query := "delete from queueplanificationaccess where useraccount_id=$1 and planification_id=$2"
+	stmt, err := getTxPreparedStmt(db, tx, query)
+	util.Check(err)
+	stmt.Exec(requesterUserId, planificationId)
 }
 
-func DeleteRoutine(tx *sqlx.Tx, routineId int64) {
-	tx.Exec("update routine set active=false where id=$1", routineId)
+func DeleteRoutine(db *sqlx.DB, tx *sqlx.Tx, routineId int64) {
+	query := "update routine set active=false where id=$1"
+	stmt, err := getTxPreparedStmt(db, tx, query)
+	util.Check(err)
+	stmt.Exec(routineId)
 }

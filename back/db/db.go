@@ -24,7 +24,7 @@ func InitDB(datasourceName string) *sqlx.DB {
 	}
 
 	db.Mapper = reflectx.NewMapperFunc("json", strings.ToLower)
-
+	preparedStmts = make(map[string]*sqlx.Stmt)
 	return db
 }
 
