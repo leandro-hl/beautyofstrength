@@ -432,11 +432,11 @@ func (o *Endpoints) getSharedRoutineDetails(w http.ResponseWriter, r *http.Reque
 						Exerestinterval: re.Exerestinterval,
 						Laprestinterval: re.Laprestinterval,
 						Exercises: []GetRoutineDetailsBlockExercise{
-							{Name: re.Exercisename, Secs: re.Secs, Reps: re.Reps},
+							{Name: re.Exercisename, Secs: re.Secs, Reps: re.Reps, VideoCode: re.VideoCode},
 						},
 					}
 				} else {
-					block.Exercises = append(block.Exercises, GetRoutineDetailsBlockExercise{Name: re.Exercisename, Secs: re.Secs, Reps: re.Reps})
+					block.Exercises = append(block.Exercises, GetRoutineDetailsBlockExercise{Name: re.Exercisename, Secs: re.Secs, Reps: re.Reps, VideoCode: re.VideoCode})
 				}
 			}
 			//last block
