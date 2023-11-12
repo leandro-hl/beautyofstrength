@@ -13,7 +13,7 @@ class ModalExerciseVideo extends Component {
         const {state: {videoCode}} = this.context
         return (
             <Modal
-                className={'embeded-video'}
+                className={'embeded-video no-padding'}
                 closeIcon
                 closeOnEscape={true}
                 closeOnDimmerClick={true}
