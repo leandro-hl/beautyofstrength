@@ -21,11 +21,6 @@ class PageProfessorContributions extends Component {
         }
     }
 
-    redirectToPlanification(id) {
-        this.context.dispatch(setData({planificationId: id}))
-        this.props.history.push('/planification')
-    }
-
     render() {
         const {planifications} = this.state;
         const {loading} = this.state;

@@ -45,17 +45,38 @@ const reducer = (state, action) => {
         default:
             newState = {...state};
     }
+
+    if (action.cache) {
+        const cached = localStorage.getItem('state')
+        if (cached) {
+            const cachedData = JSON.parse(atob(cached))
+            const newData = {...cachedData, ...action.payload}
+            localStorage.setItem('state', btoa(JSON.stringify(newData)))
+        } else {
+            localStorage.setItem('state', btoa(JSON.stringify({...action.payload})))
+        }
+    }
+
     if (isLocalhost()) {
-        localStorage.setItem('state', JSON.stringify(newState))
+        //this replaces the cookie behavior
+        const cached = localStorage.getItem('state')
+        if (cached) {
+            const cachedData = JSON.parse(atob(cached))
+            const newData = {...cachedData, auth_token: newState.auth_token}
+            localStorage.setItem('state', btoa(JSON.stringify(newData)))
+        } else {
+            localStorage.setItem('state', btoa(JSON.stringify({auth_token: newState.auth_token})))
+        }
     }
 
     return newState
 }
 
-export function setData(data) {
+export function setData(data, cache) {
     return {
         type: ACTIONS.DATA,
-        payload: data
+        payload: data,
+        cache: cache
     }
 }
 
@@ -116,7 +137,7 @@ export function ContextProvider({children}) {
     const lastState = localStorage.getItem('state')
     let currentState = {}
     if (lastState) {
-        currentState = JSON.parse(lastState)
+        currentState = {...initialState, ...JSON.parse(atob(lastState))}
     } else {
         currentState = initialState
     }

@@ -66,6 +66,36 @@ export function queryParam({location}, param) {
     return parseSearch(location).get(param)
 }
 
+export function queryEncodedData(loc, data) {
+    const currentData = queryData(loc)
+
+    if (!data) {
+        if (!currentData) {
+            return
+        }
+        return 'dt='+btoa(JSON.stringify(currentData))
+    }
+
+    if (currentData) {
+        const newData = {...currentData, ...data}
+        return 'dt='+btoa(JSON.stringify(newData))
+    }
+
+    return 'dt='+btoa(JSON.stringify(data))
+}
+export function queryData(loc) {
+    try {
+        const d = queryParam(loc, 'dt')
+        if(!d) {
+            return null
+        }
+        return JSON.parse(atob(d))
+    } catch (e) {
+        console.error(e)
+        return null
+    }
+}
+
 export function isLocalhost() {
     return window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
 }

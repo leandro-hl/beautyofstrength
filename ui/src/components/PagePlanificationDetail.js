@@ -2,11 +2,8 @@ import React, {Component} from "react";
 import {Button, Checkbox, Grid, Header, Icon, Loader, Message, Popup, Segment} from "semantic-ui-react";
 import {actionateRoutine, listRoutines, savePlanificationEditions, sharePlanification} from "../service";
 import {withRouter} from "react-router-dom";
-import {isLocalhost, queryParam} from "../functions";
-import {TopMenuBar} from "./TopMenuBar";
+import {isLocalhost} from "../functions";
 import {AppContext, setData} from "../context";
-import BottomMenuBar from "./BottomMenuBar";
-import LayoutMobile from "./LayoutMobile";
 import {ModalRoutineActionatedConfirmation} from "./ModalRoutineActionatedConfirmation";
 
 class PagePlanificationDetail extends Component {
@@ -39,7 +36,13 @@ class PagePlanificationDetail extends Component {
 
     async refresh() {
         try {
-            const {state: {planificationId}} = this.context
+            let {state: {planificationId}} = this.context
+
+            if(!planificationId) {
+                this.props.history.push('/my-planifications')
+                return
+            }
+
             const {days} = this.state;
             const res = await listRoutines(planificationId);
             const week = res.data.week.split('').map(d => parseInt(d, 10))
@@ -74,7 +77,7 @@ class PagePlanificationDetail extends Component {
 
     redirectToRoutine(id) {
         if (id) {
-            this.context.dispatch(setData({routineId: id}))
+            this.context.dispatch(setData({routineId: id}, true))
             this.props.history.push('/routine')
         }
     }

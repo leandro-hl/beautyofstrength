@@ -491,6 +491,10 @@ func (o *Endpoints) listRoutines(w http.ResponseWriter, r *http.Request, tx *sql
 		routines = db.ListActiveRoutinesICreated(o.db, tx, planificationId, usr)
 		isEditable = iAmPremium && !db.CalculatePlanificationAlreadyExecutedBySomeone(o.db, tx, planificationId)
 	} else {
+		if db.CalculateUserHasNoAccessToPlanification(o.db, tx, planificationId, usr) {
+			o.Respond(w, nil, http.StatusUnauthorized)
+			return
+		}
 		routines = db.ListActiveRoutines(o.db, tx, planificationId, usr)
 	}
 

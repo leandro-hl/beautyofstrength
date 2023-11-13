@@ -50,12 +50,12 @@ class PagePlanificationList extends Component {
     }
 
     redirectToPlanification(p) {
-        this.context.dispatch(setData({planificationId: p.id, planificationName: p.name, isOwner: p.owner}))
+        this.context.dispatch(setData({planificationId: p.id, planificationName: p.name, isOwner: p.owner}, true))
         this.props.history.push('/planification')
     }
 
     redirectToPlanificationDays(p) {
-        this.context.dispatch(setData({planificationId: p.id, planificationName: p.name}))
+        this.context.dispatch(setData({planificationId: p.id, planificationName: p.name}, true))
         this.props.history.push('/planification-days')
     }
 
