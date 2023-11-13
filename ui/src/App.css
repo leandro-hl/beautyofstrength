@@ -73,7 +73,7 @@ body > div#root {
   justify-content: center !important;
 }
 
-.align-center > input {
+.align-center, .align-center > input {
   text-align: center !important;
 }
 
@@ -335,6 +335,29 @@ body > div#root {
 
 div#g_id_onload, div.g_id_signin {
   width: 100%;
+}
+
+.chip {
+  padding: 4px !important;
+  border-radius: 50px !important;
+  text-transform: none !important;
+  margin-left: 5px !important;
+}
+
+.success {
+  background-color: #D7FFB7 !important;
+}
+
+.omit {
+  background-color: #E7E7E7 !important;
+}
+
+.feel {
+  background-color: #e8e8e8 !important;
+}
+
+.progress {
+  background-color: #F9D946 !important;
 }
 
 .disabled-btn {

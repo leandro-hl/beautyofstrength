@@ -5,6 +5,7 @@ import {withRouter} from "react-router-dom";
 import {isLocalhost} from "../functions";
 import {AppContext, setData} from "../context";
 import {ModalRoutineActionatedConfirmation} from "./ModalRoutineActionatedConfirmation";
+import {Chip} from "./Chip";
 
 class PagePlanificationDetail extends Component {
     static contextType = AppContext
@@ -313,8 +314,11 @@ class PagePlanificationDetail extends Component {
                             <Segment style={{width: '100%'}} key={i} disabled={disableLookup}>
                                 <Grid>
                                     <Grid.Column width={!disableLookup? 11 : 16} onClick={() => this.redirectToRoutine(p.id)}>
-                                        <Header sub>{p.name}{skipped? ' - Omitida' : ''}{completed? ' - Completada' : ''}</Header>
-                                        <span>{p.blockcount > 1 ? p.blockcount+' bloques de ejercicios' : p.blockcount+' bloque de ejercicios'}</span>
+                                        <Header sub>{p.name}{skipped? <Chip omit content={'Omitida'}/> : ''}{completed? <Chip success content={'Completada'}/> : ''}</Header>
+                                        <span>
+                                            {p.blockCount > 1 ? p.blockCount+' Grupos: ' : p.blockCount+' Grupo: '}
+                                            {p.workCount > 1 ? p.workCount+' bloques de trabajo' : p.workCount+' bloque de trabajo'}
+                                        </span>
                                     </Grid.Column>
                                     {
                                         (editionMode && !disableActions) &&

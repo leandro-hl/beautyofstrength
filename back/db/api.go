@@ -112,6 +112,8 @@ func GetRoutineHeader(db *sqlx.DB, tx *sqlx.Tx, routineId int64, userId int64) *
 func GetRoutineDetails(db *sqlx.DB, tx *sqlx.Tx, routineId int64, userId int64) []GetRoutineDetailsQuery {
 	query := `
 		select
+		    bg.id grouperid,
+		    bg.name groupername,
 			b.id blockgroupid,
 			b.name blockgroupname,
 			b.duration blockgroupduration,
@@ -126,12 +128,13 @@ func GetRoutineDetails(db *sqlx.DB, tx *sqlx.Tx, routineId int64, userId int64) 
 			from routine r
 		inner join planification p on p.id = r.planification_id
 		inner join userplanification u on r.planification_id = u.planification_id
-		left join blockgroup b on r.id = b.routine_id
+		left join blockgroupgrouper bg on r.id = bg.routine_id
+		left join blockgroup b on r.id = b.routine_id and bg.id=b.blockgroupgrouper_id
 		left join exerciseblockgroup eb on b.id = eb.blockgroup_id
 		left join exercise e on e.id = eb.exercise_id
 		left join instructorexercise ie on e.id = ie.exercise_id and p.creator_id = ie.useraccount_id
 		where r.active=true and r.id=$1 and u.useraccount_id=$2
-		order by b.id, eb.id`
+		order by bg.id, b.id, eb.id`
 	stmt, err := getTxPreparedStmt(db, tx, query)
 	util.Check(err)
 	dest := make([]GetRoutineDetailsQuery, 0)
@@ -147,10 +150,12 @@ func ListActiveRoutinesICreated(db *sqlx.DB, tx *sqlx.Tx, planificationId int64,
 		    r.id, 
 		    r.name, 
 		    r.planification_id, 
-		    count(b.id) as blockcount, 
+		    count(distinct bg.id) as blockcount,
+		    count(b.id) as workcount, 
 		    u2.completed from routine r 
 		inner join planification p on r.planification_id = p.id
-	    inner join blockgroup b on r.id = b.routine_id
+	    inner join blockgroupgrouper bg on r.id = bg.routine_id
+		inner join blockgroup b on r.id = b.routine_id and bg.id = b.blockgroupgrouper_id  
 		left outer join userroutinehistory u2 on r.id = u2.routine_id and u2.useraccount_id = p.creator_id                                                                 
 		where r.active=true and p.id = $1 and p.creator_id=$2
 		group by r.id, u2.completed  order by r.id`
@@ -170,11 +175,13 @@ func ListActiveRoutines(db *sqlx.DB, tx *sqlx.Tx, planificationId, userId int64)
 		    r.id, 
 		    r.name, 
 		    r.planification_id, 
-		    count(b.id) as blockcount, 
+		    count(distinct bg.id) as blockcount,
+		    count(b.id) as workcount, 
 		    u2.completed from routine r 
 		inner join planification p on r.planification_id = p.id
 		inner join userplanification u on p.id = u.planification_id
-		inner join blockgroup b on r.id = b.routine_id    
+		inner join blockgroupgrouper bg on r.id = bg.routine_id
+		inner join blockgroup b on r.id = b.routine_id and bg.id = b.blockgroupgrouper_id  
 		left outer join userroutinehistory u2 on r.id = u2.routine_id and u.useraccount_id = u2.useraccount_id                                                                
 		where r.active=true and p.id = $1 and u.useraccount_id = $2
 		group by r.id, u2.completed order by r.id`
@@ -360,17 +367,31 @@ func CountExercisesCreatedByUser(db *sqlx.DB, tx *sqlx.Tx, userAccountId int64) 
 	return &des
 }
 
-func SaveExercisesBlock(db *sqlx.DB, tx *sqlx.Tx, routineId int64, blockType, name string, duration, laps, lapRestInterval, exeRestInterval *int, exercises []ExerciseBlockGroup) *int64 {
+func SaveExercisesBlock(db *sqlx.DB, tx *sqlx.Tx,
+	routineId int64,
+	blockType, name string,
+	duration, laps, lapRestInterval, exeRestInterval *int,
+	exercises []ExerciseBlockGroup,
+	blockGroupName string, blockGroupId *int64) *int64 {
+
+	if blockGroupId == nil {
+		blockGroupId = Insert(tx, &BlockGroupGrouper{
+			Name:      &blockGroupName,
+			RoutineId: &routineId,
+		})
+	}
+
 	id := Insert(
 		tx,
 		&BlockGroup{
-			Name:            &name,
-			Duration:        duration,
-			Laps:            laps,
-			Type:            &blockType,
-			LapRestInterval: lapRestInterval,
-			ExeRestInterval: exeRestInterval,
-			RoutineId:       &routineId,
+			Name:                &name,
+			Duration:            duration,
+			Laps:                laps,
+			Type:                &blockType,
+			LapRestInterval:     lapRestInterval,
+			ExeRestInterval:     exeRestInterval,
+			RoutineId:           &routineId,
+			BlockGroupGrouperId: blockGroupId,
 		})
 
 	for _, ex := range exercises {

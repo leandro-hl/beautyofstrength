@@ -50,7 +50,7 @@ class PageBlockCreate extends Component {
 
     async componentDidMount() {
         try {
-            const {state: {planificationId, routineId, routineDetails: {nextBlockNumber}}} = this.context
+            const {state: {planificationId, routineId, newBlockGroupName, nextWorkNumber, newBlockGroupId}} = this.context
             this.context.dispatch(setData({secondaryActions: []}))
             this.setState({loading: true})
             const res = await listExercises()
@@ -60,13 +60,16 @@ class PageBlockCreate extends Component {
                     biggerId = res.data[i].id
                 }
             }
-            const defaultBlockName = 'Bloque '+(nextBlockNumber??1)
+            const defaultBlockName = 'Trabajo '+(nextWorkNumber??1)
             this.setState({
                 loading: false,
                 biggerId,
                 planificationId,
                 routineId,
-                defaultBlockName, blockName: defaultBlockName,
+                defaultBlockName,
+                newBlockGroupName: newBlockGroupName,
+                newBlockGroupId: newBlockGroupId,
+                blockName: defaultBlockName,
                 exerciseOptions: res.data.map(e => ({key: e.id, value:e.id, text:e.name, createdbyuser: e.createdbyuser.toLowerCase(), comparer: e.name.toLowerCase().trim().replaceAll(' ', '')}))})
         } catch (e) {
             console.error(e)
@@ -119,7 +122,7 @@ class PageBlockCreate extends Component {
 
     async saveExercisesBlockCpt() {
         try {
-            const {exercises, laps, workingInterval, restingInteval, blockName, planificationId, routineId} = this.state
+            const {exercises, laps, workingInterval, restingInteval, blockName, planificationId, routineId, newBlockGroupName,newBlockGroupId} = this.state
             this.setState({saving: true})
 
             if(!workingInterval || !restingInteval || !laps) {
@@ -130,6 +133,8 @@ class PageBlockCreate extends Component {
                 planificationId: parseInt(planificationId,10),
                 routineId: !!routineId ? parseInt(routineId,10) : null,
                 blockName: blockName,
+                newBlockGroupName,
+                newBlockGroupId,
                 exercises: exercises.map(e => ({id:e.key, name:e.text})),
                 laps: parseInt(laps, 10),
                 workingInterval: parseInt(workingInterval, 10),
@@ -144,7 +149,7 @@ class PageBlockCreate extends Component {
 
     async saveExercisesBlockFree() {
         try {
-            const {exercises, laps, exeRestingInteval, restingInteval, blockName, planificationId, routineId} = this.state
+            const {exercises, laps, exeRestingInteval, restingInteval, blockName, planificationId, routineId, newBlockGroupName,newBlockGroupId} = this.state
             this.setState({saving: true})
 
             if(!exeRestingInteval || !restingInteval || !laps) {
@@ -155,6 +160,8 @@ class PageBlockCreate extends Component {
                 planificationId: parseInt(planificationId,10),
                 routineId: !!routineId ? parseInt(routineId,10) : null,
                 blockName: blockName,
+                newBlockGroupName,
+                newBlockGroupId,
                 exercises: exercises.map(e => ({id:e.key, name:e.text, reps: parseInt(e.reps, 10), type: e.type})),
                 laps: parseInt(laps, 10),
                 restingInteval: parseInt(restingInteval, 10),
@@ -173,7 +180,7 @@ class PageBlockCreate extends Component {
 
     async saveExercisesBlockAmrap() {
         try {
-            const {exercises, blockName, blockDuration, planificationId, routineId} = this.state
+            const {exercises, blockName, blockDuration, planificationId, routineId,newBlockGroupName, newBlockGroupId} = this.state
             this.setState({saving: true})
 
             if(!blockDuration) {
@@ -184,6 +191,8 @@ class PageBlockCreate extends Component {
                 planificationId: parseInt(planificationId,10),
                 routineId: !!routineId ? parseInt(routineId,10) : null,
                 blockName: blockName,
+                newBlockGroupName,
+                newBlockGroupId,
                 exercises: exercises.map(e => ({id:e.key, name:e.text, reps: parseInt(e.reps, 10)})),
                 blockDuration: parseInt(blockDuration,10),
                 laps: null,
@@ -199,13 +208,15 @@ class PageBlockCreate extends Component {
 
     async saveExercisesBlockCombo() {
         try {
-            const {exercises, laps, blockName, planificationId, routineId} = this.state
+            const {exercises, laps, blockName, planificationId, routineId,newBlockGroupName,newBlockGroupId} = this.state
             this.setState({saving: true})
 
             const request = {
                 planificationId: parseInt(planificationId,10),
                 routineId: !!routineId ? parseInt(routineId,10) : null,
                 blockName: blockName,
+                newBlockGroupName,
+                newBlockGroupId,
                 exercises: exercises.map(e => ({id:e.key, name:e.text})),
                 laps: parseInt(laps, 10),
             }
@@ -218,47 +229,20 @@ class PageBlockCreate extends Component {
 
     async saveExerciseBlockPir() {
         try {
-            const {exercises, laps, blockName, planificationId, routineId} = this.state
+            const {exercises, laps, blockName, planificationId, routineId,newBlockGroupName,newBlockGroupId} = this.state
             this.setState({saving: true})
 
             const request = {
                 planificationId: parseInt(planificationId,10),
                 routineId: !!routineId ? parseInt(routineId,10) : null,
                 blockName: blockName,
+                newBlockGroupName,
+                newBlockGroupId,
                 exercises: exercises.map(e => ({id:e.key, name:e.text, reps: parseInt(e.reps, 10)})),
                 laps: parseInt(laps, 10),
             }
             const res = await saveExerciseBlockPir(request)
             this.redirectToParentRoutine(res.data.routineId)
-        } catch (e) {
-            console.log(e)
-        }
-    }
-
-    async saveExercisesBlock() {
-        try {
-            const {exercises, laps, lapRest, exeRest, lapRestDefault, exeRestDefault} = this.state
-            this.setState({saving: true})
-
-            if(!lapRest.interval) {
-                lapRest.interval = lapRestDefault
-            }
-            if(!exeRest.interval) {
-                exeRest.interval = exeRestDefault
-            }
-
-            lapRest.amount = parseFloat(lapRest.amount)
-            exeRest.amount = parseFloat(exeRest.amount)
-
-            const request = {
-                exercises: exercises.map(e => ({id:e.key, reps: parseInt(e.reps, 10)})),
-                laps: parseInt(laps, 10),
-                lapRest,
-                exeRest
-            }
-            const res = await saveExercisesBlock(request)
-
-            this.setState({saving: false})
         } catch (e) {
             console.log(e)
         }
@@ -274,7 +258,7 @@ class PageBlockCreate extends Component {
         } = this.state;
 
         const secondaryActions = [
-            {func: () => this.saveExercisesBlock(), description: 'Guardar'},
+            {func: () => {}, description: 'Guardar'},
         ]
 
         switch (id) {
@@ -306,7 +290,7 @@ class PageBlockCreate extends Component {
         }
 
         this.context.dispatch(setData({secondaryActions: secondaryActions}))
-        this.setState({showModal: false, blockType: id, exercises: [...exercisesBuffer], exercisesBuffer: [], blockName: blockName+': '+name})
+        this.setState({showModal: false, blockType: id, exercises: [...exercisesBuffer], exercisesBuffer: [], blockName: blockName+' - '+name})
     }
 
     repeatExercise(item, atTop) {
@@ -536,7 +520,7 @@ class PageBlockCreate extends Component {
 
     render() {
         const {state: {permissions: {createNewExercises}}} = this.context
-        const {blockType, exerciseOptions, exercisesBuffer, blockName, showModal} = this.state;
+        const {blockType, exerciseOptions, exercisesBuffer,newBlockGroupName, blockName, showModal} = this.state;
 
         return (
             <>
@@ -544,7 +528,7 @@ class PageBlockCreate extends Component {
                     <Button className={'header-back-arrow'} icon onClick={() => this.redirectBackToRoutine()}>
                         <Icon name={'arrow left'}/>
                     </Button>
-                    {blockName}
+                    {newBlockGroupName+': '+blockName}
                     {blockType && <Icon name={'edit outline'} className={'header-icon'} onClick={() => this.editBlock()}/>}
                 </Header>
                 {
@@ -553,7 +537,6 @@ class PageBlockCreate extends Component {
                         <div className={'scrolling-no-scrollbar'} style={{height: '90%'}}>
                             {createNewExercises && <Message>
                                 <b>No encontras un ejercicio? Agregalo haciendo click en "Agregar"</b>
-                                <br/><br/>Necesitas repetir un ejercicio? Podes hacerlo una vez generado el bloque. (Combos)
                             </Message>}
                             <Button style={{marginBottom: '1em'}} primary fluid onClick={() => this.setState({showModal: true})}>Generar</Button>
                             <div ref={this.dropdownRef}>

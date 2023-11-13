@@ -347,16 +347,21 @@ func (o *Endpoints) getRoutineDetails(w http.ResponseWriter, r *http.Request, tx
 		Id:                      header.Routineid,
 		Name:                    header.Routinename,
 		AlreadyMarkedByAthetles: util.PBool(*header.TimesMarked > 0),
-		Blocks:                  make([]GetRoutineDetailsBlock, 0),
+		BlockGroupers:           make([]GetRoutineDetailsBlockGrouper, 0),
 	}
 
+	lastGrouperId := int64(0)
 	lastBlockId := int64(0)
+	lastBlockIndex := 0
+	var grouper *GetRoutineDetailsBlockGrouper
 	var block *GetRoutineDetailsBlock
 	for _, re := range result {
-		if *re.Blockgroupid != lastBlockId {
+		if *re.GrouperId != lastGrouperId {
+			lastGrouperId = *re.GrouperId
 			lastBlockId = *re.Blockgroupid
-			if block != nil {
-				res.Blocks = append(res.Blocks, *block)
+			lastBlockIndex = 0
+			if grouper != nil {
+				res.BlockGroupers = append(res.BlockGroupers, *grouper)
 			}
 			block = &GetRoutineDetailsBlock{
 				Id:              re.Blockgroupid,
@@ -370,17 +375,41 @@ func (o *Endpoints) getRoutineDetails(w http.ResponseWriter, r *http.Request, tx
 					{Name: re.Exercisename, Secs: re.Secs, Reps: re.Reps, VideoCode: re.VideoCode},
 				},
 			}
+			grouper = &GetRoutineDetailsBlockGrouper{
+				Id:     re.GrouperId,
+				Name:   re.GrouperName,
+				Blocks: make([]GetRoutineDetailsBlock, 0),
+			}
+			grouper.Blocks = append(grouper.Blocks, *block)
 		} else {
-			block.Exercises = append(block.Exercises, GetRoutineDetailsBlockExercise{
-				Name:      re.Exercisename,
-				Secs:      re.Secs,
-				Reps:      re.Reps,
-				VideoCode: re.VideoCode,
-			})
+			if *re.Blockgroupid != lastBlockId {
+				lastBlockId = *re.Blockgroupid
+				lastBlockIndex++
+				block = &GetRoutineDetailsBlock{
+					Id:              re.Blockgroupid,
+					Name:            re.Blockgroupname,
+					Duration:        re.BlockDuration,
+					Type:            re.Type,
+					Laps:            re.Laps,
+					Exerestinterval: re.Exerestinterval,
+					Laprestinterval: re.Laprestinterval,
+					Exercises: []GetRoutineDetailsBlockExercise{
+						{Name: re.Exercisename, Secs: re.Secs, Reps: re.Reps, VideoCode: re.VideoCode},
+					},
+				}
+				grouper.Blocks = append(grouper.Blocks, *block)
+			} else {
+				grouper.Blocks[lastBlockIndex].Exercises = append(grouper.Blocks[lastBlockIndex].Exercises, GetRoutineDetailsBlockExercise{
+					Name:      re.Exercisename,
+					Secs:      re.Secs,
+					Reps:      re.Reps,
+					VideoCode: re.VideoCode,
+				})
+			}
 		}
 	}
 	//last block
-	res.Blocks = append(res.Blocks, *block)
+	res.BlockGroupers = append(res.BlockGroupers, *grouper)
 
 	o.Respond(w, &res, http.StatusOK)
 }
@@ -405,40 +434,40 @@ func (o *Endpoints) getSharedRoutineDetails(w http.ResponseWriter, r *http.Reque
 			o.Respond(w, nil, http.StatusUnauthorized)
 		} else {
 			header := db.GetRoutineHeader(o.db, tx, t.RoutineId, t.CreatorId)
-			result := db.GetRoutineDetails(o.db, tx, t.RoutineId, t.CreatorId)
+			//result := db.GetRoutineDetails(o.db, tx, t.RoutineId, t.CreatorId)
 			res := &GetRoutineDetailsResponse{
 				Id:                      header.Routineid,
 				Name:                    header.Routinename,
 				AlreadyMarkedByAthetles: util.PBool(*header.TimesMarked > 0),
-				Blocks:                  make([]GetRoutineDetailsBlock, 0),
+				//Blocks:                  make([]GetRoutineDetailsBlock, 0),
 			}
 
-			lastBlockId := int64(0)
-			var block *GetRoutineDetailsBlock
-			for _, re := range result {
-				if *re.Blockgroupid != lastBlockId {
-					lastBlockId = *re.Blockgroupid
-					if block != nil {
-						res.Blocks = append(res.Blocks, *block)
-					}
-					block = &GetRoutineDetailsBlock{
-						Id:              re.Blockgroupid,
-						Name:            re.Blockgroupname,
-						Duration:        re.BlockDuration,
-						Type:            re.Type,
-						Laps:            re.Laps,
-						Exerestinterval: re.Exerestinterval,
-						Laprestinterval: re.Laprestinterval,
-						Exercises: []GetRoutineDetailsBlockExercise{
-							{Name: re.Exercisename, Secs: re.Secs, Reps: re.Reps, VideoCode: re.VideoCode},
-						},
-					}
-				} else {
-					block.Exercises = append(block.Exercises, GetRoutineDetailsBlockExercise{Name: re.Exercisename, Secs: re.Secs, Reps: re.Reps, VideoCode: re.VideoCode})
-				}
-			}
+			//lastBlockId := int64(0)
+			//var block *GetRoutineDetailsBlock
+			//for _, re := range result {
+			//	if *re.Blockgroupid != lastBlockId {
+			//		lastBlockId = *re.Blockgroupid
+			//		if block != nil {
+			//			res.Blocks = append(res.Blocks, *block)
+			//		}
+			//		block = &GetRoutineDetailsBlock{
+			//			Id:              re.Blockgroupid,
+			//			Name:            re.Blockgroupname,
+			//			Duration:        re.BlockDuration,
+			//			Type:            re.Type,
+			//			Laps:            re.Laps,
+			//			Exerestinterval: re.Exerestinterval,
+			//			Laprestinterval: re.Laprestinterval,
+			//			Exercises: []GetRoutineDetailsBlockExercise{
+			//				{Name: re.Exercisename, Secs: re.Secs, Reps: re.Reps, VideoCode: re.VideoCode},
+			//			},
+			//		}
+			//	} else {
+			//		block.Exercises = append(block.Exercises, GetRoutineDetailsBlockExercise{Name: re.Exercisename, Secs: re.Secs, Reps: re.Reps, VideoCode: re.VideoCode})
+			//	}
+			//}
 			//last block
-			res.Blocks = append(res.Blocks, *block)
+			//res.Blocks = append(res.Blocks, *block)
 
 			o.Respond(w, &res, http.StatusOK)
 		}
@@ -532,6 +561,7 @@ func (o *Endpoints) listRoutines(w http.ResponseWriter, r *http.Request, tx *sql
 			Name:            routines[i].Name,
 			PlanificationId: routines[i].PlanificationId,
 			BlockCount:      routines[i].BlockCount,
+			WorkCount:       routines[i].WorkCount,
 			Completed:       routines[i].Completed,
 		}
 
@@ -592,7 +622,11 @@ func (o *Endpoints) saveExerciseBlockValidations(r *http.Request, tx *sqlx.Tx, r
 		panic(errors.New("unauthorized to modify the requested planification"))
 	}
 
-	if len(exercises) == 0 || len(exercises) > *o.conf.ExercisesPerBlockLimit {
+	if len(exercises) == 0 {
+		panic(errors.New("you are not adding any exercises but at least one is required"))
+	}
+
+	if len(exercises) > *o.conf.ExercisesPerBlockLimit {
 		panic(fmt.Errorf("you cannot add more than %d to an exercises block", *o.conf.ExercisesPerBlockLimit))
 	}
 
@@ -609,7 +643,7 @@ func (o *Endpoints) saveExerciseBlockValidations(r *http.Request, tx *sqlx.Tx, r
 
 		header := db.GetRoutineHeader(o.db, tx, *routineId, userId)
 		if *header.TimesMarked > 0 {
-			panic(errors.New("you cannot add more exercise blocks to a routine that was already marked by any athetle"))
+			panic(errors.New("you cannot add more exercise blocks to a routine that was already marked by any athlete"))
 		}
 
 		blocks := db.CalculateRoutineBlocksAmount(o.db, tx, *routineId)
@@ -701,7 +735,9 @@ func (o *Endpoints) saveExercisesBlockFree(w http.ResponseWriter, r *http.Reques
 			})
 		}
 	}
-	db.SaveExercisesBlock(o.db, tx, *routineId, "cpt", *t.BlockName, nil, t.Laps, t.RestingInteval, t.ExeRestingInteval, exercises)
+	db.SaveExercisesBlock(o.db, tx, *routineId, "cpt",
+		*t.BlockName, nil, t.Laps, t.RestingInteval,
+		t.ExeRestingInteval, exercises, *t.NewBlockGroupName, t.NewBlockGroupId)
 	o.Respond(w, &SaveExercisesBlockCptResponse{RoutineId: routineId}, http.StatusOK)
 }
 
@@ -718,7 +754,8 @@ func (o *Endpoints) saveExercisesBlockCpt(w http.ResponseWriter, r *http.Request
 			Secs:       t.WorkingInterval,
 		})
 	}
-	db.SaveExercisesBlock(o.db, tx, *routineId, "cpt", *t.BlockName, nil, t.Laps, t.RestingInteval, t.RestingInteval, exercises)
+	db.SaveExercisesBlock(o.db, tx, *routineId, "cpt", *t.BlockName,
+		nil, t.Laps, t.RestingInteval, t.RestingInteval, exercises, *t.NewBlockGroupName, t.NewBlockGroupId)
 	o.Respond(w, &SaveExercisesBlockCptResponse{RoutineId: routineId}, http.StatusOK)
 }
 
@@ -735,7 +772,8 @@ func (o *Endpoints) saveExercisesBlockAmrap(w http.ResponseWriter, r *http.Reque
 			Reps:       e.Reps,
 		})
 	}
-	db.SaveExercisesBlock(o.db, tx, *routineId, "amrap", *t.BlockName, t.BlockDuration, nil, nil, nil, exercises)
+	db.SaveExercisesBlock(o.db, tx, *routineId, "amrap", *t.BlockName,
+		t.BlockDuration, nil, nil, nil, exercises, *t.NewBlockGroupName, t.NewBlockGroupId)
 	o.Respond(w, &SaveExercisesBlockAmrapResponse{RoutineId: routineId}, http.StatusOK)
 }
 
@@ -751,7 +789,8 @@ func (o *Endpoints) saveExercisesBlockCombo(w http.ResponseWriter, r *http.Reque
 			ExerciseId: e.Id,
 		})
 	}
-	db.SaveExercisesBlock(o.db, tx, *routineId, "cbo", *t.BlockName, nil, t.Laps, nil, nil, exercises)
+	db.SaveExercisesBlock(o.db, tx, *routineId, "cbo", *t.BlockName, nil,
+		t.Laps, nil, nil, exercises, *t.NewBlockGroupName, t.NewBlockGroupId)
 	o.Respond(w, &SaveExercisesBlockComboResponse{RoutineId: routineId}, http.StatusOK)
 }
 
@@ -768,7 +807,8 @@ func (o *Endpoints) saveExerciseBlockPir(w http.ResponseWriter, r *http.Request,
 			Reps:       e.Reps,
 		})
 	}
-	db.SaveExercisesBlock(o.db, tx, *routineId, "pir", *t.BlockName, nil, t.Laps, nil, nil, exercises)
+	db.SaveExercisesBlock(o.db, tx, *routineId, "pir", *t.BlockName, nil,
+		t.Laps, nil, nil, exercises, *t.NewBlockGroupName, t.NewBlockGroupId)
 	o.Respond(w, &SaveExercisesBlockPirResponse{RoutineId: routineId}, http.StatusOK)
 }
 

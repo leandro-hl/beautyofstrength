@@ -41,6 +41,8 @@ type GetRoutineHeaderQuery struct {
 }
 
 type GetRoutineDetailsQuery struct {
+	GrouperId       *int64  `json:"grouperid"`
+	GrouperName     *string `json:"groupername"`
 	Blockgroupid    *int64  `json:"blockgroupid"`
 	Blockgroupname  *string `json:"blockgroupname"`
 	BlockDuration   *int    `json:"blockgroupduration"`
@@ -59,6 +61,7 @@ type ListRoutinesQuery struct {
 	Name            *string `json:"name"`
 	PlanificationId *int64  `json:"planification_id"`
 	BlockCount      *int    `json:"blockcount"`
+	WorkCount       *int    `json:"workcount"`
 	Completed       *bool   `json:"completed"`
 }
 
