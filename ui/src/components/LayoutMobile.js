@@ -16,7 +16,7 @@ class LayoutMobile extends Component {
             <>
                 {withTopBar && <TopMenuBar/>}
                 <Segment basic style={{
-                    height: noBottomBar? '92%' : '85%',
+                    height: noBottomBar? '100%' : '90%',
                     overflowY: 'scroll',
                     overflowX: 'hidden',
                     paddingTop: 20

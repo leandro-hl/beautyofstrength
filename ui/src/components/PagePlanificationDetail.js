@@ -72,7 +72,7 @@ class PagePlanificationDetail extends Component {
         if (isOwner) {
             secondaryActions.push({disabled: !createManyRoutines && routines.length>0,func: () => this.redirectToCreateRoutine(), description: 'Agregar una Rutina'})
         }
-        this.context.dispatch(setData({secondaryActions: secondaryActions}))
+        this.context.dispatch(setData({secondaryActions: secondaryActions, noBottomBar: false}))
     }
 
     redirectToRoutine(id) {
