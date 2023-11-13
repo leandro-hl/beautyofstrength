@@ -63,7 +63,7 @@ class PagePlanificationList extends Component {
         try {
             const {newPlanificationName} = this.state
             const res = await createPlanification({name: newPlanificationName});
-            this.redirectToPlanificationDays({id: res.data.id, name: newPlanificationName})
+            this.redirectToPlanificationDays({id: res.data.id, name: newPlanificationName, owner: true})
         } catch (e) {
             console.error(e)
         }
