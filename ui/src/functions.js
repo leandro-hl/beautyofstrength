@@ -83,6 +83,13 @@ export function queryEncodedData(loc, data) {
 
     return 'dt='+btoa(JSON.stringify(data))
 }
+
+export function capitalize(word) {
+    const firstLetter = word[0].toUpperCase()
+    const rest = word.substring(1,word.length).toLowerCase()
+    return firstLetter+rest
+}
+
 export function queryData(loc) {
     try {
         const d = queryParam(loc, 'dt')

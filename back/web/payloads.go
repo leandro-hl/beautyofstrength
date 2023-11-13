@@ -10,23 +10,16 @@ type SignInRequest struct {
 	Password *string `json:"password"`
 }
 
-type SaveExercisesBlockRequest struct {
-	RoutineId *int64            `json:"routineId"`
-	Exercises []ExerciseRequest `json:"exercises"`
-	Laps      *int              `json:"laps"`
-	BlockName *string           `json:"blockName"`
-	ExeRest   RestingTime       `json:"exeRest"`
-	LapRest   RestingTime       `json:"lapRest"`
-}
-
 type SaveExercisesBlockCptRequest struct {
-	RoutineId       *int64            `json:"routineId"`
-	PlanificationId *int64            `json:"planificationId"`
-	Exercises       []ExerciseRequest `json:"exercises"`
-	Laps            *int              `json:"laps"`
-	BlockName       *string           `json:"blockName"`
-	WorkingInterval *int              `json:"workingInterval"`
-	RestingInteval  *int              `json:"restingInteval"`
+	RoutineId         *int64            `json:"routineId"`
+	PlanificationId   *int64            `json:"planificationId"`
+	Exercises         []ExerciseRequest `json:"exercises"`
+	Laps              *int              `json:"laps"`
+	BlockName         *string           `json:"blockName"`
+	NewBlockGroupId   *int64            `json:"newBlockGroupId"`
+	NewBlockGroupName *string           `json:"newBlockGroupName"`
+	WorkingInterval   *int              `json:"workingInterval"`
+	RestingInteval    *int              `json:"restingInteval"`
 }
 
 type SaveExercisesBlockFreeRequest struct {
@@ -35,24 +28,30 @@ type SaveExercisesBlockFreeRequest struct {
 	Exercises         []ExerciseRequest `json:"exercises"`
 	Laps              *int              `json:"laps"`
 	BlockName         *string           `json:"blockName"`
+	NewBlockGroupId   *int64            `json:"newBlockGroupId"`
+	NewBlockGroupName *string           `json:"newBlockGroupName"`
 	RestingInteval    *int              `json:"restingInteval"`
 	ExeRestingInteval *int              `json:"exeRestingInteval"`
 }
 
 type SaveExercisesBlockAmrapRequest struct {
-	RoutineId       *int64            `json:"routineId"`
-	PlanificationId *int64            `json:"planificationId"`
-	Exercises       []ExerciseRequest `json:"exercises"`
-	BlockDuration   *int              `json:"blockDuration"`
-	BlockName       *string           `json:"blockName"`
+	RoutineId         *int64            `json:"routineId"`
+	PlanificationId   *int64            `json:"planificationId"`
+	Exercises         []ExerciseRequest `json:"exercises"`
+	BlockDuration     *int              `json:"blockDuration"`
+	BlockName         *string           `json:"blockName"`
+	NewBlockGroupId   *int64            `json:"newBlockGroupId"`
+	NewBlockGroupName *string           `json:"newBlockGroupName"`
 }
 
 type SaveExercisesBlockComboRequest struct {
-	RoutineId       *int64            `json:"routineId"`
-	PlanificationId *int64            `json:"planificationId"`
-	Exercises       []ExerciseRequest `json:"exercises"`
-	BlockName       *string           `json:"blockName"`
-	Laps            *int              `json:"laps"`
+	RoutineId         *int64            `json:"routineId"`
+	PlanificationId   *int64            `json:"planificationId"`
+	Exercises         []ExerciseRequest `json:"exercises"`
+	BlockName         *string           `json:"blockName"`
+	NewBlockGroupId   *int64            `json:"newBlockGroupId"`
+	NewBlockGroupName *string           `json:"newBlockGroupName"`
+	Laps              *int              `json:"laps"`
 }
 
 type SaveExercisesBlockComboResponse struct {
@@ -60,11 +59,13 @@ type SaveExercisesBlockComboResponse struct {
 }
 
 type SaveExercisesBlockPirRequest struct {
-	RoutineId       *int64            `json:"routineId"`
-	PlanificationId *int64            `json:"planificationId"`
-	Exercises       []ExerciseRequest `json:"exercises"`
-	BlockName       *string           `json:"blockName"`
-	Laps            *int              `json:"laps"`
+	RoutineId         *int64            `json:"routineId"`
+	PlanificationId   *int64            `json:"planificationId"`
+	Exercises         []ExerciseRequest `json:"exercises"`
+	BlockName         *string           `json:"blockName"`
+	NewBlockGroupId   *int64            `json:"newBlockGroupId"`
+	NewBlockGroupName *string           `json:"newBlockGroupName"`
+	Laps              *int              `json:"laps"`
 }
 
 type SaveExercisesBlockPirResponse struct {
@@ -99,10 +100,16 @@ type SaveUserTrainedTodayRequest struct {
 }
 
 type GetRoutineDetailsResponse struct {
-	Id                      *int64                   `json:"id"`
-	Name                    *string                  `json:"name"`
-	AlreadyMarkedByAthetles *bool                    `json:"alreadyMarkedByAthetles"`
-	Blocks                  []GetRoutineDetailsBlock `json:"blocks"`
+	Id                      *int64                          `json:"id"`
+	Name                    *string                         `json:"name"`
+	AlreadyMarkedByAthetles *bool                           `json:"alreadyMarkedByAthetles"`
+	BlockGroupers           []GetRoutineDetailsBlockGrouper `json:"blockGroupers"`
+}
+
+type GetRoutineDetailsBlockGrouper struct {
+	Id     *int64                   `json:"id"`
+	Name   *string                  `json:"name"`
+	Blocks []GetRoutineDetailsBlock `json:"blocks"`
 }
 
 type GetRoutineDetailsBlock struct {
@@ -198,8 +205,9 @@ type ListRoutinesResponse struct {
 type ListRoutinesRoutineResponse struct {
 	Id              *int    `json:"id"`
 	Name            *string `json:"name"`
-	PlanificationId *int64  `json:"planification_id"`
-	BlockCount      *int    `json:"blockcount"`
+	PlanificationId *int64  `json:"planificationId"`
+	BlockCount      *int    `json:"blockCount"`
+	WorkCount       *int    `json:"workCount"`
 	Completed       *bool   `json:"completed"`
 	IsActionable    bool    `json:"isActionable"`
 	IsStartOfWeek   bool    `json:"isStartOfWeek"`

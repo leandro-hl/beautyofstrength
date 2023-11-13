@@ -38,7 +38,7 @@ export class ModalTrainingBlockType extends Component {
         const disabled = (p) => (p.id !== 'cpt' && p.id !== 'amrap' && p.id !== 'cbo' && p.id !== 'pir' && p.id !== 'free' && p.id !== 'spr')
         return (
             <Modal dimmer={'blurring'} size="mini" open={this.props.showModal} onClose={() => this.handleClose()}>
-                <Modal.Header>Elegi el tipo de bloque</Modal.Header>
+                <Modal.Header>Elegi el tipo de trabajo</Modal.Header>
                 <Modal.Content>
                     {types.map(p => (<Segment
                         disabled={disabled(p)}
