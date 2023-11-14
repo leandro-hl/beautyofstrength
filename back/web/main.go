@@ -118,6 +118,7 @@ func main() {
 	// Start server
 	go func() {
 		l.Println("Starting server.")
+		defer db.Close(dbs)
 
 		var err error
 		err = s.ListenAndServe()
@@ -131,7 +132,6 @@ func main() {
 			l.Printf("Error starting server: %s\n", err)
 			os.Exit(1)
 		}
-		db.Close(dbs)
 	}()
 
 	// trap sigterm or interrupt and gracefully shutdown the server
