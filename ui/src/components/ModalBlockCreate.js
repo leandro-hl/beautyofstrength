@@ -1,7 +1,7 @@
 import React, {Component} from "react";
 import {Button, Input, Modal} from "semantic-ui-react";
 
-export class ModalPlanificationCreate extends Component {
+export class ModalBlockCreate extends Component {
     render() {
         return (
             <Modal
@@ -9,14 +9,14 @@ export class ModalPlanificationCreate extends Component {
                 size={"tiny"}
             >
                 <Modal.Header>
-                    Nueva Planificacion
+                    Nuevo Bloque
                 </Modal.Header>
                 <Modal.Content>
-                    <Input fluid placeholder='Nombre' onChange={(e, {value}) => this.props.onNewPlanificationName(value)} />
+                    <Input fluid placeholder='Nombre' onChange={(e, {value}) => this.props.onChange(value)} />
                 </Modal.Content>
                 <Modal.Actions>
-                    <Button secondary onClick={() => this.props.handleClose()}>Cancelar</Button>
-                    <Button primary onClick={() => this.props.handleConfirm()}>Crear</Button>
+                    <Button secondary onClick={() => this.props.onClose()}>Cancelar</Button>
+                    <Button primary onClick={() => this.props.onConfirm()}>Crear</Button>
                 </Modal.Actions>
             </Modal>
         )

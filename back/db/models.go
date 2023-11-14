@@ -43,15 +43,22 @@ type Exercise struct {
 	CreatedDate         time.Time `json:"createddate"`
 }
 
+type BlockGroupGrouper struct {
+	Id        *int64  `json:"id"`
+	Name      *string `json:"name"`
+	RoutineId *int64  `json:"routine_id"`
+}
+
 type BlockGroup struct {
-	Id              *int    `json:"id"`
-	Name            *string `json:"name"`
-	Duration        *int    `json:"duration"`
-	Laps            *int    `json:"laps"`
-	Type            *string `json:"type"`
-	LapRestInterval *int    `json:"lapRestInterval"`
-	ExeRestInterval *int    `json:"exeRestInterval"`
-	RoutineId       *int64  `json:"routine_id"`
+	Id                  *int64  `json:"id"`
+	Name                *string `json:"name"`
+	Duration            *int    `json:"duration"`
+	Laps                *int    `json:"laps"`
+	Type                *string `json:"type"`
+	LapRestInterval     *int    `json:"lapRestInterval"`
+	ExeRestInterval     *int    `json:"exeRestInterval"`
+	RoutineId           *int64  `json:"routine_id"`
+	BlockGroupGrouperId *int64  `json:"blockgroupgrouper_id"`
 }
 
 type ExerciseBlockGroup struct {
