@@ -231,7 +231,12 @@ class PageRoutineDetail extends Component{
                                     )
                                 })}
                             </div>
-                            <Divider horizontal><Icon name={'plus'} onClick={() => this.addWorkToGrouper(bg,j)}/></Divider>
+                            {
+                                (!isShared && isOwner) &&
+                                <Divider horizontal>
+                                    <Icon name={'plus'} onClick={() => this.addWorkToGrouper(bg, j)}/>
+                                </Divider>
+                            }
                         </Segment>
                     ))}
                 </Accordion>
