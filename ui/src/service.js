@@ -60,6 +60,10 @@ export function savePlanificationEditions(payload) {
     return axios.post("savePlanificationEditions", payload)
 }
 
+export function saveRoutineEditions(payload) {
+    return axios.post("saveRoutineEditions", payload)
+}
+
 export function saveExercisesBlock(payload) {
     return axios.post("saveExercisesBlock", payload)
 }

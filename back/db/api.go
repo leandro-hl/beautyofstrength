@@ -95,6 +95,7 @@ func GetRoutineHeader(db *sqlx.DB, tx *sqlx.Tx, routineId int64, userId int64) *
 		select
 			r.id routineid,
 			r.name routinename,
+			r.difficulty,
 			count(uh.id) timesmarked
 			from routine r
 		inner join planification p on p.id = r.planification_id
@@ -150,6 +151,7 @@ func ListActiveRoutinesICreated(db *sqlx.DB, tx *sqlx.Tx, planificationId int64,
 		    r.id, 
 		    r.name, 
 		    r.planification_id, 
+		    r.difficulty,
 		    count(distinct bg.id) as blockcount,
 		    count(b.id) as workcount, 
 		    u2.completed from routine r 
@@ -175,6 +177,7 @@ func ListActiveRoutines(db *sqlx.DB, tx *sqlx.Tx, planificationId, userId int64)
 		    r.id, 
 		    r.name, 
 		    r.planification_id, 
+		    r.difficulty,
 		    count(distinct bg.id) as blockcount,
 		    count(b.id) as workcount, 
 		    u2.completed from routine r 
@@ -305,6 +308,7 @@ func CreateRoutine(db *sqlx.DB, tx *sqlx.Tx, name string, planificationId int64)
 		&Routine{
 			Name:            &name,
 			PlanificationId: &planificationId,
+			Difficulty:      util.PInt(1),
 		})
 	return id
 }
@@ -343,6 +347,19 @@ func UpdatePlanificationDays(db *sqlx.DB, tx *sqlx.Tx, planificationId int64, da
 	util.Check(err)
 
 	stmt.Exec(days, planificationId)
+}
+
+func UpdateGrouperNames(db *sqlx.DB, tx *sqlx.Tx, planificationId, routineId, grouperId int64, name string) {
+	query := `
+		update blockgroupgrouper bg set name=$1 
+		from routine r
+		where bg.id=$4 
+		  and bg.routine_id = r.id 
+		  and r.id=$2 and r.planification_id=$3 and r.active=true`
+	stmt, err := getTxPreparedStmt(db, tx, query)
+	util.Check(err)
+
+	stmt.Exec(name, routineId, planificationId, grouperId)
 }
 
 func CreateExercise(db *sqlx.DB, tx *sqlx.Tx, name string, userAccountId int64) *int {

@@ -230,12 +230,40 @@ body > div#root {
   font-size: unset !important;
 }
 
+.padding-top-1 {
+  padding-top: 1em !important;
+}
+
+.padding-bottom-1 {
+  padding-bottom: 1em !important;
+}
+
+.padding-left-1 {
+  padding-left: 1em !important;
+}
+
+.padding-right-1 {
+  padding-right: 1em !important;
+}
+
+.padding-left-half {
+  padding-left: 0.5em !important;
+}
+
+.padding-right-half {
+  padding-right: 0.5em !important;
+}
+
 .no-padding {
   padding: 0px !important;
 }
 
 .no-top-padding {
   padding-top: 0px !important;
+}
+
+.no-bottom-padding {
+  padding-bottom: 0px !important;
 }
 
 .no-right-padding {
@@ -256,6 +284,18 @@ body > div#root {
 
 .no-bottom-margin {
   margin-bottom: 0px !important;
+}
+
+.input-header > input {
+  font-size: 1.25rem !important;
+}
+
+.input-centered > input {
+  text-align: center !important;
+}
+
+.margin-bottom-1 {
+  margin-bottom: 1em !important;
 }
 
 .full-width {

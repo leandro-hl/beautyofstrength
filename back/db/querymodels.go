@@ -37,6 +37,7 @@ type GetUserAccountDetailsQuery struct {
 type GetRoutineHeaderQuery struct {
 	Routineid   *int64  `json:"routineid"`
 	Routinename *string `json:"routinename"`
+	Difficulty  *int    `json:"difficulty"`
 	TimesMarked *int    `json:"timesmarked"`
 }
 
@@ -60,6 +61,7 @@ type ListRoutinesQuery struct {
 	Id              *int    `json:"id"`
 	Name            *string `json:"name"`
 	PlanificationId *int64  `json:"planification_id"`
+	Difficulty      *int    `json:"difficulty"`
 	BlockCount      *int    `json:"blockcount"`
 	WorkCount       *int    `json:"workcount"`
 	Completed       *bool   `json:"completed"`

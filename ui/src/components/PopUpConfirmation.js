@@ -1,0 +1,97 @@
+import React, {Component} from "react";
+import {Button, Grid, Icon, Popup} from "semantic-ui-react";
+
+export class PopUpConfirmation extends Component {
+    constructor(props) {
+        super(props);
+
+        this.state = {
+            showConfirmation: false,
+            isManaged: props.isManaged,
+            title: props.title,
+            primary: props.primary,
+            secondary: props.secondary,
+            trigger: props.trigger,
+            onPrimaryAction: props.onPrimaryAction ? props.onPrimaryAction :  () => {},
+            onSecondaryAction: props.onSecondaryAction ? props.onSecondaryAction :  () => {},
+            onTriggerClick: props.onTriggerClick ? props.onTriggerClick :  () => {},
+        }
+    }
+
+    close() {
+        if (!this.state.isManaged) {
+            this.setState({showConfirmation: false})
+        }
+    }
+
+    open() {
+        if(!this.state.isManaged){
+            this.setState({showConfirmation: true})
+        }
+    }
+
+    onPrimaryAction() {
+        this.close()
+        this.state.onPrimaryAction()
+    }
+
+    onSecondaryAction() {
+        this.close()
+        this.state.onSecondaryAction()
+    }
+
+    onTriggerClick() {
+        this.open()
+        this.state.onTriggerClick()
+    }
+
+    render() {
+        const {
+            title,
+            primary,
+            secondary,
+            showConfirmation,
+            isManaged,
+            trigger
+        } = this.state
+
+        let open = this.props.open
+        let triggerBuf = trigger
+        if (!isManaged) {
+            open = showConfirmation
+            triggerBuf = <Button className={'header-back-arrow'} icon
+                              onClick={() => this.onTriggerClick()}>
+                <Icon name={'close'}/>
+            </Button>
+        }
+
+        return (
+            <Popup
+                size={'small'}
+                trigger={triggerBuf}
+                position={'bottom right'}
+                hoverable
+                open={open}
+            >
+                <Grid>
+                    <Grid.Row>
+                        <Grid.Column>
+                            {title}
+                        </Grid.Column>
+                    </Grid.Row>
+                    <Grid.Row className={'no-top-padding'}>
+                        <Grid.Column>
+                            <Button onClick={() => this.onPrimaryAction()}
+                                    primary style={{position: 'relative', float: 'right'}}>
+                                {primary}
+                            </Button>
+                            <Button onClick={() => this.onSecondaryAction()} secondary style={{position: 'relative', float: 'right'}}>
+                                {secondary}
+                            </Button>
+                        </Grid.Column>
+                    </Grid.Row>
+                </Grid>
+            </Popup>
+        )
+    }
+}
