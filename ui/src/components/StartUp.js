@@ -10,37 +10,11 @@ class StartUp extends Component {
     static contextType = AppContext
     state = {loading: true}
 
-    async loadUserData() {
-        try {
-            const res = await getUserPermissions();
-            this.context.dispatch(setData({permissions: res.data, noMenu: false, secondaryActions:[]}))
-        } catch (e) {
-            console.error(e)
-        }
-    }
-
     setTheme() {
         const {state: {darkTheme}} = this.context
         setTheme(darkTheme)
     }
 
-    async loadLocalEnvironment() {
-        try {
-            const {state: {auth_token}}=this.context
-            if (!auth_token) {
-                const res = await getLocalInfo();
-                axios.defaults.headers.common['Authorization'] = `Bearer ${res.data}`;
-                this.context.dispatch(setData({auth_token: res.data}))
-            } else {
-                axios.defaults.headers.common['Authorization'] = `Bearer ${auth_token}`;
-            }
-        } catch (e) {
-            console.error(e)
-            localStorage.removeItem("state")
-            this.props.history.push('/signin')
-            this.context.dispatch(setData({auth_token: null, noMenu: true, secondaryActions:[]}))
-        }
-    }
     async componentDidMount() {
         const planShareParam = queryParam(this.props, 'pshare')
         const shareParam = queryParam(this.props, 'share')
@@ -54,11 +28,7 @@ class StartUp extends Component {
             window.history.replaceState({}, '', `${url.pathname}?${params}${url.hash}`);
             localStorage.setItem('planification-shared', planShareParam)
         }
-        if (isLocalhost()) {
-            await this.loadLocalEnvironment()
-        }
         this.setTheme()
-        await this.loadUserData()
         this.setState({loading: false})
     }
     render() {

@@ -125,7 +125,7 @@ function ResponseInterceptor({children}) {
             } else if (err.response.status === 401) {
                 //todo: separate test logic from productive one
                 dispatch(setData({auth_token: null, noMenu: true, secondaryActions:[]}))
-                history?.push('/home');
+                history?.push('/signin');
                 localStorage.removeItem("state")
             }
             throw err

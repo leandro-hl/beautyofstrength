@@ -2,7 +2,7 @@ import React, {Component} from "react";
 import {Redirect, Route, withRouter} from "react-router-dom";
 import {AppContext, setData} from "../context";
 import {isLocalhost} from "../functions";
-import {checkAuth} from "../service";
+import {checkAuth, getUserPermissions} from "../service";
 
 class PageRoot extends Component {
     static contextType = AppContext
@@ -14,8 +14,9 @@ class PageRoot extends Component {
                 if (isLocalhost()) {
                     this.context.dispatch(setData({isAuthenticated: true}))
                 } else {
-                    const res = await checkAuth()
-                    this.context.dispatch(setData({isAuthenticated: res.data}))
+                    const a = await checkAuth()
+                    const b = await getUserPermissions();
+                    this.context.dispatch(setData({isAuthenticated: a.data, permissions: b.data, noMenu: false, secondaryActions:[]}))
                 }
             }
         } catch (e) {
@@ -55,7 +56,7 @@ class PageRoot extends Component {
             }
 
              return  <Redirect to={{
-                 pathname: '/signin',
+                 pathname: '/home',
                  search: props.location.search,
                  state: { from: props.location }
              }} />

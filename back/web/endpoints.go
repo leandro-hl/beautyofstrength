@@ -654,7 +654,7 @@ func (o *Endpoints) saveExerciseBlockValidations(r *http.Request, tx *sqlx.Tx, r
 	if *plan == db.Professor {
 		exerciseNamesComparer := make([]ExerciseComparer, 0)
 		sanitizedKeys := make([]string, 0)
-		re := regexp.MustCompile(`[^a-zA-Z0-9áéíóúÁÉÍÓÚñÑüÜ]`)
+		re := regexp.MustCompile(`[^a-zA-Z0-9áéíóúÁÉÍÓÚñÑüÜ/]`)
 		for _, e := range nonExistingExerciseNames {
 			if len(*e.Name) > *o.conf.CustomExerciseNameCharacterLimit {
 				//todo validation mge not supported

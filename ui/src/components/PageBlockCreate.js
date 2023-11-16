@@ -489,7 +489,7 @@ class PageBlockCreate extends Component {
     onAddUnexistingExercise(value) {
         const {exercisesBuffer, exerciseOptions, biggerId} = this.state;
 
-        const regex = /[^a-zA-Z0-9áéíóúüÁÉÍÓÚÜÑñ]/g
+        const regex = /[^a-zA-Z0-9áéíóúüÁÉÍÓÚÜÑñ/]/g
         const sanitizedInput = value.replace(regex, "");
         const ex = exerciseOptions.find(e => e.comparer === sanitizedInput)
 
