@@ -7,23 +7,6 @@ import {checkAuth, getUserPermissions} from "../service";
 class PageRoot extends Component {
     static contextType = AppContext
 
-    async componentDidMount() {
-        try {
-            const {state: {isAuthenticated}} = this.context
-            if (isAuthenticated === undefined) {
-                if (isLocalhost()) {
-                    this.context.dispatch(setData({isAuthenticated: true}))
-                } else {
-                    const a = await checkAuth()
-                    const b = await getUserPermissions();
-                    this.context.dispatch(setData({isAuthenticated: a.data, permissions: b.data, noMenu: false, secondaryActions:[]}))
-                }
-            }
-        } catch (e) {
-            console.error(e)
-        }
-    }
-
     render() {
         const {component: Component, ...rest} = this.props;
         const {state: {
@@ -35,8 +18,12 @@ class PageRoot extends Component {
         }} = this.context
 
         return <Route {...rest} render={(props) => {
-            if (isAuthenticated === undefined) {
-                return <></>
+            if (!isAuthenticated) {
+                return  <Redirect to={{
+                    pathname: '/home',
+                    search: props.location.search,
+                    state: { from: props.location }
+                }} />
             }
 
             if (isAuthenticated && menuhomeprofessor) {
@@ -54,12 +41,6 @@ class PageRoot extends Component {
                     state: { from: props.location }
                 }} />
             }
-
-             return  <Redirect to={{
-                 pathname: '/home',
-                 search: props.location.search,
-                 state: { from: props.location }
-             }} />
         }} />
     }
 }
