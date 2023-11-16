@@ -489,7 +489,8 @@ class PageBlockCreate extends Component {
     onAddUnexistingExercise(value) {
         const {exercisesBuffer, exerciseOptions, biggerId} = this.state;
 
-        const sanitizedInput = value.replace(/[^a-zA-Z0-9]/g, "");
+        const regex = /[^a-zA-Z0-9áéíóúüÁÉÍÓÚÜÑñ]/g
+        const sanitizedInput = value.replace(regex, "");
         const ex = exerciseOptions.find(e => e.comparer === sanitizedInput)
 
         if (!!ex) {
@@ -498,7 +499,7 @@ class PageBlockCreate extends Component {
         } else {
             const words = value.split(' ')
             for (let i = 0; i < words.length; i++) {
-                const sanitizedWord = words[i].replace(/[^a-zA-Z0-9]/g, "");
+                const sanitizedWord = words[i].replace(regex, "");
                 words[i] = capitalize(sanitizedWord)
             }
 

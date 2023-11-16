@@ -102,6 +102,7 @@ type SaveUserTrainedTodayRequest struct {
 type GetRoutineDetailsResponse struct {
 	Id                      *int64                          `json:"id"`
 	Name                    *string                         `json:"name"`
+	Difficulty              *int                            `json:"difficulty"`
 	AlreadyMarkedByAthetles *bool                           `json:"alreadyMarkedByAthetles"`
 	BlockGroupers           []GetRoutineDetailsBlockGrouper `json:"blockGroupers"`
 }
@@ -211,4 +212,13 @@ type ListRoutinesRoutineResponse struct {
 	Completed       *bool   `json:"completed"`
 	IsActionable    bool    `json:"isActionable"`
 	IsStartOfWeek   bool    `json:"isStartOfWeek"`
+}
+
+type EditRoutineRequest struct {
+	PlanificationId *int64 `json:"planificationId"`
+	RoutineId       *int64 `json:"routineId"`
+	NewGrouperNames []struct {
+		Id   *int64  `json:"id"`
+		Name *string `json:"name"`
+	} `json:"newGrouperNames"`
 }

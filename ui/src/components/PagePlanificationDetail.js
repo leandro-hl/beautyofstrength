@@ -6,6 +6,9 @@ import {isLocalhost} from "../functions";
 import {AppContext, setData} from "../context";
 import {ModalRoutineActionatedConfirmation} from "./ModalRoutineActionatedConfirmation";
 import {Chip} from "./Chip";
+import {PopUpDisabledAction} from "./PopUpDisabledAction";
+import {PopUpContinueEditing} from "./PopUpContinueEditing";
+import {PopUpConfirmation} from "./PopUpConfirmation";
 
 class PagePlanificationDetail extends Component {
     static contextType = AppContext
@@ -187,10 +190,6 @@ class PagePlanificationDetail extends Component {
         }
     }
 
-    openDiscardChangesPopUpConfirmation() {
-        this.setState({showDiscardChangesConfirmation: true})
-    }
-
     discardPlanificationChanges() {
         const {routinesBackup, daysBackup} = this.state
         this.setState({
@@ -224,6 +223,11 @@ class PagePlanificationDetail extends Component {
             return <Loader active/>
         }
 
+        const actionable = isOwner
+        const canEdit = !editionMode && isEditable && editPlanification
+        const canShare = !editionMode && sharePlanification && actionable
+        const savingMode = editionMode && isEditable && editPlanification && actionable
+
         let weekNumber = 1
         return (
             <>
@@ -236,37 +240,11 @@ class PagePlanificationDetail extends Component {
                     }
                     {
                         editionMode &&
-                        <Popup
-                            size={'small'}
-                            trigger={<Button className={'header-back-arrow'} icon onClick={() => this.openDiscardChangesPopUpConfirmation()}>
-                                <Icon name={'close'}/>
-                            </Button>}
-                            position={'bottom right'}
-                            hoverable
-                            open={showDiscardChangesConfirmation}
-                        >
-                            <Grid>
-                                <Grid.Row>
-                                    <Grid.Column>
-                                        Descartar los cambios realizados?
-                                    </Grid.Column>
-                                </Grid.Row>
-                                <Grid.Row className={'no-top-padding'}>
-                                    <Grid.Column>
-                                        <Button onClick={() => this.setState({showDiscardChangesConfirmation: false})}
-                                                primary style={{position: 'relative', float: 'right'}}>
-                                            Seguir Editando
-                                        </Button>
-                                        <Button onClick={() => this.discardPlanificationChanges()} secondary style={{position: 'relative', float: 'right'}}>
-                                            Descartar
-                                        </Button>
-                                    </Grid.Column>
-                                </Grid.Row>
-                            </Grid>
-                        </Popup>
+                        <PopUpContinueEditing onDiscardChanges={() => this.discardPlanificationChanges()}/>
                     }
                     <span>{planificationName ?? 'Mis Rutinas'}</span>
-                    {(!editionMode && sharePlanification && isOwner) &&
+                    {
+                        canShare &&
                         <Popup
                             size={'small'}
                             trigger={<Icon name={'share square outline'} className={'header-icon'} onClick={() => this.sharePlanification()}/>}
@@ -274,10 +252,17 @@ class PagePlanificationDetail extends Component {
                             open={showPopUp}
                             content="Link copiado al portapapeles!" basic/>
                     }
-                    {(!editionMode && isEditable && editPlanification && isOwner) &&
-                        <Icon name={'edit outline'} className={'header-icon'} onClick={() => this.enableEditionPlanification()}/>
+                    {
+                        (!editionMode && actionable) ?
+                            canEdit ?
+                            <Icon name={'edit outline'} className={'header-icon'} onClick={() => this.enableEditionPlanification()}/> :
+                            <PopUpDisabledAction
+                                disableHeader={'No es posible editar'}
+                                disableDescription={'Tu o un atleta ya marcaron una rutina de esta planificacion'}
+                                trigger={<Icon name={'edit outline'} className={'header-icon disabled-btn'}/>}/> : null
                     }
-                    {(editionMode && isEditable && editPlanification && isOwner)&&
+                    {
+                        savingMode &&
                         <Icon disabled={savingEditions} name={'save outline'} className={'header-icon'} onClick={() => this.savePlanificationEditions()}/>
                     }
                 </Header>
@@ -313,44 +298,28 @@ class PagePlanificationDetail extends Component {
                             {p.isStartOfWeek && <Header as={'h5'}>Semana {weekNumber++}</Header>}
                             <Segment style={{width: '100%'}} key={i} disabled={disableLookup}>
                                 <Grid>
-                                    <Grid.Column width={!disableLookup? 11 : 16} onClick={() => this.redirectToRoutine(p.id)}>
+                                    <Grid.Column width={!disableLookup? 11 : 16} onClick={() => !editionMode ? this.redirectToRoutine(p.id) : null}>
                                         <Header sub>{p.name}{skipped? <Chip omit content={'Omitida'}/> : ''}{completed? <Chip success content={'Completada'}/> : ''}</Header>
                                         <span>
-                                            {p.blockCount > 1 ? p.blockCount+' Grupos: ' : p.blockCount+' Grupo: '}
-                                            {p.workCount > 1 ? p.workCount+' bloques de trabajo' : p.workCount+' bloque de trabajo'}
+                                            {p.blockCount > 1 ? p.blockCount+' Bloques, ' : p.blockCount+' Bloque, '}
+                                            {p.workCount > 1 ? p.workCount+' Trabajos' : p.workCount+' Trabajo'}
                                         </span>
                                     </Grid.Column>
                                     {
                                         (editionMode && !disableActions) &&
                                         <Grid.Column width={5} className={'no-right-padding no-left-padding'}>
-                                            <Popup
-                                                size={'small'}
+                                            <PopUpConfirmation
+                                                title={'Borrar rutina '+p.name+'?'}
+                                                primary={'Borrar'}
+                                                secondary={'Cancelar'}
+                                                isManaged
+                                                open={i===confirmRoutineDeletionIndex}
                                                 trigger={<Button disabled={disableActions}
                                                                  onClick={() => this.openDeleteRoutinePopUpConfirmation(i)}
                                                                  basic secondary icon='close' style={{position: 'relative', float: 'right'}}/>}
-                                                position={'bottom right'}
-                                                hoverable
-                                                open={i===confirmRoutineDeletionIndex}
-                                            >
-                                                <Grid>
-                                                    <Grid.Row>
-                                                        <Grid.Column>
-                                                            Borrar rutina {p.name}?
-                                                        </Grid.Column>
-                                                    </Grid.Row>
-                                                    <Grid.Row className={'no-top-padding'}>
-                                                        <Grid.Column>
-                                                            <Button onClick={() => this.deleteRoutine(p.id, i)} primary style={{position: 'relative', float: 'right'}}>
-                                                                Borrar
-                                                            </Button>
-                                                            <Button onClick={() => this.setState({confirmRoutineDeletionIndex: null})}
-                                                                    secondary style={{position: 'relative', float: 'right'}}>
-                                                                Cancelar
-                                                            </Button>
-                                                        </Grid.Column>
-                                                    </Grid.Row>
-                                                </Grid>
-                                            </Popup>
+                                                onPrimaryAction={() => this.deleteRoutine(p.id, i)}
+                                                onSecondaryAction={() => this.setState({confirmRoutineDeletionIndex: null})}
+                                            />
                                         </Grid.Column>
                                     }
                                     {

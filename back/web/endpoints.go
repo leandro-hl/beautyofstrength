@@ -225,6 +225,8 @@ func (o *Endpoints) Handle() http.Handler {
 	//Premium services
 	api.Path("/savePlanificationEditions").HandlerFunc(o.HandleAuthenticatedTransactional(o.HandleAuthorization(o.savePlanificationEditions, db.Professor)))
 
+	api.Path("/saveRoutineEditions").HandlerFunc(o.HandleAuthenticatedTransactional(o.HandleAuthorization(o.saveRoutineEditions, db.StudentPremium, db.Professor)))
+
 	//Student services
 	api.Path("/saveUserTrainedToday").HandlerFunc(o.HandleAuthenticatedTransactional(o.HandleAuthorization(o.saveUserTrainedToday, db.StudentFree, db.StudentPremium)))
 	api.Path("/getUserLoadedTrainingToday").HandlerFunc(o.HandleAuthenticatedTransactional(o.HandleAuthorization(o.getUserLoadedTrainingToday, db.StudentFree, db.StudentPremium)))
@@ -311,6 +313,7 @@ func (o *Endpoints) getUserPermissions(w http.ResponseWriter, r *http.Request, t
 		permissions["createManyExerciseBlocks"] = true
 		permissions["executeRoutine"] = true
 		permissions["editPlanification"] = true
+		permissions["editRoutine"] = true
 	}
 
 	if *plan == db.StudentPremium {
@@ -382,6 +385,7 @@ func (o *Endpoints) calculateRoutineDetailsResponse(header *db.GetRoutineHeaderQ
 	res := &GetRoutineDetailsResponse{
 		Id:                      header.Routineid,
 		Name:                    header.Routinename,
+		Difficulty:              header.Difficulty,
 		AlreadyMarkedByAthetles: util.PBool(*header.TimesMarked > 0),
 		BlockGroupers:           make([]GetRoutineDetailsBlockGrouper, 0),
 	}
@@ -587,6 +591,26 @@ func (o *Endpoints) listExercises(w http.ResponseWriter, r *http.Request, tx *sq
 	o.Respond(w, exercises, http.StatusOK)
 }
 
+func (o *Endpoints) saveRoutineEditions(w http.ResponseWriter, r *http.Request, tx *sqlx.Tx) {
+	t := EditRoutineRequest{}
+	err := o.Decode(r, &t)
+	util.Check(err)
+
+	userId := util.UserId(r)
+	if !db.CalculateUserOwnsRoutine(o.db, tx, userId, *t.PlanificationId, *t.RoutineId) {
+		panic(errors.New("unauthorized to modify the requested routine"))
+	}
+
+	plan := o.plan(r)
+	if *plan != db.StudentPremium && *plan != db.Professor {
+		panic(errors.New("you need a premium account to make this operation"))
+	}
+
+	for _, g := range t.NewGrouperNames {
+		db.UpdateGrouperNames(o.db, tx, *t.PlanificationId, *t.RoutineId, *g.Id, *g.Name)
+	}
+}
+
 func (o *Endpoints) saveExerciseBlockValidations(r *http.Request, tx *sqlx.Tx, routineId, planificationId *int64, exercises []ExerciseRequest) ([]ExerciseRequest, *int64) {
 	userId := util.UserId(r)
 	plan := o.plan(r)
@@ -630,10 +654,10 @@ func (o *Endpoints) saveExerciseBlockValidations(r *http.Request, tx *sqlx.Tx, r
 	if *plan == db.Professor {
 		exerciseNamesComparer := make([]ExerciseComparer, 0)
 		sanitizedKeys := make([]string, 0)
-		re := regexp.MustCompile(`[^a-zA-Z0-9]`)
+		re := regexp.MustCompile(`[^a-zA-Z0-9áéíóúÁÉÍÓÚñÑüÜ]`)
 		for _, e := range nonExistingExerciseNames {
 			if len(*e.Name) > *o.conf.CustomExerciseNameCharacterLimit {
-				//not supported
+				//todo validation mge not supported
 				continue
 			}
 			sanitizedKey := strings.ToLower(string(re.ReplaceAll([]byte(*e.Name), []byte(""))))
@@ -675,7 +699,7 @@ func (o *Endpoints) saveExerciseBlockValidations(r *http.Request, tx *sqlx.Tx, r
 			}
 			count := db.CountExercisesCreatedByUser(o.db, tx, userId)
 			if *count > *o.conf.CustomExercisesPerUserLimit {
-				panic(errors.New("no puedes crear mas ejercicios nuevos"))
+				panic(errors.New("you cannot create more new exercises"))
 			}
 			exerciseId := db.CreateExercise(o.db, tx, *ex.SanitizedName, userId)
 			*ex.ExerciseRequest.Name = *ex.SanitizedName

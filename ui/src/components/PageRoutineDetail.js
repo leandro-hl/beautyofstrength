@@ -1,7 +1,7 @@
 import React, {Component} from "react";
-import {Accordion, Button, Divider, Header, Icon, List, Loader, Popup, Segment, Table} from "semantic-ui-react";
+import {Accordion, Button, Divider, Header, Icon, Input, List, Loader, Popup, Segment, Table} from "semantic-ui-react";
 import {Link, withRouter} from "react-router-dom";
-import {getRoutineDetails, getSharedRoutineDetails, shareRoutine} from "../service";
+import {getRoutineDetails, getSharedRoutineDetails, saveRoutineEditions, shareRoutine} from "../service";
 import {AppContext, setData} from "../context";
 import BottomMenuBar from "./BottomMenuBar";
 import LayoutMobile from "./LayoutMobile";
@@ -10,6 +10,8 @@ import {MENU} from "../enums";
 import {PopUpDisabledAction} from "./PopUpDisabledAction";
 import {ModalBlockCreate} from "./ModalBlockCreate";
 import {Chip} from "./Chip";
+import {PopUpContinueEditing} from "./PopUpContinueEditing";
+import {PopUpConfirmation} from "./PopUpConfirmation";
 
 class PageRoutineDetail extends Component{
     static contextType = AppContext
@@ -23,6 +25,7 @@ class PageRoutineDetail extends Component{
         try {
             let share = localStorage.getItem('routine-shared')
             localStorage.removeItem('routine-shared')
+            const isShared = false
             if (!share) {
                 share = queryParam(this.props, 'share')
             }
@@ -35,22 +38,22 @@ class PageRoutineDetail extends Component{
                     routineDetails: {...res.data, nextBlockNumber: res.data.blockGroupers.length+1}}))
                 this.setState({
                     loading: false,
-                    isShared: true,
+                    isShared: !isShared,
                     routineId: res.data.id,
                     blockGroupers: res.data.blockGroupers,
                     name: res.data.name,
+                    difficulty: res.data.difficulty,
                     nextBlockNumber: res.data.blockGroupers.length+1})
             } else {
-                const {state: {routineId, planificationId, isOwner, permissions: {createManyExerciseBlocks}}} = this.context
+                const {state: {routineId, planificationId, isOwner}} = this.context
                 const res = await getRoutineDetails(routineId);
 
-                const secondaryActions = []
-                if (isOwner && !res.data.alreadyMarkedByAthetles) {
-                    secondaryActions.push({disabled: !createManyExerciseBlocks, func: () => this.addBlock(), description: 'Agregar Bloque'})
+                const actionable = !isShared && isOwner
+                let canEdit = false
+                if (actionable) {
+                    canEdit = !res.data.alreadyMarkedByAthetles
                 }
-
                 this.context.dispatch(setData({
-                    secondaryActions: secondaryActions,
                     noBottomBar: false,
                     menuButtonSelected: MENU.PLANIFICATIONS,
                     routineDetails: {...res.data, nextBlockNumber: res.data.blockGroupers.length+1}
@@ -60,9 +63,14 @@ class PageRoutineDetail extends Component{
                     planificationId,
                     isOwner,
                     routineId,
+                    canEdit,
+                    actionable,
+                    alreadyMarkedByAthetles: res.data.alreadyMarkedByAthetles,
                     blockGroupers: res.data.blockGroupers,
                     name: res.data.name,
+                    difficulty: res.data.difficulty,
                     nextBlockNumber: res.data.blockGroupers.length+1})
+                this.setSecondaryActions()
             }
         } catch (e) {
             console.error(e)
@@ -151,22 +159,159 @@ class PageRoutineDetail extends Component{
         this.setState({ showCreateBlockModal: false });
     }
 
+    async saveRoutineEditions() {
+        try {
+            const {blockGroupers} = this.state
+            this.setState({savingEditions: true})
+            const {newGrouperNames, planificationId, routineId} = this.state;
+
+            const entries = Object.entries(newGrouperNames)
+                .filter(([key, value]) => value.changed === true);
+            const namesPayload = entries.map(([key, value]) => ({id: parseInt(key, 10), index: value.index, name: value.newName}));
+
+            await saveRoutineEditions({planificationId, routineId, newGrouperNames: namesPayload})
+
+            const buf = [...blockGroupers]
+            for (let i = 0; i < namesPayload.length; i++) {
+                buf[namesPayload[i].index].name = namesPayload[i].name
+            }
+            this.setState({
+                editionMode: false,
+                savingEditions: false,
+                blockGroupers: [...buf]
+            })
+            this.setSecondaryActions()
+        } catch (e) {
+            console.error(e)
+        }
+    }
+
+    enableEditionRoutine() {
+        const {blockGroupers} = this.state
+
+        //default values for newly created inputs
+        const newGrouperNames = {}
+        for (let i = 0; i < blockGroupers.length; i++) {
+            newGrouperNames[blockGroupers[i].id] = {changed: false, index: i, newName: blockGroupers[i].name}
+        }
+
+        this.setState({editionMode: true, newGrouperNames})
+        this.context.dispatch(setData({secondaryActions: []}))
+    }
+
+    discardRoutineChanges() {
+        this.setState({
+            editionMode: false
+        })
+        this.setSecondaryActions()
+    }
+
+    setSecondaryActions(){
+        const {actionable, canEdit} = this.state
+        const {state: {permissions: {createManyExerciseBlocks}}} = this.context
+        const secondaryActions = []
+        if (actionable) {
+            const action = {func: () => this.addBlock(), description: 'Agregar Bloque'}
+            if (!canEdit) {
+                action.func = null
+                action.disabled=true
+                action.disableHeader='No es posible editar'
+                action.disableDescription='Tu o un atleta ya marcaron esta rutina como completada u omitida'
+            } else if (!createManyExerciseBlocks) {
+                action.func = null
+                action.disabled=true
+            }
+            secondaryActions.push(action)
+            this.context.dispatch(setData({secondaryActions: secondaryActions, noBottomBar: false}))
+        }
+    }
+
+    onGrouperNameChange(id, index, newName) {
+        const {newGrouperNames} = this.state
+        let buff = {...newGrouperNames}
+        if (buff) {
+            buff[id] = {changed: true, index, newName}
+        } else {
+            buff = {[id]: {changed: true, index, newName}}
+        }
+        this.setState({newGrouperNames: buff})
+    }
+
+    openDeleteBlockGroupPopUpConfirmation(i) {
+        this.setState({confirmBlockGroupDeletionIndex: i})
+    }
+
+    deleteBlockGroup(id, i) {
+        const {routinesToDelete, blockGroupers} = this.state
+        const rBuff = [...blockGroupers]
+        const deleted = rBuff.splice(i, 1)
+
+        if (deleted[0].isStartOfWeek) {
+            if (rBuff[i]) {
+                rBuff[i].isStartOfWeek=true
+            }
+        }
+
+        const buff = [...routinesToDelete]
+        buff.push(id)
+
+        this.setState({routinesToDelete: [...buff], routines: [...rBuff],confirmRoutineDeletionIndex: null})
+
+    }
+
     renderRoutineDetails() {
-        const {state: {permissions: {executeRoutine}}} = this.context
-        const {name, blockGroupers, activeIndexes, isShared, showPopUp, isOwner, showCreateBlockModal} = this.state;
+        const {state: {permissions: {executeRoutine, editRoutine}}} = this.context
+        const {
+            name,
+            confirmBlockGroupDeletionIndex,
+            difficulty,
+            editionMode,
+            actionable,
+            canEdit,
+            savingEditions,
+            blockGroupers,
+            activeIndexes,
+            isShared,
+            showPopUp,
+            isOwner,
+            showCreateBlockModal
+        } = this.state;
+        const savingMode = editionMode && canEdit && editRoutine
+
         return (
             <>
                 <Header as={'h3'}>
-                    <Button className={'header-back-arrow'} icon onClick={() => isShared? this.redirectToPlanifications() : this.redirectToPlanification()}>
-                        <Icon name={'arrow left'}/>
-                    </Button>
-                    {name}
                     {
-                        (!isShared && isOwner) &&
+                        !editionMode &&
+                        <Button className={'header-back-arrow'} icon onClick={() => isShared? this.redirectToPlanifications() : this.redirectToPlanification()}>
+                            <Icon name={'arrow left'}/>
+                        </Button>
+                    }
+                    {
+                        editionMode &&
+                        <PopUpContinueEditing onDiscardChanges={() => this.discardRoutineChanges()}/>
+                    }
+                    {name}
+                    {/* //todo: <Chip success={difficulty===1} progress={difficulty===2} content={difficulty===1? 'facil' : 'intermedia'}/>*/}
+                    {
+                        (!editionMode && actionable) &&
                         <Popup size={'small'}
                                trigger={<Icon name={'share square outline'} className={'header-icon'} onClick={() => this.shareRoutine()}/>}
                                position={'bottom right'}
                                open={showPopUp} content="Link copiado al portapapeles!" basic/>
+                    }
+                    {
+                        (!editionMode && actionable) ?
+                            canEdit ?
+                                <Icon name={'edit outline'} className={'header-icon'} onClick={() => this.enableEditionRoutine()}/> :
+                                <PopUpDisabledAction
+                                    disableHeader={'No es posible editar'}
+                                    disableDescription={'Tu o un atleta ya marcaron esta rutina como completada u omitida'}
+                                    trigger={<Icon name={'edit outline'} className={'header-icon disabled-btn'}/>}/> : null
+                    }
+                    {
+                        savingMode &&
+                        <Icon disabled={savingEditions} name={'save outline'} className={'header-icon'} onClick={() => this.saveRoutineEditions()}/>
                     }
                 </Header>
                 {/*{*/}
@@ -178,36 +323,75 @@ class PageRoutineDetail extends Component{
                 {/*        Ejecutar Rutina*/}
                 {/*    </Button>*/}
                 {/*}*/}
-                {
-                    (!isOwner && !executeRoutine && !isShared) &&
-                    <PopUpDisabledAction trigger={<Button className={'disabled-btn'} style={{marginBottom: '1em'}} primary fluid>
-                        Ejecutar Rutina
-                    </Button>}/>
-                }
+                {/*{*/}
+                {/*    (!isOwner && !executeRoutine && !isShared) &&*/}
+                {/*    <PopUpDisabledAction trigger={<Button className={'disabled-btn'} style={{marginBottom: '1em'}} primary fluid>*/}
+                {/*        Ejecutar Rutina*/}
+                {/*    </Button>}/>*/}
+                {/*}*/}
                 <Accordion
                     style={{marginBottom: '1em'}}
                     exclusive={false}
                     fluid>
                     {blockGroupers.map((bg,j) => (
-                        <Segment key={j}>
-                            <Header className={'align-center'} as={'h5'}>{bg.name}</Header>
+                        <Segment key={j} className={'padding-left-half padding-right-half'}>
+                            <Header className={'align-center'} as={'h5'}>
+                                {!editionMode && <span>{bg.name}</span>}
+                                {
+                                    editionMode &&
+                                    <>
+                                        <Input
+                                            // transparent
+                                            className={'input-header input-centered'}
+                                            placeholder={bg.name}
+                                            value={this.state.newGrouperNames[bg.id]?.newName}
+                                            onChange={(e, {value}) => this.onGrouperNameChange(bg.id, j, value)}/>
+                                        {/*<PopUpConfirmation*/}
+                                        {/*    title={'Borrar bloque '+bg.name+'?'}*/}
+                                        {/*    primary={'Borrar'}*/}
+                                        {/*    secondary={'Cancelar'}*/}
+                                        {/*    isManaged*/}
+                                        {/*    open={j===confirmBlockGroupDeletionIndex}*/}
+                                        {/*    trigger={<Button*/}
+                                        {/*                     onClick={() => this.openDeleteBlockGroupPopUpConfirmation(j)}*/}
+                                        {/*                     basic secondary icon='close' style={{position: 'relative', float: 'right'}}/>}*/}
+                                        {/*    onPrimaryAction={() => this.deleteBlockGroup(bg.id, j)}*/}
+                                        {/*    onSecondaryAction={() => this.setState({confirmBlockGroupDeletionIndex: null})}*/}
+                                        {/*/>*/}
+                                    </>
+                                }
+                            </Header>
                             <div>
                                 {bg.blocks.map((b,i) => {
                                     const name = b.name.split(' - ')
                                     return (
-                                        <Segment style={{width: '100%'}} key={b.id}>
+                                        <Segment style={{width: '100%'}} className={'no-left-padding no-right-padding'} key={b.id}>
                                             <Accordion.Title
-                                                style={{padding: 0}}
+                                                className={'no-top-padding no-bottom-padding padding-left-1 padding-right-1'}
                                                 active={activeIndexes.indexOf(j+'-'+i) !== -1}
                                                 index={j+'-'+i}
                                                 onClick={this.handleActiveBlocks}>
                                                 {name[0]} {name[1] ? <Chip feel content={capitalize(name[1])}/> : null}
                                             </Accordion.Title>
                                             <Accordion.Content active={activeIndexes.indexOf(j+'-'+i) !== -1}>
-                                                {b.duration && <div><b>Duracion: </b>{b.duration} minutos</div>}
-                                                {b.laps && <div><b>Rondas: </b>{b.laps}</div>}
-                                                {b.laprestinterval && <div><b>Descanso entre rondas: </b>{b.laprestinterval} segs</div>}
-                                                {b.exerestinterval && <div><b>Descanso entre ejercicios: </b>{b.exerestinterval} segs</div>}
+                                                <Segment basic className={'no-top-padding no-bottom-padding no-margin'}>
+                                                    {b.duration && <div><b>{b.duration} minutos</b> de duracion</div>}
+                                                    {b.laps && <div className={'margin-bottom-1'}><b>{b.laps}</b> rondas</div>}
+                                                    {
+                                                        (b.laprestinterval || b.exerestinterval) &&
+                                                        <>
+                                                            Descanso
+                                                            {b.exerestinterval &&
+                                                                <div>
+                                                                    <b>{b.exerestinterval} segs</b> por ejercicio
+                                                                </div>}
+                                                            {b.laprestinterval &&
+                                                                <div>
+                                                                    <b>{b.laprestinterval} segs</b> por ronda
+                                                                </div>}
+                                                        </>
+                                                    }
+                                                </Segment>
                                                 <Table basic unstackable style={{border: 'unset'}}>
                                                     <Table.Header>
                                                         <Table.Row>
@@ -231,12 +415,17 @@ class PageRoutineDetail extends Component{
                                     )
                                 })}
                             </div>
-                            {
-                                (!isShared && isOwner) &&
-                                <Divider horizontal>
-                                    <Icon name={'plus'} onClick={() => this.addWorkToGrouper(bg, j)}/>
-                                </Divider>
-                            }
+                            <Divider horizontal>
+                                {
+                                    (!editionMode && actionable) ?
+                                        canEdit ?
+                                            <Icon name={'plus'} onClick={() => this.addWorkToGrouper(bg, j)}/> :
+                                            <PopUpDisabledAction
+                                                disableHeader={'No es posible agregar'}
+                                                disableDescription={'Tu o un atleta ya marcaron esta rutina como completada u omitida'}
+                                                trigger={<Icon name={'plus'} className={'disabled-btn'}/>}/> : null
+                                }
+                            </Divider>
                         </Segment>
                     ))}
                 </Accordion>
