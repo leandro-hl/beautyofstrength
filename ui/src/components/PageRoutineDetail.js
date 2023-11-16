@@ -292,7 +292,7 @@ class PageRoutineDetail extends Component{
                         <PopUpContinueEditing onDiscardChanges={() => this.discardRoutineChanges()}/>
                     }
                     {name}
-                    {/* //todo: <Chip success={difficulty===1} progress={difficulty===2} content={difficulty===1? 'facil' : 'intermedia'}/>*/}
+                    <Chip style={{fontSize: 14}} success={difficulty===1} progress={difficulty===2} content={difficulty===1? 'Facil' : 'Intermedia'}/>
                     {
                         (!editionMode && actionable) &&
                         <Popup size={'small'}

@@ -2,7 +2,7 @@ import {Component} from "react";
 
 export class Chip extends Component {
     render() {
-        const {success, omit, progress, feel, content} = this.props
+        const {success, omit, progress, feel, content, style} = this.props
         let classes = 'chip'
         if (success) {
             classes += ' success'
@@ -15,7 +15,7 @@ export class Chip extends Component {
         }
 
         return (
-            <span className={classes}>
+            <span style={style} className={classes}>
                 {content}
             </span>
         )
