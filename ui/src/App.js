@@ -26,6 +26,7 @@ import PageRoot from "./components/PageRoot";
 import PagePlanificationSelectDays from "./components/PagePlanificationSelectDays";
 import PageSubscriptionApproved from "./components/PageSubscriptionApproved";
 import ModalExerciseVideo from "./components/ModalExerciseVideo";
+import PagePublicHome from "./components/PagePublicHome";
 
 class App extends Component {
     render() {
@@ -36,6 +37,7 @@ class App extends Component {
                         <LayoutMobile>
                             <Switch>
                                 <Route exact path={"/"} component={PageRoot}/>
+                                <Route exact path={"/home"} component={PagePublicHome}/>
                                 <Route exact path={"/signin"} component={SignIn}/>
                                 <Route exact path={"/terms"} component={PageTermsAndConditions}/>
                                 <Route exact path={"/privacy-policies"} component={PagePrivacyPolicies}/>
