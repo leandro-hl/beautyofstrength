@@ -36,6 +36,7 @@ class PageRoutineDetail extends Component{
                     noBottomBar: false,
                     menuButtonSelected: MENU.PLANIFICATIONS,
                     routineDetails: {...res.data, nextBlockNumber: res.data.blockGroupers.length+1}}))
+                this.context.dispatch(setData({routineId: res.data.id}, true))
                 this.setState({
                     loading: false,
                     isShared: !isShared,
