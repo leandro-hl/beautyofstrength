@@ -16,6 +16,7 @@ class PagePlanificationDetail extends Component {
     constructor(props) {
         super(props);
         this.state = {
+            changes: false,
             loading: true,
             routines: [],
             planificationId:null,
@@ -144,7 +145,7 @@ class PagePlanificationDetail extends Component {
         const {days} = this.state
         const buff = [...days]
         buff[i].checked = !buff[i].checked
-        this.setState({days: [...buff]})
+        this.setState({days: [...buff], changes: true})
     }
 
     openDeleteRoutinePopUpConfirmation(i) {
@@ -165,25 +166,28 @@ class PagePlanificationDetail extends Component {
         const buff = [...routinesToDelete]
         buff.push(id)
 
-        this.setState({routinesToDelete: [...buff], routines: [...rBuff],confirmRoutineDeletionIndex: null})
+        this.setState({routinesToDelete: [...buff], routines: [...rBuff],confirmRoutineDeletionIndex: null, changes: true})
     }
 
     async savePlanificationEditions() {
         try {
-            this.setState({savingEditions: true})
-            const {days, routinesToDelete, planificationId, routines} = this.state;
-            const week = []
-            for (let i = 0; i < days.length; i++) {
-                if (days[i].checked) {
-                    week.push(i.toString())
+            if(this.state.changes) {
+                this.setState({savingEditions: true})
+                const {days, routinesToDelete, planificationId, routines} = this.state;
+                const week = []
+                for (let i = 0; i < days.length; i++) {
+                    if (days[i].checked) {
+                        week.push(i.toString())
+                    }
                 }
+                await savePlanificationEditions({planificationId, week, routinesToDelete})
+                await this.refresh()
             }
-            await savePlanificationEditions({planificationId, week, routinesToDelete})
-            await this.refresh()
             this.setState({
                 editionMode: false,
                 routinesToDelete: [],
-                savingEditions: false
+                savingEditions: false,
+                changes: false
             })
         } catch (e) {
             console.error(e)
@@ -195,6 +199,7 @@ class PagePlanificationDetail extends Component {
         this.setState({
             showDiscardChangesConfirmation: false,
             editionMode: false,
+            changes: false,
             routines: routinesBackup.map(d => ({...d})),
             days: daysBackup.map(d => ({...d})),
             routinesToDelete: []})

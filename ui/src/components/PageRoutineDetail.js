@@ -28,6 +28,10 @@ class PageRoutineDetail extends Component{
             const isShared = false
             if (!share) {
                 share = queryParam(this.props, 'share')
+            } else {
+                if (!queryParam(this.props, 'share')) {
+                    this.props.history.replace('/routine?share='+share)
+                }
             }
             if (!!share) {
                 const res = await getSharedRoutineDetails(share)
