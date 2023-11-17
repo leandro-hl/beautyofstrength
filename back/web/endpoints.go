@@ -1243,6 +1243,7 @@ func (o *Endpoints) createTestUser(w http.ResponseWriter, r *http.Request, tx *s
 
 	email := fmt.Sprintf("%s@%s", result, "test.com")
 	accountType := r.URL.Query().Get("accountType")
+	source := r.URL.Query().Get("utm_source")
 	acc := db.AccountPlanType(rune(accountType[0]))
 	planId := db.GetAccountPlanIdByIdentifier(o.db, tx, acc)
 	userId := db.CreateUserAccount(o.db, tx, &db.UserAccount{
@@ -1259,7 +1260,12 @@ func (o *Endpoints) createTestUser(w http.ResponseWriter, r *http.Request, tx *s
 	planificationId := db.CreatePlanification(o.db, tx, *userId, "Mi Planificacion")
 	db.InsertPlanificationDays(o.db, tx, *planificationId, "01234")
 	o.storeSessionData(w, tx, *userId)
-	http.Redirect(w, r, *o.conf.AddressUi+"/app"+"/my-planifications", http.StatusFound)
+
+	if source == "btn" {
+		w.Write([]byte("/plans"))
+		return
+	}
+	http.Redirect(w, r, *o.conf.AddressUi+"/app"+"/plans", http.StatusFound)
 }
 
 func (o *Endpoints) storeSessionData(w http.ResponseWriter, tx *sqlx.Tx, userId int64) {

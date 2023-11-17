@@ -2,7 +2,7 @@ import React, { Component } from 'react';
 import {Button, Checkbox, Divider, Form, Grid, Header, Image, Label, Message, Segment} from 'semantic-ui-react';
 import {AppContext, setData} from "../context";
 import {Link, NavLink, withRouter} from "react-router-dom";
-import {signIn} from "../service";
+import {signIn, signUpWithTestUser} from "../service";
 import {isLocalhost} from "../functions";
 
 class SignIn extends Component {
@@ -25,24 +25,14 @@ class SignIn extends Component {
         document.body.appendChild(script);
         this.context.dispatch(setData({noBottomBar: true}))
     }
-    // handleChange = (e, { name, value }) => {
-    //     this.setState({ [name]: value });
-    // }
-    //
-    // async handleSubmit() {
-    //     try {
-    //         this.setState({loading: true})
-    //         const { username, password } = this.state;
-    //         const res = await signIn(username, password)
-    //         this.setState({loading: false})
-    //     } catch (e) {
-    //         console.error(e)
-    //     }
-    // }
 
-    onAcceptTermsAndConditions() {
-        const {termsAccepted} = this.state;
-        this.setState({termsAccepted: !termsAccepted})
+    async signUpWithTestUser(acc) {
+        try {
+            const res = await signUpWithTestUser(acc, 'btn')
+            this.props.history.push(res.data)
+        } catch (e) {
+            console.error(e)
+        }
     }
 
     render() {
@@ -66,11 +56,6 @@ class SignIn extends Component {
                     </Grid.Row>
                     <Grid.Row>
                         <Grid.Column>
-                            {/*<Checkbox*/}
-                            {/*    checked={termsAccepted}*/}
-                            {/*    onChange={() => this.onAcceptTermsAndConditions()}*/}
-                            {/*    label={<label>Al crear una cuenta acepto los <Link to={'/terms'}>Términos y condiciones</Link> y autorizo el uso de mis datos de acuerdo a la <Link to={'/privacy-policies'}>Declaración de Privacidad</Link>.</label>}*/}
-                            {/*/>*/}
                             <p>Al crear una cuenta acepto los <Link to={'/terms'}>Términos y condiciones</Link> y autorizo el uso de mis datos de acuerdo a la <Link to={'/privacy-policies'}>Declaración de Privacidad</Link>.</p>
                         </Grid.Column>
                     </Grid.Row>
@@ -94,6 +79,13 @@ class SignIn extends Component {
                             </div>
                         </Segment>
                     </Grid.Row>
+                    {
+                        isLocalhost() &&
+                        <Grid.Row>
+                            <Button onClick={() => this.signUpWithTestUser('s')}>Sign Up With Test User</Button>
+                        </Grid.Row>
+                    }
+
                     {/*<Grid.Row style={{padding:20}}>*/}
                     {/*    <Grid.Column style={{ maxWidth: 450 }}>*/}
                     {/*        <Header as='h2' color='teal' textAlign='center'>*/}

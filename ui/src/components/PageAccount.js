@@ -31,7 +31,15 @@ class PageAccount extends Component {
         try {
             await signout();
             localStorage.removeItem("state")
-            this.context.dispatch(setData({auth_token: null, noMenu: true, isAuthenticated: false, secondaryActions:[]}))
+            this.context.dispatch(setData({
+                auth_token: null,
+                noMenu: true,
+                permissions: {},
+                isAuthenticated: null,
+                secondaryActions:[],
+                planificationId: null,
+                routineId: null,
+            }))
             this.props.history.push('/signin')
         } catch (e) {
             console.error(e)

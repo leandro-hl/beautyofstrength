@@ -193,6 +193,10 @@ body > div#root {
   background-color: #F8D018 !important;
 }
 
+.starred {
+  color: #F8D018 !important;
+}
+
 .planification-checkbox-day {
   display: block !important;
 }

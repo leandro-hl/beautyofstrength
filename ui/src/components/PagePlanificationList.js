@@ -36,7 +36,9 @@ class PagePlanificationList extends Component {
                 this.context.dispatch(setData({
                     noBottomBar: false,
                     secondaryActions: [
-                        {func: () => this.setState({showCreatePlanificationModal: true}), description: 'Agregar Planificacion'}
+                        {
+                            func: () => this.setState({showCreatePlanificationModal: true}),
+                            description: <span><Icon name={'plus'}/> Nueva Planificacion</span>}
                     ],
                     menuButtonSelected: MENU.PLANIFICATIONS}))
             } else {
@@ -175,7 +177,10 @@ class PagePlanificationList extends Component {
                             return (
                                 <Segment style={{width: '100%'}} key={p.id}
                                          onClick={() => this.redirectToPlanification(p)}>
-                                    <Header sub>{p.name}</Header>
+                                    <Header sub>
+                                        {p.name}
+                                        {p.starred && <Icon name={'star'} className={'header-icon starred'}/> }
+                                    </Header>
                                     <span>Rutinas: {p.routinescount}</span>
                                 </Segment>
                             )

@@ -5,8 +5,10 @@ import Cookies from "universal-cookie";
 import {isLocalhost} from "../functions";
 import {checkAuth, getLocalInfo, getUserPermissions} from "../service";
 import axios from "axios";
+import {Loader} from "semantic-ui-react";
 
 class PrivateRoute extends Component {
+    state = {loading: true}
     static contextType = AppContext
 
     async loadLocalEnvironment() {
@@ -27,10 +29,10 @@ class PrivateRoute extends Component {
         }
     }
 
-    async componentDidMount() {
+    async checkAuth() {
         try {
             const {state: {isAuthenticated}} = this.context
-            if (isAuthenticated === undefined) {
+            if (!isAuthenticated) {
                 if (isLocalhost()) {
                     await this.loadLocalEnvironment()
                     const b = await getUserPermissions();
@@ -43,22 +45,33 @@ class PrivateRoute extends Component {
             }
         } catch (e) {
             console.error(e)
+        } finally {
+            this.setState({loading: false})
         }
+    }
+
+    async componentDidMount() {
+        await this.checkAuth()
     }
 
     render() {
         const {component: Component, ...rest} = this.props;
         const {state: {isAuthenticated}} = this.context
+        const {loading} = this.state
 
-        return <Route {...rest} render={(props) => (
-            isAuthenticated === undefined ? <></> : isAuthenticated
+        const func = (props) => {
+            if (loading) {
+                return <Loader active/>
+            }
+            return isAuthenticated
                 ? <Component {...props} />
                 : <Redirect to={{
                     pathname: '/signin',
                     search: props.location.search,
-                    state: { from: props.location }
-                }} />
-        )} />
+                    state: {from: props.location}
+                }}/>
+        }
+        return <Route {...rest} render={func}/>
     }
 }
 

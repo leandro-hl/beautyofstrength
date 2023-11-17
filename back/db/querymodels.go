@@ -24,6 +24,7 @@ type ListPlanificationsQuery struct {
 	Id            *int    `json:"id"`
 	Name          *string `json:"name"`
 	Owner         *bool   `json:"owner"`
+	Starred       *bool   `json:"starred"`
 	RoutinesCount *int    `json:"routinescount"`
 }
 

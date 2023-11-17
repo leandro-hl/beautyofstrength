@@ -28,6 +28,10 @@ export function signIn(username) {
     return axios.post("signIn", {username: username, password: 'password'})
 }
 
+export function signUpWithTestUser(accountType, src) {
+    return axios.post("createTestUser?accountType="+accountType+"&utm_source="+src)
+}
+
 export function signUp(username) {
     return axios.post("signUp", {username: username, password: 'password'})
 }

@@ -76,6 +76,7 @@ func ListMyPlanifications(db *sqlx.DB, tx *sqlx.Tx, userId int64) []ListPlanific
 			WHEN p.creator_id = u.useraccount_id THEN TRUE
 			ELSE FALSE
 			END as owner,
+		    p.starred,
 		    count(r.id) as routinescount
 		from planification p
 		inner join userplanification u on p.id = u.planification_id
