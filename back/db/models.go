@@ -34,6 +34,7 @@ type Routine struct {
 	Name            *string `json:"name"`
 	PlanificationId *int64  `json:"planification_id"`
 	Difficulty      *int    `json:"difficulty"`
+	Duration        *string `json:"duration"`
 }
 
 type Exercise struct {

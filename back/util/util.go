@@ -187,6 +187,10 @@ func PInt(i int) *int {
 	return &i
 }
 
+func PDuration(i time.Duration) *time.Duration {
+	return &i
+}
+
 func PFloat32(f float32) *float32 {
 	return &f
 }

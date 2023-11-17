@@ -386,6 +386,7 @@ func (o *Endpoints) calculateRoutineDetailsResponse(header *db.GetRoutineHeaderQ
 		Id:                      header.Routineid,
 		Name:                    header.Routinename,
 		Difficulty:              header.Difficulty,
+		Duration:                header.Duration,
 		AlreadyMarkedByAthetles: util.PBool(*header.TimesMarked > 0),
 		BlockGroupers:           make([]GetRoutineDetailsBlockGrouper, 0),
 	}
@@ -540,6 +541,7 @@ func (o *Endpoints) listRoutines(w http.ResponseWriter, r *http.Request, tx *sql
 			BlockCount:      routines[i].BlockCount,
 			WorkCount:       routines[i].WorkCount,
 			Completed:       routines[i].Completed,
+			Duration:        routines[i].Duration,
 		}
 
 		if routines[i].Completed != nil {

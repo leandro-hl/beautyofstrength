@@ -103,6 +103,7 @@ type GetRoutineDetailsResponse struct {
 	Id                      *int64                          `json:"id"`
 	Name                    *string                         `json:"name"`
 	Difficulty              *int                            `json:"difficulty"`
+	Duration                *string                         `json:"duration"`
 	AlreadyMarkedByAthetles *bool                           `json:"alreadyMarkedByAthetles"`
 	BlockGroupers           []GetRoutineDetailsBlockGrouper `json:"blockGroupers"`
 }
@@ -210,6 +211,7 @@ type ListRoutinesRoutineResponse struct {
 	BlockCount      *int    `json:"blockCount"`
 	WorkCount       *int    `json:"workCount"`
 	Completed       *bool   `json:"completed"`
+	Duration        *string `json:"duration"`
 	IsActionable    bool    `json:"isActionable"`
 	IsStartOfWeek   bool    `json:"isStartOfWeek"`
 }

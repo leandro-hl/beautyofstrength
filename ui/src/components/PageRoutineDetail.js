@@ -48,6 +48,7 @@ class PageRoutineDetail extends Component{
                     blockGroupers: res.data.blockGroupers,
                     name: res.data.name,
                     difficulty: res.data.difficulty,
+                    duration: res.data.duration,
                     nextBlockNumber: res.data.blockGroupers.length+1})
             } else {
                 const {state: {routineId, planificationId, isOwner}} = this.context
@@ -75,6 +76,7 @@ class PageRoutineDetail extends Component{
                     blockGroupers: res.data.blockGroupers,
                     name: res.data.name,
                     difficulty: res.data.difficulty,
+                    duration: res.data.duration,
                     nextBlockNumber: res.data.blockGroupers.length+1})
                 this.setSecondaryActions()
             }
@@ -217,7 +219,10 @@ class PageRoutineDetail extends Component{
         const {state: {permissions: {createManyExerciseBlocks}}} = this.context
         const secondaryActions = []
         if (actionable) {
-            const action = {func: () => this.addBlock(), description: 'Agregar Bloque'}
+            const action = {
+                func: () => this.addBlock(),
+                description: <span><Icon name={'plus'}/> Nuevo Bloque</span>
+            }
             if (!canEdit) {
                 action.func = null
                 action.disabled=true
@@ -271,6 +276,7 @@ class PageRoutineDetail extends Component{
             name,
             confirmBlockGroupDeletionIndex,
             difficulty,
+            duration,
             editionMode,
             actionable,
             canEdit,
@@ -298,7 +304,6 @@ class PageRoutineDetail extends Component{
                         <PopUpContinueEditing onDiscardChanges={() => this.discardRoutineChanges()}/>
                     }
                     {name}
-                    <Chip style={{fontSize: 14}} success={difficulty===1} progress={difficulty===2} content={difficulty===1? 'Facil' : 'Intermedia'}/>
                     {
                         (!editionMode && actionable) &&
                         <Popup size={'small'}
@@ -319,6 +324,10 @@ class PageRoutineDetail extends Component{
                         savingMode &&
                         <Icon disabled={savingEditions} name={'save outline'} className={'header-icon'} onClick={() => this.saveRoutineEditions()}/>
                     }
+                    <div>
+                        <Chip style={{fontSize: 14}} success={difficulty===1} progress={difficulty===2} content={difficulty===1? 'Facil' : 'Intermedia'}/>
+                        <Chip style={{fontSize: 14}}  omit content={duration}/>
+                    </div>
                 </Header>
                 {/*{*/}
                 {/*    (isOwner || executeRoutine || isShared) &&*/}

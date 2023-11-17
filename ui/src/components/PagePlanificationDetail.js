@@ -75,7 +75,10 @@ class PagePlanificationDetail extends Component {
         const {state: {isOwner, permissions: {createManyRoutines}}} = this.context
         const secondaryActions = []
         if (isOwner) {
-            secondaryActions.push({disabled: !createManyRoutines && routines.length>0,func: () => this.redirectToCreateRoutine(), description: 'Agregar una Rutina'})
+            secondaryActions.push({
+                disabled: !createManyRoutines && routines.length>0,
+                func: () => this.redirectToCreateRoutine(),
+                description: <span><Icon name={'plus'}/> Nueva Rutina</span>})
         }
         this.context.dispatch(setData({secondaryActions: secondaryActions, noBottomBar: false}))
     }

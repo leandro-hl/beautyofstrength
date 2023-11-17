@@ -97,6 +97,7 @@ func GetRoutineHeader(db *sqlx.DB, tx *sqlx.Tx, routineId int64, userId int64) *
 			r.id routineid,
 			r.name routinename,
 			r.difficulty,
+			r.duration,
 			count(uh.id) timesmarked
 			from routine r
 		inner join planification p on p.id = r.planification_id
@@ -153,6 +154,7 @@ func ListActiveRoutinesICreated(db *sqlx.DB, tx *sqlx.Tx, planificationId int64,
 		    r.name, 
 		    r.planification_id, 
 		    r.difficulty,
+		    r.duration,
 		    count(distinct bg.id) as blockcount,
 		    count(b.id) as workcount, 
 		    u2.completed from routine r 
@@ -179,6 +181,7 @@ func ListActiveRoutines(db *sqlx.DB, tx *sqlx.Tx, planificationId, userId int64)
 		    r.name, 
 		    r.planification_id, 
 		    r.difficulty,
+		    r.duration,
 		    count(distinct bg.id) as blockcount,
 		    count(b.id) as workcount, 
 		    u2.completed from routine r 
@@ -310,6 +313,7 @@ func CreateRoutine(db *sqlx.DB, tx *sqlx.Tx, name string, planificationId int64)
 			Name:            &name,
 			PlanificationId: &planificationId,
 			Difficulty:      util.PInt(1),
+			Duration:        util.PString("01:00"),
 		})
 	return id
 }
