@@ -15,7 +15,7 @@ class ModalExerciseVideo extends Component {
         const screenHeight = window.innerHeight;
         const aspectRatio = 16 / 9;
         // Calculate width and height based on the screen size and aspect ratio
-        let videoWidth = screenWidth; // Start with the full width
+        let videoWidth = screenWidth * 0.95; // Start with the full width
         let videoHeight = videoWidth * aspectRatio;
 
         // Check if the calculated height is greater than the screen height

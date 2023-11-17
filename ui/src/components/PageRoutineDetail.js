@@ -36,7 +36,7 @@ class PageRoutineDetail extends Component{
                     noBottomBar: false,
                     menuButtonSelected: MENU.PLANIFICATIONS,
                     routineDetails: {...res.data, nextBlockNumber: res.data.blockGroupers.length+1}}))
-                this.context.dispatch(setData({routineId: res.data.id}, true))
+                this.context.dispatch(setData({routineId: res.data.id, shared: true}, true))
                 this.setState({
                     loading: false,
                     isShared: !isShared,
@@ -66,6 +66,7 @@ class PageRoutineDetail extends Component{
                     routineId,
                     canEdit,
                     actionable,
+                    shared: false,
                     alreadyMarkedByAthetles: res.data.alreadyMarkedByAthetles,
                     blockGroupers: res.data.blockGroupers,
                     name: res.data.name,
