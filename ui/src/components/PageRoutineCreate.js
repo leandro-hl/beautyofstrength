@@ -26,7 +26,14 @@ class PageRoutineCreate extends Component {
     static contextType = AppContext
     constructor(props) {
         super(props);
-        this.state = {planificationId: null, routineName: '', routineNumber: null, loading: true, showCreateBlockModal: false}
+        this.state = {
+            planificationId: null,
+            routineName: '',
+            routineNumber: null,
+            loading: true,
+            showCreateBlockModal: false,
+            nextBlockNumber: 1
+        }
     }
 
     async componentDidMount() {
@@ -61,8 +68,11 @@ class PageRoutineCreate extends Component {
 
     handleConfirm() {
         try {
-            const {newBlockName} = this.state
-            this.context.dispatch(setData({nextWorkNumber: 1, newBlockGroupName: newBlockName, newBlockGroupId: null}, true))
+            const {newBlockName, nextBlockNumber} = this.state
+            this.context.dispatch(setData({
+                nextWorkNumber: 1,
+                newBlockGroupName: newBlockName ? newBlockName : 'Bloque '+nextBlockNumber,
+                newBlockGroupId: null}, true))
             this.redirectToCreateBlock()
         } catch (e) {
             console.error(e)
@@ -75,7 +85,7 @@ class PageRoutineCreate extends Component {
     }
 
     render() {
-        const {routineName, loading, showCreateBlockModal} = this.state;
+        const {routineName, loading, showCreateBlockModal, nextBlockNumber} = this.state;
 
         if (loading){
             return <Loader active/>
@@ -95,6 +105,7 @@ class PageRoutineCreate extends Component {
                 </Message>
                 <ModalBlockCreate
                     open={showCreateBlockModal}
+                    next={nextBlockNumber}
                     onChange={(name)=> this.setState({newBlockName: name})}
                     onClose={() => this.handleClose()}
                     onConfirm={() => this.handleConfirm()}/>

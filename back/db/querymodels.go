@@ -7,10 +7,11 @@ type ListExerciseIdName struct {
 	Name *string `json:"name"`
 }
 
-type ListExercise struct {
-	Id            *int    `json:"id"`
-	Name          *string `json:"name"`
-	CreatedByUser *string `json:"createdbyuser"`
+type ListExerciseQuery struct {
+	Id                 *int    `json:"id"`
+	Name               *string `json:"name"`
+	CreatedByUser      *string `json:"createdbyuser"`
+	NoCurrentUserVideo *bool   `json:"nocurrentuservideo"`
 }
 
 type ListQueuedPlanificationAccessRequestsQuery struct {

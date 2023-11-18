@@ -33,6 +33,7 @@ class PageRoutineDetail extends Component{
                     this.props.history.replace('/routine?share='+share)
                 }
             }
+
             if (!!share) {
                 const res = await getSharedRoutineDetails(share)
                 this.context.dispatch(setData({
@@ -154,8 +155,8 @@ class PageRoutineDetail extends Component{
 
     addNewBlockGroupConfirm() {
         try {
-            const {newBlockName} = this.state
-            this.context.dispatch(setData({nextWorkNumber: 1, newBlockGroupName: newBlockName, newBlockGroupId: null}, true))
+            const {newBlockName, nextBlockNumber} = this.state
+            this.context.dispatch(setData({nextWorkNumber: 1, newBlockGroupName: newBlockName ? newBlockName : 'Bloque '+nextBlockNumber, newBlockGroupId: null}, true))
             this.redirectToCreateBlock()
         } catch (e) {
             console.error(e)
@@ -216,14 +217,14 @@ class PageRoutineDetail extends Component{
 
     setSecondaryActions(){
         const {actionable, canEdit} = this.state
-        const {state: {permissions: {createManyExerciseBlocks}}} = this.context
+        const {state: {permissions: {createManyExerciseBlocks, editRoutine}}} = this.context
         const secondaryActions = []
         if (actionable) {
             const action = {
                 func: () => this.addBlock(),
                 description: <span><Icon name={'plus'}/> Nuevo Bloque</span>
             }
-            if (!canEdit) {
+            if (!canEdit && editRoutine) {
                 action.func = null
                 action.disabled=true
                 action.disableHeader='No es posible editar'
@@ -286,7 +287,8 @@ class PageRoutineDetail extends Component{
             isShared,
             showPopUp,
             isOwner,
-            showCreateBlockModal
+            showCreateBlockModal,
+            nextBlockNumber
         } = this.state;
         const savingMode = editionMode && canEdit && editRoutine
 
@@ -313,12 +315,17 @@ class PageRoutineDetail extends Component{
                     }
                     {
                         (!editionMode && actionable) ?
-                            canEdit ?
-                                <Icon name={'edit outline'} className={'header-icon'} onClick={() => this.enableEditionRoutine()}/> :
-                                <PopUpDisabledAction
-                                    disableHeader={'No es posible editar'}
-                                    disableDescription={'Tu o un atleta ya marcaron esta rutina como completada u omitida'}
-                                    trigger={<Icon name={'edit outline'} className={'header-icon disabled-btn'}/>}/> : null
+                            editRoutine ?
+                                (canEdit ?
+                                    <Icon name={'edit outline'} className={'header-icon'} onClick={() => this.enableEditionRoutine()}/>
+                                    :
+                                    <PopUpDisabledAction
+                                        disableHeader={'No es posible editar'}
+                                        disableDescription={'Tu o un atleta ya marcaron esta rutina como completada u omitida'}
+                                        trigger={<Icon name={'edit outline'} className={'header-icon disabled-btn'}/>}/>)
+                                :
+                                <PopUpDisabledAction trigger={<Icon name={'edit outline'} className={'header-icon disabled-btn'}/>}/>
+                            : null
                     }
                     {
                         savingMode &&
@@ -446,6 +453,7 @@ class PageRoutineDetail extends Component{
                 </Accordion>
                 <ModalBlockCreate
                     open={showCreateBlockModal}
+                    next={nextBlockNumber}
                     onChange={(name)=> this.setState({newBlockName: name})}
                     onClose={() => this.addNewBlockGroupClose()}
                     onConfirm={() => this.addNewBlockGroupConfirm()}/>

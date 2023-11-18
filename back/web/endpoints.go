@@ -588,9 +588,22 @@ func (o *Endpoints) listPlanifications(w http.ResponseWriter, r *http.Request, t
 }
 
 func (o *Endpoints) listExercises(w http.ResponseWriter, r *http.Request, tx *sqlx.Tx) {
-	exercises := db.ListExercises(o.db, tx)
+	userId := util.UserId(r)
 	//todo: use a Response struct to not expose db data.
-	o.Respond(w, exercises, http.StatusOK)
+	plan := o.plan(r)
+	if *plan == db.Professor {
+		o.Respond(w, &ListExercisesResponse{
+			ShowVideoInfo: util.PBool(true),
+			Exercises:     db.ListExercises(o.db, tx, userId),
+		}, http.StatusOK)
+	} else {
+		//todo: for students there will be another query that retrieves exercise videos from a round robin of instructors
+		//in the case that the student is not inside a planification owned by an instructor
+		o.Respond(w, &ListExercisesResponse{
+			ShowVideoInfo: util.PBool(false),
+			Exercises:     db.ListExercises(o.db, tx, userId),
+		}, http.StatusOK)
+	}
 }
 
 func (o *Endpoints) saveRoutineEditions(w http.ResponseWriter, r *http.Request, tx *sqlx.Tx) {

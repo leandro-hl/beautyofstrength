@@ -12,7 +12,7 @@ export class ModalBlockCreate extends Component {
                     Nuevo Bloque
                 </Modal.Header>
                 <Modal.Content>
-                    <Input fluid placeholder='Nombre' onChange={(e, {value}) => this.props.onChange(value)} />
+                    <Input fluid placeholder={'Bloque '+this.props.next} onChange={(e, {value}) => this.props.onChange(value)} />
                 </Modal.Content>
                 <Modal.Actions>
                     <Button secondary onClick={() => this.props.onClose()}>Cancelar</Button>

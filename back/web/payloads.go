@@ -1,5 +1,7 @@
 package main
 
+import "github.com/leandro-hl/beautyofstrength/back/db"
+
 type SignUpRequest struct {
 	Username *string `json:"username"`
 	Password *string `json:"password"`
@@ -223,4 +225,9 @@ type EditRoutineRequest struct {
 		Id   *int64  `json:"id"`
 		Name *string `json:"name"`
 	} `json:"newGrouperNames"`
+}
+
+type ListExercisesResponse struct {
+	ShowVideoInfo *bool                  `json:"showVideoInfo"`
+	Exercises     []db.ListExerciseQuery `json:"exercises"`
 }

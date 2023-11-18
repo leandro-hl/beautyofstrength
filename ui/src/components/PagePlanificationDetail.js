@@ -232,7 +232,7 @@ class PagePlanificationDetail extends Component {
         }
 
         const actionable = isOwner
-        const canEdit = !editionMode && isEditable && editPlanification
+        const canEdit = !editionMode && isEditable
         const canShare = !editionMode && sharePlanification && actionable
         const savingMode = editionMode && isEditable && editPlanification && actionable
 
@@ -262,12 +262,16 @@ class PagePlanificationDetail extends Component {
                     }
                     {
                         (!editionMode && actionable) ?
-                            canEdit ?
-                            <Icon name={'edit outline'} className={'header-icon'} onClick={() => this.enableEditionPlanification()}/> :
-                            <PopUpDisabledAction
-                                disableHeader={'No es posible editar'}
-                                disableDescription={'Tu o un atleta ya marcaron una rutina de esta planificacion'}
-                                trigger={<Icon name={'edit outline'} className={'header-icon disabled-btn'}/>}/> : null
+                            editPlanification ?
+                                canEdit ?
+                                <Icon name={'edit outline'} className={'header-icon'} onClick={() => this.enableEditionPlanification()}/>
+                                :
+                                <PopUpDisabledAction
+                                    disableHeader={'No es posible editar'}
+                                    disableDescription={'Tu o un atleta ya marcaron una rutina de esta planificacion'}
+                                    trigger={<Icon name={'edit outline'} className={'header-icon disabled-btn'}/>}/>
+                            : <PopUpDisabledAction trigger={<Icon name={'edit outline'} className={'header-icon disabled-btn'}/>}/>
+                        : null
                     }
                     {
                         savingMode &&

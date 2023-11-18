@@ -237,13 +237,22 @@ func UpdateUserPlanificationRoutineAccess(db *sqlx.DB, tx *sqlx.Tx, planificatio
 	stmt.Exec(newUpToRoutineAccess, planificationId, userId)
 }
 
-func ListExercises(db *sqlx.DB, tx *sqlx.Tx) []ListExercise {
-	query := `SELECT e.id, e.name, u.name as createdbyuser FROM exercise e inner join useraccount u on u.id = e.createdbyuser_id  ORDER BY e.name`
+func ListExercises(db *sqlx.DB, tx *sqlx.Tx, userId int64) []ListExerciseQuery {
+	query := `
+		SELECT 
+		    e.id, 
+		    e.name, 
+		    u.name as createdbyuser,
+		    ie.id is null as nocurrentuservideo
+		FROM exercise e 
+		inner join useraccount u on u.id = e.createdbyuser_id  
+		left join instructorexercise ie on e.id = ie.exercise_id and ie.useraccount_id=$1
+		ORDER BY e.name`
 	stmt, err := getTxPreparedStmt(db, tx, query)
 	util.Check(err)
 
-	var dest []ListExercise
-	err = stmt.Select(&dest)
+	var dest []ListExerciseQuery
+	err = stmt.Select(&dest, userId)
 	util.Check(err)
 	return dest
 }

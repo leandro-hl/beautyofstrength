@@ -221,6 +221,12 @@ body > div#root {
   font-size: 1em !important;
 }
 
+.right-floated-icon {
+  float: right !important;
+  margin: 0px !important;
+  font-size: 1em !important;
+}
+
 .input-left-label > div.label {
   background-color: unset !important;
   border: unset !important;

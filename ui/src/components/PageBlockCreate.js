@@ -19,6 +19,7 @@ import {AppContext, setData} from "../context";
 import BottomMenuBar from "./BottomMenuBar";
 import {ExerciseListItemFree} from "./ExerciseListItemFree";
 import {capitalize} from "../functions";
+import {Chip} from "./Chip";
 
 class PageBlockCreate extends Component {
     static contextType = AppContext
@@ -56,9 +57,9 @@ class PageBlockCreate extends Component {
             this.setState({loading: true})
             const res = await listExercises()
             let biggerId = 0
-            for (let i = 0; i < res.data.length; i++) {
-                if (res.data[i].id > biggerId) {
-                    biggerId = res.data[i].id
+            for (let i = 0; i < res.data.exercises.length; i++) {
+                if (res.data.exercises[i].id > biggerId) {
+                    biggerId = res.data.exercises[i].id
                 }
             }
             const defaultBlockName = 'Trabajo '+(nextWorkNumber??1)
@@ -71,7 +72,35 @@ class PageBlockCreate extends Component {
                 newBlockGroupName: newBlockGroupName,
                 newBlockGroupId: newBlockGroupId,
                 blockName: defaultBlockName,
-                exerciseOptions: res.data.map(e => ({key: e.id, value:e.id, text:e.name, createdbyuser: e.createdbyuser.toLowerCase(), comparer: e.name.toLowerCase().trim().replaceAll(' ', '')}))})
+                showVideoInfo: res.data.showVideoInfo,
+                exerciseOptions: res.data.exercises.map(e => ({
+                    key: e.id,
+                    value:e.id,
+                    text: e.name,
+                    content: (
+                        res.data.showVideoInfo ?
+                            <Grid>
+                                <Grid.Row>
+                                    {
+                                        e.nocurrentuservideo ?
+                                        <>
+                                            <Grid.Column width={11}>
+                                                {e.name}
+                                            </Grid.Column>
+                                            <Grid.Column width={5} className={'no-padding'}>
+                                                <Chip omit content={'Sin video'}/>
+                                            </Grid.Column>
+                                        </> : <Grid.Column>
+                                                {e.name}
+                                            </Grid.Column>
+                                    }
+                                </Grid.Row>
+                            </Grid> : e.name
+                    ),
+                    createdbyuser: e.createdbyuser.toLowerCase(),
+                    comparer: e.name.toLowerCase().trim().replaceAll(' ', '')
+                }))})
+
         } catch (e) {
             console.error(e)
         }
