@@ -308,6 +308,10 @@ body > div#root {
   margin-bottom: 1em !important;
 }
 
+.margin-bottom-half {
+  margin-bottom: 0.5em !important;
+}
+
 .full-width {
   width: 100% !important;
 }

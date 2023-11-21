@@ -14,8 +14,6 @@ class PagePublicHome extends Component {
                         background: #252525;
                         color: #ffffff;
                         padding: 1em;
-                        min-height: 70px;
-                        height: 160px;
                         border-bottom: #f9d118 3px solid;
                     }
                         header a {
@@ -45,9 +43,7 @@ class PagePublicHome extends Component {
                         text-align: center;
                         background: #352c2f;
                         color: #ffffff;
-                        position: absolute;
                         width: 100%;
-                        bottom: 0;
                     }`
         return (
             <div>
@@ -60,7 +56,7 @@ class PagePublicHome extends Component {
                                 <li><a href="#">Home</a></li>
                                 <li><a href="#about">Acerca De Nosotros</a></li>
                                 <li><a href="#privacy-policy">Politica de Privacidad</a></li>
-                                <li><a href="https://bos.team/app/signin" target="_blank">Ingresar</a></li>
+                                <li><a href={`${process.env.PUBLIC_URL}/signin`}>Ingresar</a></li>
                             </ul>
                         </nav>
                     </div>
@@ -85,7 +81,7 @@ class PagePublicHome extends Component {
                                 web https://bos.team/app/privacy-policies, detalla nuestras prácticas y compromiso con
                                 la protección de tus datos personales.
                             </p>
-                            <a href="https://bos.team/app/privacy-policies">Lee nuestra politica de privacidad
+                            <a href={`${process.env.PUBLIC_URL}/privacy-policies`}>Lee nuestra politica de privacidad
                                 completa</a>
                         </section>
                     </div>

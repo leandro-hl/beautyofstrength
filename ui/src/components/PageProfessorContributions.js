@@ -14,15 +14,13 @@ class PageProfessorContributions extends Component {
     async componentDidMount() {
         try {
             this.context.dispatch(setData({noBottomBar: false, menuButtonSelected: MENU.CONTRIBUTIONS}))
-            const res = await listPlanifications();
-            this.setState({loading: false, planifications: res.data})
+            this.setState({loading: false})
         } catch (e) {
             console.error(e)
         }
     }
 
     render() {
-        const {planifications} = this.state;
         const {loading} = this.state;
 
         if (loading) {

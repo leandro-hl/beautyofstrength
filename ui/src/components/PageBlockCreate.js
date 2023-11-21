@@ -15,7 +15,7 @@ import {ModalTrainingBlockType} from "./ModalTrainingBlockType";
 import {ExerciseListItemCircuitInterval} from "./ExerciseListItemCircuitInterval";
 import {InputNumber} from "./InputNumber";
 import {ExerciseListItemCombo} from "./ExerciseListItemCombo";
-import {AppContext, setData} from "../context";
+import {AppContext, setData, showSuccess} from "../context";
 import BottomMenuBar from "./BottomMenuBar";
 import {ExerciseListItemFree} from "./ExerciseListItemFree";
 import {capitalize} from "../functions";
@@ -171,6 +171,7 @@ class PageBlockCreate extends Component {
                 restingInteval: parseInt(restingInteval, 10)
             }
             const res = await saveExercisesBlockCpt(request)
+            showSuccess(this.context, '', 'Operacion completada con exito!')
             this.redirectToParentRoutine(res.data.routineId)
         } catch (e) {
             console.log(e)
@@ -198,6 +199,7 @@ class PageBlockCreate extends Component {
                 exeRestingInteval: parseInt(exeRestingInteval, 10)
             }
             const res = await saveExercisesBlockFree(request)
+            showSuccess(this.context, '', 'Operacion completada con exito!')
             this.redirectToParentRoutine(res.data.routineId)
         } catch (e) {
             console.log(e)
@@ -230,6 +232,7 @@ class PageBlockCreate extends Component {
                 restingInteval: null
             }
             const res = await saveExercisesBlockAmrap(request)
+            showSuccess(this.context, '', 'Operacion completada con exito!')
             this.redirectToParentRoutine(res.data.routineId)
         } catch (e) {
             console.log(e)
@@ -251,6 +254,7 @@ class PageBlockCreate extends Component {
                 laps: parseInt(laps, 10),
             }
             const res = await saveExercisesBlockCombo(request)
+            showSuccess(this.context, '', 'Operacion completada con exito!')
             this.redirectToParentRoutine(res.data.routineId)
         } catch (e) {
             console.log(e)
@@ -272,6 +276,7 @@ class PageBlockCreate extends Component {
                 laps: parseInt(laps, 10),
             }
             const res = await saveExerciseBlockPir(request)
+            showSuccess(this.context, '', 'Operacion completada con exito!')
             this.redirectToParentRoutine(res.data.routineId)
         } catch (e) {
             console.log(e)

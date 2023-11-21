@@ -1,9 +1,9 @@
 import React, {Component} from "react";
-import {Button, Checkbox, Grid, Header, Icon, Loader, Message, Popup, Segment} from "semantic-ui-react";
+import {Button, Checkbox, Grid, Header, Icon, Loader, Message, Modal, Popup, Segment} from "semantic-ui-react";
 import {actionateRoutine, listRoutines, savePlanificationEditions, sharePlanification} from "../service";
 import {withRouter} from "react-router-dom";
 import {isLocalhost} from "../functions";
-import {AppContext, setData} from "../context";
+import {AppContext, setData, showSuccess} from "../context";
 import {ModalRoutineActionatedConfirmation} from "./ModalRoutineActionatedConfirmation";
 import {Chip} from "./Chip";
 import {PopUpDisabledAction} from "./PopUpDisabledAction";
@@ -20,7 +20,6 @@ class PagePlanificationDetail extends Component {
             loading: true,
             routines: [],
             planificationId:null,
-            showPopUp: false,
             routinesToDelete:[],
             routinesBackup:[],
             days: [
@@ -101,23 +100,20 @@ class PagePlanificationDetail extends Component {
     }
 
     async sharePlanification() {
+        let res = {}
         try {
             const {planificationId} = this.state
-            const res = await sharePlanification({planificationId})
+            res = await sharePlanification({planificationId})
 
             if (isLocalhost()) {
                 await navigator.clipboard.writeText(`localhost:3000/app${res.data}`);
             } else {
                 await navigator.clipboard.writeText(`https://bos.team/app${res.data}`);
             }
-
-            this.setState({showPopUp: true})
-            const timeId = setTimeout(() => {
-                this.setState({showPopUp: false})
-                clearTimeout(timeId)
-            }, 1000)
+            showSuccess(this.context, '', 'Link copiado al portapapeles!')
         } catch (e) {
             console.error(e)
+            this.setState({planificationLink: `${isLocalhost() ? 'localhost:3000/app' : 'https://bos.team/app'}${res.data}`, showModalCopyLink: true})
         }
     }
 
@@ -128,12 +124,13 @@ class PagePlanificationDetail extends Component {
             const buffer = [...routines]
             if (info.actionatedRoutineAction === 'skip') {
                 buffer[info.actionatedRoutineIndex].completed=false
+                showSuccess(this.context, '', 'Rutina omitida!')
             } else {
                 buffer[info.actionatedRoutineIndex].completed=true
+                showSuccess(this.context, '', 'Rutina completada!')
             }
             buffer[info.actionatedRoutineIndex].isActionable=false
             this.setState({routines: [...buffer]})
-            //todo sucess message
         } catch (e) {
             console.error(e)
         }
@@ -185,6 +182,7 @@ class PagePlanificationDetail extends Component {
                 }
                 await savePlanificationEditions({planificationId, week, routinesToDelete})
                 await this.refresh()
+                showSuccess(this.context, '', 'Planificacion actualizada!')
             }
             this.setState({
                 editionMode: false,
@@ -219,10 +217,11 @@ class PagePlanificationDetail extends Component {
             days,
             week,
             routines,
-            showPopUp,
             showDiscardChangesConfirmation,
             confirmRoutineDeletionIndex,
             showModalRoutineActionated,
+            showModalCopyLink,
+            planificationLink,
             actionatedRoutineId,
             actionatedRoutineAction,
             actionatedRoutineIndex} = this.state;
@@ -253,12 +252,7 @@ class PagePlanificationDetail extends Component {
                     <span>{planificationName ?? 'Mis Rutinas'}</span>
                     {
                         canShare &&
-                        <Popup
-                            size={'small'}
-                            trigger={<Icon name={'share square outline'} className={'header-icon'} onClick={() => this.sharePlanification()}/>}
-                            position={'bottom right'}
-                            open={showPopUp}
-                            content="Link copiado al portapapeles!" basic/>
+                        <Icon name={'share square outline'} className={'header-icon'} onClick={() => this.sharePlanification()}/>
                     }
                     {
                         (!editionMode && actionable) ?
@@ -357,6 +351,18 @@ class PagePlanificationDetail extends Component {
                         onConfirm={(info) => this.actionateRoutine(info)}
                         onClose={() => this.setState({showModalRoutineActionated: false})}
                     />
+                }
+                {
+                    showModalCopyLink &&
+                    <Modal dimmer={'blurring'} size="mini" open={showModalCopyLink} onClose={() => this.setState({showModalCopyLink: false, planificationLink:null})}>
+                        <Modal.Header>Link Generado!</Modal.Header>
+                        <Modal.Content style={{lineBreak: 'anywhere'}}>
+                            <p>{planificationLink}</p>
+                        </Modal.Content>
+                        <Modal.Actions>
+                            <Button secondary onClick={() => this.setState({showModalCopyLink: false, planificationLink:null})}>Cerrar</Button>
+                        </Modal.Actions>
+                    </Modal>
                 }
             </>
         )

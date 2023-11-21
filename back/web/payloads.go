@@ -103,6 +103,9 @@ type SaveUserTrainedTodayRequest struct {
 
 type GetRoutineDetailsResponse struct {
 	Id                      *int64                          `json:"id"`
+	CanBeSaved              *bool                           `json:"canBeSaved"`
+	IsCopy                  *bool                           `json:"isCopy"`
+	AlreadyCopied           *bool                           `json:"alreadyCopied"`
 	Name                    *string                         `json:"name"`
 	Difficulty              *int                            `json:"difficulty"`
 	Duration                *string                         `json:"duration"`
@@ -135,6 +138,7 @@ type GetRoutineDetailsBlockExercise struct {
 }
 
 type ShareRoutineRequest struct {
+	CanBeSaved      *bool  `json:"canBeSaved"`
 	RoutineId       *int64 `json:"routineId"`
 	PlanificationId *int64 `json:"planificationId"`
 }
@@ -188,6 +192,10 @@ type ActionateRoutineRequest struct {
 	ActionatedRoutineAction *string `json:"actionatedRoutineAction"`
 }
 
+type SaveSharedRoutineRequest struct {
+	RoutineId *int64 `json:"routineId"`
+}
+
 type SavePlanificationDaysResponse struct {
 	Id *int64 `json:"id"`
 }
@@ -230,4 +238,12 @@ type EditRoutineRequest struct {
 type ListExercisesResponse struct {
 	ShowVideoInfo *bool                  `json:"showVideoInfo"`
 	Exercises     []db.ListExerciseQuery `json:"exercises"`
+}
+
+type ListLatestEventsResponse struct {
+	Events []string `json:"events"`
+}
+
+type BadRequestResponse struct {
+	ErrorCode *string `json:"code"`
 }

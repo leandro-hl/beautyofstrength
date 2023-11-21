@@ -1,8 +1,27 @@
 import React, {Component} from "react";
-import {Accordion, Button, Divider, Header, Icon, Input, List, Loader, Popup, Segment, Table} from "semantic-ui-react";
+import {
+    Accordion,
+    Button,
+    Divider,
+    Header,
+    Icon,
+    Input,
+    List,
+    Loader, Modal,
+    Popup,
+    Radio,
+    Segment,
+    Table
+} from "semantic-ui-react";
 import {Link, withRouter} from "react-router-dom";
-import {getRoutineDetails, getSharedRoutineDetails, saveRoutineEditions, shareRoutine} from "../service";
-import {AppContext, setData} from "../context";
+import {
+    getRoutineDetails,
+    getSharedRoutineDetails,
+    saveRoutineEditions,
+    saveSharedRoutine,
+    shareRoutine
+} from "../service";
+import {AppContext, setData, showSuccess} from "../context";
 import BottomMenuBar from "./BottomMenuBar";
 import LayoutMobile from "./LayoutMobile";
 import {capitalize, isLocalhost, queryParam} from "../functions";
@@ -18,7 +37,7 @@ class PageRoutineDetail extends Component{
 
     constructor(props) {
         super(props);
-        this.state = {loading: true, name: '', blocks: [], planificationId: null, routineId: null, activeIndexes:[]}
+        this.state = {loading: true, name: '', blocks: [], planificationId: null, routineId: null,canBeSaved:false, activeIndexes:[]}
     }
 
     async componentDidMount() {
@@ -45,9 +64,12 @@ class PageRoutineDetail extends Component{
                 this.setState({
                     loading: false,
                     isShared: !isShared,
+                    canBeSaved: res.data.canBeSaved,
                     routineId: res.data.id,
                     blockGroupers: res.data.blockGroupers,
                     name: res.data.name,
+                    isCopy: res.data.isCopy,
+                    alreadyCopied: res.data.alreadyCopied,
                     difficulty: res.data.difficulty,
                     duration: res.data.duration,
                     nextBlockNumber: res.data.blockGroupers.length+1})
@@ -71,6 +93,8 @@ class PageRoutineDetail extends Component{
                     isOwner,
                     routineId,
                     canEdit,
+                    isCopy: res.data.isCopy,
+                    alreadyCopied: res.data.alreadyCopied,
                     actionable,
                     shared: false,
                     alreadyMarkedByAthetles: res.data.alreadyMarkedByAthetles,
@@ -116,23 +140,22 @@ class PageRoutineDetail extends Component{
     }
 
     async shareRoutine() {
+        let res = {}
         try {
-            const {planificationId, routineId} = this.state
-            const res = await shareRoutine({planificationId, routineId})
+            const {planificationId, routineId, canBeSaved} = this.state
+            res = await shareRoutine({canBeSaved, planificationId, routineId})
 
             if (isLocalhost()) {
                 await navigator.clipboard.writeText(`localhost:3000/app${res.data}`);
             } else {
                 await navigator.clipboard.writeText(`https://bos.team/app${res.data}`);
             }
-
-            this.setState({showPopUp: true})
-            const timeId = setTimeout(() => {
-                this.setState({showPopUp: false})
-                clearTimeout(timeId)
-            }, 1000)
+            showSuccess(this.context, '', 'Link copiado al portapapeles!')
         } catch (e) {
             console.error(e)
+            this.setState({routineLink: `${isLocalhost() ? 'localhost:3000/app' : 'https://bos.team/app'}${res.data}`, showModalCopyLink: true})
+        } finally {
+            this.setState({showPopUp: false})
         }
     }
 
@@ -190,6 +213,19 @@ class PageRoutineDetail extends Component{
                 blockGroupers: [...buf]
             })
             this.setSecondaryActions()
+            showSuccess(this.context, '', 'Cambios en la rutina guardados!')
+        } catch (e) {
+            console.error(e)
+        }
+    }
+
+    async saveSharedRoutine() {
+        try {
+            this.setState({savingSharedRoutine: true})
+            const {routineId} = this.state;
+            await saveSharedRoutine({routineId})
+            this.setState({savingSharedRoutine: false, alreadyCopied: true})
+            showSuccess(this.context, '', 'Rutina guardada en la planificacion "Rutinas Compartidas"!')
         } catch (e) {
             console.error(e)
         }
@@ -271,8 +307,10 @@ class PageRoutineDetail extends Component{
 
     }
 
+    canRoutineBeSavedByThirdPeople = (e, { name, value }) => this.setState({ canBeSaved: name === 'yes' && value })
+
     renderRoutineDetails() {
-        const {state: {permissions: {executeRoutine, editRoutine}}} = this.context
+        const {state: {permissions: {executeRoutine, editRoutine, canSaveSharedRoutines}}} = this.context
         const {
             name,
             confirmBlockGroupDeletionIndex,
@@ -285,10 +323,17 @@ class PageRoutineDetail extends Component{
             blockGroupers,
             activeIndexes,
             isShared,
+            isCopy,
+            canBeSaved,
+            savingSharedRoutine,
             showPopUp,
+            showLinkGenerated,
             isOwner,
+            alreadyCopied,
             showCreateBlockModal,
-            nextBlockNumber
+            nextBlockNumber,
+            showModalCopyLink,
+            routineLink
         } = this.state;
         const savingMode = editionMode && canEdit && editRoutine
 
@@ -307,11 +352,39 @@ class PageRoutineDetail extends Component{
                     }
                     {name}
                     {
-                        (!editionMode && actionable) &&
-                        <Popup size={'small'}
-                               trigger={<Icon name={'share square outline'} className={'header-icon'} onClick={() => this.shareRoutine()}/>}
-                               position={'bottom right'}
-                               open={showPopUp} content="Link copiado al portapapeles!" basic/>
+                        (!editionMode && actionable && !isCopy) &&
+                        <PopUpConfirmation
+                            title={'Compartir Rutina'}
+                            primary={'Compartir'}
+                            secondary={'Cancelar'}
+                            isManaged
+                            open={showPopUp}
+                            trigger={<Icon name={'share square outline'} className={'header-icon'} onClick={() => this.setState({showPopUp: true})}/>}
+                            onPrimaryAction={() => this.shareRoutine()}
+                            onSecondaryAction={() => this.setState({showPopUp: false})}
+                        >
+                            <div className={'margin-bottom-1'}>
+                                Pueden los invitados guardar la rutina? Permite crear una copia de la rutina en la cuenta de los invitados, con acceso a tus videos. Sino, por defecto el link expira en 14 dias. Si creas un nuevo link, reemplazara al existente pero los invitados que hayan guardado la rutina podran seguir accediendola.
+                            </div>
+                            <div className={'margin-bottom-half'}>
+                                <Radio
+                                    label='Permitir Guardar'
+                                    name='yes'
+                                    value={true}
+                                    checked={this.state.canBeSaved}
+                                    onChange={this.canRoutineBeSavedByThirdPeople}
+                                />
+                            </div>
+                            <div>
+                                <Radio
+                                    label='No Permitir'
+                                    name='no'
+                                    value={false}
+                                    checked={!this.state.canBeSaved}
+                                    onChange={this.canRoutineBeSavedByThirdPeople}
+                                />
+                            </div>
+                        </PopUpConfirmation>
                     }
                     {
                         (!editionMode && actionable) ?
@@ -330,6 +403,10 @@ class PageRoutineDetail extends Component{
                     {
                         savingMode &&
                         <Icon disabled={savingEditions} name={'save outline'} className={'header-icon'} onClick={() => this.saveRoutineEditions()}/>
+                    }
+                    {
+                        (isShared && canBeSaved && canSaveSharedRoutines && !alreadyCopied) &&
+                        <Icon disabled={savingSharedRoutine} name={'save outline'} className={'header-icon'} onClick={() => this.saveSharedRoutine()}/>
                     }
                     <div>
                         <Chip style={{fontSize: 14}} success={difficulty===1} progress={difficulty===2} content={difficulty===1? 'Facil' : 'Intermedia'}/>
@@ -440,7 +517,11 @@ class PageRoutineDetail extends Component{
                             <Divider horizontal>
                                 {
                                     (!editionMode && actionable) ?
-                                        canEdit ?
+                                        !editRoutine ?
+                                            <PopUpDisabledAction
+                                                trigger={<Icon name={'plus'} className={'disabled-btn'}/>}/>
+                                            :
+                                            canEdit ?
                                             <Icon name={'plus'} onClick={() => this.addWorkToGrouper(bg, j)}/> :
                                             <PopUpDisabledAction
                                                 disableHeader={'No es posible agregar'}
@@ -457,6 +538,18 @@ class PageRoutineDetail extends Component{
                     onChange={(name)=> this.setState({newBlockName: name})}
                     onClose={() => this.addNewBlockGroupClose()}
                     onConfirm={() => this.addNewBlockGroupConfirm()}/>
+                {
+                    showModalCopyLink &&
+                    <Modal dimmer={'blurring'} size="mini" open={showModalCopyLink} onClose={() => this.setState({showModalCopyLink: false, routineLink:null})}>
+                        <Modal.Header>Link Generado!</Modal.Header>
+                        <Modal.Content style={{lineBreak: 'anywhere'}}>
+                            <p>{routineLink}</p>
+                        </Modal.Content>
+                        <Modal.Actions>
+                            <Button secondary onClick={() => this.setState({showModalCopyLink: false, routineLink:null})}>Cerrar</Button>
+                        </Modal.Actions>
+                    </Modal>
+                }
             </>
         )
     }

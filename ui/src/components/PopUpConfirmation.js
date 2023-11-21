@@ -1,5 +1,5 @@
 import React, {Component} from "react";
-import {Button, Grid, Icon, Popup} from "semantic-ui-react";
+import {Button, Grid, Header, Icon, Popup} from "semantic-ui-react";
 
 export class PopUpConfirmation extends Component {
     constructor(props) {
@@ -73,24 +73,30 @@ export class PopUpConfirmation extends Component {
                 hoverable
                 open={open}
             >
-                <Grid>
-                    <Grid.Row>
-                        <Grid.Column>
-                            {title}
-                        </Grid.Column>
-                    </Grid.Row>
-                    <Grid.Row className={'no-top-padding'}>
-                        <Grid.Column>
-                            <Button onClick={() => this.onPrimaryAction()}
-                                    primary style={{position: 'relative', float: 'right'}}>
-                                {primary}
-                            </Button>
-                            <Button onClick={() => this.onSecondaryAction()} secondary style={{position: 'relative', float: 'right'}}>
-                                {secondary}
-                            </Button>
-                        </Grid.Column>
-                    </Grid.Row>
-                </Grid>
+                <Popup.Header>{title}</Popup.Header>
+                <Popup.Content>
+                    <Grid>
+                        {
+                            this.props.children ?
+                                <Grid.Row>
+                                    <Grid.Column>
+                                        {this.props.children}
+                                    </Grid.Column>
+                                </Grid.Row> : null
+                        }
+                        <Grid.Row className={ this.props.children ? 'no-top-padding' : ''}>
+                            <Grid.Column>
+                                <Button onClick={() => this.onPrimaryAction()}
+                                        primary style={{position: 'relative', float: 'right'}}>
+                                    {primary}
+                                </Button>
+                                <Button onClick={() => this.onSecondaryAction()} secondary style={{position: 'relative', float: 'right'}}>
+                                    {secondary}
+                                </Button>
+                            </Grid.Column>
+                        </Grid.Row>
+                    </Grid>
+                </Popup.Content>
             </Popup>
         )
     }

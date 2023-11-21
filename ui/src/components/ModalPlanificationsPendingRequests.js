@@ -1,8 +1,10 @@
 import React, {Component} from "react";
 import {Button, Grid, Modal, Segment} from "semantic-ui-react";
 import {acceptPlanificationAccessRequest, declinePlanificationAccessRequest} from "../service";
+import {AppContext, showSuccess} from "../context";
 
 export class ModalPlanificationsPendingRequests extends Component {
+    static contextType = AppContext
     state = { showModal: false }
 
     componentDidMount() {
@@ -20,7 +22,7 @@ export class ModalPlanificationsPendingRequests extends Component {
                 requesterUserId: r.useraccount_id
             })
             this.props.onRemove(i)
-            //todo success message
+            showSuccess(this.context, '', `Aceptaste a ${r.requestername} en la planificacion ${r.planificationname}!`)
         } catch (e) {
             console.error(e)
         }
@@ -33,7 +35,7 @@ export class ModalPlanificationsPendingRequests extends Component {
                 requesterUserId: r.useraccount_id
             })
             this.props.onRemove(i)
-            //todo success message
+            showSuccess(this.context, '', `Rechazaste a ${r.requestername} en la planificacion ${r.planificationname}!`)
         } catch (e) {
             console.error(e)
         }
@@ -41,7 +43,7 @@ export class ModalPlanificationsPendingRequests extends Component {
 
     render() {
         return (
-            <Modal dimmer={'blurring'} size="mini" open={this.state.showModal} onClose={() => this.handleClose()}>
+            <Modal size="mini" open={this.state.showModal} onClose={() => this.handleClose()}>
                 <Modal.Header>Solicitudes pendientes</Modal.Header>
                 <Modal.Content>
                     {this.props.requests.length === 0 && <>Sin Solicitudes pendientes</>}

@@ -27,6 +27,7 @@ import PagePlanificationSelectDays from "./components/PagePlanificationSelectDay
 import PageSubscriptionApproved from "./components/PageSubscriptionApproved";
 import ModalExerciseVideo from "./components/ModalExerciseVideo";
 import PagePublicHome from "./components/PagePublicHome";
+import {PopUpMessage} from "./components/PopUpMessage";
 
 class App extends Component {
     render() {
@@ -60,6 +61,7 @@ class App extends Component {
                             </Switch>
                         </LayoutMobile>
                         <ModalExerciseVideo/>
+                        <PopUpMessage/>
                     </StartUp>
                 </ContextProvider>
             </BrowserRouter>
