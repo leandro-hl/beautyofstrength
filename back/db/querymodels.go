@@ -37,11 +37,13 @@ type GetUserAccountDetailsQuery struct {
 }
 
 type GetRoutineHeaderQuery struct {
-	Routineid   *int64  `json:"routineid"`
-	Routinename *string `json:"routinename"`
-	Difficulty  *int    `json:"difficulty"`
-	Duration    *string `json:"duration"`
-	TimesMarked *int    `json:"timesmarked"`
+	Routineid     *int64  `json:"routineid"`
+	Routinename   *string `json:"routinename"`
+	Difficulty    *int    `json:"difficulty"`
+	Duration      *string `json:"duration"`
+	TimesMarked   *int    `json:"timesmarked"`
+	IsCopy        *bool   `json:"iscopy"`
+	AlreadyCopied *bool   `json:"alreadycopied"`
 }
 
 type GetRoutineDetailsQuery struct {
@@ -77,4 +79,11 @@ type GetPlanificationScheduleQuery struct {
 	Days              *string   `json:"days"`
 	AccessUpToRoutine *int      `json:"accessuptoroutine"`
 	AccessLastUpdated time.Time `json:"accesslastupdated"`
+}
+
+type ListLatestEventsByQuery struct {
+	SenderName        *string        `json:"sendername"`
+	PlanificationName *string        `json:"planificationname"`
+	RoutineName       *string        `json:"routinename"`
+	Type              *EventUserType `json:"type"`
 }

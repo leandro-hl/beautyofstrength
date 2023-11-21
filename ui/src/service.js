@@ -60,12 +60,20 @@ export function listQueuedPlanificationAccessRequests() {
     return axios.get("listQueuedPlanificationAccessRequests")
 }
 
+export function listLatestEvents() {
+    return axios.get("listLatestEvents")
+}
+
 export function savePlanificationEditions(payload) {
     return axios.post("savePlanificationEditions", payload)
 }
 
 export function saveRoutineEditions(payload) {
     return axios.post("saveRoutineEditions", payload)
+}
+
+export function saveSharedRoutine(payload) {
+    return axios.post("saveSharedRoutine", payload)
 }
 
 export function saveExercisesBlock(payload) {

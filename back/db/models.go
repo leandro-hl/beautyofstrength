@@ -17,9 +17,26 @@ const (
 	StudentPremium AccountPlanType = 'z'
 )
 
+type EventUserType string
+
+const (
+	SavedCopyOfRoutine EventUserType = "scr"
+)
+
+type EventUser struct {
+	Id              *int64         `json:"id"`
+	Type            *EventUserType `json:"type"`
+	ReceiverId      *int64         `json:"receiver_id"`
+	SenderId        *int64         `json:"sender_id"`
+	PlanificationId *int64         `json:"planification_id"`
+	RoutineId       *int64         `json:"routine_id"`
+	CreatedDate     time.Time      `json:"createddate"`
+}
+
 type Planification struct {
-	Id        *int    `json:"id"`
+	Id        *int64  `json:"id"`
 	Name      *string `json:"name"`
+	Starred   *bool   `json:"starred"`
 	CreatorId *int64  `json:"creator_id"`
 }
 
@@ -30,11 +47,13 @@ type PlanificationSchedule struct {
 }
 
 type Routine struct {
-	Id              *int    `json:"id"`
+	Id              *int64  `json:"id"`
 	Name            *string `json:"name"`
 	PlanificationId *int64  `json:"planification_id"`
 	Difficulty      *int    `json:"difficulty"`
 	Duration        *string `json:"duration"`
+	Active          *bool   `json:"active"`
+	CreatorId       *int64  `json:"creator_id"`
 }
 
 type Exercise struct {
@@ -56,9 +75,9 @@ type BlockGroup struct {
 	Name                *string `json:"name"`
 	Duration            *int    `json:"duration"`
 	Laps                *int    `json:"laps"`
+	LapRestInterval     *int    `json:"laprestinterval"`
+	ExeRestInterval     *int    `json:"exerestinterval"`
 	Type                *string `json:"type"`
-	LapRestInterval     *int    `json:"lapRestInterval"`
-	ExeRestInterval     *int    `json:"exeRestInterval"`
 	RoutineId           *int64  `json:"routine_id"`
 	BlockGroupGrouperId *int64  `json:"blockgroupgrouper_id"`
 }
@@ -142,6 +161,7 @@ type UserSharingToken struct {
 	CreatorId       *int64    `json:"creator_id"`
 	RoutineId       *int64    `json:"routine_id"`
 	PlanificationId *int64    `json:"planification_id"`
+	CanBeSaved      *bool     `json:"canbesaved"`
 	IsValid         *bool     `json:"isvalid"`
 }
 
@@ -149,4 +169,11 @@ type QueuePlanificationAccess struct {
 	Id              *int64 `json:"id"`
 	PlanificationId *int64 `json:"planification_id"`
 	UserAccountId   *int64 `json:"useraccount_id"`
+}
+
+type UserRoutineCopy struct {
+	Id            *int64    `json:"id"`
+	RoutineId     *int64    `json:"routine_id"`
+	UserAccountId *int64    `json:"useraccount_id"`
+	CreatedDate   time.Time `json:"createddate"`
 }

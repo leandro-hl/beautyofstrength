@@ -81,9 +81,18 @@ class SignIn extends Component {
                     </Grid.Row>
                     {
                         isLocalhost() &&
-                        <Grid.Row>
-                            <Button onClick={() => this.signUpWithTestUser('s')}>Sign Up With Test User</Button>
-                        </Grid.Row>
+                        <>
+                            <Grid.Row>
+                                <Button onClick={() => this.signUpWithTestUser('s')}>Sign Up With Free Athlete</Button>
+                            </Grid.Row>
+                            <Grid.Row>
+                                <Button onClick={() => this.signUpWithTestUser('z')}>Sign Up With Premium Athlete</Button>
+                            </Grid.Row>
+                            <Grid.Row>
+                                <Button onClick={() => this.signUpWithTestUser('p')}>Sign Up With Instructor</Button>
+                            </Grid.Row>
+                        </>
+
                     }
 
                     {/*<Grid.Row style={{padding:20}}>*/}

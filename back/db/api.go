@@ -67,6 +67,18 @@ func ListExerciseNames(db *sqlx.DB) []ListExerciseIdName {
 	return exercisesNames
 }
 
+func GetPlanificationIdByName(db *sqlx.DB, tx *sqlx.Tx, userId int64, name string) *int64 {
+	var des int64
+	query := `select id from planification where creator_id=$1 and name=$2`
+	stmt, _ := getTxPreparedStmt(db, tx, query)
+	stmt.Get(&des, userId, name)
+
+	if des == 0 {
+		return nil
+	}
+	return &des
+}
+
 func ListMyPlanifications(db *sqlx.DB, tx *sqlx.Tx, userId int64) []ListPlanificationsQuery {
 	query := `
 		select 
@@ -91,24 +103,37 @@ func ListMyPlanifications(db *sqlx.DB, tx *sqlx.Tx, userId int64) []ListPlanific
 	return dest
 }
 
-func GetRoutineHeader(db *sqlx.DB, tx *sqlx.Tx, routineId int64, userId int64) *GetRoutineHeaderQuery {
+func GetRoutineHeader(db *sqlx.DB, tx *sqlx.Tx, routineId int64, userId int64, currentUserId int64) *GetRoutineHeaderQuery {
 	query := `
 		select
 			r.id routineid,
 			r.name routinename,
 			r.difficulty,
 			r.duration,
-			count(uh.id) timesmarked
+			count(uh.id) timesmarked,
+			r.creator_id != p.creator_id as iscopy,
+			u2.id is not null as alreadycopied
 			from routine r
 		inner join planification p on p.id = r.planification_id
 		inner join userplanification u on r.planification_id = u.planification_id
 		left join userroutinehistory uh on r.id = uh.routine_id
+		left join userroutinecopy u2 on r.id = u2.routine_id and u2.useraccount_id=$3
 		where r.active=true and r.id=$1 and u.useraccount_id=$2
-		group by r.id, r.name`
+		group by r.id, r.name, p.creator_id, u2.id`
 	stmt, err := getTxPreparedStmt(db, tx, query)
 	util.Check(err)
 	var dest GetRoutineHeaderQuery
-	stmt.Get(&dest, routineId, userId)
+	err = stmt.Get(&dest, routineId, userId, currentUserId)
+	util.Check(err)
+	return &dest
+}
+
+func GetRoutineById(db *sqlx.DB, tx *sqlx.Tx, routineId int64) *Routine {
+	query := `select * from routine where id=$1`
+	stmt, err := getTxPreparedStmt(db, tx, query)
+	util.Check(err)
+	var dest Routine
+	stmt.Get(&dest, routineId)
 	return &dest
 }
 
@@ -135,7 +160,7 @@ func GetRoutineDetails(db *sqlx.DB, tx *sqlx.Tx, routineId int64, userId int64) 
 		left join blockgroup b on r.id = b.routine_id and bg.id=b.blockgroupgrouper_id
 		left join exerciseblockgroup eb on b.id = eb.blockgroup_id
 		left join exercise e on e.id = eb.exercise_id
-		left join instructorexercise ie on e.id = ie.exercise_id and p.creator_id = ie.useraccount_id
+		left join instructorexercise ie on e.id = ie.exercise_id and r.creator_id = ie.useraccount_id
 		where r.active=true and r.id=$1 and u.useraccount_id=$2
 		order by bg.id, b.id, eb.id`
 	stmt, err := getTxPreparedStmt(db, tx, query)
@@ -315,7 +340,7 @@ func CreateUserAccount(db *sqlx.DB, tx *sqlx.Tx, user *UserAccount) *int64 {
 	return id
 }
 
-func CreateRoutine(db *sqlx.DB, tx *sqlx.Tx, name string, planificationId int64) *int64 {
+func CreateRoutineDefault(db *sqlx.DB, tx *sqlx.Tx, name string, planificationId, creatorId int64) *int64 {
 	id := Insert(
 		tx,
 		&Routine{
@@ -323,16 +348,77 @@ func CreateRoutine(db *sqlx.DB, tx *sqlx.Tx, name string, planificationId int64)
 			PlanificationId: &planificationId,
 			Difficulty:      util.PInt(1),
 			Duration:        util.PString("01:00"),
+			Active:          util.PBool(true),
+			CreatorId:       &creatorId,
 		})
 	return id
 }
 
-func CreatePlanification(db *sqlx.DB, tx *sqlx.Tx, userId int64, name string) *int64 {
+func CreateRoutine(db *sqlx.DB, tx *sqlx.Tx, name string, planificationId, creatorId int64, difficulty int, duration string) *int64 {
+	id := Insert(
+		tx,
+		&Routine{
+			Name:            &name,
+			PlanificationId: &planificationId,
+			Difficulty:      &difficulty,
+			Duration:        &duration,
+			Active:          util.PBool(true),
+			CreatorId:       &creatorId,
+		})
+	return id
+}
+
+func CreateBlockGrouper(db *sqlx.DB, tx *sqlx.Tx, name string, routineId int64) *int64 {
+	id := Insert(
+		tx,
+		&BlockGroupGrouper{
+			Name:      &name,
+			RoutineId: &routineId,
+		})
+	return id
+}
+
+func CreateBlockGroup(
+	db *sqlx.DB,
+	tx *sqlx.Tx,
+	blockType, name string,
+	routineId, blockGroupId int64,
+	duration, laps, lapRestInterval, exeRestInterval *int) *int64 {
+	id := Insert(
+		tx,
+		&BlockGroup{
+			Name:                &name,
+			Duration:            duration,
+			Laps:                laps,
+			Type:                &blockType,
+			LapRestInterval:     lapRestInterval,
+			ExeRestInterval:     exeRestInterval,
+			RoutineId:           &routineId,
+			BlockGroupGrouperId: &blockGroupId,
+		})
+	return id
+}
+
+func CreateExerciseBlockGroup(db *sqlx.DB, tx *sqlx.Tx, blockId int64, exerciseId int, reps, secs *int) *int64 {
+	id := Insert(
+		tx,
+		&ExerciseBlockGroup{
+			BlockGroupId: &blockId,
+			ExerciseId:   &exerciseId,
+			Reps:         reps,
+			Secs:         secs,
+		})
+
+	return id
+}
+
+func CreatePlanification(db *sqlx.DB, tx *sqlx.Tx, userId int64, name string, starred bool) *int64 {
 	id := Insert(
 		tx,
 		&Planification{
 			Name:      &name,
 			CreatorId: &userId,
+			Starred:   &starred,
 		})
 
 	Insert(
@@ -483,7 +569,7 @@ func CalculateUserOwnsRoutine(db *sqlx.DB, tx *sqlx.Tx, userId, planificationId,
 	query := `
 		select count(1) from planification p 
 		inner join routine r on p.id = r.planification_id 
-		where r.active=true and p.creator_id=$1 and r.planification_id=$2 and r.id=$3`
+		where r.active=true and p.creator_id=$1 and r.planification_id=$2 and r.id=$3 and r.creator_id=$1`
 	stmt, err := getTxPreparedStmt(db, tx, query)
 	util.Check(err)
 
@@ -510,6 +596,16 @@ func CalculateRoutineBlocksAmount(db *sqlx.DB, tx *sqlx.Tx, routineId int64) int
 	var des int
 	stmt.Get(&des, routineId)
 	return des
+}
+
+func CalculateUserAlreadyCopiedRoutine(db *sqlx.DB, tx *sqlx.Tx, userId, routineId int64) bool {
+	query := "select count(1) from userroutinecopy where useraccount_id=$1 and routine_id=$2"
+	stmt, err := getTxPreparedStmt(db, tx, query)
+	util.Check(err)
+
+	var des int
+	stmt.Get(&des, userId, routineId)
+	return des > 0
 }
 
 func GetUserIdByUserName(db *sqlx.DB, tx *sqlx.Tx, userName string) int64 {
@@ -592,12 +688,13 @@ func SelectAllUserDeviceSubscriptions(db *sqlx.DB) []UserDevice {
 	return subs
 }
 
-func SaveUserSharingToken(db *sqlx.DB, tx *sqlx.Tx, planificationId, userId int64, routineId *int64) {
+func SaveUserSharingToken(db *sqlx.DB, tx *sqlx.Tx, planificationId, userId int64, routineId *int64, canBeSaved bool) {
 	Insert(tx, &UserSharingToken{
 		Creationdate:    time.Now(),
 		CreatorId:       &userId,
 		RoutineId:       routineId,
 		PlanificationId: &planificationId,
+		CanBeSaved:      &canBeSaved,
 		IsValid:         util.PBool(true),
 	})
 }
@@ -621,6 +718,18 @@ func GetRoutineUserSharingToken(db *sqlx.DB, tx *sqlx.Tx, planificationId, routi
 
 	var des UserSharingToken
 	stmt.Get(&des, userId, routineId, planificationId)
+	return des
+}
+
+func GetRoutineUserSharingTokenBy(db *sqlx.DB, tx *sqlx.Tx, routineId int64) UserSharingToken {
+	query := `
+		select * from usersharingtoken 
+		where routine_id is not null and routine_id=$1 and isvalid=true`
+	stmt, err := getTxPreparedStmt(db, tx, query)
+	util.Check(err)
+
+	var des UserSharingToken
+	stmt.Get(&des, routineId)
 	return des
 }
 
@@ -721,6 +830,14 @@ func InsertUserRoutineHistory(db *sqlx.DB, tx *sqlx.Tx, completed bool, planific
 		})
 }
 
+func InsertUserRoutineCopy(db *sqlx.DB, tx *sqlx.Tx, userId, routineId int64) {
+	Insert(tx, &UserRoutineCopy{
+		RoutineId:     &routineId,
+		UserAccountId: &userId,
+		CreatedDate:   time.Now(),
+	})
+}
+
 func AcceptPlanificationAccessRequest(db *sqlx.DB, tx *sqlx.Tx, planificationId, requesterUserId, userId int64, plan *AccountPlanType) {
 	query := "delete from queueplanificationaccess where useraccount_id=$1 and planification_id=$2"
 	stmt, err := getTxPreparedStmt(db, tx, query)
@@ -755,4 +872,64 @@ func DeleteRoutine(db *sqlx.DB, tx *sqlx.Tx, routineId int64) {
 	stmt, err := getTxPreparedStmt(db, tx, query)
 	util.Check(err)
 	stmt.Exec(routineId)
+}
+
+func ListBlockGroupGrouperByRoutineId(db *sqlx.DB, tx *sqlx.Tx, routineId int64) []BlockGroupGrouper {
+	query := `select * from blockgroupgrouper where routine_id=$1 order by id`
+	stmt, err := getTxPreparedStmt(db, tx, query)
+	util.Check(err)
+	var des []BlockGroupGrouper
+	stmt.Select(&des, routineId)
+	return des
+}
+
+func ListBlockGroupByRoutineId(db *sqlx.DB, tx *sqlx.Tx, routineId, bgId int64) []BlockGroup {
+	query := `select * from blockgroup where routine_id=$1 and blockgroupgrouper_id=$2 order by id`
+	stmt, err := getTxPreparedStmt(db, tx, query)
+	util.Check(err)
+	var des []BlockGroup
+	err = stmt.Select(&des, routineId, bgId)
+	util.Check(err)
+	return des
+}
+
+func ListBlockGroupExerciseByBlockId(db *sqlx.DB, tx *sqlx.Tx, blockId int64) []ExerciseBlockGroup {
+	query := `select * from exerciseblockgroup where blockgroup_id=$1 order by id`
+	stmt, err := getTxPreparedStmt(db, tx, query)
+	util.Check(err)
+	var des []ExerciseBlockGroup
+	stmt.Select(&des, blockId)
+	return des
+}
+
+func InsertEventUser(
+	db *sqlx.DB,
+	tx *sqlx.Tx,
+	t EventUserType,
+	receiverId, senderId int64,
+	planificationId, routineId *int64) {
+	Insert(
+		tx,
+		&EventUser{
+			Type:            &t,
+			ReceiverId:      &receiverId,
+			SenderId:        &senderId,
+			PlanificationId: planificationId,
+			RoutineId:       routineId,
+			CreatedDate:     time.Now(),
+		})
+}
+
+func ListLatestEventsBy(db *sqlx.DB, tx *sqlx.Tx, receiverId int64) []ListLatestEventsByQuery {
+	query := `
+		select eu.type, u.name as sendername, p.name as planificationname, r.name as routinename from eventuser eu
+		inner join useraccount u on eu.sender_id = u.id
+		left join routine r on eu.routine_id = r.id
+		left join planification p on eu.planification_id = p.id		
+        where receiver_id=$1 and createddate >= CURRENT_DATE - INTERVAL '1 month'`
+	stmt, err := getTxPreparedStmt(db, tx, query)
+	util.Check(err)
+	var des []ListLatestEventsByQuery
+	stmt.Select(&des, receiverId)
+	return des
 }

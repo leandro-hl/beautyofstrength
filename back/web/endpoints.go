@@ -28,6 +28,11 @@ import (
 	"time"
 )
 
+const (
+	MyPlanificationReservedName             = "Mi Planificacion"
+	SharedRoutinesPlanificationReservedName = "Rutinas Compartidas"
+)
+
 type Endpoints struct {
 	db         *sqlx.DB
 	conf       *Config
@@ -223,8 +228,7 @@ func (o *Endpoints) Handle() http.Handler {
 	api.Path("/declinePlanificationAccessRequest").HandlerFunc(o.HandleAuthenticatedTransactional(o.HandleAuthorization(o.declinePlanificationAccessRequest, db.Professor)))
 
 	//Premium services
-	api.Path("/savePlanificationEditions").HandlerFunc(o.HandleAuthenticatedTransactional(o.HandleAuthorization(o.savePlanificationEditions, db.Professor)))
-
+	api.Path("/savePlanificationEditions").HandlerFunc(o.HandleAuthenticatedTransactional(o.HandleAuthorization(o.savePlanificationEditions, db.StudentPremium, db.Professor)))
 	api.Path("/saveRoutineEditions").HandlerFunc(o.HandleAuthenticatedTransactional(o.HandleAuthorization(o.saveRoutineEditions, db.StudentPremium, db.Professor)))
 
 	//Student services
@@ -253,6 +257,8 @@ func (o *Endpoints) Handle() http.Handler {
 	api.Path("/getRoutineDetails").HandlerFunc(o.HandleAuthenticatedTransactional(o.HandleAuthorization(o.getRoutineDetails, db.StudentFree, db.StudentPremium, db.Professor)))
 	api.Path("/getUserAccountDetails").HandlerFunc(o.HandleAuthenticatedTransactional(o.HandleAuthorization(o.getUserAccountDetails, db.StudentFree, db.StudentPremium, db.Professor)))
 	api.Path("/actionateRoutine").HandlerFunc(o.HandleAuthenticatedTransactional(o.HandleAuthorization(o.actionateRoutine, db.StudentFree, db.StudentPremium, db.Professor)))
+	api.Path("/saveSharedRoutine").HandlerFunc(o.HandleAuthenticatedTransactional(o.HandleAuthorization(o.saveSharedRoutine, db.StudentFree, db.StudentPremium, db.Professor)))
+	api.Path("/listLatestEvents").HandlerFunc(o.HandleAuthenticatedTransactional(o.HandleAuthorization(o.listLatestEvents, db.StudentFree, db.StudentPremium, db.Professor)))
 	api.Path("/signout").HandlerFunc(o.HandleAuthenticatedTransactional(o.HandleAuthorization(o.signout, db.StudentFree, db.StudentPremium, db.Professor)))
 	api.Path("/checkAuth").HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		_, err := r.Cookie("auth_token")
@@ -298,6 +304,7 @@ func (o *Endpoints) getUserPermissions(w http.ResponseWriter, r *http.Request, t
 		permissions["listPlanifications"] = true
 		permissions["menuplanifications"] = true
 		permissions["listExercises"] = true
+		permissions["canSaveSharedRoutines"] = true
 		//not implemented
 		permissions["createOneRoutine"] = true
 		permissions["editRoutinesICreated"] = true
@@ -344,9 +351,9 @@ func (o *Endpoints) getRoutineDetails(w http.ResponseWriter, r *http.Request, tx
 	util.Check(err)
 	userId := util.UserId(r)
 
-	header := db.GetRoutineHeader(o.db, tx, routineId, userId)
+	header := db.GetRoutineHeader(o.db, tx, routineId, userId, userId)
 	result := db.GetRoutineDetails(o.db, tx, routineId, userId)
-	res := o.calculateRoutineDetailsResponse(header, result)
+	res := o.calculateRoutineDetailsResponse(header, result, false)
 
 	o.Respond(w, &res, http.StatusOK)
 }
@@ -365,28 +372,31 @@ func (o *Endpoints) getSharedRoutineDetails(w http.ResponseWriter, r *http.Reque
 		util.Check(err)
 
 		metaData := db.GetRoutineUserSharingToken(o.db, tx, t.PlanificationId, t.RoutineId, t.CreatorId)
-
 		if metaData.Creationdate.Add(time.Hour * time.Duration(*o.conf.LinkSharingExpirationDays) * 24).Before(time.Now()) {
 			db.InvalidateSharingTokenForRoutine(o.db, tx, t.PlanificationId, t.RoutineId, t.CreatorId)
-			o.Respond(w, nil, http.StatusUnauthorized)
+			panic(&BadRequestResponse{ErrorCode: util.PString("shared_routine_expired")})
 		} else {
-			header := db.GetRoutineHeader(o.db, tx, t.RoutineId, t.CreatorId)
+			usr := util.UserId(r)
+			header := db.GetRoutineHeader(o.db, tx, t.RoutineId, t.CreatorId, usr)
 			result := db.GetRoutineDetails(o.db, tx, t.RoutineId, t.CreatorId)
-			res := o.calculateRoutineDetailsResponse(header, result)
+			res := o.calculateRoutineDetailsResponse(header, result, *metaData.CanBeSaved)
 
 			o.Respond(w, &res, http.StatusOK)
 		}
 	} else {
-		o.Respond(w, nil, http.StatusUnauthorized)
+		panic(&BadRequestResponse{ErrorCode: util.PString("no_shared_routine")})
 	}
 }
 
-func (o *Endpoints) calculateRoutineDetailsResponse(header *db.GetRoutineHeaderQuery, result []db.GetRoutineDetailsQuery) *GetRoutineDetailsResponse {
+func (o *Endpoints) calculateRoutineDetailsResponse(header *db.GetRoutineHeaderQuery, result []db.GetRoutineDetailsQuery, canBeSaved bool) *GetRoutineDetailsResponse {
 	res := &GetRoutineDetailsResponse{
 		Id:                      header.Routineid,
 		Name:                    header.Routinename,
 		Difficulty:              header.Difficulty,
 		Duration:                header.Duration,
+		IsCopy:                  header.IsCopy,
+		AlreadyCopied:           header.AlreadyCopied,
+		CanBeSaved:              &canBeSaved,
 		AlreadyMarkedByAthetles: util.PBool(*header.TimesMarked > 0),
 		BlockGroupers:           make([]GetRoutineDetailsBlockGrouper, 0),
 	}
@@ -454,6 +464,81 @@ func (o *Endpoints) calculateRoutineDetailsResponse(header *db.GetRoutineHeaderQ
 	return res
 }
 
+func (o *Endpoints) listLatestEvents(w http.ResponseWriter, r *http.Request, tx *sqlx.Tx) {
+	usr := util.UserId(r)
+	events := db.ListLatestEventsBy(o.db, tx, usr)
+
+	res := make([]string, 0)
+	for _, e := range events {
+		switch *e.Type {
+		case db.SavedCopyOfRoutine:
+			res = append(res, fmt.Sprintf("%s guardó la rutina %s que compartiste", *e.SenderName, *e.RoutineName))
+			break
+		}
+	}
+
+	o.Respond(w, &ListLatestEventsResponse{Events: res}, http.StatusOK)
+}
+
+func (o *Endpoints) saveSharedRoutine(w http.ResponseWriter, r *http.Request, tx *sqlx.Tx) {
+	t := SaveSharedRoutineRequest{}
+	err := o.Decode(r, &t)
+	util.Check(err)
+
+	usr := util.UserId(r)
+	meta := db.GetRoutineUserSharingTokenBy(o.db, tx, *t.RoutineId)
+	if *meta.CanBeSaved {
+		if db.CalculateUserAlreadyCopiedRoutine(o.db, tx, usr, *t.RoutineId) {
+			panic(&BadRequestResponse{ErrorCode: util.PString("shared_routine_already_copied")})
+			//panic(errors.New("you cannot copy the same routine twice"))
+		}
+
+		planificationId := db.GetPlanificationIdByName(o.db, tx, usr, SharedRoutinesPlanificationReservedName)
+		if planificationId == nil {
+			planificationId = db.CreatePlanification(o.db, tx, usr, SharedRoutinesPlanificationReservedName, true)
+			db.InsertPlanificationDays(o.db, tx, *planificationId, "01234")
+		} else {
+			count := db.CountRoutinesInPlanification(o.db, tx, *planificationId)
+			plan := o.plan(r)
+			if *plan == db.StudentFree && *count > 0 {
+				panic(&BadRequestResponse{ErrorCode: util.PString("free_saved_routines_limit")})
+				//panic(errors.New("free accounts cannot save more than one shared routine"))
+			}
+		}
+
+		original := db.GetRoutineById(o.db, tx, *t.RoutineId)
+		originalGroupers := db.ListBlockGroupGrouperByRoutineId(o.db, tx, *t.RoutineId)
+		newRoutineId := db.CreateRoutine(
+			o.db,
+			tx,
+			*original.Name,
+			*planificationId,
+			*original.CreatorId,
+			*original.Difficulty,
+			*original.Duration)
+
+		for _, bg := range originalGroupers {
+			newBgId := db.CreateBlockGrouper(o.db, tx, *bg.Name, *newRoutineId)
+			originalGroups := db.ListBlockGroupByRoutineId(o.db, tx, *bg.RoutineId, *bg.Id)
+
+			for _, b := range originalGroups {
+				newBlockGroupId := db.CreateBlockGroup(o.db, tx, *b.Type, *b.Name, *newRoutineId, *newBgId, b.Duration, b.Laps, b.LapRestInterval, b.ExeRestInterval)
+				originalExercises := db.ListBlockGroupExerciseByBlockId(o.db, tx, *b.Id)
+
+				for _, ex := range originalExercises {
+					db.CreateExerciseBlockGroup(o.db, tx, *newBlockGroupId, *ex.ExerciseId, ex.Reps, ex.Secs)
+				}
+			}
+		}
+
+		db.InsertEventUser(o.db, tx, db.SavedCopyOfRoutine, *original.CreatorId, usr, nil, original.Id)
+		db.InsertUserRoutineCopy(o.db, tx, usr, *original.Id)
+	} else {
+		panic(&BadRequestResponse{ErrorCode: util.PString("cannot_save_routine")})
+		//panic(errors.New("routine cannot be saved"))
+	}
+}
+
 func (o *Endpoints) actionateRoutine(w http.ResponseWriter, r *http.Request, tx *sqlx.Tx) {
 	t := ActionateRoutineRequest{}
 	err := o.Decode(r, &t)
@@ -465,7 +550,8 @@ func (o *Endpoints) actionateRoutine(w http.ResponseWriter, r *http.Request, tx 
 		iAmPremium := *plan == db.StudentPremium || *plan == db.Professor
 		if !iAmPremium {
 			if db.CalculateUserAlreadyActionatedARoutineToday(o.db, tx, *t.PlanificationId, usr) {
-				panic(errors.New("you already actionate a routine today"))
+				panic(&BadRequestResponse{ErrorCode: util.PString("free_actionate_routine_limit")})
+				//panic(errors.New("you already actionate a routine today"))
 			}
 			schedule := db.GetPlanificationScheduleByUser(o.db, tx, *t.PlanificationId, usr)
 			db.UpdateUserPlanificationRoutineAccess(o.db, tx, *t.PlanificationId, usr, *schedule.AccessUpToRoutine+1)
@@ -476,14 +562,16 @@ func (o *Endpoints) actionateRoutine(w http.ResponseWriter, r *http.Request, tx 
 		} else if *t.ActionatedRoutineAction == "finished" {
 			db.InsertUserRoutineHistory(o.db, tx, true, *t.PlanificationId, *t.ActionatedRoutineId, usr)
 		}
+	} else {
+		panic(&BadRequestResponse{ErrorCode: util.PString("no_access")})
 	}
-	o.Respond(w, nil, http.StatusOK)
 }
 
 func (o *Endpoints) listRoutines(w http.ResponseWriter, r *http.Request, tx *sqlx.Tx) {
 	id := r.URL.Query().Get("planificationId")
 	if id == "" {
-		panic(errors.New("planification id is required"))
+		panic(&BadRequestResponse{ErrorCode: util.PString("required_planificationid")})
+		//panic(errors.New("planification id is required"))
 	}
 	planificationId, err := strconv.ParseInt(id, 10, 64)
 	util.Check(err)
@@ -613,12 +701,14 @@ func (o *Endpoints) saveRoutineEditions(w http.ResponseWriter, r *http.Request, 
 
 	userId := util.UserId(r)
 	if !db.CalculateUserOwnsRoutine(o.db, tx, userId, *t.PlanificationId, *t.RoutineId) {
-		panic(errors.New("unauthorized to modify the requested routine"))
+		panic(&BadRequestResponse{ErrorCode: util.PString("no_access")})
+		//panic(errors.New("unauthorized to modify the requested routine"))
 	}
 
 	plan := o.plan(r)
 	if *plan != db.StudentPremium && *plan != db.Professor {
-		panic(errors.New("you need a premium account to make this operation"))
+		panic(&BadRequestResponse{ErrorCode: util.PString("no_access_premium")})
+		//panic(errors.New("you need a premium account to make this operation"))
 	}
 
 	for _, g := range t.NewGrouperNames {
@@ -631,36 +721,43 @@ func (o *Endpoints) saveExerciseBlockValidations(r *http.Request, tx *sqlx.Tx, r
 	plan := o.plan(r)
 
 	if !db.CalculateUserOwnsPlanification(o.db, tx, userId, *planificationId) {
-		panic(errors.New("unauthorized to modify the requested planification"))
+		panic(&BadRequestResponse{ErrorCode: util.PString("no_access")})
+		//panic(errors.New("unauthorized to modify the requested planification"))
 	}
 
 	if len(exercises) == 0 {
-		panic(errors.New("you are not adding any exercises but at least one is required"))
+		panic(&BadRequestResponse{ErrorCode: util.PString("required_at_least_one_exercise")})
+		//panic(errors.New("you are not adding any exercises but at least one is required"))
 	}
 
 	if len(exercises) > *o.conf.ExercisesPerBlockLimit {
-		panic(fmt.Errorf("you cannot add more than %d to an exercises block", *o.conf.ExercisesPerBlockLimit))
+		panic(&BadRequestResponse{ErrorCode: util.PString("work_exercises_limit")})
+		//panic(fmt.Errorf("you cannot add more than %d to an exercises block", *o.conf.ExercisesPerBlockLimit))
 	}
 
 	if routineId == nil {
 		last := db.CountRoutinesInPlanification(o.db, tx, *planificationId)
 		if *plan == db.StudentFree && *last > 0 {
-			panic(errors.New("free accounts cannot have more than one routine"))
+			panic(&BadRequestResponse{ErrorCode: util.PString("free_create_routine_limit")})
+			//panic(errors.New("free accounts cannot have more than one routine"))
 		}
-		routineId = db.CreateRoutine(o.db, tx, fmt.Sprintf("Dia %d", *last+1), *planificationId)
+		routineId = db.CreateRoutineDefault(o.db, tx, fmt.Sprintf("Dia %d", *last+1), *planificationId, userId)
 	} else {
 		if !db.CalculateUserOwnsRoutine(o.db, tx, userId, *planificationId, *routineId) {
-			panic(errors.New("unauthorized to modify the requested routine"))
+			panic(&BadRequestResponse{ErrorCode: util.PString("no_access")})
+			//panic(errors.New("unauthorized to modify the requested routine"))
 		}
 
-		header := db.GetRoutineHeader(o.db, tx, *routineId, userId)
+		header := db.GetRoutineHeader(o.db, tx, *routineId, userId, userId)
 		if *header.TimesMarked > 0 {
-			panic(errors.New("you cannot add more exercise blocks to a routine that was already marked by any athlete"))
+			panic(&BadRequestResponse{ErrorCode: util.PString("cannot_modify_routine")})
+			//panic(errors.New("you cannot add more exercise blocks to a routine that was already marked by any athlete"))
 		}
 
 		blocks := db.CalculateRoutineBlocksAmount(o.db, tx, *routineId)
 		if *plan == db.StudentFree && blocks >= *o.conf.StudentFreeAccountRoutineBlocksLimit {
-			panic(errors.New(fmt.Sprintf("you cannot add more than %d exercise blocks to a routine with a free account", *o.conf.StudentFreeAccountRoutineBlocksLimit)))
+			panic(&BadRequestResponse{ErrorCode: util.PString("free_work_routine_limit")})
+			//panic(errors.New(fmt.Sprintf("you cannot add more than %d exercise blocks to a routine with a free account", *o.conf.StudentFreeAccountRoutineBlocksLimit)))
 		}
 	}
 
@@ -714,7 +811,8 @@ func (o *Endpoints) saveExerciseBlockValidations(r *http.Request, tx *sqlx.Tx, r
 			}
 			count := db.CountExercisesCreatedByUser(o.db, tx, userId)
 			if *count > *o.conf.CustomExercisesPerUserLimit {
-				panic(errors.New("you cannot create more new exercises"))
+				panic(&BadRequestResponse{ErrorCode: util.PString("new_exercises_limit")})
+				//panic(errors.New("you cannot create more new exercises"))
 			}
 			exerciseId := db.CreateExercise(o.db, tx, *ex.SanitizedName, userId)
 			*ex.ExerciseRequest.Name = *ex.SanitizedName
@@ -829,8 +927,17 @@ func (o *Endpoints) createPlanification(w http.ResponseWriter, r *http.Request, 
 	err := o.Decode(r, &t)
 	util.Check(err)
 
+	if t.Name == nil {
+		panic(&BadRequestResponse{ErrorCode: util.PString("create_planification_name_required")})
+	}
+
+	if *t.Name == MyPlanificationReservedName || *t.Name == SharedRoutinesPlanificationReservedName {
+		panic(&BadRequestResponse{ErrorCode: util.PString("create_planification_reserved_names")})
+		//panic(errors.New("you cannot use reserved planification names"))
+	}
+
 	userId := util.UserId(r)
-	id := db.CreatePlanification(o.db, tx, userId, *t.Name)
+	id := db.CreatePlanification(o.db, tx, userId, *t.Name, false)
 	o.Respond(w, &CreatePlanificationResponse{Id: id}, http.StatusOK)
 }
 
@@ -840,8 +947,7 @@ func (o *Endpoints) savePlanificationDays(w http.ResponseWriter, r *http.Request
 	util.Check(err)
 
 	if len(*t.Days) <= 0 {
-		//todo: validation message
-		return
+		panic(&BadRequestResponse{ErrorCode: util.PString("required_planification_week_one_day")})
 	}
 
 	userId := util.UserId(r)
@@ -988,7 +1094,7 @@ func (o *Endpoints) googleSignIn(w http.ResponseWriter, r *http.Request, tx *sql
 			Locale:        util.PString(claims.Locale),
 			AccountPlanId: planId,
 		})
-		planificationId := db.CreatePlanification(o.db, tx, *userId, "Mi Planificacion")
+		planificationId := db.CreatePlanification(o.db, tx, *userId, MyPlanificationReservedName, true)
 		db.InsertPlanificationDays(o.db, tx, *planificationId, "01234")
 		o.storeSessionData(w, tx, *userId)
 		http.Redirect(w, r, *o.conf.AddressUi+"/app"+"/plans", http.StatusFound)
@@ -1033,7 +1139,7 @@ func (o *Endpoints) shareRoutine(w http.ResponseWriter, r *http.Request, tx *sql
 		encrypted, err := util.Encrypt(string(str), key)
 		util.Check(err)
 
-		db.SaveUserSharingToken(o.db, tx, *t.PlanificationId, userId, t.RoutineId)
+		db.SaveUserSharingToken(o.db, tx, *t.PlanificationId, userId, t.RoutineId, *t.CanBeSaved)
 		o.Respond(w, fmt.Sprintf("/routine?share=%s", base64.RawURLEncoding.EncodeToString([]byte(encrypted))), http.StatusOK)
 	} else {
 		o.Respond(w, nil, http.StatusUnauthorized)
@@ -1097,24 +1203,15 @@ func (o *Endpoints) savePlanificationEditions(w http.ResponseWriter, r *http.Req
 	util.Check(err)
 	userId := util.UserId(r)
 	if len(p.Week) <= 0 {
-		//todo: validation message
-		return
+		panic(&BadRequestResponse{ErrorCode: util.PString("required_planification_week_one_day")})
 	}
 
 	if !db.CalculateUserOwnsPlanification(o.db, tx, userId, *p.PlanificationId) {
-		//todo: validation message
-		return
+		panic(&BadRequestResponse{ErrorCode: util.PString("no_access")})
 	}
 
 	if db.CalculatePlanificationAlreadyExecutedBySomeone(o.db, tx, *p.PlanificationId) {
-		//todo: validation message
-		return
-	}
-
-	plan := db.GetAccountPlanIdentifierByUserId(o.db, tx, userId)
-	if *plan != db.StudentPremium && *plan != db.Professor {
-		//todo: validation message
-		return
+		panic(&BadRequestResponse{ErrorCode: util.PString("cannot_edit_planification_being_executed")})
 	}
 
 	db.UpdatePlanificationDays(o.db, tx, *p.PlanificationId, strings.Join(p.Week, ""))
@@ -1140,7 +1237,7 @@ func (o *Endpoints) sharePlanification(w http.ResponseWriter, r *http.Request, t
 		encrypted, err := util.Encrypt(string(str), key)
 		util.Check(err)
 
-		db.SaveUserSharingToken(o.db, tx, *t.PlanificationId, userId, nil)
+		db.SaveUserSharingToken(o.db, tx, *t.PlanificationId, userId, nil, false)
 		o.Respond(w, fmt.Sprintf("/my-planifications?pshare=%s", base64.RawURLEncoding.EncodeToString([]byte(encrypted))), http.StatusOK)
 	} else {
 		o.Respond(w, nil, http.StatusUnauthorized)
@@ -1272,7 +1369,7 @@ func (o *Endpoints) createTestUser(w http.ResponseWriter, r *http.Request, tx *s
 		Locale:        util.PString(""),
 		AccountPlanId: planId,
 	})
-	planificationId := db.CreatePlanification(o.db, tx, *userId, "Mi Planificacion")
+	planificationId := db.CreatePlanification(o.db, tx, *userId, MyPlanificationReservedName, true)
 	db.InsertPlanificationDays(o.db, tx, *planificationId, "01234")
 	o.storeSessionData(w, tx, *userId)
 
@@ -1439,6 +1536,8 @@ func (o *Endpoints) HandleFatal(handlerFunc http.HandlerFunc) http.HandlerFunc {
 		defer func() {
 			if e := recover(); e != nil {
 				switch e.(type) {
+				case *BadRequestResponse:
+					o.Respond(w, e, http.StatusBadRequest)
 				case util.ValidationErrors:
 					o.Respond(w, e, http.StatusBadRequest)
 				default:

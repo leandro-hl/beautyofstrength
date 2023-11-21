@@ -7,7 +7,7 @@ import {
     requestAccessToSharedPlanification
 } from "../service";
 import {withRouter} from "react-router-dom";
-import {AppContext, setData} from "../context";
+import {AppContext, setData, showSuccess} from "../context";
 import BottomMenuBar from "./BottomMenuBar";
 import LayoutMobile from "./LayoutMobile";
 import {MENU} from "../enums";
@@ -57,7 +57,7 @@ class PagePlanificationList extends Component {
     }
 
     redirectToPlanificationDays(p) {
-        this.context.dispatch(setData({planificationId: p.id, planificationName: p.name}, true))
+        this.context.dispatch(setData({planificationId: p.id, planificationName: p.name, isOwner: p.owner}, true))
         this.props.history.push('/planification-days')
     }
 
@@ -65,6 +65,7 @@ class PagePlanificationList extends Component {
         try {
             const {newPlanificationName} = this.state
             const res = await createPlanification({name: newPlanificationName});
+            showSuccess(this.context, '', 'Planificacion creada!')
             this.redirectToPlanificationDays({id: res.data.id, name: newPlanificationName, owner: true})
         } catch (e) {
             console.error(e)
@@ -98,6 +99,7 @@ class PagePlanificationList extends Component {
             const {sharedPlanification} = this.state
             await requestAccessToSharedPlanification({sharedPlanification})
             localStorage.removeItem('planification-shared')
+            showSuccess(this.context, '', 'Solicitaste acceso a la planificacion!')
         } catch (e) {
             console.error(e)
         }
@@ -121,6 +123,7 @@ class PagePlanificationList extends Component {
             this.setState({refreshing: true})
             const res = await listPlanifications();
             this.setState({refreshing: false, planifications: res.data})
+            showSuccess(this.context, '', 'Lista de planificaciones actualizada!')
         } catch (e) {
             console.error(e)
         }

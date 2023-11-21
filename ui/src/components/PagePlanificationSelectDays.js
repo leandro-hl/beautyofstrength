@@ -1,7 +1,7 @@
 import {withRouter} from "react-router-dom";
 import React, {Component} from "react";
 import {Header, Checkbox, Loader, Button, Icon, Message} from "semantic-ui-react";
-import {AppContext, setData} from "../context";
+import {AppContext, setData, showSuccess} from "../context";
 import {savePlanificationDays} from "../service";
 
 class PagePlanificationSelectDays extends Component {
@@ -20,6 +20,7 @@ class PagePlanificationSelectDays extends Component {
                 .map(([key]) => key);
 
             await savePlanificationDays({planificationId: planificationId,days: payload.join("")})
+            showSuccess(this.context, '', 'Dias de la planificacion seleccionados!')
             this.redirectToPlanification()
         } catch (e) {
             console.error(e)

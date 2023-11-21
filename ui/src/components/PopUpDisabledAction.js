@@ -17,6 +17,7 @@ export class PopUpDisabledAction extends Component {
 
         this.timeout = setTimeout(() => {
             this.setState({ isOpen: false })
+            clearTimeout(this.timeout)
         }, 2500)
     }
 
