@@ -716,9 +716,13 @@ func (o *Endpoints) saveRoutineEditions(w http.ResponseWriter, r *http.Request, 
 	}
 }
 
-func (o *Endpoints) saveExerciseBlockValidations(r *http.Request, tx *sqlx.Tx, routineId, planificationId *int64, exercises []ExerciseRequest) ([]ExerciseRequest, *int64) {
+func (o *Endpoints) saveExerciseBlockValidations(r *http.Request, tx *sqlx.Tx, routineId, planificationId *int64, exercises []ExerciseRequest, newName *string) ([]ExerciseRequest, *int64) {
 	userId := util.UserId(r)
 	plan := o.plan(r)
+
+	if len(*newName) > 50 {
+		panic(&BadRequestResponse{ErrorCode: util.PString("create_blockgroup_name_max_50")})
+	}
 
 	if !db.CalculateUserOwnsPlanification(o.db, tx, userId, *planificationId) {
 		panic(&BadRequestResponse{ErrorCode: util.PString("no_access")})
@@ -830,7 +834,7 @@ func (o *Endpoints) saveExercisesBlockFree(w http.ResponseWriter, r *http.Reques
 	err := o.Decode(r, &t)
 	util.Check(err)
 
-	validExercises, routineId := o.saveExerciseBlockValidations(r, tx, t.RoutineId, t.PlanificationId, t.Exercises)
+	validExercises, routineId := o.saveExerciseBlockValidations(r, tx, t.RoutineId, t.PlanificationId, t.Exercises, t.NewBlockGroupName)
 	exercises := make([]db.ExerciseBlockGroup, 0)
 	for _, e := range validExercises {
 		if e.Type != nil && *e.Type == "sec" {
@@ -856,7 +860,7 @@ func (o *Endpoints) saveExercisesBlockCpt(w http.ResponseWriter, r *http.Request
 	err := o.Decode(r, &t)
 	util.Check(err)
 
-	validExercises, routineId := o.saveExerciseBlockValidations(r, tx, t.RoutineId, t.PlanificationId, t.Exercises)
+	validExercises, routineId := o.saveExerciseBlockValidations(r, tx, t.RoutineId, t.PlanificationId, t.Exercises, t.NewBlockGroupName)
 	exercises := make([]db.ExerciseBlockGroup, 0)
 	for _, e := range validExercises {
 		exercises = append(exercises, db.ExerciseBlockGroup{
@@ -874,7 +878,7 @@ func (o *Endpoints) saveExercisesBlockAmrap(w http.ResponseWriter, r *http.Reque
 	err := o.Decode(r, &t)
 	util.Check(err)
 
-	validExercises, routineId := o.saveExerciseBlockValidations(r, tx, t.RoutineId, t.PlanificationId, t.Exercises)
+	validExercises, routineId := o.saveExerciseBlockValidations(r, tx, t.RoutineId, t.PlanificationId, t.Exercises, t.NewBlockGroupName)
 	exercises := make([]db.ExerciseBlockGroup, 0)
 	for _, e := range validExercises {
 		exercises = append(exercises, db.ExerciseBlockGroup{
@@ -892,7 +896,7 @@ func (o *Endpoints) saveExercisesBlockCombo(w http.ResponseWriter, r *http.Reque
 	err := o.Decode(r, &t)
 	util.Check(err)
 
-	validExercises, routineId := o.saveExerciseBlockValidations(r, tx, t.RoutineId, t.PlanificationId, t.Exercises)
+	validExercises, routineId := o.saveExerciseBlockValidations(r, tx, t.RoutineId, t.PlanificationId, t.Exercises, t.NewBlockGroupName)
 	exercises := make([]db.ExerciseBlockGroup, 0)
 	for _, e := range validExercises {
 		exercises = append(exercises, db.ExerciseBlockGroup{
@@ -909,7 +913,7 @@ func (o *Endpoints) saveExerciseBlockPir(w http.ResponseWriter, r *http.Request,
 	err := o.Decode(r, &t)
 	util.Check(err)
 
-	validExercises, routineId := o.saveExerciseBlockValidations(r, tx, t.RoutineId, t.PlanificationId, t.Exercises)
+	validExercises, routineId := o.saveExerciseBlockValidations(r, tx, t.RoutineId, t.PlanificationId, t.Exercises, t.NewBlockGroupName)
 	exercises := make([]db.ExerciseBlockGroup, 0)
 	for _, e := range validExercises {
 		exercises = append(exercises, db.ExerciseBlockGroup{
@@ -934,6 +938,10 @@ func (o *Endpoints) createPlanification(w http.ResponseWriter, r *http.Request, 
 	if *t.Name == MyPlanificationReservedName || *t.Name == SharedRoutinesPlanificationReservedName {
 		panic(&BadRequestResponse{ErrorCode: util.PString("create_planification_reserved_names")})
 		//panic(errors.New("you cannot use reserved planification names"))
+	}
+
+	if len(*t.Name) > 50 {
+		panic(&BadRequestResponse{ErrorCode: util.PString("create_planification_name_max_50")})
 	}
 
 	userId := util.UserId(r)

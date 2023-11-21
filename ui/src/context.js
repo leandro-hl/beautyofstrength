@@ -150,6 +150,16 @@ export function calculareError(code) {
                 title: '',
                 description: 'No podes usar nombres reservados para crear planificaciones'
             }
+        case 'create_planification_name_max_50':
+            return {
+                title: '',
+                description: 'El nombre de la planificacion no debe tener mas de 50 letras'
+            }
+        case 'create_blockgroup_name_max_50':
+            return {
+                title: '',
+                description: 'El nombre del bloque no debe tener mas de 50 letras'
+            }
         case 'no_access':
             return {
                 title: '',
