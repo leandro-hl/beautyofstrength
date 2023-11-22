@@ -2,12 +2,12 @@ import React, {Component} from "react";
 import {
     Accordion,
     Button,
-    Divider,
+    Divider, Grid,
     Header,
     Icon,
-    Input,
+    Input, Label,
     List,
-    Loader, Modal,
+    Loader, Message, Modal,
     Popup,
     Radio,
     Segment,
@@ -31,13 +31,27 @@ import {ModalBlockCreate} from "./ModalBlockCreate";
 import {Chip} from "./Chip";
 import {PopUpContinueEditing} from "./PopUpContinueEditing";
 import {PopUpConfirmation} from "./PopUpConfirmation";
+import {ExerciseSearch} from "./ExerciseSearch";
+import {SegRepsButtonGroup} from "./SegRepsButtonGroup";
 
 class PageRoutineDetail extends Component{
     static contextType = AppContext
 
     constructor(props) {
         super(props);
-        this.state = {loading: true, name: '', blocks: [], planificationId: null, routineId: null,canBeSaved:false, activeIndexes:[]}
+        this.state = {
+            loading: true,
+            name: '',
+            blocks: [],
+            planificationId: null,
+            routineId: null,
+            canBeSaved:false,
+            activeIndexes:[],
+            activeDraftExercise: {
+                type: 'reps',
+                ex: []
+            }
+        }
     }
 
     async componentDidMount() {
@@ -59,7 +73,7 @@ class PageRoutineDetail extends Component{
                     secondaryActions: [],
                     noBottomBar: false,
                     menuButtonSelected: MENU.PLANIFICATIONS,
-                    routineDetails: {...res.data, nextBlockNumber: res.data.blockGroupers.length+1}}))
+                    nextBlockNumber: res.data.blockGroupers.length+1}))
                 this.context.dispatch(setData({routineId: res.data.id, shared: true}, true))
                 this.setState({
                     loading: false,
@@ -74,40 +88,64 @@ class PageRoutineDetail extends Component{
                     duration: res.data.duration,
                     nextBlockNumber: res.data.blockGroupers.length+1})
             } else {
-                const {state: {routineId, planificationId, isOwner}} = this.context
-                const res = await getRoutineDetails(routineId);
-
-                const actionable = !isShared && isOwner
-                let canEdit = false
-                if (actionable) {
-                    canEdit = !res.data.alreadyMarkedByAthetles
-                }
-                this.context.dispatch(setData({
-                    noBottomBar: false,
-                    menuButtonSelected: MENU.PLANIFICATIONS,
-                    routineDetails: {...res.data, nextBlockNumber: res.data.blockGroupers.length+1}
-                }))
-                this.setState({
-                    loading: false,
-                    planificationId,
-                    isOwner,
-                    routineId,
-                    canEdit,
-                    isCopy: res.data.isCopy,
-                    alreadyCopied: res.data.alreadyCopied,
-                    actionable,
-                    shared: false,
-                    alreadyMarkedByAthetles: res.data.alreadyMarkedByAthetles,
-                    blockGroupers: res.data.blockGroupers,
-                    name: res.data.name,
-                    difficulty: res.data.difficulty,
-                    duration: res.data.duration,
-                    nextBlockNumber: res.data.blockGroupers.length+1})
-                this.setSecondaryActions()
+                await this.refresh()
             }
         } catch (e) {
             console.error(e)
         }
+    }
+
+    async refresh() {
+        const {state: {routineId, planificationId, isOwner, draftBlockGroupers}} = this.context
+        const res = await getRoutineDetails(routineId);
+
+        const actionable = isOwner
+        let canEdit = false
+        let backup = {}
+        if (actionable) {
+            canEdit = !res.data.alreadyMarkedByAthetles
+            backup = {
+                name: res.data.name,
+                blockGroupers: res.data.blockGroupers.map(b => (
+                    {
+                        ...b,
+                        blocks: b.blocks.map(bb => (
+                            {
+                                ...bb,
+                                exercises: bb.exercises.map(e => ({...e}))
+                            }
+                        ))
+                    }
+                ))
+            }
+        }
+        this.context.dispatch(setData({
+            noBottomBar: false,
+            menuButtonSelected: MENU.PLANIFICATIONS,
+        }))
+        this.context.dispatch(setData({
+            nextBlockNumber: res.data.blockGroupers.length+draftBlockGroupers.length+1
+        }, true))
+
+        this.setState({
+            loading: false,
+            backup,
+            updates: {},
+            planificationId,
+            isOwner,
+            routineId,
+            canEdit,
+            isCopy: res.data.isCopy,
+            alreadyCopied: res.data.alreadyCopied,
+            actionable,
+            shared: false,
+            alreadyMarkedByAthetles: res.data.alreadyMarkedByAthetles,
+            blockGroupers: [...res.data.blockGroupers, ...draftBlockGroupers],
+            name: res.data.name,
+            difficulty: res.data.difficulty,
+            duration: res.data.duration,
+            nextBlockNumber: res.data.blockGroupers.length+draftBlockGroupers.length+1})
+        this.setSecondaryActions()
     }
 
     redirectToCreateBlock() {
@@ -165,7 +203,12 @@ class PageRoutineDetail extends Component{
 
     addWorkToGrouper(bg, i) {
         try {
-            this.context.dispatch(setData({nextWorkNumber: bg.blocks.length+1,newBlockGroupName: bg.name, newBlockGroupId: bg.id}, true))
+            this.context.dispatch(setData({
+                nextWorkNumber: bg.blocks.length+1,
+                newBlockGroupName: bg.name,
+                newBlockGroupId: bg.id,
+                newBlockGroupDraftIndex: bg.draftIndex
+            }, true))
             this.redirectToCreateBlock()
         } catch (e) {
             console.error(e)
@@ -174,6 +217,17 @@ class PageRoutineDetail extends Component{
 
     addBlock() {
         this.setState({ showCreateBlockModal: true });
+    }
+
+    addBlockInMemory() {
+        const {state: {draftBlockGroupers}} = this.context
+        const {nextBlockNumber, blockGroupers} = this.state
+        const buff = [...blockGroupers]
+        const buffDraft = [...draftBlockGroupers]
+        buff.push({id: null, name: 'Bloque '+nextBlockNumber, draftId: nextBlockNumber, draftIndex: draftBlockGroupers.length, blocks: []})
+        buffDraft.push({id: null, name: 'Bloque '+nextBlockNumber, draftId: nextBlockNumber, draftIndex: draftBlockGroupers.length, blocks: []})
+        this.setState({blockGroupers: [...buff],  nextBlockNumber: nextBlockNumber+1})
+        this.context.dispatch(setData({draftBlockGroupers: [...buffDraft]}))
     }
 
     addNewBlockGroupConfirm() {
@@ -193,29 +247,90 @@ class PageRoutineDetail extends Component{
 
     async saveRoutineEditions() {
         try {
-            const {blockGroupers} = this.state
+            const {planificationId, routineId, activeDraftExercise, updates, blockGroupers} = this.state
             this.setState({savingEditions: true})
-            const {newGrouperNames, planificationId, routineId} = this.state;
 
-            const entries = Object.entries(newGrouperNames)
-                .filter(([key, value]) => value.changed === true);
-            const namesPayload = entries.map(([key, value]) => ({id: parseInt(key, 10), index: value.index, name: value.newName}));
+            const namesPayload = Object.entries(updates.newGrouperNames ?? []).map(([key, value]) => ({
+                id: parseInt(value.id, 10),
+                name: value.newName
+            }));
 
-            await saveRoutineEditions({planificationId, routineId, newGrouperNames: namesPayload})
-
-            const buf = [...blockGroupers]
-            for (let i = 0; i < namesPayload.length; i++) {
-                buf[namesPayload[i].index].name = namesPayload[i].name
+            const exercisesToAddPayload = []
+            for (let i = 0; i < blockGroupers.length; i++) {
+                for (let j = 0; j < blockGroupers[i].blocks.length; j++) {
+                    for (let k = 0; k < blockGroupers[i].blocks[j].exercises.length; k++) {
+                        if (blockGroupers[i].blocks[j].exercises[k].toAdd) {
+                            const ex = blockGroupers[i].blocks[j].exercises[k]
+                            exercisesToAddPayload.push({
+                                order: k,
+                                // name: ex.name,
+                                grouperId: ex.grouperId,
+                                workoutId: ex.workoutId,
+                                exerciseId: ex.exerciseId,
+                                [ex.type]: ex.reps,
+                            })
+                        }
+                    }
+                }
             }
+
+            if (activeDraftExercise.ex.length>0) {
+                const existingIndex = exercisesToAddPayload.findIndex(e => e.order >= activeDraftExercise.order)
+                const item = {
+                    order: activeDraftExercise.order,
+                    grouperId: activeDraftExercise.grouperId,
+                    workoutId: activeDraftExercise.workoutId,
+                    exerciseId:activeDraftExercise.ex[0].value,
+                    [activeDraftExercise.type]: parseInt(activeDraftExercise.reps,10)
+                }
+                if (existingIndex !== -1) {
+                    exercisesToAddPayload.splice(existingIndex+1,0, item)
+                    for (let i = existingIndex+1; i < exercisesToAddPayload.length; i++) {
+                        exercisesToAddPayload[i].order = exercisesToAddPayload[i].order + 1
+                    }
+                } else {
+                    exercisesToAddPayload.push(item)
+                }
+            }
+
+            const grouperIdsToDelete = (updates.grouperIdsToDelete ?? []).map(id => id);
+
+            const workoutsToDeletePayload = Object.entries(updates.workoutsToDelete ?? []).map(([key, value]) => ({
+                grouperId: value.grouperId,
+                workoutId: value.workoutId
+            }));
+
+            const exercisesToDeletePayload = Object.entries(updates.workOutExercisesToDelete ?? []).map(([key, value]) => ({
+                grouperId: value.grouperId,
+                workoutId: value.workoutId,
+                exerciseId: value.exerciseId,
+            }));
+
+            const payload = {
+                planificationId,
+                routineId,
+                name: updates.name,
+                newGrouperNames: namesPayload,
+                exercisesToAdd: exercisesToAddPayload,
+                workoutsToDelete: workoutsToDeletePayload,
+                exercisesToDelete: exercisesToDeletePayload,
+                grouperIdsToDelete: grouperIdsToDelete
+            }
+            await saveRoutineEditions(payload)
+            await this.refresh()
             this.setState({
                 editionMode: false,
-                savingEditions: false,
-                blockGroupers: [...buf]
+                addExerciseInputIndex: null,
+                activeDraftExercise: {
+                    type: 'reps',
+                    ex: []
+                }
             })
-            this.setSecondaryActions()
             showSuccess(this.context, '', 'Cambios en la rutina guardados!')
         } catch (e) {
             console.error(e)
+        } finally {
+            this.setState({savingEditions: false})
         }
     }
 
@@ -233,20 +348,33 @@ class PageRoutineDetail extends Component{
 
     enableEditionRoutine() {
         const {blockGroupers} = this.state
-
-        //default values for newly created inputs
-        const newGrouperNames = {}
-        for (let i = 0; i < blockGroupers.length; i++) {
-            newGrouperNames[blockGroupers[i].id] = {changed: false, index: i, newName: blockGroupers[i].name}
-        }
-
-        this.setState({editionMode: true, newGrouperNames})
+        const indexes = []
+        blockGroupers.map((bg,j) => bg.blocks.map((b,i) => indexes.push(j+'-'+i)))
+        this.setState({editionMode: true, activeIndexes: indexes})
         this.context.dispatch(setData({secondaryActions: []}))
     }
 
     discardRoutineChanges() {
+        const {backup} = this.state
         this.setState({
-            editionMode: false
+            editionMode: false,
+            updates: {},
+            name: backup.name,
+            blockGroupers: backup.blockGroupers.map(b => (
+            {
+                ...b,
+                blocks: b.blocks.map(bb => (
+                    {
+                        ...bb,
+                        exercises: bb.exercises.map(e => ({...e}))
+                    }
+                ))
+            })),
+            addExerciseInputIndex: null,
+            activeDraftExercise: {
+                type: 'reps',
+                ex: []
+            }
         })
         this.setSecondaryActions()
     }
@@ -257,6 +385,7 @@ class PageRoutineDetail extends Component{
         const secondaryActions = []
         if (actionable) {
             const action = {
+                // func: () => this.addBlockInMemory(),
                 func: () => this.addBlock(),
                 description: <span><Icon name={'plus'}/> Nuevo Bloque</span>
             }
@@ -274,46 +403,213 @@ class PageRoutineDetail extends Component{
         }
     }
 
-    onGrouperNameChange(id, index, newName) {
-        const {newGrouperNames} = this.state
-        let buff = {...newGrouperNames}
-        if (buff) {
-            buff[id] = {changed: true, index, newName}
-        } else {
-            buff = {[id]: {changed: true, index, newName}}
-        }
-        this.setState({newGrouperNames: buff})
+    onRoutineNameChange(newName) {
+        const {updates} = this.state
+        this.setState({name: newName, updates: {...updates, name:newName}})
     }
 
-    openDeleteBlockGroupPopUpConfirmation(i) {
-        this.setState({confirmBlockGroupDeletionIndex: i})
+    onGrouperNameChange(id, index, newName) {
+        const {updates, blockGroupers} = this.state
+
+        let buff = {...updates}
+        if(buff.newGrouperNames) {
+            buff.newGrouperNames[index] = {id, newName}
+        } else {
+            buff.newGrouperNames = {[index]: {id, newName}}
+        }
+
+        blockGroupers[index].name = newName
+        this.setState({updates: {...buff}, blockGroupers})
     }
 
     deleteBlockGroup(id, i) {
-        const {routinesToDelete, blockGroupers} = this.state
-        const rBuff = [...blockGroupers]
-        const deleted = rBuff.splice(i, 1)
+        const {updates, blockGroupers} = this.state
 
-        if (deleted[0].isStartOfWeek) {
-            if (rBuff[i]) {
-                rBuff[i].isStartOfWeek=true
-            }
+        let buff = {...updates}
+        if(buff.grouperIdsToDelete) {
+            buff.grouperIdsToDelete.push(id)
+        } else {
+            buff.grouperIdsToDelete = [id]
         }
 
-        const buff = [...routinesToDelete]
-        buff.push(id)
+        const rBuff = [...blockGroupers]
+        rBuff.splice(i, 1)
+        this.setState({updates: {...buff}, blockGroupers: [...rBuff],confirmBlockGroupDeletionIndex: null})
+    }
 
-        this.setState({routinesToDelete: [...buff], routines: [...rBuff],confirmRoutineDeletionIndex: null})
+    deleteWorkFromBlockGroup(bgId, workId, j,i) {
+        const {updates, blockGroupers} = this.state
 
+        let buff = {...updates}
+        if(buff.workoutsToDelete) {
+            buff.workoutsToDelete[bgId+'-'+workId] = {grouperId: bgId, workoutId: workId}
+        } else {
+            buff.workoutsToDelete = {[bgId+'-'+workId]: {grouperId: bgId, workoutId: workId}}
+        }
+
+        blockGroupers[j].blocks.splice(i, 1)
+        for (let k = i; k < blockGroupers[j].blocks.length; k++) {
+            const nameType = blockGroupers[j].blocks[k].name.split(' - ')
+            const name = nameType[0].split(' ')
+            blockGroupers[j].blocks[k].name = name[0] + ' ' + (parseInt(name[1],10)-1) + ' - ' + nameType[1]
+        }
+
+        this.setState({updates: {...buff}, blockGroupers: [...blockGroupers],confirmWorkDeletionIndex: null})
+    }
+
+    deleteExerciseFromWork(bgId, workId, exId, j,i,k, isDraft) {
+        const {updates, blockGroupers} = this.state
+
+        if (!isDraft) {
+            let buff = {...updates}
+            if(buff.workOutExercisesToDelete) {
+                buff.workOutExercisesToDelete[bgId+'-'+workId+'-'+exId] = {grouperId: bgId, workoutId: workId, exerciseId: exId}
+            } else {
+                buff.workOutExercisesToDelete = {[bgId+'-'+workId+'-'+exId]: {grouperId: bgId, workoutId: workId, exerciseId: exId}}
+            }
+
+            blockGroupers[j].blocks[i].exercises[k].toDelete = true
+            this.setState({updates: {...buff}, blockGroupers: [...blockGroupers],confirmWorkExerciseDeletionIndex: null})
+        } else {
+            blockGroupers[j].blocks[i].exercises.splice(k,1)
+            this.setState({blockGroupers: [...blockGroupers],confirmWorkExerciseDeletionIndex: null})
+        }
     }
 
     canRoutineBeSavedByThirdPeople = (e, { name, value }) => this.setState({ canBeSaved: name === 'yes' && value })
+
+    cancelAddNewExercise() {
+        this.setState({
+            addExerciseInputIndex: null,
+            activeDraftExercise: {
+                type: 'reps',
+                ex: []
+            }})
+    }
+
+    addNewExercise(bgId, workId, j,i,k, isSequential) {
+        const {activeDraftExercise, addExerciseInputIndex, updates, blockGroupers} = this.state
+
+        if (activeDraftExercise.ex.length===0) {
+            //starting
+            this.setState({
+                addExerciseInputIndex: j + '-' + i + '-' + k,
+                activeDraftExercise: {
+                    bgId,
+                    workId,
+                    type: 'reps',
+                    ex: []
+                }
+            })
+        } else {
+            //means it was set before
+            const indexes = addExerciseInputIndex.split('-')
+            const jp = indexes[0]
+            const ip = indexes[1]
+            const kp = indexes[2]
+
+            //plus one because I will be inserted one after where I was rendered.
+            const kpInt = parseInt(kp,10)
+            const orderIndex = kpInt+1
+
+            blockGroupers[jp].blocks[ip].exercises.splice(orderIndex,null, {
+                id: null, isDraft: true, toAdd:true,
+                name: activeDraftExercise.ex[0].text,
+                grouperId: activeDraftExercise.bgId,
+                workoutId: activeDraftExercise.workId,
+                exerciseId: activeDraftExercise.ex[0].value,
+                type: activeDraftExercise.type,
+                reps: activeDraftExercise.reps,
+                [activeDraftExercise.type]: activeDraftExercise.reps,
+            })
+
+            //recalc K if we're adding a new exercise to the same work we want to continue editing.
+            const currentKIndex = !isSequential && k > kpInt && workId === activeDraftExercise.workId ? (k+1) : k
+            this.setState({
+                blockGroupers: [...blockGroupers],
+                addExerciseInputIndex: j + '-' + i + '-' + currentKIndex,
+                activeDraftExercise: {
+                    bgId,
+                    workId,
+                    type: 'reps',
+                    ex: []
+                }
+            })
+        }
+    }
+
+    renderAddExercise(bg, b, addExerciseInputIndex, j,i,k, isSequential) {
+        if (isSequential) {
+            k++
+        }
+        const openKey = j + '-' + i + '-' + k
+        return (
+            <>
+                <div className={'table-plus-item'}>
+                    {addExerciseInputIndex === openKey ?
+                        <>
+                            <Icon
+                                name={'minus circle'}
+                                color={'red'}
+                                onClick={() => this.cancelAddNewExercise()}/>
+                        </> :
+                        <Icon
+                            name={'plus circle'}
+                            onClick={() => this.addNewExercise(bg.id, b.id, j,i,k, isSequential)}/>}
+                </div>
+            </>
+        )
+    }
+
+    renderAddExerciseInputs(bg, b, addExerciseInputIndex, j,i,k, activeDraftExercise) {
+        return (
+            <>
+                {
+                    addExerciseInputIndex === j+'-'+i+'-'+k &&
+                    <Table.Row style={{position: 'relative'}}>
+                        <Table.Cell colSpan={'3'}>
+                            <Grid>
+                                <Grid.Row className={'padding-1'}>
+                                    <Grid.Column width={10} className={'no-padding'}>
+                                        <ExerciseSearch
+                                            basic
+                                            // allowAdditions
+                                            defaultSelected={activeDraftExercise.ex}
+                                            onSelected={(selected)=> this.setState({activeDraftExercise: {...activeDraftExercise, grouperId: bg.id, workoutId: b.id, order: k, ex: selected}})}/>
+                                    </Grid.Column>
+                                    <Grid.Column width={3} className={'no-padding'}>
+                                        <Input
+                                            className={'line-height-dropdown'}
+                                            fluid
+                                            placeholder='10' type={'number'}
+                                            min={1}
+                                            max={99}
+                                            value={activeDraftExercise.reps}
+                                            onKeyDown={(event) => {}}
+                                            onChange={(e, {value}) => this.setState({activeDraftExercise: {...activeDraftExercise, reps:value}})}/>
+                                    </Grid.Column>
+                                    <Grid.Column width={3} className={'no-padding'}>
+                                        <SegRepsButtonGroup default={activeDraftExercise.type} onIntervalSelected={(val) => this.setState({activeDraftExercise: {...activeDraftExercise, type:val}})}/>
+                                    </Grid.Column>
+                                </Grid.Row>
+                            </Grid>
+                        </Table.Cell>
+                        {this.renderAddExercise(bg, b, addExerciseInputIndex, j,i,k, true)}
+                    </Table.Row>
+                }
+            </>
+        )
+    }
 
     renderRoutineDetails() {
         const {state: {permissions: {executeRoutine, editRoutine, canSaveSharedRoutines}}} = this.context
         const {
             name,
             confirmBlockGroupDeletionIndex,
+            confirmWorkDeletionIndex,
+            confirmWorkExerciseDeletionIndex,
+            addExerciseInputIndex,
+            activeDraftExercise,
             difficulty,
             duration,
             editionMode,
@@ -350,7 +646,14 @@ class PageRoutineDetail extends Component{
                         editionMode &&
                         <PopUpContinueEditing onDiscardChanges={() => this.discardRoutineChanges()}/>
                     }
-                    {name}
+                    {
+                        !editionMode ? name :
+                        <Input
+                            className={'input-header'}
+                            placeholder={name}
+                            value={name}
+                            onChange={(e, {value}) => this.onRoutineNameChange(value)}/>
+                    }
                     {
                         (!editionMode && actionable && !isCopy) &&
                         <PopUpConfirmation
@@ -430,6 +733,13 @@ class PageRoutineDetail extends Component{
                 {/*        Ejecutar Rutina*/}
                 {/*    </Button>}/>*/}
                 {/*}*/}
+                {
+                    blockGroupers.length === 0 &&
+                    <Message>
+                        <Message.Header>Rutina Vacia</Message.Header>
+                        <p>Comienza agregando algunos bloques de trabajo</p>
+                    </Message>
+                }
                 <Accordion
                     style={{marginBottom: '1em'}}
                     exclusive={false}
@@ -442,28 +752,34 @@ class PageRoutineDetail extends Component{
                                     editionMode &&
                                     <>
                                         <Input
-                                            // transparent
                                             className={'input-header input-centered'}
                                             placeholder={bg.name}
-                                            value={this.state.newGrouperNames[bg.id]?.newName}
+                                            value={bg.name}
                                             onChange={(e, {value}) => this.onGrouperNameChange(bg.id, j, value)}/>
-                                        {/*<PopUpConfirmation*/}
-                                        {/*    title={'Borrar bloque '+bg.name+'?'}*/}
-                                        {/*    primary={'Borrar'}*/}
-                                        {/*    secondary={'Cancelar'}*/}
-                                        {/*    isManaged*/}
-                                        {/*    open={j===confirmBlockGroupDeletionIndex}*/}
-                                        {/*    trigger={<Button*/}
-                                        {/*                     onClick={() => this.openDeleteBlockGroupPopUpConfirmation(j)}*/}
-                                        {/*                     basic secondary icon='close' style={{position: 'relative', float: 'right'}}/>}*/}
-                                        {/*    onPrimaryAction={() => this.deleteBlockGroup(bg.id, j)}*/}
-                                        {/*    onSecondaryAction={() => this.setState({confirmBlockGroupDeletionIndex: null})}*/}
-                                        {/*/>*/}
+                                        <PopUpConfirmation
+                                            title={'Borrar '+bg.name+'?'}
+                                            primary={'Borrar'}
+                                            secondary={'Cancelar'}
+                                            isManaged
+                                            open={j===confirmBlockGroupDeletionIndex}
+                                            trigger={<Button
+                                                             onClick={() => this.setState({confirmBlockGroupDeletionIndex: j})}
+                                                             basic secondary icon='close' style={
+                                                {position: 'relative', float: 'right', padding: 0, fontSize: 13}
+                                            }/>}
+                                            onPrimaryAction={() => this.deleteBlockGroup(bg.id, j)}
+                                            onSecondaryAction={() => this.setState({confirmBlockGroupDeletionIndex: null})}
+                                        />
                                     </>
                                 }
                             </Header>
                             <div>
+                                {
+                                    bg.blocks.length === 0 &&
+                                    <Message><Message.Content>Comienza agregando algunos trabajos al bloque</Message.Content></Message>
+                                }
                                 {bg.blocks.map((b,i) => {
+                                    //todo: fix separate type from workout name.
                                     const name = b.name.split(' - ')
                                     return (
                                         <Segment style={{width: '100%'}} className={'no-left-padding no-right-padding'} key={b.id}>
@@ -471,8 +787,26 @@ class PageRoutineDetail extends Component{
                                                 className={'no-top-padding no-bottom-padding padding-left-1 padding-right-1'}
                                                 active={activeIndexes.indexOf(j+'-'+i) !== -1}
                                                 index={j+'-'+i}
-                                                onClick={this.handleActiveBlocks}>
-                                                {name[0]} {name[1] ? <Chip feel content={capitalize(name[1])}/> : null}
+                                                onClick={!editionMode? this.handleActiveBlocks : () => {}}>
+                                                {/*//todo: consider fixing if workout name is sometime configurable.*/}
+                                                Trabajo {i+1} {name[1] ? <Chip feel content={capitalize(name[1])}/> : null}
+                                                {
+                                                    editionMode &&
+                                                    <PopUpConfirmation
+                                                        title={'Borrar '+name[0]+'?'}
+                                                        primary={'Borrar'}
+                                                        secondary={'Cancelar'}
+                                                        isManaged
+                                                        open={(j+'-'+i)===confirmWorkDeletionIndex}
+                                                        trigger={<Button
+                                                            onClick={() => this.setState({confirmWorkDeletionIndex: j+'-'+i})}
+                                                            basic secondary icon='close' style={
+                                                            {position: 'relative', float: 'right', padding: 0, fontSize: 13}
+                                                        }/>}
+                                                        onPrimaryAction={() => this.deleteWorkFromBlockGroup(bg.id, b.id, j, i)}
+                                                        onSecondaryAction={() => this.setState({confirmWorkDeletionIndex: null})}
+                                                    />
+                                                }
                                             </Accordion.Title>
                                             <Accordion.Content active={activeIndexes.indexOf(j+'-'+i) !== -1}>
                                                 <Segment basic className={'no-top-padding no-bottom-padding no-margin'}>
@@ -498,16 +832,69 @@ class PageRoutineDetail extends Component{
                                                         <Table.Row>
                                                             <Table.HeaderCell>Ejercicio</Table.HeaderCell>
                                                             {b.exercises.find(e => e.reps || e.secs) && <Table.HeaderCell>Trabajo</Table.HeaderCell>}
+                                                            {editionMode && <Table.HeaderCell/>}
                                                         </Table.Row>
                                                     </Table.Header>
                                                     <Table.Body>
-                                                        {b.exercises.map((e, i) => (
-                                                            <Table.Row key={i}>
-                                                                <Table.Cell>
-                                                                    {e.videoCode ? <Link to={'#'} onClick={() => this.openExerciseVideo(e.videoCode)}>{e.name}</Link> : e.name}
-                                                                </Table.Cell>
-                                                                {(e.reps || e.secs) && <Table.Cell>{e.reps ? e.reps+' Reps' : e.secs+' Segs'}</Table.Cell>}
-                                                            </Table.Row>
+                                                        {
+                                                            b.exercises.length === 0 &&
+                                                            <>
+                                                                <Table.Row style={{position: 'relative'}}>
+                                                                    <Table.Cell>
+                                                                        Sin Ejercicios
+                                                                    </Table.Cell>
+                                                                    {editionMode && this.renderAddExercise(bg, b, addExerciseInputIndex, j,i,0)}
+                                                                </Table.Row>
+                                                                {this.renderAddExerciseInputs(bg, b, addExerciseInputIndex, j,i,0, activeDraftExercise)}
+                                                            </>
+                                                        }
+                                                        {b.exercises.map((e, k) => (
+                                                            <>
+                                                                <Table.Row key={k} style={{position: 'relative'}}>
+                                                                    <Table.Cell>
+                                                                        {e.videoCode ? <Link to={'#'} onClick={() => this.openExerciseVideo(e.videoCode)}>{e.name}</Link> : e.name}
+                                                                    </Table.Cell>
+                                                                    {
+                                                                        (e.reps || e.secs) && !e.toDelete &&
+                                                                        <Table.Cell>
+                                                                            {e.reps ? e.reps+' Reps' : e.secs+' Segs'}
+                                                                        </Table.Cell>
+                                                                    }
+                                                                    {
+                                                                        editionMode &&
+                                                                        <>
+                                                                            {
+                                                                                e.toDelete &&
+                                                                                <Table.Cell colSpan={'2'}>
+                                                                                    <Label color='red'>
+                                                                                        A borrar
+                                                                                    </Label>
+                                                                                </Table.Cell>
+                                                                            }
+                                                                            {
+                                                                                !e.toDelete &&
+                                                                                <>
+                                                                                    <Table.Cell/>
+                                                                                    <PopUpConfirmation
+                                                                                        title={'Borrar '+e.name+'?'}
+                                                                                        primary={'Borrar'}
+                                                                                        secondary={'Cancelar'}
+                                                                                        isManaged
+                                                                                        open={(j+'-'+i+'-'+k)===confirmWorkExerciseDeletionIndex}
+                                                                                        trigger={<Button
+                                                                                            onClick={() => this.setState({confirmWorkExerciseDeletionIndex: j+'-'+i+'-'+k})}
+                                                                                            className={'table-remove-item'} icon='close'/>}
+                                                                                        onPrimaryAction={() => this.deleteExerciseFromWork(bg.id, b.id, e.id, j, i, k, e.isDraft)}
+                                                                                        onSecondaryAction={() => this.setState({confirmWorkExerciseDeletionIndex: null})}
+                                                                                    />
+                                                                                </>
+                                                                            }
+                                                                            {this.renderAddExercise(bg, b, addExerciseInputIndex, j,i,k)}
+                                                                        </>
+                                                                    }
+                                                                </Table.Row>
+                                                                {this.renderAddExerciseInputs(bg, b, addExerciseInputIndex, j,i,k, activeDraftExercise)}
+                                                            </>
                                                         ))}
                                                     </Table.Body>
                                                 </Table>

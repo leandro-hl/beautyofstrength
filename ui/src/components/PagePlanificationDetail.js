@@ -91,7 +91,11 @@ class PagePlanificationDetail extends Component {
 
     redirectToCreateRoutine() {
         const {routines} = this.state;
-        this.context.dispatch(setData({routineId: null, routineNumber: routines.length+1, routineDetails: {
+        this.context.dispatch(setData({
+            routineId: null,
+            routineNumber: routines.length+1,
+            //todo: routineDetails I believe is not in use...
+            routineDetails: {
                 name: '',
                 blocks: [],
                 nextBlockNumber: null

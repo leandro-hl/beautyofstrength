@@ -8,10 +8,10 @@ type ListExerciseIdName struct {
 }
 
 type ListExerciseQuery struct {
-	Id                 *int    `json:"id"`
-	Name               *string `json:"name"`
-	CreatedByUser      *string `json:"createdbyuser"`
-	NoCurrentUserVideo *bool   `json:"nocurrentuservideo"`
+	Id   *int    `json:"id"`
+	Name *string `json:"name"`
+	//CreatedByUser      *string `json:"createdbyuser"`
+	NoCurrentUserVideo *bool `json:"nocurrentuservideo"`
 }
 
 type ListQueuedPlanificationAccessRequestsQuery struct {
@@ -49,6 +49,7 @@ type GetRoutineHeaderQuery struct {
 type GetRoutineDetailsQuery struct {
 	GrouperId       *int64  `json:"grouperid"`
 	GrouperName     *string `json:"groupername"`
+	GrouperOrder    *int    `json:"grouperorder"`
 	Blockgroupid    *int64  `json:"blockgroupid"`
 	Blockgroupname  *string `json:"blockgroupname"`
 	BlockDuration   *int    `json:"blockgroupduration"`
@@ -58,6 +59,7 @@ type GetRoutineDetailsQuery struct {
 	Laprestinterval *int    `json:"laprestinterval"`
 	Reps            *int    `json:"reps"`
 	Secs            *int    `json:"secs"`
+	ExerciseBGID    *int64  `json:"exercisebgid"`
 	Exercisename    *string `json:"exercisename"`
 	VideoCode       *string `json:"videocode"`
 }

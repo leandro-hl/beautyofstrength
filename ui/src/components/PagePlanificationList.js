@@ -1,5 +1,17 @@
 import React, {Component} from "react";
-import {Advertisement, Button, Header, Icon, Input, List, Loader, Message, Modal, Segment} from "semantic-ui-react";
+import {
+    Advertisement,
+    Button,
+    Grid,
+    Header,
+    Icon,
+    Input,
+    List,
+    Loader,
+    Message,
+    Modal,
+    Segment
+} from "semantic-ui-react";
 import {
     createPlanification, getUserPermissions,
     listPlanifications,
@@ -14,6 +26,7 @@ import {MENU} from "../enums";
 import {ModalPlanificationCreate} from "./ModalPlanificationCreate";
 import {ModalPlanificationRequestAccess} from "./ModalPlanificationRequestAccess";
 import {ModalPlanificationsPendingRequests} from "./ModalPlanificationsPendingRequests";
+import {PopUpConfirmation} from "./PopUpConfirmation";
 
 class PagePlanificationList extends Component {
     static contextType = AppContext
@@ -180,11 +193,32 @@ class PagePlanificationList extends Component {
                             return (
                                 <Segment style={{width: '100%'}} key={p.id}
                                          onClick={() => this.redirectToPlanification(p)}>
-                                    <Header sub>
-                                        {p.name}
-                                        {p.starred && <Icon name={'star'} className={'header-icon starred'}/> }
-                                    </Header>
-                                    <span>Rutinas: {p.routinescount}</span>
+                                    <Grid>
+                                        <Grid.Column width={!true? 11 : 16}>
+                                            <Header sub>
+                                                {p.name}
+                                                {p.starred && <Icon name={'star'} className={'header-icon starred'}/> }
+                                            </Header>
+                                            <span>Rutinas: {p.routinescount}</span>
+                                        </Grid.Column>
+                                        {/*{*/}
+                                        {/*    (editionMode && !disableActions) &&*/}
+                                        {/*    <Grid.Column width={5} className={'no-right-padding no-left-padding'}>*/}
+                                        {/*        <PopUpConfirmation*/}
+                                        {/*            title={'Borrar rutina '+p.name+'?'}*/}
+                                        {/*            primary={'Borrar'}*/}
+                                        {/*            secondary={'Cancelar'}*/}
+                                        {/*            isManaged*/}
+                                        {/*            open={i===confirmRoutineDeletionIndex}*/}
+                                        {/*            trigger={<Button disabled={disableActions}*/}
+                                        {/*                             onClick={() => this.openDeleteRoutinePopUpConfirmation(i)}*/}
+                                        {/*                             basic secondary icon='close' style={{position: 'relative', float: 'right'}}/>}*/}
+                                        {/*            onPrimaryAction={() => this.deleteRoutine(p.id, i)}*/}
+                                        {/*            onSecondaryAction={() => this.setState({confirmRoutineDeletionIndex: null})}*/}
+                                        {/*        />*/}
+                                        {/*    </Grid.Column>*/}
+                                        {/*}*/}
+                                    </Grid>
                                 </Segment>
                             )
                         })}
