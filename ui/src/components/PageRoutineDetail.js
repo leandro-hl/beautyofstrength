@@ -405,8 +405,10 @@ class PageRoutineDetail extends Component{
                         <Icon disabled={savingEditions} name={'save outline'} className={'header-icon'} onClick={() => this.saveRoutineEditions()}/>
                     }
                     {
-                        (isShared && canBeSaved && canSaveSharedRoutines && !alreadyCopied) &&
-                        <Icon disabled={savingSharedRoutine} name={'save outline'} className={'header-icon'} onClick={() => this.saveSharedRoutine()}/>
+                        !canSaveSharedRoutines ?
+                            <PopUpDisabledAction trigger={<Icon name={'save outline'} className={'header-icon disabled-btn'}/>}/> :
+                            (isShared && canBeSaved && canSaveSharedRoutines && !alreadyCopied) &&
+                            <Icon disabled={savingSharedRoutine} name={'save outline'} className={'header-icon'} onClick={() => this.saveSharedRoutine()}/>
                     }
                     <div>
                         <Chip style={{fontSize: 14}} success={difficulty===1} progress={difficulty===2} content={difficulty===1? 'Facil' : 'Intermedia'}/>

@@ -304,7 +304,6 @@ func (o *Endpoints) getUserPermissions(w http.ResponseWriter, r *http.Request, t
 		permissions["listPlanifications"] = true
 		permissions["menuplanifications"] = true
 		permissions["listExercises"] = true
-		permissions["canSaveSharedRoutines"] = true
 		//not implemented
 		permissions["createOneRoutine"] = true
 		permissions["editRoutinesICreated"] = true
@@ -321,6 +320,7 @@ func (o *Endpoints) getUserPermissions(w http.ResponseWriter, r *http.Request, t
 		permissions["executeRoutine"] = true
 		permissions["editPlanification"] = true
 		permissions["editRoutine"] = true
+		permissions["canSaveSharedRoutines"] = true
 	}
 
 	if *plan == db.StudentPremium {
@@ -488,6 +488,11 @@ func (o *Endpoints) saveSharedRoutine(w http.ResponseWriter, r *http.Request, tx
 	usr := util.UserId(r)
 	meta := db.GetRoutineUserSharingTokenBy(o.db, tx, *t.RoutineId)
 	if *meta.CanBeSaved {
+		plan := o.plan(r)
+		if *plan == db.StudentFree {
+			panic(&BadRequestResponse{ErrorCode: util.PString("free_saved_routines_no")})
+		}
+
 		if db.CalculateUserAlreadyCopiedRoutine(o.db, tx, usr, *t.RoutineId) {
 			panic(&BadRequestResponse{ErrorCode: util.PString("shared_routine_already_copied")})
 			//panic(errors.New("you cannot copy the same routine twice"))
@@ -497,15 +502,15 @@ func (o *Endpoints) saveSharedRoutine(w http.ResponseWriter, r *http.Request, tx
 		if planificationId == nil {
 			planificationId = db.CreatePlanification(o.db, tx, usr, SharedRoutinesPlanificationReservedName, true)
 			db.InsertPlanificationDays(o.db, tx, *planificationId, "01234")
-		} else {
-			count := db.CountRoutinesInPlanification(o.db, tx, *planificationId)
-			plan := o.plan(r)
-			if *plan == db.StudentFree && *count > 0 {
-				panic(&BadRequestResponse{ErrorCode: util.PString("free_saved_routines_limit")})
-				//panic(errors.New("free accounts cannot save more than one shared routine"))
-			}
 		}
-
+		//else {
+		//	count := db.CountRoutinesInPlanification(o.db, tx, *planificationId)
+		//	plan := o.plan(r)
+		//	if *plan == db.StudentFree && *count > 0 {
+		//		panic(&BadRequestResponse{ErrorCode: util.PString("free_saved_routines_limit")})
+		//		//panic(errors.New("free accounts cannot save more than one shared routine"))
+		//	}
+		//}
 		original := db.GetRoutineById(o.db, tx, *t.RoutineId)
 		originalGroupers := db.ListBlockGroupGrouperByRoutineId(o.db, tx, *t.RoutineId)
 		newRoutineId := db.CreateRoutine(

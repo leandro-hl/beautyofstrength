@@ -110,6 +110,11 @@ export function calculareError(code) {
                 title: '',
                 description: 'Pasate a premium para guardar mas de una rutina!'
             }
+        case 'free_saved_routines_no':
+            return {
+                title: '',
+                description: 'Pasate a premium para guardar la rutina!'
+            }
         case 'free_create_routine_limit':
             return {
                 title: '',
