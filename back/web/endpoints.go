@@ -55,16 +55,19 @@ func (o *ExercisesComparerCache) Add(id int, name string) {
 	o.s2[id] = true
 }
 
-func (o *ExercisesComparerCache) FilterExercisesByIds(exs []ExerciseRequest) (yes []ExerciseRequest, no []ExerciseRequest) {
+func (o *ExercisesComparerCache) FilterExercisesByIds(exs []ExerciseRequest) (yes []ExerciseRequest, no []ExerciseRequest, order []bool) {
 	o.a.Lock()
 	defer o.a.Unlock()
 	yes = make([]ExerciseRequest, 0)
 	no = make([]ExerciseRequest, 0)
+	order = make([]bool, 0)
 	for _, k := range exs {
 		if _, ok := o.s2[*k.Id]; ok {
 			yes = append(yes, k)
+			order = append(order, true)
 		} else {
 			no = append(no, k)
+			order = append(order, false)
 		}
 	}
 
@@ -770,13 +773,13 @@ func (o *Endpoints) saveExerciseBlockValidations(r *http.Request, tx *sqlx.Tx, r
 		}
 	}
 
-	exercisesToAddToBlock, nonExistingExerciseNames := exercisesComparerCache.FilterExercisesByIds(exercises)
-
+	existingExercises, nonExistingExercisesUnsanitized, order := exercisesComparerCache.FilterExercisesByIds(exercises)
+	nonExistingToAdd := make([]ExerciseRequest, 0)
 	if *plan == db.Professor {
 		exerciseNamesComparer := make([]ExerciseComparer, 0)
 		sanitizedKeys := make([]string, 0)
 		re := regexp.MustCompile(`[^a-zA-Z0-9áéíóúÁÉÍÓÚñÑüÜ/]`)
-		for _, e := range nonExistingExerciseNames {
+		for _, e := range nonExistingExercisesUnsanitized {
 			if len(*e.Name) > *o.conf.CustomExerciseNameCharacterLimit {
 				//todo validation mge not supported
 				continue
@@ -811,7 +814,7 @@ func (o *Endpoints) saveExerciseBlockValidations(r *http.Request, tx *sqlx.Tx, r
 					if *ex2.SanitizedKey == *ex.SanitizedKey {
 						*ex.ExerciseRequest.Name = *ex2.SanitizedName
 						*ex.ExerciseRequest.Id = *ex2.Id
-						exercisesToAddToBlock = append(exercisesToAddToBlock, ex.ExerciseRequest)
+						nonExistingToAdd = append(nonExistingToAdd, ex.ExerciseRequest)
 						break
 					}
 				}
@@ -826,11 +829,23 @@ func (o *Endpoints) saveExerciseBlockValidations(r *http.Request, tx *sqlx.Tx, r
 			exerciseId := db.CreateExercise(o.db, tx, *ex.SanitizedName, userId)
 			*ex.ExerciseRequest.Name = *ex.SanitizedName
 			*ex.ExerciseRequest.Id = *exerciseId
-			exercisesToAddToBlock = append(exercisesToAddToBlock, ex.ExerciseRequest)
+			nonExistingToAdd = append(nonExistingToAdd, ex.ExerciseRequest)
 			exercisesComparerCache.Add(*exerciseId, *ex.SanitizedName)
 		}
 	}
 
+	exercisesToAddToBlock := make([]ExerciseRequest, 0)
+	existingExercisesIndex := 0
+	nonExistingExercisesIndex := 0
+	for _, o := range order {
+		if o {
+			exercisesToAddToBlock = append(exercisesToAddToBlock, existingExercises[existingExercisesIndex])
+			existingExercisesIndex++
+		} else {
+			exercisesToAddToBlock = append(exercisesToAddToBlock, nonExistingToAdd[nonExistingExercisesIndex])
+			nonExistingExercisesIndex++
+		}
+	}
 	return exercisesToAddToBlock, routineId
 }
 
