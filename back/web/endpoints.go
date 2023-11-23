@@ -1106,6 +1106,7 @@ func (o *Endpoints) googleSignIn(w http.ResponseWriter, r *http.Request, tx *sql
 			PictureUrl:    util.PString(claims.PictureUrl),
 			Locale:        util.PString(claims.Locale),
 			AccountPlanId: planId,
+			CreatedDate:   time.Now(),
 		})
 		planificationId := db.CreatePlanification(o.db, tx, *userId, MyPlanificationReservedName, true)
 		db.InsertPlanificationDays(o.db, tx, *planificationId, "01234")
@@ -1381,6 +1382,7 @@ func (o *Endpoints) createTestUser(w http.ResponseWriter, r *http.Request, tx *s
 		PictureUrl:    util.PString(""),
 		Locale:        util.PString(""),
 		AccountPlanId: planId,
+		CreatedDate:   time.Now(),
 	})
 	planificationId := db.CreatePlanification(o.db, tx, *userId, MyPlanificationReservedName, true)
 	db.InsertPlanificationDays(o.db, tx, *planificationId, "01234")

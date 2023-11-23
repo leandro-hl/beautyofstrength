@@ -97,16 +97,17 @@ type AccountPlan struct {
 }
 
 type UserAccount struct {
-	Id            *int64  `json:"id"`
-	Name          *string `json:"name"`
-	Username      *string `json:"username"`
-	Email         *string `json:"email"`
-	EmailVerified *bool   `json:"emailverified"`
-	UserType      *string `json:"usertype"`
-	Password      *string `json:"password"`
-	PictureUrl    *string `json:"pictureurl"`
-	Locale        *string `json:"locale"`
-	AccountPlanId *int    `json:"accountplan_id"`
+	Id            *int64    `json:"id"`
+	Name          *string   `json:"name"`
+	Username      *string   `json:"username"`
+	Email         *string   `json:"email"`
+	EmailVerified *bool     `json:"emailverified"`
+	UserType      *string   `json:"usertype"`
+	Password      *string   `json:"password"`
+	PictureUrl    *string   `json:"pictureurl"`
+	Locale        *string   `json:"locale"`
+	AccountPlanId *int      `json:"accountplan_id"`
+	CreatedDate   time.Time `json:"createddate"`
 }
 
 type UserAccountSession struct {

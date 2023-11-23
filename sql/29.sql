@@ -37,6 +37,8 @@ create table if not exists userroutinecopy
 
 alter table planification alter column  name type varchar(50);
 
+alter table useraccount add column createddate TIMESTAMP WITHOUT TIME ZONE NOT NULL default now();
+
 GRANT SELECT, INSERT ON TABLE eventuser TO db;
 GRANT SELECT, INSERT ON TABLE userroutinecopy TO db;
 
