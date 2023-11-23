@@ -926,7 +926,7 @@ func ListLatestEventsBy(db *sqlx.DB, tx *sqlx.Tx, receiverId int64) []ListLatest
 		inner join useraccount u on eu.sender_id = u.id
 		left join routine r on eu.routine_id = r.id
 		left join planification p on eu.planification_id = p.id		
-        where receiver_id=$1 and createddate >= CURRENT_DATE - INTERVAL '1 month'`
+        where receiver_id=$1 and eu.createddate >= CURRENT_DATE - INTERVAL '1 month' limit 50`
 	stmt, err := getTxPreparedStmt(db, tx, query)
 	util.Check(err)
 	var des []ListLatestEventsByQuery
