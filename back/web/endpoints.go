@@ -1110,7 +1110,7 @@ func (o *Endpoints) googleSignIn(w http.ResponseWriter, r *http.Request, tx *sql
 		planificationId := db.CreatePlanification(o.db, tx, *userId, MyPlanificationReservedName, true)
 		db.InsertPlanificationDays(o.db, tx, *planificationId, "01234")
 		o.storeSessionData(w, tx, *userId)
-		http.Redirect(w, r, *o.conf.AddressUi+"/app"+"/plans", http.StatusFound)
+		http.Redirect(w, r, *o.conf.AddressUi+"/app"+"/my-planifications", http.StatusFound)
 	}
 }
 
