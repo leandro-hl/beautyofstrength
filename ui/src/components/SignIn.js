@@ -47,7 +47,7 @@ class SignIn extends Component {
                         <Header as={'h1'}><b>bOS</b></Header>
                     </Grid.Row>
                     <Grid.Row className={'no-padding'}>
-                        <Header as={'h3'}>Beauty Of Strenght</Header>
+                        <Header as={'h3'}>Beauty Of Strength</Header>
                     </Grid.Row>
                     <Grid.Row>
                         <Grid.Column>

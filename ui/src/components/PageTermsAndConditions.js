@@ -157,9 +157,9 @@ class PageTermsAndConditions extends Component {
                 </Header>
                 <p>Gracias por usar una de nuestras aplicaciones. Lea esto detenidamente antes de utilizarla.</p>
 
-                <p>Estos Términos de uso ("Términos") establecen información importante sobre sus derechos, obligaciones y las restricciones que pueden aplicarse cuando utiliza cualquier aplicación de Beauty Of Strenght Team ("Aplicación").</p>
+                <p>Estos Términos de uso ("Términos") establecen información importante sobre sus derechos, obligaciones y las restricciones que pueden aplicarse cuando utiliza cualquier aplicación de Beauty Of Strength Team ("Aplicación").</p>
 
-                <p>Estos Términos rigen la relación entre usted y Leandro Hereñu CUIT 20-38635468-6 cuando accede y utiliza nuestro Servicios. Cualquier referencia a "usted" o "su", significa usted como usuario de la Aplicación. Cualquier referencia a "nosotros", "Nosotros", "nuestro" es para el equipo de Beauty Of Strenght.</p>
+                <p>Estos Términos rigen la relación entre usted y Leandro Hereñu CUIT 20-38635468-6 cuando accede y utiliza nuestro Servicios. Cualquier referencia a "usted" o "su", significa usted como usuario de la Aplicación. Cualquier referencia a "nosotros", "Nosotros", "nuestro" es para el equipo de Beauty Of Strength.</p>
 
                 <p>Le recomendamos que lea estos Términos detenidamente antes de usar la Aplicación. Al acceder y continuar utilizando la Aplicación, usted acepta las obligaciones legales de estos Términos. Si no esta de acuerdo con los Términos, debe descontinuar el uso de la Aplicación. Usted acepta cumplir con las leyes de propiedad intelectual, y todos los términos y condiciones de estos Términos.</p>
 
@@ -175,17 +175,17 @@ class PageTermsAndConditions extends Component {
 
                 <p>Los creadores, productores y distribuidores de los programas, planificaciones y rutinas no aceptan ninguna responsabilidad por cualquier lesión o accidente incurrido como resultado de seguir los ejercicios en ellos descriptos.</p>
 
-                <p>Sujeto a los términos de estos Términos, Beauty Of Strenght Team le otorga una licencia limitada, no exclusiva, no transferible, revocable, de alcance limitado, sin derecho a sublicencia, para utilizar la Aplicación con el fin de ver y usar la Aplicación y el contenido de acuerdo con estos Términos.</p>
+                <p>Sujeto a los términos de estos Términos, Beauty Of Strength Team le otorga una licencia limitada, no exclusiva, no transferible, revocable, de alcance limitado, sin derecho a sublicencia, para utilizar la Aplicación con el fin de ver y usar la Aplicación y el contenido de acuerdo con estos Términos.</p>
 
                 <p>Esta aplicación contiene material con derechos de autor, secretos comerciales y otro material patentado. Usted no deberá, y no deberá intentar en ningún momento, modificar, realizar ingeniería inversa, desmontar, descompilar, mostrar, transmitir o vender, en cualquier forma o por cualquier medio, la Aplicación. Tampoco puede crear trabajos derivados u otros trabajos basados o derivados de la Aplicación en forma total o parcial, y cualquier tipo de reproducción o redistribución de materiales que no cumpla con estos Términos, se encuentra expresamente prohibido.</p>
 
                 <p>Todos los materiales que forman parte de la Aplicación (incluidos, entre otros, diseños, texto, gráficos, aplicaciones, software, música, sonido, video y otros archivos) están protegidos por la ley contra su uso no autorizado. La ley de derechos de autor y las disposiciones de los tratados internacionales de derechos de autor protegen todo el contenido de la aplicación.</p>
 
-                <p>Todos los derechos de propiedad intelectual en la Aplicación serán, en todo momento, únicos y exclusivos, y propiedad del equipo Beauty Of Strenght o sus licenciantes.</p>
+                <p>Todos los derechos de propiedad intelectual en la Aplicación serán, en todo momento, únicos y exclusivos, y propiedad del equipo Beauty Of Strength o sus licenciantes.</p>
 
                 <p>Aparte de una licencia limitada, personal, revocable, intransferible y no sublicenciable para usar la Aplicación, no tiene ningún derecho o título en la Aplicación ni en ninguno de los contenidos que contiene. Usted acepta no utilizar la aplicación para actuaciones públicas.</p>
 
-                <p>El equipo de Beauty Of Strenght tiene el derecho absoluto y exclusivo de administrar, regular, controlar, modificar y/o eliminar contenido audiovisual según lo considere conveniente, y el equipo de Beauty Of Strenght no será responsable ante usted por el ejercicio de tal derecho.</p>
+                <p>El equipo de Beauty Of Strength tiene el derecho absoluto y exclusivo de administrar, regular, controlar, modificar y/o eliminar contenido audiovisual según lo considere conveniente, y el equipo de Beauty Of Strength no será responsable ante usted por el ejercicio de tal derecho.</p>
 
                 <p>Deberá utilizar la Aplicación de conformidad con todas las leyes aplicables, y no con propósito ilegal. Sin limitar lo anterior, cualquier uso, visualización o distribución de la Aplicación junto con material pornográfico, racista, vulgar, obsceno, difamatorio, calumnioso, abusivo, promoviendo el odio, discriminando o mostrando prejuicios basados en religión, etnia, raza, orientación sexual o edad, están estrictamente prohibidas.</p>
 
@@ -193,32 +193,32 @@ class PageTermsAndConditions extends Component {
 
                 <p>Usted acepta que su uso de la Aplicación será bajo su propio riesgo. La solicitud se proporciona con base en "en el estado en el que se encuentra" y "según disponibilidad". La calidad de la visualización del contenido de video dentro de la aplicación varía de un dispositivo a otro y está sujeto a la calidad de la conectividad a Internet del dispositivo. Usted es responsable de todos los cargos de acceso a internet. De ser necesario, consulte con su proveedor de internet para información sobre posibles cargos por uso de datos de Internet.</p>
 
-                <p>En la medida permitida por la ley, Beauty Of Strenght Team, sus funcionarios, directores, empleados y los agentes renuncian a todas las garantías, expresas o implícitas, en relación con la Aplicación y su uso (usuario) de los mismos, incluidas las garantías implícitas de título, comerciabilidad, idoneidad para un propósito particular o no incumplimiento, precisión, autoridad, integridad, utilidad y oportunidad.</p>
+                <p>En la medida permitida por la ley, Beauty Of Strength Team, sus funcionarios, directores, empleados y los agentes renuncian a todas las garantías, expresas o implícitas, en relación con la Aplicación y su uso (usuario) de los mismos, incluidas las garantías implícitas de título, comerciabilidad, idoneidad para un propósito particular o no incumplimiento, precisión, autoridad, integridad, utilidad y oportunidad.</p>
 
                 <p>No hacemos ninguna declaración, promesa o garantía de que la Aplicación estará libre de errores u omisiones ni que estará disponible ininterrumpidamente y en condiciones de funcionamiento completo y excluyen expresamente otras garantías, expresas o implícitas, orales o escritas, que incluyen, entre otras, cualquier garantía implícita de calidad comercial o idoneidad para un propósito particular. No asumimos ninguna obligación o responsabilidad por (i) errores, equivocaciones o imprecisiones de contenido, (ii) lesiones personales o daños a la propiedad, de cualquier naturaleza, como resultado de su acceso y uso de la Aplicación, (iii) cualquier uso o acceso no autorizado de nuestros servidores seguros y/o cualquier información personal y/o información financiera almacenada en el mismo, (iv) cualquier interrupción o cese de transmisión desde o hacia la Aplicación, (v) cualquier error, virus, troyano o similar que pueda transmitirse hacia o a través de la Aplicación por parte de un tercero, o (vi) en el caso de que la Aplicación sea descontinuada o modificada en forma parcial o total.</p>
 
-                <p>En ningún caso (incluido, entre otros, el caso de negligencia), Beauty Of Strenght, sus funcionarios, directores, empleados y agentes serán responsables de cualquier daño consecuencial, incidental, directo, indirecto, especial o punitivo de cualquier tipo (incluidos, entre otros, daños por pérdida de ganancias, pérdida de uso, interrupción del negocio, pérdida de información o datos, o pérdida pecuniaria), en relación con o derivada de o relacionado con este Acuerdo, la Aplicación o el uso o la imposibilidad de usar la Aplicación para el suministro, el desempeño o el uso de cualquier otro asunto a continuación, ya sea por contrato, agravio o cualquier otra teoría, ya sea que el equipo de Beauty Of Strenght haya sido informado o no de la posibilidad de estos daños. La limitación de responsabilidad anterior se aplicará en la mayor medida permitida por la ley en el jurisdicción aplicable.</p>
+                <p>En ningún caso (incluido, entre otros, el caso de negligencia), Beauty Of Strength, sus funcionarios, directores, empleados y agentes serán responsables de cualquier daño consecuencial, incidental, directo, indirecto, especial o punitivo de cualquier tipo (incluidos, entre otros, daños por pérdida de ganancias, pérdida de uso, interrupción del negocio, pérdida de información o datos, o pérdida pecuniaria), en relación con o derivada de o relacionado con este Acuerdo, la Aplicación o el uso o la imposibilidad de usar la Aplicación para el suministro, el desempeño o el uso de cualquier otro asunto a continuación, ya sea por contrato, agravio o cualquier otra teoría, ya sea que el equipo de Beauty Of Strength haya sido informado o no de la posibilidad de estos daños. La limitación de responsabilidad anterior se aplicará en la mayor medida permitida por la ley en el jurisdicción aplicable.</p>
 
-                <p>Usted indemnizará, mantendrá indemne y defenderá al equipo de Beauty Of Strenght, sus funcionarios, directores, empleados y agentes contra todos y cada uno de los reclamos, procedimientos, demandas y costos resultantes de, o de alguna manera conectados con su uso de la Aplicación.</p>
+                <p>Usted indemnizará, mantendrá indemne y defenderá al equipo de Beauty Of Strength, sus funcionarios, directores, empleados y agentes contra todos y cada uno de los reclamos, procedimientos, demandas y costos resultantes de, o de alguna manera conectados con su uso de la Aplicación.</p>
 
                 <p>Estos Términos están disponibles en español y se regirán e interpretarán de acuerdo con las leyes de Argentina. Las disputas que surjan en relación con estos Términos de uso estarán sujetas a la exclusiva jurisdicción de los tribunales de Argentina. Si alguna disposición se considera ilegal, nula o de otra manera inaplicable, entonces esa disposición se considerará separable de este Acuerdo y no afectará la validez y aplicabilidad de cualquier otra disposición.</p>
 
-                <p>El equipo de Beauty Of Strenght se reserva el derecho, a su exclusivo criterio, de modificar estos Términos en cualquier momento, y es su responsabilidad de revisar estos Términos para cualquier cambio. Notificaremos cualquier cambio en la parte superior de estos Condiciones. Su uso de la Aplicación después de cualquier modificación de estos Términos significará su consentimiento y aceptación de sus términos revisados.</p>
+                <p>El equipo de Beauty Of Strength se reserva el derecho, a su exclusivo criterio, de modificar estos Términos en cualquier momento, y es su responsabilidad de revisar estos Términos para cualquier cambio. Notificaremos cualquier cambio en la parte superior de estos Condiciones. Su uso de la Aplicación después de cualquier modificación de estos Términos significará su consentimiento y aceptación de sus términos revisados.</p>
 
-                <h2>Suscripciones a los planes pagos de Beauty Of Strenght</h2>
+                <h2>Suscripciones a los planes pagos de Beauty Of Strength</h2>
 
-                <p>Para desbloquear el acceso a todo el contenido obtenga alguna de las suscripciones ofrecidas de Beauty Of Strenght.</p>
+                <p>Para desbloquear el acceso a todo el contenido obtenga alguna de las suscripciones ofrecidas de Beauty Of Strength.</p>
 
                 <p>El pago de la suscripción se facturará de forma mensual o anual en el día calendario correspondiente con la fecha de inicio de su suscripción paga. Si un pago no se realiza con éxito, podemos suspender su acceso a la Aplicación o su contenido hasta que recibamos un pago válido.</p>
 
                 <p>Las suscripciones se renuevan automáticamente al finalizar por un periodo igual al de la suscripción elegida.</p>
 
-                <p>Usted puede cancelar su suscripción en cualquier momento comunicandose con el equipo de Beauty Of Strenght o según corresponda, hasta 24h antes de la fecha de renovación automática de la suscripción. No proporcionamos reembolsos por períodos parciales de suscripción ni en caso de compras accidentales. Para cancelar, siga las instrucciones correspondientes. Más info en el Centro de ayuda y soporte.</p>
+                <p>Usted puede cancelar su suscripción en cualquier momento comunicandose con el equipo de Beauty Of Strength o según corresponda, hasta 24h antes de la fecha de renovación automática de la suscripción. No proporcionamos reembolsos por períodos parciales de suscripción ni en caso de compras accidentales. Para cancelar, siga las instrucciones correspondientes. Más info en el Centro de ayuda y soporte.</p>
 
-                <p>Los precios de los planes pagos de Beauty Of Strenght pueden variar según la ubicación geográfica y en cualquier momento.</p>
+                <p>Los precios de los planes pagos de Beauty Of Strength pueden variar según la ubicación geográfica y en cualquier momento.</p>
 
                 <p>Última edición: 02/11/2023</p>
-                <p>Copyright © 2023 Beauty Of Strenght bOS</p>
+                <p>Copyright © 2023 Beauty Of Strength bOS</p>
             </>
         )
     }

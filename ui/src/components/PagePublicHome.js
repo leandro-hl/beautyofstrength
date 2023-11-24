@@ -50,7 +50,7 @@ class PagePublicHome extends Component {
                 <style>{css}</style>
                 <header>
                     <div className="container">
-                        <h1>bOS, Beauty Of Strenght</h1>
+                        <h1>bOS, Beauty Of Strength</h1>
                         <nav>
                             <ul>
                                 <li><a href="#">Home</a></li>
@@ -88,7 +88,7 @@ class PagePublicHome extends Component {
                 </div>
 
                 <footer>
-                    <p>© 2023 bOS, Beauty Of Strenght. Todos los derechos reservados.</p>
+                    <p>© 2023 bOS, Beauty Of Strength. Todos los derechos reservados.</p>
                 </footer>
             </div>
         )

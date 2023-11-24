@@ -32,17 +32,17 @@ class PagePrivacyPolicies extends Component {
                 </Header>
                 <h2>1. Disponibilidad</h2>
 
-                Beauty of Strenght pone a tu disposición esta Política de Privacidad (en adelante la “Política de Privacidad”), en la que puedes consultar las características del uso que realizamos sobre tus datos personales para poder prestar nuestro Servicio y otros fines.
+                Beauty of Strength pone a tu disposición esta Política de Privacidad (en adelante la “Política de Privacidad”), en la que puedes consultar las características del uso que realizamos sobre tus datos personales para poder prestar nuestro Servicio y otros fines.
 
-                Puedes acceder a esta Política de Privacidad en cualquier momento, ya que se encuentra a tu disposición en el apartado “Privacidad” de la web de Beauty of Strenght https://bos.team/app (en adelante, el “Sitio Web”). En el Sitio Web, el apartado “Privacidad” se encuentra en https://bos.team/app/privacy-policies. Cuando utilizamos el término “Plataforma”, nos referimos al Sitio Web.
+                Puedes acceder a esta Política de Privacidad en cualquier momento, ya que se encuentra a tu disposición en el apartado “Privacidad” de la web de Beauty of Strength https://bos.team/app (en adelante, el “Sitio Web”). En el Sitio Web, el apartado “Privacidad” se encuentra en https://bos.team/app/privacy-policies. Cuando utilizamos el término “Plataforma”, nos referimos al Sitio Web.
 
                 <h2>2. El Responsable de tus Datos Personales</h2>
 
-                El Responsable del Tratamiento de tus Datos Personales es Leandro Hereñu CUIT 20-38635468-6 (en adelante, “Beauty of Strenght” o “nosotros”, indistintamente). Beauty of Strenght es responsable de tus Datos Personales porque decidimos cómo protegemos y utilizamos tus Datos Personales.
+                El Responsable del Tratamiento de tus Datos Personales es Leandro Hereñu CUIT 20-38635468-6 (en adelante, “Beauty of Strength” o “nosotros”, indistintamente). Beauty of Strength es responsable de tus Datos Personales porque decidimos cómo protegemos y utilizamos tus Datos Personales.
 
                 <h2>3. Obtención y uso de tus Datos Personales</h2>
 
-                Para que puedas acceder a los Servicios que ofrecemos en Beauty of Strenght, utilizaremos algunos datos sobre ti obtenidos a través de diferentes formas y en diferentes momentos. A continuación, puedes verlo en detalle:
+                Para que puedas acceder a los Servicios que ofrecemos en Beauty of Strength, utilizaremos algunos datos sobre ti obtenidos a través de diferentes formas y en diferentes momentos. A continuación, puedes verlo en detalle:
 
                 Utilizaremos los datos personales que nos entregas al crearte una cuenta de usuario: nombres y apellidos, contraseña, dirección de correo electrónico, número de teléfono, dirección postal, país y fecha de nacimiento, imágenes.
 
@@ -70,24 +70,24 @@ class PagePrivacyPolicies extends Component {
 
                 <h2>2. Realizar acciones de marketing</h2>
 
-                Utilizaremos tus Datos Personales para enviarte noticias, ofertas y promociones relacionados con Beauty of Strenght y con terceros relacionados con los sectores relativos a productos y consumos hasta que nos solicites que dejemos de hacerlo, independientemente de que continúes utilizando nuestro Servicio o te hayas dado de baja. A tal fin, analizaremos tus Datos Personales y crearemos un perfil sobre ti para que las noticias, ofertas y promociones que te enviemos sean personalizadas, de forma que se adapten en cada momento a tus necesidades y preferencias personales.
+                Utilizaremos tus Datos Personales para enviarte noticias, ofertas y promociones relacionados con Beauty of Strength y con terceros relacionados con los sectores relativos a productos y consumos hasta que nos solicites que dejemos de hacerlo, independientemente de que continúes utilizando nuestro Servicio o te hayas dado de baja. A tal fin, analizaremos tus Datos Personales y crearemos un perfil sobre ti para que las noticias, ofertas y promociones que te enviemos sean personalizadas, de forma que se adapten en cada momento a tus necesidades y preferencias personales.
                 Puedes pedirnos en cualquier momento que dejemos de analizar tu perfil, aunque ello supondrá que no recibirás más noticias, ofertas y promociones.
 
                 <h2>3. Mejorar nuestro servicio</h2>
 
-                En Beauty of Strenght trabajamos en el perfeccionamiento de la Plataforma. Ese trabajo requiere en muchas ocasiones el uso de algunos de tus Datos Personales. Los utilizaremos hasta que elimines tu cuenta de Usuario.
+                En Beauty of Strength trabajamos en el perfeccionamiento de la Plataforma. Ese trabajo requiere en muchas ocasiones el uso de algunos de tus Datos Personales. Los utilizaremos hasta que elimines tu cuenta de Usuario.
 
                 <h2>4. Prevenir fraudes</h2>
 
-                Para prevenir potenciales delitos o fraudes contra terceros, contra ti y contra Beauty of Strenght, en algunos casos, tendremos que revelar tus Datos Personales a terceros. Los utilizaremos hasta que elimines tu cuenta de Usuario.
+                Para prevenir potenciales delitos o fraudes contra terceros, contra ti y contra Beauty of Strength, en algunos casos, tendremos que revelar tus Datos Personales a terceros. Los utilizaremos hasta que elimines tu cuenta de Usuario.
 
-                <h2>5. Consultarte tu opinión sobre Beauty of Strenght</h2>
+                <h2>5. Consultarte tu opinión sobre Beauty of Strength</h2>
 
                 En algunos momentos podremos pedirte que nos respondas a una encuesta para conocer cuál es tu percepción sobre nosotros. No tendrás que darnos tu opinión si no quieres. Si lo haces, utilizaremos tus respuestas hasta que elimines tu cuenta de Usuario.
 
                 <h2>5. Base jurídica para el uso de tus Datos Personales</h2>
 
-                En Beauty of Strenght utilizamos tus Datos Personales de forma lícita. Para ello, necesitamos contar con una base jurídica suficiente. A continuación te indicamos cuál es la base jurídica para que utilicemos tus Datos Personales respecto de cada una de las finalidades descritas en el apartado anterior.
+                En Beauty of Strength utilizamos tus Datos Personales de forma lícita. Para ello, necesitamos contar con una base jurídica suficiente. A continuación te indicamos cuál es la base jurídica para que utilicemos tus Datos Personales respecto de cada una de las finalidades descritas en el apartado anterior.
 
                 <h2>1. Prestarte el Servicio</h2>
 
@@ -99,15 +99,15 @@ class PagePrivacyPolicies extends Component {
 
                 <h2>3. Mejorar nuestro servicio</h2>
 
-                Consideramos que Beauty of Strenght tiene un interés legítimo para realizar pruebas, investigaciones y estudios analíticos que mejoren la calidad del Servicio.
+                Consideramos que Beauty of Strength tiene un interés legítimo para realizar pruebas, investigaciones y estudios analíticos que mejoren la calidad del Servicio.
 
                 <h2>4. Prevenir fraudes</h2>
 
-                Consideramos que Beauty of Strenght tiene un interés legítimo para tratar de prevenir potenciales fraudes relacionados con el Servicio.
+                Consideramos que Beauty of Strength tiene un interés legítimo para tratar de prevenir potenciales fraudes relacionados con el Servicio.
 
                 <h2>5. Consultarte tu opinión</h2>
 
-                Creemos que Beauty of Strenght tiene un interés legítimo para conocer la percepción que tienes sobre Beauty of Strenght, que le permitirá tomar decisiones estratégicas que se adapten a las necesidades y preocupaciones de todos los usuarios.
+                Creemos que Beauty of Strength tiene un interés legítimo para conocer la percepción que tienes sobre Beauty of Strength, que le permitirá tomar decisiones estratégicas que se adapten a las necesidades y preocupaciones de todos los usuarios.
 
                 <h2>6. Compartiremos tus Datos Personales con terceros</h2>
 
@@ -121,7 +121,7 @@ class PagePrivacyPolicies extends Component {
 
                 <h2>7. Tus derechos en cuestiones de Protección de datos</h2>
 
-                Como usuario de Beauty of Strenght dispones de los siguientes derechos:
+                Como usuario de Beauty of Strength dispones de los siguientes derechos:
 
                 <p>Acceso. Puedes solicitarnos que te indiquemos si estamos utilizando o no tus Datos Personales; en caso de que sí los estemos utilizando, también te trasladaremos información adicional como qué datos personales tenemos sobre ti, para qué los estamos utilizando, las entidades con las que los compartimos, el periodo durante el que vamos a conservar tus datos o si estamos realizando perfiles, entre otras cuestiones.</p>
 
@@ -129,7 +129,7 @@ class PagePrivacyPolicies extends Component {
 
                 <p>Supresión. Puedes solicitarnos que eliminemos los Datos Personales que tenemos sobre ti (i) cuando ya no sean necesarios para la finalidad para la que los utilizamos, (ii) cuando nos retires tu consentimiento, en el caso de que sólo los tratemos para desarrollar finalidades basadas en el mismo.</p>
 
-                <p>Limitación. Puedes pedirnos que restrinjamos temporalmente la utilización de tus Datos Personales (i) cuando consideres que tus datos son inexactos, hasta que los verifiquemos o actualicemos (mientras tanto, no podrás disfrutar del Servicio); (ii) cuando ya no los necesitemos para llevar a cabo las finalidades indicadas en el apartado 4 anterior pero tú prefieras que los conservemos para que puedas ejercitar o defenderte ante reclamaciones y (iii) cuando te opongas a que utilicemos tus datos, mientras valoramos si el interés legítimo que tiene Beauty of Strenght prevalece sobre tu derecho a oponerte a que los utilicemos (iv) cuando tus Datos Personales hayan sido procesados ilegítimamente.</p>
+                <p>Limitación. Puedes pedirnos que restrinjamos temporalmente la utilización de tus Datos Personales (i) cuando consideres que tus datos son inexactos, hasta que los verifiquemos o actualicemos (mientras tanto, no podrás disfrutar del Servicio); (ii) cuando ya no los necesitemos para llevar a cabo las finalidades indicadas en el apartado 4 anterior pero tú prefieras que los conservemos para que puedas ejercitar o defenderte ante reclamaciones y (iii) cuando te opongas a que utilicemos tus datos, mientras valoramos si el interés legítimo que tiene Beauty of Strength prevalece sobre tu derecho a oponerte a que los utilicemos (iv) cuando tus Datos Personales hayan sido procesados ilegítimamente.</p>
 
                 <p>Portabilidad. Puedes solicitarnos que te entreguemos directamente o que entreguemos a otra entidad, siempre que sea posible técnicamente, un archivo estructurado, de uso común y legible por un sistema informático, que contenga los Datos Personales relativos a los servicios que has utilizado, así como cualquier otra información relacionada con la prestación del Servicio.</p>
 
