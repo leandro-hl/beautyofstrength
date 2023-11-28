@@ -267,7 +267,7 @@ class PageRoutineDetail extends Component{
                                 grouperId: ex.grouperId,
                                 workoutId: ex.workoutId,
                                 exerciseId: ex.exerciseId,
-                                [ex.type]: ex.reps,
+                                [ex.type]: parseInt(ex.reps,10),
                             })
                         }
                     }
