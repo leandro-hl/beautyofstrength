@@ -984,7 +984,7 @@ func (o *Endpoints) saveExercisesBlockFree(w http.ResponseWriter, r *http.Reques
 	validExercises, routineId := o.saveExerciseBlockValidations(r, tx, t.RoutineId, t.PlanificationId, t.Exercises, t.NewBlockGroupName)
 	exercises := make([]db.ExerciseBlockGroup, 0)
 	for _, e := range validExercises {
-		if e.Type != nil && *e.Type == "sec" {
+		if e.Type != nil && *e.Type == "secs" {
 			exercises = append(exercises, db.ExerciseBlockGroup{
 				ExerciseId: e.Id,
 				Secs:       e.Reps,
