@@ -6,43 +6,41 @@ export class PopUpConfirmation extends Component {
         super(props);
 
         this.state = {
-            showConfirmation: false,
-            isManaged: props.isManaged,
-            title: props.title,
-            primary: props.primary,
-            secondary: props.secondary,
-            trigger: props.trigger,
-            onPrimaryAction: props.onPrimaryAction ? props.onPrimaryAction :  () => {},
-            onSecondaryAction: props.onSecondaryAction ? props.onSecondaryAction :  () => {},
-            onTriggerClick: props.onTriggerClick ? props.onTriggerClick :  () => {},
+            showConfirmation: false
         }
     }
 
     close() {
-        if (!this.state.isManaged) {
+        if (!this.props.isManaged) {
             this.setState({showConfirmation: false})
         }
     }
 
     open() {
-        if(!this.state.isManaged){
+        if(!this.props.isManaged){
             this.setState({showConfirmation: true})
         }
     }
 
     onPrimaryAction() {
         this.close()
-        this.state.onPrimaryAction()
+        if (this.props.onPrimaryAction){
+            this.props.onPrimaryAction()
+        }
     }
 
     onSecondaryAction() {
         this.close()
-        this.state.onSecondaryAction()
+        if (this.props.onSecondaryAction){
+            this.props.onSecondaryAction()
+        }
     }
 
     onTriggerClick() {
         this.open()
-        this.state.onTriggerClick()
+        if (this.props.onTriggerClick){
+            this.props.onTriggerClick()
+        }
     }
 
     render() {
@@ -53,7 +51,7 @@ export class PopUpConfirmation extends Component {
             showConfirmation,
             isManaged,
             trigger
-        } = this.state
+        } = this.props
 
         let open = this.props.open
         let triggerBuf = trigger

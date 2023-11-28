@@ -34,10 +34,12 @@ type EventUser struct {
 }
 
 type Planification struct {
-	Id        *int64  `json:"id"`
-	Name      *string `json:"name"`
-	Starred   *bool   `json:"starred"`
-	CreatorId *int64  `json:"creator_id"`
+	Id              *int64    `json:"id"`
+	Name            *string   `json:"name"`
+	Starred         *bool     `json:"starred"`
+	CreatorId       *int64    `json:"creator_id"`
+	Active          *bool     `json:"active"`
+	LastUpdatedDate time.Time `json:"lastupdateddate"`
 }
 
 type PlanificationSchedule struct {
@@ -47,13 +49,14 @@ type PlanificationSchedule struct {
 }
 
 type Routine struct {
-	Id              *int64  `json:"id"`
-	Name            *string `json:"name"`
-	PlanificationId *int64  `json:"planification_id"`
-	Difficulty      *int    `json:"difficulty"`
-	Duration        *string `json:"duration"`
-	Active          *bool   `json:"active"`
-	CreatorId       *int64  `json:"creator_id"`
+	Id              *int64    `json:"id"`
+	Name            *string   `json:"name"`
+	PlanificationId *int64    `json:"planification_id"`
+	Difficulty      *int      `json:"difficulty"`
+	Duration        *string   `json:"duration"`
+	Active          *bool     `json:"active"`
+	CreatorId       *int64    `json:"creator_id"`
+	LastUpdatedDate time.Time `json:"lastupdateddate"`
 }
 
 type Exercise struct {
@@ -65,29 +68,37 @@ type Exercise struct {
 }
 
 type BlockGroupGrouper struct {
-	Id        *int64  `json:"id"`
-	Name      *string `json:"name"`
-	RoutineId *int64  `json:"routine_id"`
+	Id              *int64    `json:"id"`
+	Name            *string   `json:"name"`
+	RoutineId       *int64    `json:"routine_id"`
+	Order           *int      `json:"order"`
+	LastUpdatedDate time.Time `json:"lastupdateddate"`
+	Active          *bool     `json:"active"`
 }
 
 type BlockGroup struct {
-	Id                  *int64  `json:"id"`
-	Name                *string `json:"name"`
-	Duration            *int    `json:"duration"`
-	Laps                *int    `json:"laps"`
-	LapRestInterval     *int    `json:"laprestinterval"`
-	ExeRestInterval     *int    `json:"exerestinterval"`
-	Type                *string `json:"type"`
-	RoutineId           *int64  `json:"routine_id"`
-	BlockGroupGrouperId *int64  `json:"blockgroupgrouper_id"`
+	Id                  *int64    `json:"id"`
+	Name                *string   `json:"name"`
+	Duration            *int      `json:"duration"`
+	Laps                *int      `json:"laps"`
+	LapRestInterval     *int      `json:"laprestinterval"`
+	ExeRestInterval     *int      `json:"exerestinterval"`
+	Type                *string   `json:"type"`
+	RoutineId           *int64    `json:"routine_id"`
+	BlockGroupGrouperId *int64    `json:"blockgroupgrouper_id"`
+	LastUpdatedDate     time.Time `json:"lastupdateddate"`
+	Active              *bool     `json:"active"`
 }
 
 type ExerciseBlockGroup struct {
-	Id           *int64 `json:"id"`
-	BlockGroupId *int64 `json:"blockgroup_id"`
-	ExerciseId   *int   `json:"exercise_id"`
-	Reps         *int   `json:"reps"`
-	Secs         *int   `json:"secs"`
+	Id              *int64    `json:"id"`
+	BlockGroupId    *int64    `json:"blockgroup_id"`
+	ExerciseId      *int      `json:"exercise_id"`
+	Reps            *int      `json:"reps"`
+	Secs            *int      `json:"secs"`
+	LastUpdatedDate time.Time `json:"lastupdateddate"`
+	Active          *bool     `json:"active"`
+	Order           *int      `json:"order"`
 }
 
 type AccountPlan struct {

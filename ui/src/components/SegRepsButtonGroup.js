@@ -1,5 +1,6 @@
 import React, {Component} from "react";
 import {Button} from "semantic-ui-react";
+import {Chip} from "./Chip";
 
 export class SegRepsButtonGroup extends Component {
     constructor(props) {
@@ -8,14 +9,16 @@ export class SegRepsButtonGroup extends Component {
     }
     selected(interval) {
         this.setState({repsIsPrimary: interval === 'reps'})
-        this.props.onIntervalSelected(interval)
+        if(this.props.onIntervalSelected) {
+            this.props.onIntervalSelected(interval)
+        }
     }
     render() {
         const {repsIsPrimary} = this.state
         return (
             <Button.Group vertical>
-                <Button secondary={!repsIsPrimary} primary={repsIsPrimary} onClick={() => this.selected('reps')}>Reps</Button>
-                <Button primary={!repsIsPrimary} secondary={repsIsPrimary} onClick={() => this.selected('sec')}>Seg</Button>
+                <Button as={Chip} basic={!repsIsPrimary} secondary={!repsIsPrimary} primary={repsIsPrimary} onClick={() => this.selected('reps')}>Rep</Button>
+                <Button as={Chip} basic={repsIsPrimary} secondary={repsIsPrimary} primary={!repsIsPrimary} onClick={() => this.selected('secs')}>Seg</Button>
             </Button.Group>
         )
     }

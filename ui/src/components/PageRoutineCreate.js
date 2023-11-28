@@ -38,10 +38,12 @@ class PageRoutineCreate extends Component {
 
     async componentDidMount() {
         try {
+            const {nextBlockNumber} = this.state
             const {state: {routineNumber, planificationId}} = this.context
             this.context.dispatch(setData({secondaryActions: [
                     {func: () => this.addBlock(), description: 'Agregar Bloque'}
                 ], noBottomBar: false, menuButtonSelected: MENU.PLANIFICATIONS}))
+            this.context.dispatch(setData({routineId: null, nextBlockNumber}, true))
             this.setState({
                 planificationId: planificationId,
                 routineName: 'Dia '+routineNumber,
@@ -101,7 +103,7 @@ class PageRoutineCreate extends Component {
                 </Header>
                 <Message>
                     <Message.Header>Rutina Vacia</Message.Header>
-                    <p>Agregale algunos bloques de trabajo para continuar</p>
+                    <p>Comienza agregando algunos bloques de trabajo</p>
                 </Message>
                 <ModalBlockCreate
                     open={showCreateBlockModal}

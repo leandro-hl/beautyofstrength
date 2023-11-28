@@ -56,7 +56,11 @@ func Insert(tx *sqlx.Tx, t interface{}) *int64 {
 		}
 
 		if columnName, ok := field.Tag.Lookup("json"); ok {
-			columns = append(columns, columnName)
+			if columnName == "order" {
+				columns = append(columns, `"`+columnName+`"`)
+			} else {
+				columns = append(columns, columnName)
+			}
 		} else {
 			columns = append(columns, strings.ToLower(field.Name))
 		}

@@ -19,6 +19,7 @@ const initialState = {
     isAuthenticated: undefined,
     popupMessage: {},
     permissions: {},
+    draftBlockGroupers: [],
     menuButtonSelected: MENU.HOME,
     noBottomBar: true,
     withTopBar: false,
@@ -31,7 +32,12 @@ const initialState = {
         blocks: [],
         nextBlockNumber: null
     },
-    darkTheme: false
+    darkTheme: false,
+    prepareExercises: {
+        data: {
+            exercises: []
+        }
+    }
 }
 
 const reducer = (state, action) => {
@@ -164,6 +170,36 @@ export function calculareError(code) {
             return {
                 title: '',
                 description: 'El nombre del bloque no debe tener mas de 50 letras'
+            }
+        case 'update_routine_name_max_30':
+            return {
+                title: '',
+                description: 'El nombre de la rutina no debe tener mas de 30 letras'
+            }
+        case 'update_routine_blockgroup_name_max_35':
+            return {
+                title: '',
+                description: 'El nombre del bloque no debe tener mas de 35 letras'
+            }
+        case 'update_routine_blockgroup_name_required':
+            return {
+                title: '',
+                description: 'El nombre del bloque es requerido'
+            }
+        case 'update_routine_workout_limit':
+            return {
+                title: '',
+                description: 'Estas superando la cantidad de trabajos que se pueden actualizar al mismo tiempo. Contactate con soporte.'
+            }
+        case 'update_routine_exercise_limit':
+            return {
+                title: '',
+                description: 'Estas superando la cantidad de ejercicios que se pueden actualizar al mismo tiempo. Contactate con soporte.'
+            }
+        case 'update_routine_blockgroup_limit':
+            return {
+                title: '',
+                description: 'Estas superando la cantidad de bloques que se pueden actualizar al mismo tiempo. Contactate con soporte.'
             }
         case 'no_access':
             return {
