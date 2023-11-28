@@ -267,7 +267,7 @@ class PageRoutineDetail extends Component{
                                 grouperId: ex.grouperId,
                                 workoutId: ex.workoutId,
                                 exerciseId: ex.exerciseId,
-                                [ex.type]: parseInt(ex.reps,10),
+                                [ex.type]: parseInt(ex.amount,10),
                             })
                         }
                     }
@@ -519,7 +519,7 @@ class PageRoutineDetail extends Component{
                 workoutId: activeDraftExercise.workId,
                 exerciseId: activeDraftExercise.ex[0].value,
                 type: activeDraftExercise.type,
-                reps: activeDraftExercise.reps,
+                amount: activeDraftExercise.reps,
                 [activeDraftExercise.type]: activeDraftExercise.reps,
             })
 
