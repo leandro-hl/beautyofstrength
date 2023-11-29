@@ -304,6 +304,10 @@ body > div#root {
   margin-bottom: 0px !important;
 }
 
+.input-header {
+  max-width: 75% !important;
+}
+
 .input-header > input {
   font-size: 1.25rem !important;
 }
@@ -438,19 +442,29 @@ div#g_id_onload, div.g_id_signin {
   color: #eee !important;
 }
 
+.table-row-item {
+  position: relative;
+}
+
 .table-plus-item{
   position: absolute;
   left: 0;
   width: 100%;
   text-align: center;
-  bottom: -10px;
+  /*bottom: -13px;*/
+  /*margin-top: 32px !important;*/
   color: #b5b5b5;
+}
+
+.table-plus-item-sequential {
+  /*margin-top: 32px !important;*/
 }
 
 .table-remove-item {
   position: absolute;
   right: 5px;
-  padding: 1em 0 0 0 !important;
+  /*bottom: 13px;*/
+  padding: 0 0 0 0 !important;
   font-size: 13px !important;
   color: #c1bfbf !important;
   background: transparent none !important;

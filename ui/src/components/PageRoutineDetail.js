@@ -539,25 +539,25 @@ class PageRoutineDetail extends Component{
     }
 
     renderAddExercise(bg, b, addExerciseInputIndex, j,i,k, isSequential) {
+        let classes = 'table-plus-item'
         if (isSequential) {
             k++
+            classes += ' table-plus-item-sequential'
         }
         const openKey = j + '-' + i + '-' + k
         return (
-            <>
-                <div className={'table-plus-item'}>
-                    {addExerciseInputIndex === openKey ?
-                        <>
-                            <Icon
-                                name={'minus circle'}
-                                color={'red'}
-                                onClick={() => this.cancelAddNewExercise()}/>
-                        </> :
+            <div className={classes}>
+                {addExerciseInputIndex === openKey ?
+                    <>
                         <Icon
-                            name={'plus circle'}
-                            onClick={() => this.addNewExercise(bg.id, b.id, j,i,k, isSequential)}/>}
-                </div>
-            </>
+                            name={'minus circle'}
+                            color={'red'}
+                            onClick={() => this.cancelAddNewExercise()}/>
+                    </> :
+                    <Icon
+                        name={'plus circle'}
+                        onClick={() => this.addNewExercise(bg.id, b.id, j,i,k, isSequential)}/>}
+            </div>
         )
     }
 
@@ -593,8 +593,8 @@ class PageRoutineDetail extends Component{
                                     </Grid.Column>
                                 </Grid.Row>
                             </Grid>
+                            {this.renderAddExercise(bg, b, addExerciseInputIndex, j,i,k, true)}
                         </Table.Cell>
-                        {this.renderAddExercise(bg, b, addExerciseInputIndex, j,i,k, true)}
                     </Table.Row>
                 }
             </>
@@ -842,17 +842,18 @@ class PageRoutineDetail extends Component{
                                                                 <Table.Row style={{position: 'relative'}}>
                                                                     <Table.Cell>
                                                                         Sin Ejercicios
+                                                                        {editionMode && this.renderAddExercise(bg, b, addExerciseInputIndex, j,i,0)}
                                                                     </Table.Cell>
-                                                                    {editionMode && this.renderAddExercise(bg, b, addExerciseInputIndex, j,i,0)}
                                                                 </Table.Row>
                                                                 {this.renderAddExerciseInputs(bg, b, addExerciseInputIndex, j,i,0, activeDraftExercise)}
                                                             </>
                                                         }
                                                         {b.exercises.map((e, k) => (
                                                             <>
-                                                                <Table.Row key={k} style={{position: 'relative'}}>
+                                                                <Table.Row key={k} className={'table-row-item'}>
                                                                     <Table.Cell>
                                                                         {e.videoCode ? <Link to={'#'} onClick={() => this.openExerciseVideo(e.videoCode)}>{e.name}</Link> : e.name}
+                                                                        {editionMode && this.renderAddExercise(bg, b, addExerciseInputIndex, j,i,k)}
                                                                     </Table.Cell>
                                                                     {
                                                                         (e.reps || e.secs) && !e.toDelete &&
@@ -873,8 +874,7 @@ class PageRoutineDetail extends Component{
                                                                             }
                                                                             {
                                                                                 !e.toDelete &&
-                                                                                <>
-                                                                                    <Table.Cell/>
+                                                                                <Table.Cell>
                                                                                     <PopUpConfirmation
                                                                                         title={'Borrar '+e.name+'?'}
                                                                                         primary={'Borrar'}
@@ -887,9 +887,8 @@ class PageRoutineDetail extends Component{
                                                                                         onPrimaryAction={() => this.deleteExerciseFromWork(bg.id, b.id, e.id, j, i, k, e.isDraft)}
                                                                                         onSecondaryAction={() => this.setState({confirmWorkExerciseDeletionIndex: null})}
                                                                                     />
-                                                                                </>
+                                                                                </Table.Cell>
                                                                             }
-                                                                            {this.renderAddExercise(bg, b, addExerciseInputIndex, j,i,k)}
                                                                         </>
                                                                     }
                                                                 </Table.Row>
