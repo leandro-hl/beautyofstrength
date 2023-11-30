@@ -189,3 +189,20 @@ type UserRoutineCopy struct {
 	UserAccountId *int64    `json:"useraccount_id"`
 	CreatedDate   time.Time `json:"createddate"`
 }
+
+type UserExerciseRM struct {
+	Id            *int64    `json:"id"`
+	ExerciseId    *int      `json:"exercise_id"`
+	UserAccountId *int64    `json:"useraccount_id"`
+	Rm            *int      `json:"rm"`
+	Grouper       *int      `json:"grouper"`
+	Order         *int      `json:"order"`
+	CreatedDate   time.Time `json:"createddate"`
+}
+
+type UserExerciseRMHistory struct {
+	Id          *int64    `json:"id"`
+	UeId        *int64    `json:"userexerciserm_id"`
+	Rm          *int      `json:"rm"`
+	CreatedDate time.Time `json:"createddate"`
+}

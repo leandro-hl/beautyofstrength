@@ -1,6 +1,8 @@
 package main
 
-import "github.com/leandro-hl/beautyofstrength/back/db"
+import (
+	"github.com/leandro-hl/beautyofstrength/back/db"
+)
 
 type SignUpRequest struct {
 	Username *string `json:"username"`
@@ -271,4 +273,27 @@ type ListLatestEventsResponse struct {
 
 type BadRequestResponse struct {
 	ErrorCode *string `json:"code"`
+}
+
+type ListUserRmsResponse struct {
+	Rms []UserRmResponse `json:"rms"`
+}
+
+type UserRmResponse struct {
+	Id           *int64  `json:"id"`
+	ExerciseName *string `json:"name"`
+	Rm           *int    `json:"rm"`
+	Date         *string `json:"date"`
+	Sum          *bool   `json:"sum"`
+	From         *int    `json:"from"`
+}
+
+type SaveNewRmRequest struct {
+	Id *int64 `json:"id"`
+	Rm *int   `json:"rm"`
+}
+
+type ListLastUserRmHistoryStatsResponse struct {
+	Labels []string `json:"labels"`
+	Series [][]int  `json:"series"`
 }

@@ -19,6 +19,10 @@ class SignIn extends Component {
     }
 
     componentDidMount() {
+        const {state: {auth_token}}=this.context
+        if (auth_token) {
+            this.props.history.push('/my-planifications')
+        }
         const script = document.createElement('script');
         script.src = 'https://accounts.google.com/gsi/client';
         script.async = true;

@@ -281,6 +281,10 @@ func (o *Endpoints) Handle() http.Handler {
 	//Premium services
 	api.Path("/savePlanificationEditions").HandlerFunc(o.HandleAuthenticatedTransactional(o.HandleAuthorization(o.savePlanificationEditions, db.StudentPremium, db.Professor)))
 	api.Path("/saveRoutineEditions").HandlerFunc(o.HandleAuthenticatedTransactional(o.HandleAuthorization(o.saveRoutineEditions, db.StudentPremium, db.Professor)))
+	api.Path("/saveNewRm").HandlerFunc(o.HandleAuthenticatedTransactional(o.HandleAuthorization(o.saveNewRm, db.StudentPremium)))
+
+	api.Path("/listUserRms").HandlerFunc(o.HandleAuthenticatedTransactional(o.HandleAuthorization(o.listUserRms, db.StudentFree, db.StudentPremium)))
+	api.Path("/listLastUserRmHistoryStats").HandlerFunc(o.HandleAuthenticatedTransactional(o.HandleAuthorization(o.listLastUserRmHistoryStats, db.StudentFree, db.StudentPremium)))
 
 	//Student services
 	api.Path("/saveUserTrainedToday").HandlerFunc(o.HandleAuthenticatedTransactional(o.HandleAuthorization(o.saveUserTrainedToday, db.StudentFree, db.StudentPremium)))
@@ -765,6 +769,134 @@ func (o *Endpoints) listExercises(w http.ResponseWriter, r *http.Request, tx *sq
 			Exercises:     exercises,
 		}, http.StatusOK)
 	}
+}
+
+func (o *Endpoints) listUserRms(w http.ResponseWriter, r *http.Request, tx *sqlx.Tx) {
+	userId := util.UserId(r)
+
+	rms := db.ListUserExerciseRmByUserId(o.db, tx, userId)
+
+	rmsRes := make([]UserRmResponse, 0)
+	for i, rm := range rms {
+		rmsRes = append(rmsRes, UserRmResponse{
+			Id:           rm.UeId,
+			ExerciseName: rm.ExerciseName,
+			Rm:           rm.Rm,
+			Date:         util.PString(rm.LastUpdatedDate.Format("02/01/2006")),
+			Sum:          nil,
+			From:         nil,
+		})
+
+		if *rm.ExerciseName == "Fondo" {
+			rmsRes[i].Sum = util.PBool(true)
+			rmsRes[i].From = util.PInt(0)
+		}
+	}
+
+	rmsRes[len(rmsRes)-1].Sum = util.PBool(true)
+	rmsRes[len(rmsRes)-1].From = util.PInt(2)
+
+	o.Respond(w, &ListUserRmsResponse{
+		Rms: rmsRes,
+	}, http.StatusOK)
+}
+
+func (o *Endpoints) saveNewRm(w http.ResponseWriter, r *http.Request, tx *sqlx.Tx) {
+	t := SaveNewRmRequest{}
+	err := o.Decode(r, &t)
+	util.Check(err)
+
+	usr := util.UserId(r)
+	if !db.CalculateRmBelongToUser(o.db, tx, usr, *t.Id) {
+		panic(&BadRequestResponse{ErrorCode: util.PString("no_access")})
+	}
+
+	db.UpdateUserRmSummary(o.db, tx, *t.Id, *t.Rm)
+	db.InsertNewUserRmHistory(o.db, tx, *t.Id, *t.Rm)
+}
+
+func (o *Endpoints) listLastUserRmHistoryStats(w http.ResponseWriter, r *http.Request, tx *sqlx.Tx) {
+	usr := util.UserId(r)
+	data := db.ListLast7UserRmHistory(o.db, tx, usr)
+	labels := make([]string, 0)
+	matrix := make([][]int, 5)
+	for i := range matrix {
+		matrix[i] = make([]int, 0)
+	}
+	lastRmId := *data[0].Id
+	dataEach := 7
+	currentSerie := 0
+	maxDate := data[0].Date
+	minDate := data[0].Date
+	for i := 0; i < len(data); i++ {
+		if *data[i].Id != lastRmId {
+			//repeat for last element
+			if len(matrix[currentSerie]) < dataEach {
+				loadedData := make([]int, 0)
+				for _, d := range matrix[currentSerie] {
+					loadedData = append(loadedData, d)
+				}
+				matrix[currentSerie] = make([]int, 0)
+				for j := 0; j < dataEach-len(loadedData); j++ {
+					matrix[currentSerie] = append(matrix[currentSerie], 0)
+				}
+				for _, d := range loadedData {
+					matrix[currentSerie] = append(matrix[currentSerie], d)
+				}
+			}
+			lastRmId = *data[i].Id
+			currentSerie++
+		}
+
+		if data[i].Rm == nil {
+			matrix[currentSerie] = append(matrix[currentSerie], 0)
+		} else {
+			matrix[currentSerie] = append(matrix[currentSerie], *data[i].Rm)
+		}
+
+		if maxDate == nil {
+			maxDate = data[i].Date
+		} else if data[i].Date != nil && maxDate.Before(*data[i].Date) {
+			maxDate = data[i].Date
+		}
+
+		if minDate == nil {
+			minDate = data[i].Date
+		} else if data[i].Date != nil && minDate.After(*data[i].Date) {
+			minDate = data[i].Date
+		}
+	}
+
+	if len(matrix[currentSerie]) < dataEach {
+		loadedData := make([]int, 0)
+		for _, d := range matrix[currentSerie] {
+			loadedData = append(loadedData, d)
+		}
+		matrix[currentSerie] = make([]int, 0)
+		for j := 0; j < dataEach-len(loadedData); j++ {
+			matrix[currentSerie] = append(matrix[currentSerie], 0)
+		}
+		for _, d := range loadedData {
+			matrix[currentSerie] = append(matrix[currentSerie], d)
+		}
+	}
+
+	if minDate != nil {
+		labels = append(labels, (*minDate).Format("02/01/2006"))
+	} else {
+		labels = append(labels, time.Now().Format("02/01/2006"))
+	}
+
+	if maxDate != nil {
+		labels = append(labels, (*maxDate).Format("02/01/2006"))
+	} else {
+		labels = append(labels, time.Now().Format("02/01/2006"))
+	}
+
+	o.Respond(w, &ListLastUserRmHistoryStatsResponse{
+		Labels: labels,
+		Series: matrix,
+	}, http.StatusOK)
 }
 
 func (o *Endpoints) saveRoutineEditions(w http.ResponseWriter, r *http.Request, tx *sqlx.Tx) {
@@ -1252,6 +1384,7 @@ func (o *Endpoints) googleSignIn(w http.ResponseWriter, r *http.Request, tx *sql
 		})
 		planificationId := db.CreatePlanification(o.db, tx, *userId, MyPlanificationReservedName, true)
 		db.InsertPlanificationDays(o.db, tx, *planificationId, "01234")
+		db.GenerateUserExerciseRm(o.db, tx, *userId)
 		o.storeSessionData(w, tx, *userId)
 		http.Redirect(w, r, *o.conf.AddressUi+"/app"+"/my-planifications", http.StatusFound)
 	}
@@ -1528,10 +1661,11 @@ func (o *Endpoints) createTestUser(w http.ResponseWriter, r *http.Request, tx *s
 	})
 	planificationId := db.CreatePlanification(o.db, tx, *userId, MyPlanificationReservedName, true)
 	db.InsertPlanificationDays(o.db, tx, *planificationId, "01234")
+	db.GenerateUserExerciseRm(o.db, tx, *userId)
 	o.storeSessionData(w, tx, *userId)
 
 	if source == "btn" {
-		w.Write([]byte("/plans"))
+		w.Write([]byte("/my-planifications"))
 		return
 	}
 	http.Redirect(w, r, *o.conf.AddressUi+"/app"+"/plans", http.StatusFound)
