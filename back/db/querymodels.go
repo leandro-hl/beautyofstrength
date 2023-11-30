@@ -89,3 +89,18 @@ type ListLatestEventsByQuery struct {
 	RoutineName       *string        `json:"routinename"`
 	Type              *EventUserType `json:"type"`
 }
+
+type ListUserExerciseRmQuery struct {
+	UeId            *int64    `json:"id"`
+	ExerciseName    *string   `json:"name"`
+	Rm              *int      `json:"rm"`
+	Grouper         *int      `json:"grouper"`
+	Order           *int      `json:"order"`
+	LastUpdatedDate time.Time `json:"lastupdateddate"`
+}
+
+type ListLast7UserRmHistoryQuery struct {
+	Id   *int64     `json:"id"`
+	Rm   *int       `json:"rm"`
+	Date *time.Time `json:"date"`
+}

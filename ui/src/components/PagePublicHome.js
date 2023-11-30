@@ -1,7 +1,25 @@
 import React, {Component} from "react";
 import {withRouter} from "react-router-dom";
+import {getLocalInfo} from "../service";
+import axios from "axios";
+import {AppContext, setData} from "../context";
+import {Loader} from "semantic-ui-react";
 class PagePublicHome extends Component {
+    static contextType = AppContext
+    state = {loading: true}
+    componentDidMount() {
+        const {state: {auth_token}}=this.context
+        if (auth_token) {
+            this.props.history.push('/my-planifications')
+        }
+        this.setState({loading: false})
+    }
+
     render() {
+        if (this.state.loading) {
+            return <Loader active/>
+        }
+
         const css = `
         body {
                         font-family: Arial, sans-serif;

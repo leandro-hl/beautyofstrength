@@ -40,6 +40,10 @@ export function listPlanifications() {
     return axios.get("listPlanifications")
 }
 
+export function listUserRms() {
+    return axios.get("listUserRms")
+}
+
 export function listRoutines(planificationId) {
     return axios.get("listRoutines?planificationId=" + planificationId)
 }
@@ -62,6 +66,14 @@ export function listQueuedPlanificationAccessRequests() {
 
 export function listLatestEvents() {
     return axios.get("listLatestEvents")
+}
+
+export function listLastUserRmHistoryStats() {
+    return axios.get("listLastUserRmHistoryStats")
+}
+
+export function saveNewRm(payload) {
+    return axios.post("saveNewRm", payload)
 }
 
 export function savePlanificationEditions(payload) {

@@ -890,6 +890,44 @@ func CalculateGrouperWorkoutBelongToRoutine(db *sqlx.DB, tx *sqlx.Tx, routineId,
 	return des == 1
 }
 
+func CalculateRmBelongToUser(db *sqlx.DB, tx *sqlx.Tx, userId, rmId int64) bool {
+	query := `
+		select count(1) 
+		from userexerciserm ue 
+		where ue.id=$1 and ue.useraccount_id=$2`
+	stmt, err := getTxPreparedStmt(db, tx, query)
+	util.Check(err)
+
+	var des int
+	stmt.Get(&des, rmId, userId)
+	return des == 1
+}
+
+func ListLast7UserRmHistory(db *sqlx.DB, tx *sqlx.Tx, userId int64) []ListLast7UserRmHistoryQuery {
+	query := `
+		WITH ranked_data AS (
+			SELECT
+				ue.id,
+				u.rm,
+				u.createddate,
+				ROW_NUMBER() OVER (PARTITION BY u.userexerciserm_id ORDER BY u.createddate DESC) as rn
+			FROM userexerciserm ue
+			left join userexercisermhistory u on ue.id = u.userexerciserm_id
+			where ue.useraccount_id=$1 order by ue.grouper, ue."order", u.createddate
+		)
+		SELECT
+			id,
+			rm,
+			createddate as date
+		FROM ranked_data
+		WHERE rn <= 7`
+	stmt, err := getTxPreparedStmt(db, tx, query)
+	util.Check(err)
+	var des []ListLast7UserRmHistoryQuery
+	stmt.Select(&des, userId)
+	return des
+}
+
 func InsertUserRoutineHistory(db *sqlx.DB, tx *sqlx.Tx, completed bool, planificationId, routineId, userId int64) {
 	Insert(
 		tx,
@@ -908,6 +946,43 @@ func InsertUserRoutineCopy(db *sqlx.DB, tx *sqlx.Tx, userId, routineId int64) {
 		UserAccountId: &userId,
 		CreatedDate:   time.Now(),
 	})
+}
+
+func InsertNewUserRmHistory(db *sqlx.DB, tx *sqlx.Tx, rmId int64, rm int) {
+	Insert(tx, &UserExerciseRMHistory{
+		UeId:        &rmId,
+		Rm:          &rm,
+		CreatedDate: time.Now(),
+	})
+}
+
+func GenerateUserExerciseRm(db *sqlx.DB, tx *sqlx.Tx, userId int64) {
+	data := []struct {
+		Name    string
+		Grouper int
+		Order   int
+	}{
+		{"Dominada", 0, 0},
+		{"Fondo", 0, 1},
+		{"Peso Muerto", 1, 0},
+		{"Press de Banca", 1, 1},
+		{"Sentadilla", 1, 2},
+	}
+	query := `
+		insert into userexerciserm(useraccount_id, exercise_id, rm, grouper, "order", lastupdateddate)
+		values($1, (select id from exercise where name = $2), 0, $3, $4, now())`
+	stmt, err := getTxPreparedStmt(db, tx, query)
+	util.Check(err)
+	for _, d := range data {
+		stmt.Exec(userId, d.Name, d.Grouper, d.Order)
+	}
+}
+
+func UpdateUserRmSummary(db *sqlx.DB, tx *sqlx.Tx, rmId int64, rm int) {
+	query := "update userexerciserm set rm=$2, lastupdateddate=now() where id=$1"
+	stmt, err := getTxPreparedStmt(db, tx, query)
+	util.Check(err)
+	stmt.Exec(rmId, rm)
 }
 
 func AcceptPlanificationAccessRequest(db *sqlx.DB, tx *sqlx.Tx, planificationId, requesterUserId, userId int64, plan *AccountPlanType) {
@@ -1025,6 +1100,18 @@ func ListBlockGroupExerciseByBlockId(db *sqlx.DB, tx *sqlx.Tx, blockId int64) []
 	util.Check(err)
 	var des []ExerciseBlockGroup
 	stmt.Select(&des, blockId)
+	return des
+}
+
+func ListUserExerciseRmByUserId(db *sqlx.DB, tx *sqlx.Tx, userId int64) []ListUserExerciseRmQuery {
+	query := `
+		select ue.id, e.name, ue.rm, ue.lastupdateddate, ue.grouper, ue."order" from userexerciserm ue
+		 inner join exercise e on ue.exercise_id = e.id
+		 where ue.useraccount_id=$1 order by ue.grouper, ue."order"`
+	stmt, err := getTxPreparedStmt(db, tx, query)
+	util.Check(err)
+	var des []ListUserExerciseRmQuery
+	stmt.Select(&des, userId)
 	return des
 }
 
