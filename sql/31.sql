@@ -46,4 +46,4 @@ select id, (select id from exercise where name = 'Sentadilla'), 0, 1, 2, now()
 from useraccount;
 
 GRANT select, update ON TABLE userexerciserm TO db;
-grant insert on table  userexercisermhistory to db;
+grant select, insert on table  userexercisermhistory to db;

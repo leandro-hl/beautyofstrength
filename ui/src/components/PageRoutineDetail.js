@@ -259,7 +259,7 @@ class PageRoutineDetail extends Component{
             for (let i = 0; i < blockGroupers.length; i++) {
                 for (let j = 0; j < blockGroupers[i].blocks.length; j++) {
                     for (let k = 0; k < blockGroupers[i].blocks[j].exercises.length; k++) {
-                        if (blockGroupers[i].blocks[j].exercises[k].toAdd) {
+                        if (blockGroupers[i].blocks[j].exercises[k].isDraft) {
                             const ex = blockGroupers[i].blocks[j].exercises[k]
                             exercisesToAddPayload.push({
                                 order: k,
@@ -513,7 +513,8 @@ class PageRoutineDetail extends Component{
             const orderIndex = kpInt+1
 
             blockGroupers[jp].blocks[ip].exercises.splice(orderIndex,null, {
-                id: null, isDraft: true, toAdd:true,
+                id: null,
+                isDraft: true,
                 name: activeDraftExercise.ex[0].text,
                 grouperId: activeDraftExercise.bgId,
                 workoutId: activeDraftExercise.workId,
@@ -851,7 +852,8 @@ class PageRoutineDetail extends Component{
                                                         {b.exercises.map((e, k) => (
                                                             <>
                                                                 <Table.Row key={k} className={'table-row-item'}>
-                                                                    <Table.Cell>
+                                                                    <Table.Cell style={{position: 'relative'}}>
+                                                                        {e.isDraft && <div className={'label-new-item'}/>}
                                                                         {e.videoCode ? <Link to={'#'} onClick={() => this.openExerciseVideo(e.videoCode)}>{e.name}</Link> : e.name}
                                                                         {editionMode && this.renderAddExercise(bg, b, addExerciseInputIndex, j,i,k)}
                                                                     </Table.Cell>
