@@ -490,25 +490,25 @@ func UpdateGrouperNames(db *sqlx.DB, tx *sqlx.Tx, planificationId, routineId, gr
 	stmt.Exec(name, routineId, planificationId, grouperId)
 }
 
-func UpdateExercisesBlockGroupOrderingByRoutine(db *sqlx.DB, tx *sqlx.Tx, routineId int64) {
-	query := `
-		WITH Ordered AS (
-		SELECT
-			ebg.id,
-			ROW_NUMBER() OVER (PARTITION BY ebg.blockgroup_id ORDER BY ebg."order") AS order
-		FROM exerciseblockgroup ebg
-		inner join blockgroup b on ebg.blockgroup_id = b.id
-		where b.routine_id=$1 and ebg.active=true and b.active=true
-	)
-	UPDATE exerciseblockgroup eg
-	SET "order" = Ordered.order
-	FROM Ordered
-	WHERE eg.id = Ordered.id;`
-	stmt, err := getTxPreparedStmt(db, tx, query)
-	util.Check(err)
-
-	stmt.Exec(routineId)
-}
+//func UpdateExercisesBlockGroupOrderingByRoutine(db *sqlx.DB, tx *sqlx.Tx, routineId int64) {
+//	query := `
+//		WITH Ordered AS (
+//		SELECT
+//			ebg.id,
+//			ROW_NUMBER() OVER (PARTITION BY ebg.blockgroup_id ORDER BY ebg."order") AS order
+//		FROM exerciseblockgroup ebg
+//		inner join blockgroup b on ebg.blockgroup_id = b.id
+//		where b.routine_id=$1 and ebg.active=true and b.active=true
+//	)
+//	UPDATE exerciseblockgroup eg
+//	SET "order" = Ordered.order
+//	FROM Ordered
+//	WHERE eg.id = Ordered.id;`
+//	stmt, err := getTxPreparedStmt(db, tx, query)
+//	util.Check(err)
+//
+//	stmt.Exec(routineId)
+//}
 
 func CreateExercise(db *sqlx.DB, tx *sqlx.Tx, name string, userAccountId int64) *int {
 	id := Insert(
@@ -1057,13 +1057,6 @@ func DeleteExerciseBlockGroupByWorkoutId(db *sqlx.DB, tx *sqlx.Tx, routineId, gr
 	stmt.Exec(workoutId, routineId, grouperId)
 }
 
-func DeleteWorkout(db *sqlx.DB, tx *sqlx.Tx, routineId, grouperId, workoutId int64) {
-	query := "update blockgroup set active=false, lastupdateddate=now() where id=$1 and routine_id=$2 and blockgroupgrouper_id=$3"
-	stmt, err := getTxPreparedStmt(db, tx, query)
-	util.Check(err)
-	stmt.Exec(workoutId, routineId, grouperId)
-}
-
 func DeleteExerciseBlockGroup(db *sqlx.DB, tx *sqlx.Tx, routineId, grouperId, workoutId int64, exerciseId int) {
 	query := `
 		update exerciseblockgroup eb
@@ -1073,6 +1066,13 @@ func DeleteExerciseBlockGroup(db *sqlx.DB, tx *sqlx.Tx, routineId, grouperId, wo
 	stmt, err := getTxPreparedStmt(db, tx, query)
 	util.Check(err)
 	stmt.Exec(workoutId, exerciseId, routineId, grouperId)
+}
+
+func DeleteWorkout(db *sqlx.DB, tx *sqlx.Tx, routineId, grouperId, workoutId int64) {
+	query := "update blockgroup set active=false, lastupdateddate=now() where id=$1 and routine_id=$2 and blockgroupgrouper_id=$3"
+	stmt, err := getTxPreparedStmt(db, tx, query)
+	util.Check(err)
+	stmt.Exec(workoutId, routineId, grouperId)
 }
 
 func ListBlockGroupGrouperByRoutineId(db *sqlx.DB, tx *sqlx.Tx, routineId int64) []BlockGroupGrouper {
@@ -1095,7 +1095,7 @@ func ListBlockGroupByRoutineId(db *sqlx.DB, tx *sqlx.Tx, routineId, bgId int64) 
 }
 
 func ListBlockGroupExerciseByBlockId(db *sqlx.DB, tx *sqlx.Tx, blockId int64) []ExerciseBlockGroup {
-	query := `select * from exerciseblockgroup where blockgroup_id=$1 and active=true order by id`
+	query := `select * from exerciseblockgroup where blockgroup_id=$1 and active=true order by "order"`
 	stmt, err := getTxPreparedStmt(db, tx, query)
 	util.Check(err)
 	var des []ExerciseBlockGroup

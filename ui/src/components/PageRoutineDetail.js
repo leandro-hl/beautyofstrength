@@ -247,7 +247,7 @@ class PageRoutineDetail extends Component{
 
     async saveRoutineEditions() {
         try {
-            const {planificationId, routineId, activeDraftExercise, updates, blockGroupers} = this.state
+            const {planificationId, routineId, activeDraftExercise, updates, blockGroupers, addExerciseInputK} = this.state
             this.setState({savingEditions: true})
 
             const namesPayload = Object.entries(updates.newGrouperNames ?? []).map(([key, value]) => ({
@@ -256,40 +256,54 @@ class PageRoutineDetail extends Component{
             }));
 
             const exercisesToAddPayload = []
+            let lastToDeleteIndex = 0
             for (let i = 0; i < blockGroupers.length; i++) {
                 for (let j = 0; j < blockGroupers[i].blocks.length; j++) {
-                    for (let k = 0; k < blockGroupers[i].blocks[j].exercises.length; k++) {
-                        if (blockGroupers[i].blocks[j].exercises[k].isDraft) {
-                            const ex = blockGroupers[i].blocks[j].exercises[k]
-                            exercisesToAddPayload.push({
-                                order: k,
-                                // name: ex.name,
-                                grouperId: ex.grouperId,
-                                workoutId: ex.workoutId,
-                                exerciseId: ex.exerciseId,
-                                [ex.type]: parseInt(ex.amount,10),
-                            })
+                    const workout = blockGroupers[i].blocks[j]
+                    exercisesToAddPayload.push({grouperId: blockGroupers[i].id,workoutId: workout.id, exercises: []})
+                    if (workout.exercises.length === 0) {
+                        //add activeDraftExercise
+                        if (activeDraftExercise.ex.length>0 && activeDraftExercise.workoutId === workout.id) {
+                            const item = {
+                                order: 0,
+                                grouperId: activeDraftExercise.grouperId,
+                                workoutId: activeDraftExercise.workoutId,
+                                exerciseId:activeDraftExercise.ex[0].value,
+                                [activeDraftExercise.type]: parseInt(activeDraftExercise.reps,10)
+                            }
+                            exercisesToAddPayload[j].exercises.push(item)
+                        }
+                    } else  {
+                        for (let k = 0; k < workout.exercises.length; k++) {
+                            const ex = workout.exercises[k]
+                            if (ex.toDelete) {
+                                lastToDeleteIndex = k + 1
+                            } else if (ex.isDraft) {
+                                const order = activeDraftExercise.order < k && activeDraftExercise.workoutId === ex.workoutId ? k+1 : k
+                                exercisesToAddPayload[j].exercises.push({
+                                    order: order - lastToDeleteIndex,
+                                    // name: ex.name,
+                                    grouperId: ex.grouperId,
+                                    workoutId: ex.workoutId,
+                                    exerciseId: ex.exerciseId,
+                                    [ex.type]: parseInt(ex.amount,10),
+                                })
+                            }
+                            if (addExerciseInputK === k) {
+                                //add activeDraftExercise
+                                if (activeDraftExercise.ex.length>0 && activeDraftExercise.workoutId === ex.workoutId) {
+                                    const item = {
+                                        order: (k+1) - lastToDeleteIndex,
+                                        grouperId: activeDraftExercise.grouperId,
+                                        workoutId: activeDraftExercise.workoutId,
+                                        exerciseId:activeDraftExercise.ex[0].value,
+                                        [activeDraftExercise.type]: parseInt(activeDraftExercise.reps,10)
+                                    }
+                                    exercisesToAddPayload[j].exercises.push(item)
+                                }
+                            }
                         }
                     }
-                }
-            }
-
-            if (activeDraftExercise.ex.length>0) {
-                const existingIndex = exercisesToAddPayload.findIndex(e => e.order >= activeDraftExercise.order)
-                const item = {
-                    order: activeDraftExercise.order,
-                    grouperId: activeDraftExercise.grouperId,
-                    workoutId: activeDraftExercise.workoutId,
-                    exerciseId:activeDraftExercise.ex[0].value,
-                    [activeDraftExercise.type]: parseInt(activeDraftExercise.reps,10)
-                }
-                if (existingIndex !== -1) {
-                    exercisesToAddPayload.splice(existingIndex+1,0, item)
-                    for (let i = existingIndex+1; i < exercisesToAddPayload.length; i++) {
-                        exercisesToAddPayload[i].order = exercisesToAddPayload[i].order + 1
-                    }
-                } else {
-                    exercisesToAddPayload.push(item)
                 }
             }
 
@@ -321,6 +335,7 @@ class PageRoutineDetail extends Component{
             this.setState({
                 editionMode: false,
                 addExerciseInputIndex: null,
+                addExerciseInputK: null,
                 activeDraftExercise: {
                     type: 'reps',
                     ex: []
@@ -371,6 +386,7 @@ class PageRoutineDetail extends Component{
                 ))
             })),
             addExerciseInputIndex: null,
+            addExerciseInputK: null,
             activeDraftExercise: {
                 type: 'reps',
                 ex: []
@@ -481,6 +497,7 @@ class PageRoutineDetail extends Component{
     cancelAddNewExercise() {
         this.setState({
             addExerciseInputIndex: null,
+            addExerciseInputK: null,
             activeDraftExercise: {
                 type: 'reps',
                 ex: []
@@ -494,6 +511,7 @@ class PageRoutineDetail extends Component{
             //starting
             this.setState({
                 addExerciseInputIndex: j + '-' + i + '-' + k,
+                addExerciseInputK: k,
                 activeDraftExercise: {
                     bgId,
                     workId,
@@ -529,6 +547,7 @@ class PageRoutineDetail extends Component{
             this.setState({
                 blockGroupers: [...blockGroupers],
                 addExerciseInputIndex: j + '-' + i + '-' + currentKIndex,
+                addExerciseInputK: currentKIndex,
                 activeDraftExercise: {
                     bgId,
                     workId,
@@ -576,7 +595,11 @@ class PageRoutineDetail extends Component{
                                             basic
                                             // allowAdditions
                                             defaultSelected={activeDraftExercise.ex}
-                                            onSelected={(selected)=> this.setState({activeDraftExercise: {...activeDraftExercise, grouperId: bg.id, workoutId: b.id, order: k, ex: selected}})}/>
+                                            onSelected={(selected)=> {
+                                                const newActiveDraftExercise = {...activeDraftExercise, grouperId: bg.id, workoutId: b.id, order: k, ex: selected}
+                                                console.log(newActiveDraftExercise)
+                                                this.setState({activeDraftExercise: newActiveDraftExercise})
+                                            }}/>
                                     </Grid.Column>
                                     <Grid.Column width={3} className={'no-padding'}>
                                         <Input
@@ -724,7 +747,7 @@ class PageRoutineDetail extends Component{
                                 </Grid.Column>
                             }
                         </Grid>
-                        {this.renderAddExercise(bg, b, addExerciseInputIndex, j,i,k)}
+                        {editionMode && this.renderAddExercise(bg, b, addExerciseInputIndex, j,i,k)}
                     </Table.Cell>
                     {
                         (e.reps || e.secs) && !editionMode &&

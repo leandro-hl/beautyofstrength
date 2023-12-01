@@ -930,9 +930,6 @@ func (o *Endpoints) saveRoutineEditions(w http.ResponseWriter, r *http.Request, 
 	if len(t.WorkOutToDelete) > 50 {
 		panic(&BadRequestResponse{ErrorCode: util.PString("update_routine_workout_limit")})
 	}
-	if len(t.ExercisesToAdd) > 100 {
-		panic(&BadRequestResponse{ErrorCode: util.PString("update_routine_exercise_limit")})
-	}
 	if len(t.ExercisesToDelete) > 100 {
 		panic(&BadRequestResponse{ErrorCode: util.PString("update_routine_exercise_limit")})
 	}
@@ -946,13 +943,6 @@ func (o *Endpoints) saveRoutineEditions(w http.ResponseWriter, r *http.Request, 
 		}
 
 		db.UpdateGrouperNames(o.db, tx, *t.PlanificationId, *t.RoutineId, *g.Id, *g.Name)
-	}
-
-	//todo: move the validation outside the loop grouping by *e.GrouperId, *e.WorkoutId
-	for _, e := range t.ExercisesToAdd {
-		if db.CalculateGrouperWorkoutBelongToRoutine(o.db, tx, *t.RoutineId, *e.GrouperId, *e.WorkoutId) {
-			db.CreateExerciseBlockGroup(o.db, tx, *e.WorkoutId, *e.ExerciseId, *e.Order, e.Reps, e.Secs)
-		}
 	}
 
 	for _, bg := range t.GrouperIdsToDelete {
@@ -970,8 +960,31 @@ func (o *Endpoints) saveRoutineEditions(w http.ResponseWriter, r *http.Request, 
 		db.DeleteExerciseBlockGroup(o.db, tx, *t.RoutineId, *e.GrouperId, *e.WorkoutId, *e.ExerciseId)
 	}
 
-	if len(t.ExercisesToDelete) > 0 && len(t.ExercisesToAdd) > 0 {
-		db.UpdateExercisesBlockGroupOrderingByRoutine(o.db, tx, *t.RoutineId)
+	for _, wk := range t.ExercisesToAdd {
+		if len(wk.Exercises) > 30 {
+			panic(&BadRequestResponse{ErrorCode: util.PString("update_routine_exercise_limit")})
+		}
+
+		if !db.CalculateGrouperWorkoutBelongToRoutine(o.db, tx, *t.RoutineId, *wk.GrouperId, *wk.WorkoutId) {
+			panic(&BadRequestResponse{ErrorCode: util.PString("no_access")})
+		}
+
+		currentValid := db.ListBlockGroupExerciseByBlockId(o.db, tx, *wk.WorkoutId)
+		db.DeleteExerciseBlockGroupByWorkoutId(o.db, tx, *t.RoutineId, *wk.GrouperId, *wk.WorkoutId)
+
+		iNew := 0
+		iCurrent := 0
+		for i := 0; i < len(currentValid)+len(wk.Exercises); i++ {
+			if iNew < len(wk.Exercises) && i == *wk.Exercises[iNew].Order {
+				e := wk.Exercises[iNew]
+				db.CreateExerciseBlockGroup(o.db, tx, *e.WorkoutId, *e.ExerciseId, i, e.Reps, e.Secs)
+				iNew++
+			} else {
+				e := currentValid[iCurrent]
+				db.CreateExerciseBlockGroup(o.db, tx, *e.BlockGroupId, *e.ExerciseId, i, e.Reps, e.Secs)
+				iCurrent++
+			}
+		}
 	}
 }
 

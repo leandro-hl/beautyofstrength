@@ -248,12 +248,16 @@ type EditRoutineRequest struct {
 		WorkoutId *int64 `json:"workoutId"`
 	} `json:"workoutsToDelete"`
 	ExercisesToAdd []struct {
-		GrouperId  *int64 `json:"grouperId"`
-		WorkoutId  *int64 `json:"workoutId"`
-		ExerciseId *int   `json:"exerciseId"`
-		Order      *int   `json:"order"`
-		Reps       *int   `json:"reps"`
-		Secs       *int   `json:"secs"`
+		GrouperId *int64 `json:"grouperId"`
+		WorkoutId *int64 `json:"workoutId"`
+		Exercises []struct {
+			GrouperId  *int64 `json:"grouperId"`
+			WorkoutId  *int64 `json:"workoutId"`
+			ExerciseId *int   `json:"exerciseId"`
+			Order      *int   `json:"order"`
+			Reps       *int   `json:"reps"`
+			Secs       *int   `json:"secs"`
+		} `exercises`
 	} `json:"exercisesToAdd"`
 	ExercisesToDelete []struct {
 		GrouperId  *int64 `json:"grouperId"`
