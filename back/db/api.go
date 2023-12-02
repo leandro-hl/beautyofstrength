@@ -982,7 +982,8 @@ func GenerateUserExerciseRm(db *sqlx.DB, tx *sqlx.Tx, userId int64) {
 	stmt, err := getTxPreparedStmt(db, tx, query)
 	util.Check(err)
 	for _, d := range data {
-		stmt.Exec(userId, d.Name, d.Grouper, d.Order)
+		_, err = stmt.Exec(userId, d.Name, d.Grouper, d.Order)
+		util.Check(err)
 	}
 }
 
