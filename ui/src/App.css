@@ -10,12 +10,19 @@ body {
   background-color: #121212 !important;
 }
 
-.body-dark .ui.header {
-  color: #ffffff !important;
+.body-dark .ui.header .chip {
+  color: #000000 !important;
 }
 
-.body-dark .ui.segment .ui.sub.header {
+.body-dark .ui.segment .ui.sub.header,
+.body-dark .ui.accordion .ui.segment .ui.header {
   color: #000000 !important;
+}
+
+.body-dark .svg-body {
+  width: 100%;
+  height: 80vh;
+  color: white;
 }
 
 .body-dark .button-bottom-bar {
@@ -43,12 +50,27 @@ body {
   color: #ffffff !important;
 }
 
-.body-dark .planification-checkbox-day label {
+.body-dark .planification-checkbox-day label,
+.body-dark .chip.secondary.button,
+.body-dark p,
+.body-dark .ui.header,
+.body-dark .privacy-policy
+{
   color: white !important;
+}
+
+.body-dark .ui.message p {
+  color: black;
 }
 
 .ui.header {
   color: #000000 !important;
+}
+
+.svg-body {
+  width: 100%;
+  height: 80vh;
+  color: black;
 }
 
 @media (min-width: 600px) {

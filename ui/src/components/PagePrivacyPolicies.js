@@ -23,7 +23,7 @@ class PagePrivacyPolicies extends Component {
     }
     render() {
         return (
-            <>
+            <div className={'privacy-policy'}>
                 <Header as={'h3'}>
                     <Button className={'header-back-arrow'} icon onClick={() => this.props.history.goBack()}>
                         <Icon name={'arrow left'}/>
@@ -142,7 +142,7 @@ class PagePrivacyPolicies extends Component {
                 <h2>8. ¿Actualizaremos esta Política de Privacidad?</h2>
 
                 Es posible. Si decidimos realizar algún cambio en nuestra Política de Privacidad, te informaremos previamente.
-            </>
+            </div>
         )
     }
 }

@@ -14,8 +14,12 @@ export class Chip extends Component {
             classes += ' feel'
         }
 
+        if (className) {
+            classes += ' '+className
+        }
+
         return (
-            <span style={style} className={classes+' '+className} onClick={onClick}>
+            <span style={style} className={classes} onClick={onClick}>
                 {content ?? this.props.children}
             </span>
         )
