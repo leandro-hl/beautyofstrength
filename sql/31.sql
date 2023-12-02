@@ -45,5 +45,5 @@ insert into userexerciserm(useraccount_id, exercise_id, rm, grouper, "order", la
 select id, (select id from exercise where name = 'Sentadilla'), 0, 1, 2, now()
 from useraccount;
 
-GRANT select, update ON TABLE userexerciserm TO db;
+GRANT select, update, insert ON TABLE userexerciserm TO db;
 grant select, insert on table  userexercisermhistory to db;
