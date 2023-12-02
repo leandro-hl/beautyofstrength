@@ -170,7 +170,7 @@ class PagePlanificationList extends Component {
     }
 
     render() {
-        const {state: {permissions: {createPlanification, sharePlanification}}} = this.context
+        const {state: {permissions: {createPlanification, sharePlanification, deletePlanification}}} = this.context
         const {ownedPlanifications, sharedPlanifications , planificationShared, showPendingRequests, requests, refreshing, confirmPlanificationDeletionIndex} = this.state;
         const {loading} = this.state;
 
@@ -208,10 +208,11 @@ class PagePlanificationList extends Component {
                         })}
                         <Header as={'h5'}>Creadas</Header>
                         {ownedPlanifications.map((p,i) => {
+                            const canDelete = deletePlanification && !p.starred
                             return (
                                 <Segment style={{width: '100%'}} key={i}>
                                     <Grid>
-                                        <Grid.Column width={p.starred ? 16 : 11} onClick={() => this.redirectToPlanification(p)}>
+                                        <Grid.Column width={canDelete ? 11 : 16} onClick={() => this.redirectToPlanification(p)}>
                                             <Header sub>
                                                 {p.name}
                                                 {p.starred && <Icon name={'star'} className={'header-icon starred'}/> }
@@ -219,7 +220,7 @@ class PagePlanificationList extends Component {
                                             <span>Rutinas: {p.routinescount}</span>
                                         </Grid.Column>
                                         {
-                                            !p.starred &&
+                                            canDelete &&
                                             <Grid.Column width={5} className={'no-right-padding no-left-padding'}>
                                                 <PopUpConfirmation
                                                     title={'Borrar planificacion '+p.name+'?'}

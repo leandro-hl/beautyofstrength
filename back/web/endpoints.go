@@ -387,6 +387,7 @@ func (o *Endpoints) getUserPermissions(w http.ResponseWriter, r *http.Request, t
 		permissions["menudiscussions"] = true
 		permissions["menuhomeprofessor"] = true
 		permissions["createPlanification"] = true
+		permissions["deletePlanification"] = true
 		permissions["createNewExercises"] = true
 		permissions["createNewMuscles"] = true
 		permissions["createNewEquipment"] = true
