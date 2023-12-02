@@ -315,7 +315,8 @@ func RemoveActiveSession(db *sqlx.DB, tx *sqlx.Tx, userId int64) {
 	stmt, err := getTxPreparedStmt(db, tx, query)
 	util.Check(err)
 
-	stmt.Exec(userId)
+	_, err = stmt.Exec(userId)
+	util.Check(err)
 }
 
 func SaveCreatedActiveSession(db *sqlx.DB, tx *sqlx.Tx, token string, userId int64) *int64 {
