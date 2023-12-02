@@ -13,7 +13,7 @@ import {
     Segment
 } from "semantic-ui-react";
 import {
-    createPlanification, getUserPermissions,
+    createPlanification, deletePlanification, getUserPermissions,
     listPlanifications,
     listQueuedPlanificationAccessRequests,
     requestAccessToSharedPlanification
@@ -58,7 +58,9 @@ class PagePlanificationList extends Component {
                 this.context.dispatch(setData({noBottomBar: false, secondaryActions: [], menuButtonSelected: MENU.PLANIFICATIONS}))
             }
             const res = await listPlanifications();
-            this.setState({loading: false, planifications: res.data})
+            const ownedPlanifications = res.data.filter(p => p.owner);
+            const sharedPlanifications = res.data.filter(p => !p.owner)
+            this.setState({loading: false, ownedPlanifications, sharedPlanifications})
         } catch (e) {
             console.error(e)
         }
@@ -135,7 +137,9 @@ class PagePlanificationList extends Component {
         try {
             this.setState({refreshing: true})
             const res = await listPlanifications();
-            this.setState({refreshing: false, planifications: res.data})
+            const ownedPlanifications = res.data.filter(p => p.owner);
+            const sharedPlanifications = res.data.filter(p => !p.owner)
+            this.setState({refreshing: false, ownedPlanifications, sharedPlanifications})
             showSuccess(this.context, '', 'Lista de planificaciones actualizada!')
         } catch (e) {
             console.error(e)
@@ -149,17 +153,31 @@ class PagePlanificationList extends Component {
         this.setState({requests: [...buffer]})
     }
 
+    openDeletePlanificationPopUpConfirmation(i) {
+        this.setState({confirmPlanificationDeletionIndex: i})
+    }
+
+    async deletePlanification(id, i) {
+        try {
+            const {ownedPlanifications} = this.state
+            await deletePlanification(id)
+            ownedPlanifications.splice(i,1)
+            this.setState({ownedPlanifications, confirmPlanificationDeletionIndex: null})
+            showSuccess(this.context, '', 'Planificacion eliminada!')
+        } catch (e) {
+            console.error(e)
+        }
+    }
+
     render() {
         const {state: {permissions: {createPlanification, sharePlanification}}} = this.context
-        const {planifications, planificationShared, showPendingRequests, requests, refreshing} = this.state;
+        const {ownedPlanifications, sharedPlanifications , planificationShared, showPendingRequests, requests, refreshing, confirmPlanificationDeletionIndex} = this.state;
         const {loading} = this.state;
 
         if (loading) {
             return <Loader active/>
         }
 
-        const ownedPlanifications = planifications.filter(p => p.owner);
-        const sharedPlanifications = planifications.filter(p => !p.owner)
         return (
             <>
                 <Header as={'h3'}>
@@ -189,35 +207,34 @@ class PagePlanificationList extends Component {
                             )
                         })}
                         <Header as={'h5'}>Creadas</Header>
-                        {ownedPlanifications.map(p => {
+                        {ownedPlanifications.map((p,i) => {
                             return (
-                                <Segment style={{width: '100%'}} key={p.id}
-                                         onClick={() => this.redirectToPlanification(p)}>
+                                <Segment style={{width: '100%'}} key={i}>
                                     <Grid>
-                                        <Grid.Column width={!true? 11 : 16}>
+                                        <Grid.Column width={p.starred ? 16 : 11} onClick={() => this.redirectToPlanification(p)}>
                                             <Header sub>
                                                 {p.name}
                                                 {p.starred && <Icon name={'star'} className={'header-icon starred'}/> }
                                             </Header>
                                             <span>Rutinas: {p.routinescount}</span>
                                         </Grid.Column>
-                                        {/*{*/}
-                                        {/*    (editionMode && !disableActions) &&*/}
-                                        {/*    <Grid.Column width={5} className={'no-right-padding no-left-padding'}>*/}
-                                        {/*        <PopUpConfirmation*/}
-                                        {/*            title={'Borrar rutina '+p.name+'?'}*/}
-                                        {/*            primary={'Borrar'}*/}
-                                        {/*            secondary={'Cancelar'}*/}
-                                        {/*            isManaged*/}
-                                        {/*            open={i===confirmRoutineDeletionIndex}*/}
-                                        {/*            trigger={<Button disabled={disableActions}*/}
-                                        {/*                             onClick={() => this.openDeleteRoutinePopUpConfirmation(i)}*/}
-                                        {/*                             basic secondary icon='close' style={{position: 'relative', float: 'right'}}/>}*/}
-                                        {/*            onPrimaryAction={() => this.deleteRoutine(p.id, i)}*/}
-                                        {/*            onSecondaryAction={() => this.setState({confirmRoutineDeletionIndex: null})}*/}
-                                        {/*        />*/}
-                                        {/*    </Grid.Column>*/}
-                                        {/*}*/}
+                                        {
+                                            !p.starred &&
+                                            <Grid.Column width={5} className={'no-right-padding no-left-padding'}>
+                                                <PopUpConfirmation
+                                                    title={'Borrar planificacion '+p.name+'?'}
+                                                    primary={'Borrar'}
+                                                    secondary={'Cancelar'}
+                                                    isManaged
+                                                    open={i===confirmPlanificationDeletionIndex}
+                                                    trigger={<Button
+                                                                     onClick={() => this.openDeletePlanificationPopUpConfirmation(i)}
+                                                                     basic secondary icon='close' style={{position: 'relative', float: 'right'}}/>}
+                                                    onPrimaryAction={() => this.deletePlanification(p.id, i)}
+                                                    onSecondaryAction={() => this.setState({confirmPlanificationDeletionIndex: null})}
+                                                />
+                                            </Grid.Column>
+                                        }
                                     </Grid>
                                 </Segment>
                             )

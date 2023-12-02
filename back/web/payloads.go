@@ -301,3 +301,7 @@ type ListLastUserRmHistoryStatsResponse struct {
 	Labels []string `json:"labels"`
 	Series [][]int  `json:"series"`
 }
+
+type DeletePlanificationRequest struct {
+	Id *int64 `json:"id"`
+}

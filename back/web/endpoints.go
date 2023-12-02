@@ -273,6 +273,7 @@ func (o *Endpoints) Handle() http.Handler {
 	//Instructor services (all premium)
 	api.Path("/sharePlanification").HandlerFunc(o.HandleAuthenticatedTransactional(o.HandleAuthorization(o.sharePlanification, db.Professor)))
 	api.Path("/createPlanification").HandlerFunc(o.HandleAuthenticatedTransactional(o.HandleAuthorization(o.createPlanification, db.Professor)))
+	api.Path("/deletePlanification").HandlerFunc(o.HandleAuthenticatedTransactional(o.HandleAuthorization(o.deletePlanification, db.Professor)))
 	api.Path("/savePlanificationDays").HandlerFunc(o.HandleAuthenticatedTransactional(o.HandleAuthorization(o.savePlanificationDays, db.Professor)))
 	api.Path("/listQueuedPlanificationAccessRequests").HandlerFunc(o.HandleAuthenticatedTransactional(o.HandleAuthorization(o.listQueuedPlanificationAccessRequests, db.Professor)))
 	api.Path("/acceptPlanificationAccessRequest").HandlerFunc(o.HandleAuthenticatedTransactional(o.HandleAuthorization(o.acceptPlanificationAccessRequest, db.Professor)))
@@ -1239,6 +1240,24 @@ func (o *Endpoints) createPlanification(w http.ResponseWriter, r *http.Request, 
 	userId := util.UserId(r)
 	id := db.CreatePlanification(o.db, tx, userId, *t.Name, false)
 	o.Respond(w, &CreatePlanificationResponse{Id: id}, http.StatusOK)
+}
+
+func (o *Endpoints) deletePlanification(w http.ResponseWriter, r *http.Request, tx *sqlx.Tx) {
+	t := DeletePlanificationRequest{}
+	err := o.Decode(r, &t)
+	util.Check(err)
+
+	if t.Id == nil {
+		panic(&BadRequestResponse{ErrorCode: util.PString("planification_id_required")})
+	}
+
+	userId := util.UserId(r)
+
+	if db.CalculateUserOwnsPlanification(o.db, tx, userId, *t.Id) {
+		db.DeletePlanificationById(o.db, tx, userId, *t.Id)
+	} else {
+		panic(&BadRequestResponse{ErrorCode: util.PString("no_access")})
+	}
 }
 
 func (o *Endpoints) savePlanificationDays(w http.ResponseWriter, r *http.Request, tx *sqlx.Tx) {

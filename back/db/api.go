@@ -450,6 +450,13 @@ func CreatePlanification(db *sqlx.DB, tx *sqlx.Tx, userId int64, name string, st
 	return id
 }
 
+func DeletePlanificationById(db *sqlx.DB, tx *sqlx.Tx, userId, planificationId int64) {
+	query := "update planification set active=false, lastupdateddate=now() where id=$1 and creator_id=$2"
+	stmt, err := getTxPreparedStmt(db, tx, query)
+	util.Check(err)
+	stmt.Exec(planificationId, userId)
+}
+
 func InsertPlanificationDays(db *sqlx.DB, tx *sqlx.Tx, planificationId int64, days string) {
 	Insert(
 		tx,

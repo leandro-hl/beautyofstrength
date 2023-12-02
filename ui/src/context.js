@@ -236,6 +236,11 @@ export function calculareError(code) {
                 title: '',
                 description: 'La planificacion debe tener un nombre'
             }
+        case 'planification_id_required':
+            return {
+                title: '',
+                description: 'El ID de planificacion es requerido'
+            }
         default:
             return {title: '', description: 'La operacion no se pudo completar'}
     }

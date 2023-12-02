@@ -76,6 +76,10 @@ export function saveNewRm(payload) {
     return axios.post("saveNewRm", payload)
 }
 
+export function deletePlanification(id) {
+    return axios.post("deletePlanification", {id})
+}
+
 export function savePlanificationEditions(payload) {
     return axios.post("savePlanificationEditions", payload)
 }
