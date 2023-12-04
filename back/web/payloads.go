@@ -191,6 +191,7 @@ type DeclinePlanificationAccessRequest struct {
 type SavePlanificationEditionsRequest struct {
 	PlanificationId  *int64   `json:"planificationId"`
 	RoutinesToDelete []int64  `json:"routinesToDelete"`
+	NewMesocycle     *int     `json:"newMesocycle"`
 	Week             []string `json:"week"`
 }
 
@@ -216,9 +217,10 @@ type GoogleSignInRequest struct {
 	CSRFToken *string `json:"g_csrf_token"`
 }
 
-type ListRoutinesResponse struct {
+type GetPlanificationDetailsResponse struct {
 	IsEditable *bool                         `json:"isEditable"`
 	Week       *string                       `json:"week"`
+	Mesocycle  *int                          `json:"mesocycle"`
 	Routines   []ListRoutinesRoutineResponse `json:"routines"`
 }
 
@@ -304,4 +306,8 @@ type ListLastUserRmHistoryStatsResponse struct {
 
 type DeletePlanificationRequest struct {
 	Id *int64 `json:"id"`
+}
+
+type CopyMesocycleRequest struct {
+	PlanificationId *int64 `json:"planificationId"`
 }

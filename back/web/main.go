@@ -9,6 +9,7 @@ import (
 	"github.com/gorilla/handlers"
 	"github.com/leandro-hl/beautyofstrength/back/db"
 	"github.com/leandro-hl/beautyofstrength/back/util"
+	"github.com/leandro-hl/beautyofstrength/back/workers/queue"
 	"log"
 	"net/http"
 	"os"
@@ -96,7 +97,13 @@ func main() {
 		}
 	}()
 
-	dbs := db.InitDB(*cryptoConf.DatasourceName)
+	go func() {
+		dbs := db.InitDB(*cryptoConf.DatasourceName, 1)
+		w := queue.NewWorker(dbs)
+		w.Start()
+	}()
+
+	dbs := db.InitDB(*cryptoConf.DatasourceName, 2)
 	o := NewEndpoints(&config, &cryptoConf, l, dbs)
 	allowedHeaders := []string{"Content-type", "Accept", "Content-Length", "Accept-Encoding", "X-CSRF-Token", "Authorization"}
 	if config.IsDevelopment() {

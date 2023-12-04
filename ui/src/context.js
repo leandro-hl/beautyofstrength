@@ -241,6 +241,11 @@ export function calculareError(code) {
                 title: '',
                 description: 'El ID de planificacion es requerido'
             }
+        case 'planification_mesocycle_max':
+            return {
+                title: '',
+                description: 'El Mesociclo puede ser de hasta 30 dias. Contactanos para saber mas'
+            }
         default:
             return {title: '', description: 'La operacion no se pudo completar'}
     }

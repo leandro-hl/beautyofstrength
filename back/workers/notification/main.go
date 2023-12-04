@@ -4,7 +4,6 @@ import (
 	"encoding/base64"
 	"flag"
 	"fmt"
-	"github.com/jmoiron/sqlx"
 	"github.com/leandro-hl/beautyofstrength/back/db"
 	"github.com/leandro-hl/beautyofstrength/back/util"
 	"github.com/leandro-hl/beautyofstrength/back/webpush"
@@ -33,17 +32,17 @@ func main() {
 	util.LoadConfig(*confSpec, &config)
 	ticker := time.NewTicker(24 * time.Hour)
 	defer ticker.Stop()
-	sql := db.InitDB(*config.DatasourceName)
+	db := db.InitDB(*config.DatasourceName, 3)
 	key, err := base64.StdEncoding.DecodeString(*config.VapidDataKey)
 	util.Check(err)
-	execute(config, sql, key)
+	execute(config, db, key)
 
 	for range ticker.C {
-		execute(config, sql, key)
+		execute(config, db, key)
 	}
 }
 
-func execute(config Config, sql *sqlx.DB, key []byte) {
+func execute(config Config, sql *db.DB, key []byte) {
 	//todo: cualquiera que este debugueando con el browser puede mandarme subscriptions al mismo dispositivo N veces!!!
 	// el user agent cambia dependiendo de que dispositivo estamos usando en el browser...
 	devices := db.SelectAllUserDeviceSubscriptions(sql)

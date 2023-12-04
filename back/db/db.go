@@ -15,7 +15,12 @@ import (
 	"strings"
 )
 
-func InitDB(datasourceName string) *sqlx.DB {
+type DB struct {
+	Db     *sqlx.DB
+	Serial int
+}
+
+func InitDB(datasourceName string, serial int) *DB {
 	db, err := sqlx.Connect("postgres", datasourceName)
 
 	if err != nil {
@@ -24,8 +29,12 @@ func InitDB(datasourceName string) *sqlx.DB {
 	}
 
 	db.Mapper = reflectx.NewMapperFunc("json", strings.ToLower)
+	//todo: this will be initialized twice cause reused function but we're ok for now
 	preparedStmts = make(map[string]*sqlx.Stmt)
-	return db
+	return &DB{
+		Db:     db,
+		Serial: serial,
+	}
 }
 
 func formatIndex(i int) string {
