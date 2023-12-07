@@ -97,12 +97,6 @@ func main() {
 		}
 	}()
 
-	go func() {
-		dbs := db.InitDB(*cryptoConf.DatasourceName, 1)
-		w := queue.NewWorker(dbs)
-		w.Start()
-	}()
-
 	dbs := db.InitDB(*cryptoConf.DatasourceName, 2)
 	o := NewEndpoints(&config, &cryptoConf, l, dbs)
 	allowedHeaders := []string{"Content-type", "Accept", "Content-Length", "Accept-Encoding", "X-CSRF-Token", "Authorization"}
@@ -121,6 +115,13 @@ func main() {
 		WriteTimeout: 10 * time.Second,
 		IdleTimeout:  120 * time.Second, // Max time for connections using TCP keep-alive.
 	}
+
+	//worker
+	go func() {
+		bb := db.InitDB(*cryptoConf.DatasourceName, 1)
+		w := queue.NewWorker(bb)
+		w.Start()
+	}()
 
 	// Start server
 	go func() {

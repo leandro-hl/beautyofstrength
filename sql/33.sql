@@ -24,4 +24,5 @@ create table if not exists queue.planificationoperation
     lastupdateddate TIMESTAMP WITHOUT TIME ZONE NULL
 );
 
+GRANT USAGE ON SCHEMA queue TO db;
 GRANT select, update, insert ON TABLE queue.planificationoperation TO db;
