@@ -1,6 +1,12 @@
 import React, {Component} from "react";
-import {Button, Checkbox, Grid, Header, Icon, Loader, Message, Modal, Popup, Segment} from "semantic-ui-react";
-import {actionateRoutine, listRoutines, savePlanificationEditions, sharePlanification} from "../service";
+import {Button, Checkbox, Grid, Header, Icon,Input, List, Loader, Message, Modal, Popup, Segment} from "semantic-ui-react";
+import {
+    actionateRoutine,
+    getPlanificationDetails,
+    repeatLastMesocycle,
+    savePlanificationEditions,
+    sharePlanification
+} from "../service";
 import {withRouter} from "react-router-dom";
 import {isLocalhost} from "../functions";
 import {AppContext, setData, showSuccess} from "../context";
@@ -48,7 +54,7 @@ class PagePlanificationDetail extends Component {
             }
 
             const {days} = this.state;
-            const res = await listRoutines(planificationId);
+            const res = await getPlanificationDetails(planificationId);
             const week = res.data.week.split('').map(d => parseInt(d, 10))
             for (let i = 0; i < days.length; i++) {
                 days[i].checked = week.indexOf(i)!==-1
@@ -58,6 +64,7 @@ class PagePlanificationDetail extends Component {
                 loading: false,
                 days: days,
                 daysBackup: days.map(d => ({...d})),
+                mesocycle: res.data.mesocycle,
                 week: week,
                 routines: res.data.routines,
                 routinesBackup: res.data.routines.map(d => ({...d})),
@@ -175,16 +182,17 @@ class PagePlanificationDetail extends Component {
 
     async savePlanificationEditions() {
         try {
-            if(this.state.changes) {
+            const {changes} = this.state
+            if(changes) {
                 this.setState({savingEditions: true})
-                const {days, routinesToDelete, planificationId, routines} = this.state;
+                const {days, routinesToDelete, planificationId, newMesocycle} = this.state;
                 const week = []
                 for (let i = 0; i < days.length; i++) {
                     if (days[i].checked) {
                         week.push(i.toString())
                     }
                 }
-                await savePlanificationEditions({planificationId, week, routinesToDelete})
+                await savePlanificationEditions({planificationId, week, routinesToDelete, newMesocycle:parseInt(newMesocycle, 10)})
                 await this.refresh()
                 showSuccess(this.context, '', 'Planificacion actualizada!')
             }
@@ -211,16 +219,30 @@ class PagePlanificationDetail extends Component {
         this.setSecondaryActions()
     }
 
+    async repeatLastMesocycle() {
+        try {
+            const {planificationId} = this.state;
+            await repeatLastMesocycle({planificationId})
+            showSuccess(this.context, '', 'Generando nuevo mesociclo. Revisa tu home para saber si ya esta generado!')
+        } catch (e) {
+            console.error(e)
+        } finally {
+            this.setState({showPopUpCopyMesocycle: false})
+        }
+    }
+
     render() {
-        const {state: {planificationName, isOwner, permissions: {sharePlanification, editPlanification}}} = this.context
+        const {state: {planificationName, isOwner, permissions: {sharePlanification, editPlanification, repeatLastMesocycle}}} = this.context
         const {
             loading,
             isEditable,
             editionMode,
             savingEditions,
             days,
+            mesocycle,
             week,
             routines,
+            showPopUpCopyMesocycle,
             showDiscardChangesConfirmation,
             confirmRoutineDeletionIndex,
             showModalRoutineActionated,
@@ -276,7 +298,24 @@ class PagePlanificationDetail extends Component {
                         <Icon disabled={savingEditions} name={'save outline'} className={'header-icon'} onClick={() => this.savePlanificationEditions()}/>
                     }
                 </Header>
-                <Header as={'h5'}>Dias</Header>
+                <Header as={'h5'}>
+                    Dias
+                    {
+                        !editionMode && isOwner && repeatLastMesocycle &&
+                        <PopUpConfirmation
+                            title={'Repetir Ultimo Mesociclo? Se generaran hasta ' + mesocycle + ' rutinas nuevas'}
+                            primary={'Repetir'}
+                            secondary={'Cancelar'}
+                            isManaged
+                            open={showPopUpCopyMesocycle}
+                            trigger={<Icon disabled={savingEditions}
+                                           name={'refresh'} className={'header-icon'}
+                                           onClick={() => this.setState({showPopUpCopyMesocycle: true})}/>}
+                            onPrimaryAction={() => this.repeatLastMesocycle()}
+                            onSecondaryAction={() => this.setState({showPopUpCopyMesocycle: false})}
+                        />
+                    }
+                </Header>
                 <Segment>
                     <Grid>
                         <Grid.Row columns={7}>
@@ -290,6 +329,24 @@ class PagePlanificationDetail extends Component {
                             })}
                         </Grid.Row>
                     </Grid>
+                </Segment>
+                <Segment>
+                    <List>
+                        <List.Item>
+                            Fecha de inicio: A definir
+                        </List.Item>
+                        <List.Item>
+                            Mesociclo: {editionMode ?
+                                    <Input
+                                        type={'number'}
+                                        placeholder={mesocycle}
+                                        className={'size-two-digits align-center'}
+                                        onChange={(e, {value}) => this.setState({newMesocycle: value, changes: !!value})}
+                                    />
+                                    : mesocycle
+                                } dias
+                        </List.Item>
+                    </List>
                 </Segment>
                 {
                     !routines.length &&

@@ -34,7 +34,7 @@ const (
 )
 
 type Endpoints struct {
-	db         *sqlx.DB
+	db         *db.DB
 	conf       *Config
 	cryptoConf *CryptoConfig
 	r          *mux.Router
@@ -237,7 +237,7 @@ var listExercisesQueryCache = NewListExercisesQueryCache()
 var shareManager = NewShareTokenManager()
 var developmentLastCreatedSessionTokenStack = make([]string, 0)
 
-func NewEndpoints(conf *Config, cryptoConf *CryptoConfig, l *log.Logger, dbs *sqlx.DB) *Endpoints {
+func NewEndpoints(conf *Config, cryptoConf *CryptoConfig, l *log.Logger, dbs *db.DB) *Endpoints {
 	exercisesNames := db.ListExerciseNames(dbs)
 	for _, e := range exercisesNames {
 		exercisesComparerCache.Add(*e.Id, *e.Name)
@@ -278,6 +278,7 @@ func (o *Endpoints) Handle() http.Handler {
 	api.Path("/listQueuedPlanificationAccessRequests").HandlerFunc(o.HandleAuthenticatedTransactional(o.HandleAuthorization(o.listQueuedPlanificationAccessRequests, db.Professor)))
 	api.Path("/acceptPlanificationAccessRequest").HandlerFunc(o.HandleAuthenticatedTransactional(o.HandleAuthorization(o.acceptPlanificationAccessRequest, db.Professor)))
 	api.Path("/declinePlanificationAccessRequest").HandlerFunc(o.HandleAuthenticatedTransactional(o.HandleAuthorization(o.declinePlanificationAccessRequest, db.Professor)))
+	api.Path("/repeatLastMesocycle").HandlerFunc(o.HandleAuthenticatedTransactional(o.HandleAuthorization(o.repeatLastMesocycle, db.Professor)))
 
 	//Premium services
 	api.Path("/savePlanificationEditions").HandlerFunc(o.HandleAuthenticatedTransactional(o.HandleAuthorization(o.savePlanificationEditions, db.StudentPremium, db.Professor)))
@@ -302,7 +303,7 @@ func (o *Endpoints) Handle() http.Handler {
 	api.Path("/saveExercisesBlockCombo").HandlerFunc(o.HandleAuthenticatedTransactional(o.HandleAuthorization(o.saveExercisesBlockCombo, db.StudentFree, db.StudentPremium, db.Professor)))
 	api.Path("/saveExerciseBlockPir").HandlerFunc(o.HandleAuthenticatedTransactional(o.HandleAuthorization(o.saveExerciseBlockPir, db.StudentFree, db.StudentPremium, db.Professor)))
 	api.Path("/listPlanifications").HandlerFunc(o.HandleAuthenticatedTransactional(o.HandleAuthorization(o.listPlanifications, db.StudentFree, db.StudentPremium, db.Professor)))
-	api.Path("/listRoutines").HandlerFunc(o.HandleAuthenticatedTransactional(o.HandleAuthorization(o.listRoutines, db.StudentFree, db.StudentPremium, db.Professor)))
+	api.Path("/getPlanificationDetails").HandlerFunc(o.HandleAuthenticatedTransactional(o.HandleAuthorization(o.getPlanificationDetails, db.StudentFree, db.StudentPremium, db.Professor)))
 	api.Path("/listExercises").HandlerFunc(o.HandleAuthenticatedTransactional(o.HandleAuthorization(o.listExercises, db.StudentFree, db.StudentPremium, db.Professor)))
 	api.Path("/getUserPermissions").HandlerFunc(o.HandleAuthenticatedTransactional(o.HandleAuthorization(o.getUserPermissions, db.StudentFree, db.StudentPremium, db.Professor)))
 	api.Path("/retrieveVapidPublicKey").HandlerFunc(o.HandleAuthenticatedTransactional(o.HandleAuthorization(o.retrieveVapidPublicKey, db.StudentFree, db.StudentPremium, db.Professor)))
@@ -392,6 +393,7 @@ func (o *Endpoints) getUserPermissions(w http.ResponseWriter, r *http.Request, t
 		permissions["createNewMuscles"] = true
 		permissions["createNewEquipment"] = true
 		permissions["sharePlanification"] = true
+		permissions["repeatLastMesocycle"] = true
 	}
 
 	o.Respond(w, permissions, http.StatusOK)
@@ -541,6 +543,9 @@ func (o *Endpoints) listLatestEvents(w http.ResponseWriter, r *http.Request, tx 
 		case db.SavedCopyOfRoutine:
 			res = append(res, fmt.Sprintf("%s guardó la rutina %s que compartiste", *e.SenderName, *e.RoutineName))
 			break
+		case db.LastMesocycleGenerated:
+			res = append(res, fmt.Sprintf("Mesociclo para la planificacion %s generado!", *e.PlanificationName))
+			break
 		}
 	}
 
@@ -566,8 +571,9 @@ func (o *Endpoints) saveSharedRoutine(w http.ResponseWriter, r *http.Request, tx
 
 		planificationId := db.GetPlanificationIdByName(o.db, tx, usr, SharedRoutinesPlanificationReservedName)
 		if planificationId == nil {
-			planificationId = db.CreatePlanification(o.db, tx, usr, SharedRoutinesPlanificationReservedName, true)
-			db.InsertPlanificationDays(o.db, tx, *planificationId, "01234")
+			days := "01234"
+			planificationId = db.CreatePlanification(o.db, tx, usr, SharedRoutinesPlanificationReservedName, true, len(days))
+			db.InsertPlanificationDays(o.db, tx, *planificationId, days)
 		}
 		//else {
 		//	count := db.CountRoutinesInPlanification(o.db, tx, *planificationId)
@@ -577,6 +583,8 @@ func (o *Endpoints) saveSharedRoutine(w http.ResponseWriter, r *http.Request, tx
 		//		//panic(errors.New("free accounts cannot save more than one shared routine"))
 		//	}
 		//}
+
+		//routine copy
 		original := db.GetRoutineById(o.db, tx, *t.RoutineId)
 		originalGroupers := db.ListBlockGroupGrouperByRoutineId(o.db, tx, *t.RoutineId)
 		newRoutineId := db.CreateRoutine(
@@ -638,7 +646,7 @@ func (o *Endpoints) actionateRoutine(w http.ResponseWriter, r *http.Request, tx 
 	}
 }
 
-func (o *Endpoints) listRoutines(w http.ResponseWriter, r *http.Request, tx *sqlx.Tx) {
+func (o *Endpoints) getPlanificationDetails(w http.ResponseWriter, r *http.Request, tx *sqlx.Tx) {
 	id := r.URL.Query().Get("planificationId")
 	if id == "" {
 		panic(&BadRequestResponse{ErrorCode: util.PString("required_planificationid")})
@@ -664,6 +672,7 @@ func (o *Endpoints) listRoutines(w http.ResponseWriter, r *http.Request, tx *sql
 		routines = db.ListActiveRoutines(o.db, tx, planificationId, usr)
 	}
 
+	details := db.GetPlanificationById(o.db, tx, planificationId)
 	schedule := db.GetPlanificationScheduleByUser(o.db, tx, planificationId, usr)
 	week := len(*schedule.Days)
 	accessUpToRoutine := *schedule.AccessUpToRoutine
@@ -734,9 +743,10 @@ func (o *Endpoints) listRoutines(w http.ResponseWriter, r *http.Request, tx *sql
 		routinesResponse = append(routinesResponse, routineResponse)
 	}
 
-	o.Respond(w, &ListRoutinesResponse{
+	o.Respond(w, &GetPlanificationDetailsResponse{
 		IsEditable: &isEditable,
 		Week:       schedule.Days,
+		Mesocycle:  details.Mesocycle,
 		Routines:   routinesResponse,
 	}, http.StatusOK)
 }
@@ -1239,7 +1249,7 @@ func (o *Endpoints) createPlanification(w http.ResponseWriter, r *http.Request, 
 	}
 
 	userId := util.UserId(r)
-	id := db.CreatePlanification(o.db, tx, userId, *t.Name, false)
+	id := db.CreatePlanification(o.db, tx, userId, *t.Name, false, 5)
 	o.Respond(w, &CreatePlanificationResponse{Id: id}, http.StatusOK)
 }
 
@@ -1415,8 +1425,9 @@ func (o *Endpoints) googleSignIn(w http.ResponseWriter, r *http.Request, tx *sql
 			AccountPlanId: planId,
 			CreatedDate:   time.Now(),
 		})
-		planificationId := db.CreatePlanification(o.db, tx, *userId, MyPlanificationReservedName, true)
-		db.InsertPlanificationDays(o.db, tx, *planificationId, "01234")
+		days := "01234"
+		planificationId := db.CreatePlanification(o.db, tx, *userId, MyPlanificationReservedName, true, len(days))
+		db.InsertPlanificationDays(o.db, tx, *planificationId, days)
 		db.GenerateUserExerciseRm(o.db, tx, *userId)
 		o.storeSessionData(w, tx, *userId)
 		http.Redirect(w, r, *o.conf.AddressUi+"/app"+"/my-planifications", http.StatusFound)
@@ -1536,10 +1547,31 @@ func (o *Endpoints) savePlanificationEditions(w http.ResponseWriter, r *http.Req
 		panic(&BadRequestResponse{ErrorCode: util.PString("cannot_edit_planification_being_executed")})
 	}
 
+	if p.NewMesocycle != nil {
+		if *p.NewMesocycle <= 30 {
+			db.UpdatePlanificationMesocycle(o.db, tx, *p.PlanificationId, *p.NewMesocycle)
+		} else {
+			panic(&BadRequestResponse{ErrorCode: util.PString("planification_mesocycle_max")})
+		}
+	}
 	db.UpdatePlanificationDays(o.db, tx, *p.PlanificationId, strings.Join(p.Week, ""))
 	for i := 0; i < len(p.RoutinesToDelete); i++ {
 		db.DeleteRoutine(o.db, tx, p.RoutinesToDelete[i])
 	}
+}
+
+func (o *Endpoints) repeatLastMesocycle(w http.ResponseWriter, r *http.Request, tx *sqlx.Tx) {
+	p := CopyMesocycleRequest{}
+	err := o.Decode(r, &p)
+	util.Check(err)
+	userId := util.UserId(r)
+
+	if !db.CalculateUserCanCopyMesocyclePlanification(o.db, tx, userId, *p.PlanificationId) {
+		panic(&BadRequestResponse{ErrorCode: util.PString("no_access")})
+	}
+
+	db.UpdatePlanificationMesocycleCopiedDate(o.db, tx, *p.PlanificationId)
+	db.EnqueuePlanificationOperation(o.db, tx, userId, *p.PlanificationId, db.PlanificationCopyMesocycle)
 }
 
 func (o *Endpoints) sharePlanification(w http.ResponseWriter, r *http.Request, tx *sqlx.Tx) {
@@ -1692,8 +1724,9 @@ func (o *Endpoints) createTestUser(w http.ResponseWriter, r *http.Request, tx *s
 		AccountPlanId: planId,
 		CreatedDate:   time.Now(),
 	})
-	planificationId := db.CreatePlanification(o.db, tx, *userId, MyPlanificationReservedName, true)
-	db.InsertPlanificationDays(o.db, tx, *planificationId, "01234")
+	days := "01234"
+	planificationId := db.CreatePlanification(o.db, tx, *userId, MyPlanificationReservedName, true, len(days))
+	db.InsertPlanificationDays(o.db, tx, *planificationId, days)
 	db.GenerateUserExerciseRm(o.db, tx, *userId)
 	o.storeSessionData(w, tx, *userId)
 
@@ -1821,7 +1854,7 @@ type HandlerTransactional func(http.ResponseWriter, *http.Request, *sqlx.Tx)
 
 func (o *Endpoints) HandleTransactional(handlerFunc HandlerTransactional) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		tx, err := o.db.Beginx()
+		tx, err := o.db.Db.Beginx()
 		util.Check(err)
 		defer func() {
 			err = tx.Commit()

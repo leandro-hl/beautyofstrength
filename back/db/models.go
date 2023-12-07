@@ -20,7 +20,8 @@ const (
 type EventUserType string
 
 const (
-	SavedCopyOfRoutine EventUserType = "scr"
+	SavedCopyOfRoutine     EventUserType = "scr"
+	LastMesocycleGenerated               = "pcm"
 )
 
 type EventUser struct {
@@ -34,12 +35,14 @@ type EventUser struct {
 }
 
 type Planification struct {
-	Id              *int64    `json:"id"`
-	Name            *string   `json:"name"`
-	Starred         *bool     `json:"starred"`
-	CreatorId       *int64    `json:"creator_id"`
-	Active          *bool     `json:"active"`
-	LastUpdatedDate time.Time `json:"lastupdateddate"`
+	Id                      *int64     `json:"id"`
+	Name                    *string    `json:"name"`
+	Starred                 *bool      `json:"starred"`
+	Mesocycle               *int       `json:"mesocycle"`
+	CreatorId               *int64     `json:"creator_id"`
+	Active                  *bool      `json:"active"`
+	LastMesocycleCopiedDate *time.Time `json:"lastmesocyclecopieddate"`
+	LastUpdatedDate         time.Time  `json:"lastupdateddate"`
 }
 
 type PlanificationSchedule struct {
@@ -205,4 +208,14 @@ type UserExerciseRMHistory struct {
 	UeId        *int64    `json:"userexerciserm_id"`
 	Rm          *int      `json:"rm"`
 	CreatedDate time.Time `json:"createddate"`
+}
+
+type QueuePlanificationOperation struct {
+	Id              *int64                  `json:"id"`
+	UserAccountId   *int64                  `json:"useraccount_id"`
+	PlanificationId *int64                  `json:"planification_id"`
+	Operation       *PlanificationOperation `json:"operation"`
+	Completed       *bool                   `json:"completed"`
+	CreatedDate     time.Time               `json:"createddate"`
+	LastUpdatedDate time.Time               `json:"lastupdateddate"`
 }

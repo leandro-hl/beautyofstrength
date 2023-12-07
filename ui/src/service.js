@@ -44,8 +44,8 @@ export function listUserRms() {
     return axios.get("listUserRms")
 }
 
-export function listRoutines(planificationId) {
-    return axios.get("listRoutines?planificationId=" + planificationId)
+export function getPlanificationDetails(planificationId) {
+    return axios.get("getPlanificationDetails?planificationId=" + planificationId)
 }
 
 export function getRoutineDetails(routineId) {
@@ -82,6 +82,10 @@ export function deletePlanification(id) {
 
 export function savePlanificationEditions(payload) {
     return axios.post("savePlanificationEditions", payload)
+}
+
+export function repeatLastMesocycle(payload) {
+    return axios.post("repeatLastMesocycle", payload)
 }
 
 export function saveRoutineEditions(payload) {
