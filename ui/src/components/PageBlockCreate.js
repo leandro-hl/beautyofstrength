@@ -1,4 +1,4 @@
-import React, {Component, createRef} from "react";
+import React, {Component, createRef, useContext, useState} from "react";
 import {Button, Divider, Dropdown, Grid, Header, Icon, Input, Label, List, Message, Segment} from "semantic-ui-react";
 import {ExerciseListItem} from "./ExerciseListItem";
 import {RestInput} from "./RestInput";
@@ -21,6 +21,36 @@ import {ExerciseListItemFree} from "./ExerciseListItemFree";
 import {capitalize} from "../functions";
 import {Chip} from "./Chip";
 import {ExerciseSearch} from "./ExerciseSearch";
+import {PopUpContinueEditing} from "./PopUpContinueEditing";
+import {PopUpDisabledAction} from "./PopUpDisabledAction";
+
+const MenuHeaderRender = ({
+                              blockType,
+                              newBlockGroupName,
+                              blockName,
+                              redirectBackToRoutine,
+                              editBlock
+                          }) => {
+    const name = newBlockGroupName+': '+blockName
+    return (
+        <>
+            <Button className={'header-back-arrow'} icon onClick={() => redirectBackToRoutine()}>
+                <Icon name={'arrow left'}/>
+            </Button>
+            <span>
+                {name.length > 20 ? <span>{newBlockGroupName+': '}<br/>{blockName}</span> : name}
+            </span>
+            {/*todo: Hot fix just for the icon to not break the UI. Real fix: block type is chip and not part of the block name. */}
+            {blockType && <Icon
+                name={'edit outline'}
+                className={'header-icon'}
+                style={{position: 'absolute',
+                    top: '5px',
+                    right: '10px'}}
+                onClick={() => editBlock()}/>}
+        </>
+    )
+}
 
 class PageBlockCreate extends Component {
     static contextType = AppContext
@@ -38,7 +68,12 @@ class PageBlockCreate extends Component {
             defaultIncrementPerSerie,
             defaultPiramidSeries,
             //todo: lapRestDefault: 'sec', exeRestDefault: 'sec' seems to not be in use.
-            next: 0, defaultBlockName: '', blockName: '', exercises: [], lapRestDefault: 'sec', exeRestDefault: 'sec'}
+            next: 0,
+            defaultBlockName: '',
+            blockName: '',
+            exercises: [],
+            lapRestDefault: 'sec',
+            exeRestDefault: 'sec'}
     }
     
     redirectBackToRoutine() {
@@ -67,6 +102,7 @@ class PageBlockCreate extends Component {
                 newBlockGroupId: newBlockGroupId,
                 blockName: defaultBlockName,
             })
+            this.setTopBar(newBlockGroupName, defaultBlockName)
         } catch (e) {
             console.error(e)
         }
@@ -74,6 +110,18 @@ class PageBlockCreate extends Component {
 
     componentWillUnmount() {
         this.context.dispatch(setData({secondaryActions: []}))
+    }
+
+    setTopBar(newBlockGroupName, blockName, blockType) {
+        this.context.dispatch(setData({
+            MenuHeaderRender: <MenuHeaderRender
+                blockType={blockType ?? this.state.blockType}
+                newBlockGroupName={newBlockGroupName ?? this.state.newBlockGroupName}
+                blockName={blockName ?? this.state.blockName}
+                redirectBackToRoutine={() => this.redirectBackToRoutine()}
+                editBlock={() => this.editBlock()}
+            />
+        }))
     }
 
     saveExercise(i, reps, goNext) {
@@ -305,7 +353,9 @@ class PageBlockCreate extends Component {
         }
 
         this.context.dispatch(setData({secondaryActions: secondaryActions}))
-        this.setState({showModal: false, blockType: id, exercises: [...exercisesBuffer], exercisesBuffer: [], blockName: blockName+' - '+name})
+        const newBlockName = blockName+' - '+name
+        this.setState({showModal: false, blockType: id, exercises: [...exercisesBuffer], exercisesBuffer: [], blockName: newBlockName})
+        this.setTopBar(null, newBlockName, id)
     }
 
     repeatExercise(item, atTop) {
@@ -504,21 +554,15 @@ class PageBlockCreate extends Component {
         const {defaultBlockName, exercises} = this.state
         this.context.dispatch(setData({secondaryActions: []}))
         this.setState({blockType: null, blockName: defaultBlockName, exercises: [], exercisesBuffer: [...exercises]})
+        this.setTopBar(null, defaultBlockName, null)
     }
 
     render() {
         const {state: {permissions: {createNewExercises}}} = this.context
-        const {blockType, exercisesBuffer,newBlockGroupName, blockName, showModal} = this.state;
+        const {blockType, exercisesBuffer, showModal} = this.state;
 
         return (
             <>
-                <Header as={'h3'}>
-                    <Button className={'header-back-arrow'} icon onClick={() => this.redirectBackToRoutine()}>
-                        <Icon name={'arrow left'}/>
-                    </Button>
-                    {newBlockGroupName+': '+blockName}
-                    {blockType && <Icon name={'edit outline'} className={'header-icon'} onClick={() => this.editBlock()}/>}
-                </Header>
                 {
                     !blockType &&
                     <>

@@ -60,6 +60,10 @@ export function listExercises() {
     return axios.get("listExercises")
 }
 
+export function listEquipment() {
+    return axios.get("listEquipment")
+}
+
 export function listQueuedPlanificationAccessRequests() {
     return axios.get("listQueuedPlanificationAccessRequests")
 }
@@ -159,6 +163,10 @@ export function actionateRoutine(payload) {
 
 export function createPlanification(payload) {
     return axios.post("createPlanification", payload)
+}
+
+export function createNewExercise(payload) {
+    return axios.post("createNewExercise", payload)
 }
 
 export function getUserLoadedTrainingToday() {

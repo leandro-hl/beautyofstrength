@@ -76,7 +76,7 @@ class BottomMenuBar extends Component {
                         {menudiscussions && <Button className={selected === MENU.CONTRIBUTIONS ? 'button-bottom-bar-selected' : 'button-bottom-bar'}
                                  icon onClick={() => this.onClick(MENU.CONTRIBUTIONS, '/my-contributions')}>
                             <Icon name={MENU.CONTRIBUTIONS} />
-                            <span>Discusion</span>
+                            <span>Comunidad</span>
                         </Button>}
                         {menustatistics && <Button className={selected === MENU.STATS ? 'button-bottom-bar-selected' : 'button-bottom-bar'}
                                                     icon onClick={() => this.onClick(MENU.STATS, '/my-stats')}>

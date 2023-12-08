@@ -146,6 +146,11 @@ export function calculareError(code) {
                 title: '',
                 description: 'Superaste la cantidad de ejercicios nuevos que puedes crear'
             }
+        case 'exercise_name_limit':
+            return {
+                title: '',
+                description: 'El nombre del ejercicio no puede tener mas de 70 caracteres'
+            }
         case 'cannot_save_routine':
             return {
                 title: '',
@@ -246,6 +251,8 @@ export function calculareError(code) {
                 title: '',
                 description: 'El Mesociclo puede ser de hasta 30 dias. Contactanos para saber mas'
             }
+        case 'unexpected_error':
+            return {title: '', description: 'Ocurrio un error y la operacion no se pudo completar'}
         default:
             return {title: '', description: 'La operacion no se pudo completar'}
     }

@@ -14,12 +14,14 @@ class LayoutMobile extends Component {
 
         return (
             <>
-                {withTopBar && <TopMenuBar/>}
+                <TopMenuBar/>
                 <Segment basic style={{
                     height: noBottomBar? '100%' : '90%',
                     overflowY: 'scroll',
                     overflowX: 'hidden',
-                    paddingTop: 20
+                    paddingTop: 20,
+                    paddingBottom: 80,
+                    marginTop: 0
                 }}>
                     {children}
                     <div style={{marginBottom: 100}}></div>

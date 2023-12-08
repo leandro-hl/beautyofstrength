@@ -25,6 +25,14 @@ body {
   color: white;
 }
 
+.body-dark .top-menu-bar, .body-dark .top-menu-bar .header-back-arrow {
+  background-color: #252525 !important;
+}
+
+.body-dark .header-back-arrow {
+  color: #ffffff !important;
+}
+
 .body-dark .button-bottom-bar {
   background-color: #252525 !important;
   color: #cacaca !important;
@@ -37,11 +45,6 @@ body {
 
 .body-dark .button-bottom-bar-selected i.icon:before {
   background-color: #b08f10 !important;
-  color: #ffffff !important;
-}
-
-.body-dark .header-back-arrow {
-  background-color: #121212 !important;
   color: #ffffff !important;
 }
 
@@ -59,12 +62,10 @@ body {
   color: white !important;
 }
 
-.body-dark .ui.message p {
-  color: black;
-}
-
-.ui.header {
-  color: #000000 !important;
+.body-dark .ui.message p,
+.body-dark .add-exercise-row .chip.secondary.button,
+.ui.header{
+  color: black !important;
 }
 
 .svg-body {
@@ -84,6 +85,7 @@ body > div#root {
   height: 100%;
   max-width: 600px;
   width: 100%;
+  overflow: hidden;
 }
 
 .App {

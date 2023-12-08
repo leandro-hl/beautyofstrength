@@ -8,13 +8,21 @@ import LayoutMobile from "./LayoutMobile";
 import {AppContext, setData} from "../context";
 import {MENU} from "../enums";
 
+const MenuHeaderRender = () => {
+    return <>Inicio</>
+}
+
 class PageHomeStudent extends Component {
     static contextType = AppContext
     state = {loadedTrainingToday: false, loading: true}
 
     async componentDidMount() {
         try {
-            this.context.dispatch(setData({noBottomBar: false, menuButtonSelected: MENU.HOME}))
+            this.context.dispatch(setData({
+                noBottomBar: false,
+                menuButtonSelected: MENU.HOME,
+                MenuHeaderRender: <MenuHeaderRender/>
+            }))
             // const res = await getUserLoadedTrainingToday()
             // this.setState({loadedTrainingToday: res.data.loaded, loading: false})
             const res = await listLatestEvents()
@@ -36,7 +44,6 @@ class PageHomeStudent extends Component {
         return (
             <>
                 <>
-                    <Header as={'h3'}>Inicio</Header>
                     {events.length === 0 && <Message><Message.Content>No hay eventos que mostrar</Message.Content></Message>}
                     {events.map((e,i) => (<Segment key={i}>{e}</Segment>))}
                 </>
