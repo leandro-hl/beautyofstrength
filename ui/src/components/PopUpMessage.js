@@ -12,7 +12,7 @@ export class PopUpMessage extends Component {
                 wide
                 position={'top center'}
                 open={show} basic className={'no-padding'}
-                trigger={<div className={'popup-message'} style={{position: 'absolute', width: '100%'}}/>}>
+                trigger={<div className={'popup-message'} style={{position: 'absolute', width: '100%', bottom: 100}}/>}>
                 <Popup.Content>
                     <Message negative={negative} positive={!negative}>
                         <Message.Header>{title}</Message.Header>

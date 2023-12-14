@@ -1,8 +1,21 @@
 import React, {Component} from "react";
 import {withRouter, Link} from "react-router-dom";
 import {Button, Header, Icon} from "semantic-ui-react";
+import {AppContext, setData} from "../context";
+import {MENU} from "../enums";
+
+const MenuHeaderRender = ({history}) => {
+    return <>
+        <Button className={'header-back-arrow'} icon onClick={() => history.goBack()}>
+            <Icon name={'arrow left'}/>
+        </Button>
+        Términos de uso
+    </>
+}
 
 class PageTermsAndConditions extends Component {
+    static contextType = AppContext
+
     render2() {
             return (
                 <>
@@ -146,15 +159,14 @@ class PageTermsAndConditions extends Component {
                 </>
             )
     }
+
+    componentDidMount() {
+        this.context.dispatch(setData({MenuHeaderRender: <MenuHeaderRender history={this.props.history}/>}))
+    }
+
     render() {
         return (
             <>
-                <Header as={'h3'}>
-                    <Button className={'header-back-arrow'} icon onClick={() => this.props.history.goBack()}>
-                        <Icon name={'arrow left'}/>
-                    </Button>
-                    Términos de uso
-                </Header>
                 <p>Gracias por usar una de nuestras aplicaciones. Lea esto detenidamente antes de utilizarla.</p>
 
                 <p>Estos Términos de uso ("Términos") establecen información importante sobre sus derechos, obligaciones y las restricciones que pueden aplicarse cuando utiliza cualquier aplicación de Beauty Of Strength Team ("Aplicación").</p>

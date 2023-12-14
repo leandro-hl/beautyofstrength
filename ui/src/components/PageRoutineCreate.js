@@ -22,6 +22,15 @@ import LayoutMobile from "./LayoutMobile";
 import {MENU} from "../enums";
 import {ModalBlockCreate} from "./ModalBlockCreate";
 
+const MenuHeaderRender = ({routineName, redirectToPlanification}) => {
+    return <>
+        <Button className={'header-back-arrow'} icon onClick={() => redirectToPlanification()}>
+            <Icon name={'arrow left'}/>
+        </Button>
+        {routineName}
+    </>
+}
+
 class PageRoutineCreate extends Component {
     static contextType = AppContext
     constructor(props) {
@@ -40,13 +49,22 @@ class PageRoutineCreate extends Component {
         try {
             const {nextBlockNumber} = this.state
             const {state: {routineNumber, planificationId}} = this.context
-            this.context.dispatch(setData({secondaryActions: [
+
+            //todo: this should change to avoid mixing planification and routine. The routine should be able to live outside a planification.
+            const routineName = 'Dia '+routineNumber
+
+            this.context.dispatch(setData({
+                secondaryActions: [
                     {func: () => this.addBlock(), description: 'Agregar Bloque'}
-                ], noBottomBar: false, menuButtonSelected: MENU.PLANIFICATIONS}))
+                ],
+                noBottomBar: false,
+                menuButtonSelected: MENU.PLANIFICATIONS,
+                MenuHeaderRender: <MenuHeaderRender routineName={routineName} redirectToPlanification={() => this.redirectToPlanification()}/>
+            }))
             this.context.dispatch(setData({routineId: null, nextBlockNumber}, true))
             this.setState({
                 planificationId: planificationId,
-                routineName: 'Dia '+routineNumber,
+                routineName: routineName,
                 routineNumber
             })
         } catch (e) {
@@ -87,7 +105,7 @@ class PageRoutineCreate extends Component {
     }
 
     render() {
-        const {routineName, loading, showCreateBlockModal, nextBlockNumber} = this.state;
+        const {loading, showCreateBlockModal, nextBlockNumber} = this.state;
 
         if (loading){
             return <Loader active/>
@@ -95,12 +113,6 @@ class PageRoutineCreate extends Component {
 
         return (
             <>
-                <Header as={'h3'}>
-                    <Button className={'header-back-arrow'} icon onClick={() => this.redirectToPlanification()}>
-                        <Icon name={'arrow left'}/>
-                    </Button>
-                    {routineName}
-                </Header>
                 <Message>
                     <Message.Header>Rutina Vacia</Message.Header>
                     <p>Comienza agregando algunos bloques de trabajo</p>

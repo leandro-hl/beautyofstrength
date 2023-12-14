@@ -1,4 +1,4 @@
-import React, {Component} from "react";
+import React, {Component, useState} from "react";
 import {
     Advertisement,
     Button,
@@ -28,12 +28,25 @@ import {ModalPlanificationRequestAccess} from "./ModalPlanificationRequestAccess
 import {ModalPlanificationsPendingRequests} from "./ModalPlanificationsPendingRequests";
 import {PopUpConfirmation} from "./PopUpConfirmation";
 
+const MenuHeaderRender = ({onRefresh}) => {
+    const [refreshing, setRefreshing] = useState(false)
+    return <>
+        Mis Planificaciones
+        <Icon disabled={refreshing} name={'refresh'} className={'header-icon'} onClick={async () => {
+            setRefreshing(true)
+            await onRefresh()
+            setRefreshing(false)
+        }}/>
+    </>
+}
+
 class PagePlanificationList extends Component {
     static contextType = AppContext
     state = {loading: true, planifications: [], requests:[], planificationShared: false}
 
     async componentDidMount() {
         try {
+            this.setTopBar()
             const routineShared = localStorage.getItem('routine-shared')
             if (routineShared) {
                 this.props.history.push('/routine')
@@ -64,6 +77,12 @@ class PagePlanificationList extends Component {
         } catch (e) {
             console.error(e)
         }
+    }
+
+    setTopBar() {
+        this.context.dispatch(setData({
+            MenuHeaderRender: <MenuHeaderRender onRefresh={() => this.refreshPlanifications()}/>
+        }))
     }
 
     redirectToPlanification(p) {
@@ -180,10 +199,6 @@ class PagePlanificationList extends Component {
 
         return (
             <>
-                <Header as={'h3'}>
-                    Mis Planificaciones
-                    <Icon disabled={refreshing} name={'refresh'} className={'header-icon'} onClick={() => this.refreshPlanifications()}/>
-                </Header>
                 {sharePlanification && <Button primary fluid onClick={() => this.fetchPendingRequests()}>Revisar solicitudes pendientes</Button>}
                 {refreshing && <Loader active/>}
                 {

@@ -290,7 +290,7 @@ func Check(err error) {
 
 func CheckNoPanic(err error) {
 	if err != nil {
-		fmt.Println(string(debug.Stack()))
-		fmt.Println(err)
+		fmt.Println("App: " + string(debug.Stack()))
+		fmt.Println("App: " + err.Error())
 	}
 }

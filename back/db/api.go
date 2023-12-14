@@ -316,6 +316,18 @@ func ListExercises(db *DB, tx *sqlx.Tx, userId int64) []ListExerciseQuery {
 	return dest
 }
 
+func ListEquipment(db *DB, tx *sqlx.Tx) []ListEquipmentQuery {
+	query := `
+		SELECT id,name FROM equipment e ORDER BY e.name`
+	stmt, err := getTxPreparedStmt(db, tx, query)
+	util.Check(err)
+
+	var dest []ListEquipmentQuery
+	err = stmt.Select(&dest)
+	util.Check(err)
+	return dest
+}
+
 func ListActiveUserAccountSessions(db *DB) []UserAccountSession {
 	query := `SELECT * FROM useraccountsession`
 	stmt, err := getTxPreparedStmt(db, nil, query)
@@ -574,6 +586,21 @@ func CreateExercise(db *DB, tx *sqlx.Tx, name string, userAccountId int64) *int 
 			CreatedDate:         time.Now(),
 		})
 	return util.PInt(int(*id))
+}
+
+func AssociateExerciseEquipment(db *DB, tx *sqlx.Tx, exerciseId int, equipment []CreateExerciseEquipment) {
+	for _, e := range equipment {
+		Insert(
+			tx,
+			&ExerciseEquipment{
+				EquipmentId:     e.Id,
+				ExerciseId:      &exerciseId,
+				Occurrences:     e.Occurrences,
+				Required:        util.PBool(true),
+				CreatedDate:     time.Now(),
+				LastUpdatedDate: time.Now(),
+			})
+	}
 }
 
 func CountExercisesCreatedByUser(db *DB, tx *sqlx.Tx, userAccountId int64) *int {

@@ -51,6 +51,24 @@ type PlanificationSchedule struct {
 	Days            *string `json:"days"`
 }
 
+type Equipment struct {
+	Id              *int64    `json:"id"`
+	Name            *string   `json:"name"`
+	AddedWeight     *bool     `json:"addedweight"`
+	CreatedDate     time.Time `json:"createddate"`
+	LastUpdatedDate time.Time `json:"lastupdateddate"`
+}
+
+type ExerciseEquipment struct {
+	Id              *int64    `json:"id"`
+	EquipmentId     *int64    `json:"equipment_id"`
+	ExerciseId      *int      `json:"exercise_id"`
+	Occurrences     *int      `json:"occurrences"`
+	Required        *bool     `json:"required"`
+	CreatedDate     time.Time `json:"createddate"`
+	LastUpdatedDate time.Time `json:"lastupdateddate"`
+}
+
 type Routine struct {
 	Id              *int64    `json:"id"`
 	Name            *string   `json:"name"`

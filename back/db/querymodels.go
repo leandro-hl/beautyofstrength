@@ -14,6 +14,11 @@ type ListExerciseQuery struct {
 	NoCurrentUserVideo *bool `json:"nocurrentuservideo"`
 }
 
+type ListEquipmentQuery struct {
+	Id   *int64  `json:"id"`
+	Name *string `json:"name"`
+}
+
 type ListQueuedPlanificationAccessRequestsQuery struct {
 	RequesterName     *string `json:"requestername"`
 	PlanificationName *string `json:"planificationname"`
@@ -103,4 +108,9 @@ type ListLast7UserRmHistoryQuery struct {
 	Id   *int64     `json:"id"`
 	Rm   *int       `json:"rm"`
 	Date *time.Time `json:"date"`
+}
+
+type CreateExerciseEquipment struct {
+	Id          *int64 `json:"id"`
+	Occurrences *int   `json:"occurrences"`
 }

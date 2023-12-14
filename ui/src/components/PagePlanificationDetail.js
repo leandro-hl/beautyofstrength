@@ -1,4 +1,4 @@
-import React, {Component} from "react";
+import React, {Component, useContext, useState} from "react";
 import {Button, Checkbox, Grid, Header, Icon,Input, List, Loader, Message, Modal, Popup, Segment} from "semantic-ui-react";
 import {
     actionateRoutine,
@@ -15,6 +15,72 @@ import {Chip} from "./Chip";
 import {PopUpDisabledAction} from "./PopUpDisabledAction";
 import {PopUpContinueEditing} from "./PopUpContinueEditing";
 import {PopUpConfirmation} from "./PopUpConfirmation";
+
+const MenuHeaderRender = ({
+                              isEditable,
+                              discardPlanificationChanges,
+                              onSharePlanification,
+                              enableEditionPlanification,
+                              savePlanificationEditions,
+                              onBackArrow
+                          }) => {
+    const {state: {planificationName, isOwner, permissions: {sharePlanification, editPlanification}}} = useContext(AppContext)
+
+    const [editionMode, setEditionMode] = useState(false)
+    const [savingEditions, setSavingEditions] = useState(false)
+    const actionable = isOwner
+    const canEdit = !editionMode && isEditable
+    const canShare = !editionMode && sharePlanification && actionable
+    const savingMode = editionMode && isEditable && editPlanification && actionable
+
+    return (
+        <>
+            {
+                !editionMode &&
+                <Button className={'header-back-arrow'} icon onClick={() => onBackArrow()}>
+                    <Icon name={'arrow left'}/>
+                </Button>
+            }
+            {
+                editionMode &&
+                <PopUpContinueEditing onDiscardChanges={() => {
+                    discardPlanificationChanges()
+                    setEditionMode(false)
+                }}/>
+            }
+            <span>{planificationName ?? 'Mis Rutinas'}</span>
+            {
+                canShare &&
+                <Icon name={'share square outline'} className={'header-icon'} onClick={() => onSharePlanification()}/>
+            }
+            {
+                (!editionMode && actionable) ?
+                    editPlanification ?
+                        canEdit ?
+                            <Icon name={'edit outline'} className={'header-icon'} onClick={() => {
+                                setEditionMode(true)
+                                enableEditionPlanification()
+                            }}/>
+                            :
+                            <PopUpDisabledAction
+                                disableHeader={'No es posible editar'}
+                                disableDescription={'Tu o un atleta ya marcaron una rutina de esta planificacion'}
+                                trigger={<Icon name={'edit outline'} className={'header-icon disabled-btn'}/>}/>
+                        : <PopUpDisabledAction trigger={<Icon name={'edit outline'} className={'header-icon disabled-btn'}/>}/>
+                    : null
+            }
+            {
+                savingMode &&
+                <Icon disabled={savingEditions} name={'save outline'} className={'header-icon'} onClick={async () => {
+                    setSavingEditions(true)
+                    await savePlanificationEditions()
+                    setEditionMode(false)
+                    setSavingEditions(false)
+                }}/>
+            }
+        </>
+    )
+}
 
 class PagePlanificationDetail extends Component {
     static contextType = AppContext
@@ -71,6 +137,7 @@ class PagePlanificationDetail extends Component {
                 isEditable: res.data.isEditable,
                 planificationId})
             this.setSecondaryActions()
+            this.setTopBar()
         } catch (e) {
             console.error(e)
         }
@@ -231,6 +298,19 @@ class PagePlanificationDetail extends Component {
         }
     }
 
+    setTopBar() {
+        this.context.dispatch(setData({
+            MenuHeaderRender: <MenuHeaderRender
+                isEditable={this.state.isEditable}
+                discardPlanificationChanges={() => this.discardPlanificationChanges()}
+                onSharePlanification={() => this.sharePlanification()}
+                enableEditionPlanification={() => this.enableEditionPlanification()}
+                savePlanificationEditions={() => this.savePlanificationEditions()}
+                onBackArrow={() => this.props.history.push('/my-planifications')}
+            />
+        }))
+    }
+
     render() {
         const {state: {planificationName, isOwner, permissions: {sharePlanification, editPlanification, repeatLastMesocycle}}} = this.context
         const {
@@ -256,48 +336,9 @@ class PagePlanificationDetail extends Component {
             return <Loader active/>
         }
 
-        const actionable = isOwner
-        const canEdit = !editionMode && isEditable
-        const canShare = !editionMode && sharePlanification && actionable
-        const savingMode = editionMode && isEditable && editPlanification && actionable
-
         let weekNumber = 1
         return (
             <>
-                <Header as={'h3'}>
-                    {
-                        !editionMode &&
-                        <Button className={'header-back-arrow'} icon onClick={() => this.props.history.push('/my-planifications')}>
-                            <Icon name={'arrow left'}/>
-                        </Button>
-                    }
-                    {
-                        editionMode &&
-                        <PopUpContinueEditing onDiscardChanges={() => this.discardPlanificationChanges()}/>
-                    }
-                    <span>{planificationName ?? 'Mis Rutinas'}</span>
-                    {
-                        canShare &&
-                        <Icon name={'share square outline'} className={'header-icon'} onClick={() => this.sharePlanification()}/>
-                    }
-                    {
-                        (!editionMode && actionable) ?
-                            editPlanification ?
-                                canEdit ?
-                                <Icon name={'edit outline'} className={'header-icon'} onClick={() => this.enableEditionPlanification()}/>
-                                :
-                                <PopUpDisabledAction
-                                    disableHeader={'No es posible editar'}
-                                    disableDescription={'Tu o un atleta ya marcaron una rutina de esta planificacion'}
-                                    trigger={<Icon name={'edit outline'} className={'header-icon disabled-btn'}/>}/>
-                            : <PopUpDisabledAction trigger={<Icon name={'edit outline'} className={'header-icon disabled-btn'}/>}/>
-                        : null
-                    }
-                    {
-                        savingMode &&
-                        <Icon disabled={savingEditions} name={'save outline'} className={'header-icon'} onClick={() => this.savePlanificationEditions()}/>
-                    }
-                </Header>
                 <Header as={'h5'}>
                     Dias
                     {

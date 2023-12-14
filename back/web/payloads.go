@@ -311,3 +311,12 @@ type DeletePlanificationRequest struct {
 type CopyMesocycleRequest struct {
 	PlanificationId *int64 `json:"planificationId"`
 }
+
+type CreateNewExerciseRequest struct {
+	Name      *string                      `json:"name"`
+	Equipment []db.CreateExerciseEquipment `json:"equipment"`
+}
+
+type CreateNewExerciseResponse struct {
+	Id *int `json:"id"`
+}

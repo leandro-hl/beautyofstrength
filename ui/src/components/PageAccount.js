@@ -6,6 +6,10 @@ import {AppContext, setData} from "../context";
 import {MENU} from "../enums";
 import {contactByWhatsapp, setTheme} from "../functions";
 
+const MenuHeaderRender = () => {
+    return <>Perfil</>
+}
+
 class PageAccount extends Component {
     static contextType = AppContext
     state = {loading: true, userAccount: {}}
@@ -15,6 +19,7 @@ class PageAccount extends Component {
             this.context.dispatch(setData({
                 noBottomBar: false,
                 menuButtonSelected: MENU.ACCOUNT,
+                MenuHeaderRender: <MenuHeaderRender/>,
                 secondaryActions: [{func: () => this.signout(), description: 'Salir'}]}))
             const res = await getUserAccountDetails();
             this.setState({loading: false, userAccount: res.data})
@@ -39,6 +44,7 @@ class PageAccount extends Component {
                 secondaryActions:[],
                 planificationId: null,
                 routineId: null,
+                MenuHeaderRender: null
             }))
             this.props.history.push('/signin')
         } catch (e) {

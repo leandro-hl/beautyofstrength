@@ -1,29 +1,31 @@
 import React, {Component} from "react";
-import {Loader, Menu} from "semantic-ui-react";
+import {Header, Icon, Loader, Menu, Segment} from "semantic-ui-react";
+import {AppContext} from "../context";
 
 export class TopMenuBar extends Component {
-    state = {activeItem: 'Activas'}
+    static contextType = AppContext
 
-    handleItemClick = (e, { name }) => this.setState({ activeItem: name })
+    constructor(props) {
+        super(props);
+
+        this.state = {
+
+        }
+    }
 
     render() {
-        const {activeItem} = this.state;
-
+        const {state: {MenuHeaderRender}} = this.context
         return (
-            <Menu borderless fluid>
-                <Menu.Item
-                    style={{width: '50%'}}
-                    name='Activas'
-                    active={activeItem === 'Activas'}
-                    onClick={this.handleItemClick}
-                />
-                <Menu.Item
-                    style={{width: '50%'}}
-                    name='Historicas'
-                    active={activeItem === 'Historicas'}
-                    onClick={this.handleItemClick}
-                />
-            </Menu>
+            <>
+                {
+                    MenuHeaderRender &&
+                    <Segment className={'no-margin top-menu-bar'}>
+                        <Header as={'h3'} className={'top-bar'}>
+                            {MenuHeaderRender}
+                        </Header>
+                    </Segment>
+                }
+            </>
         )
     }
 }

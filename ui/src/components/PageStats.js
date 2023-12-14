@@ -9,6 +9,10 @@ import {listLastUserRmHistoryStats, listPlanifications, listUserRms, saveNewRm} 
 import {Chart, registerables} from "chart.js";
 import {PopUpDisabledAction} from "./PopUpDisabledAction";
 
+const MenuHeaderRender = () => {
+    return <>Estadisticas</>
+}
+
 class PageStats extends Component {
     static contextType = AppContext
     canvasRef = createRef()
@@ -20,7 +24,11 @@ class PageStats extends Component {
 
     async componentDidMount() {
         try {
-            this.context.dispatch(setData({noBottomBar: false, menuButtonSelected: MENU.STATS}))
+            this.context.dispatch(setData({
+                noBottomBar: false,
+                menuButtonSelected: MENU.STATS,
+                MenuHeaderRender: <MenuHeaderRender/>
+            }))
             const res = await listUserRms();
             const res2 = await listLastUserRmHistoryStats()
 
@@ -193,7 +201,6 @@ class PageStats extends Component {
         }}} = this.context
         return (
             <>
-                <Header as={'h3'}>Estadisticas</Header>
                 <Segment loading={loading}>
                     <Table basic unstackable style={{border: 'unset'}}>
                         <Table.Header>

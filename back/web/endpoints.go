@@ -89,17 +89,19 @@ func NewListExercisesQueryCache() *ListExercisesQueryCache {
 }
 
 type ExercisesComparerCache struct {
-	s  map[string]string
-	s2 map[int]bool
-	a  sync.Mutex
+	keyToName map[string]string
+	keyToId   map[string]int
+	idToName  map[int]string
+	a         sync.Mutex
 }
 
 func (o *ExercisesComparerCache) Add(id int, name string) {
 	o.a.Lock()
 	defer o.a.Unlock()
 	key := strings.ToLower(strings.TrimSpace(strings.ReplaceAll(name, " ", "")))
-	o.s[key] = name
-	o.s2[id] = true
+	o.keyToName[key] = name
+	o.keyToId[key] = id
+	o.idToName[id] = name
 }
 
 func (o *ExercisesComparerCache) FilterExercisesByIds(exs []ExerciseRequest) (yes []ExerciseRequest, no []ExerciseRequest, order []bool) {
@@ -109,7 +111,7 @@ func (o *ExercisesComparerCache) FilterExercisesByIds(exs []ExerciseRequest) (ye
 	no = make([]ExerciseRequest, 0)
 	order = make([]bool, 0)
 	for _, k := range exs {
-		if _, ok := o.s2[*k.Id]; ok {
+		if _, ok := o.idToName[*k.Id]; ok {
 			yes = append(yes, k)
 			order = append(order, true)
 		} else {
@@ -127,10 +129,26 @@ func (o *ExercisesComparerCache) FilterNamesByIds(keys []int, names []string) (y
 	yes = make([]int, 0)
 	no = make([]string, 0)
 	for i, k := range keys {
-		if _, ok := o.s2[k]; ok {
+		if _, ok := o.idToName[k]; ok {
 			yes = append(yes, k)
 		} else {
 			no = append(no, names[i])
+		}
+	}
+
+	return
+}
+
+func (o *ExercisesComparerCache) Filter(exercises []ExerciseComparer) (yes, no []ExerciseComparer) {
+	o.a.Lock()
+	defer o.a.Unlock()
+	yes = make([]ExerciseComparer, 0)
+	no = make([]ExerciseComparer, 0)
+	for _, k := range exercises {
+		if _, ok := o.keyToName[*k.SanitizedKey]; ok {
+			yes = append(yes, k)
+		} else {
+			no = append(no, k)
 		}
 	}
 
@@ -144,27 +162,19 @@ type ExerciseComparer struct {
 	ExerciseRequest
 }
 
-func (o *ExercisesComparerCache) Exist(exercises []ExerciseComparer) (yes, no []ExerciseComparer) {
+func (o *ExercisesComparerCache) Exists(sanitizedExerciseKey string) (int, bool) {
 	o.a.Lock()
 	defer o.a.Unlock()
-	yes = make([]ExerciseComparer, 0)
-	no = make([]ExerciseComparer, 0)
-	for _, k := range exercises {
-		if _, ok := o.s[*k.SanitizedKey]; ok {
-			yes = append(yes, k)
-		} else {
-			no = append(no, k)
-		}
-	}
-
-	return
+	id, ok := o.keyToId[sanitizedExerciseKey]
+	return id, ok
 }
 
 func NewExercisesComparerCache() *ExercisesComparerCache {
 	return &ExercisesComparerCache{
-		s:  make(map[string]string),
-		s2: make(map[int]bool),
-		a:  sync.Mutex{},
+		keyToName: make(map[string]string),
+		keyToId:   make(map[string]int),
+		idToName:  make(map[int]string),
+		a:         sync.Mutex{},
 	}
 }
 
@@ -279,6 +289,7 @@ func (o *Endpoints) Handle() http.Handler {
 	api.Path("/acceptPlanificationAccessRequest").HandlerFunc(o.HandleAuthenticatedTransactional(o.HandleAuthorization(o.acceptPlanificationAccessRequest, db.Professor)))
 	api.Path("/declinePlanificationAccessRequest").HandlerFunc(o.HandleAuthenticatedTransactional(o.HandleAuthorization(o.declinePlanificationAccessRequest, db.Professor)))
 	api.Path("/repeatLastMesocycle").HandlerFunc(o.HandleAuthenticatedTransactional(o.HandleAuthorization(o.repeatLastMesocycle, db.Professor)))
+	api.Path("/createNewExercise").HandlerFunc(o.HandleAuthenticatedTransactional(o.HandleAuthorization(o.createNewExercise, db.Professor)))
 
 	//Premium services
 	api.Path("/savePlanificationEditions").HandlerFunc(o.HandleAuthenticatedTransactional(o.HandleAuthorization(o.savePlanificationEditions, db.StudentPremium, db.Professor)))
@@ -305,6 +316,7 @@ func (o *Endpoints) Handle() http.Handler {
 	api.Path("/listPlanifications").HandlerFunc(o.HandleAuthenticatedTransactional(o.HandleAuthorization(o.listPlanifications, db.StudentFree, db.StudentPremium, db.Professor)))
 	api.Path("/getPlanificationDetails").HandlerFunc(o.HandleAuthenticatedTransactional(o.HandleAuthorization(o.getPlanificationDetails, db.StudentFree, db.StudentPremium, db.Professor)))
 	api.Path("/listExercises").HandlerFunc(o.HandleAuthenticatedTransactional(o.HandleAuthorization(o.listExercises, db.StudentFree, db.StudentPremium, db.Professor)))
+	api.Path("/listEquipment").HandlerFunc(o.HandleAuthenticatedTransactional(o.HandleAuthorization(o.listEquipment, db.StudentFree, db.StudentPremium, db.Professor)))
 	api.Path("/getUserPermissions").HandlerFunc(o.HandleAuthenticatedTransactional(o.HandleAuthorization(o.getUserPermissions, db.StudentFree, db.StudentPremium, db.Professor)))
 	api.Path("/retrieveVapidPublicKey").HandlerFunc(o.HandleAuthenticatedTransactional(o.HandleAuthorization(o.retrieveVapidPublicKey, db.StudentFree, db.StudentPremium, db.Professor)))
 	api.Path("/saveUserDevicePushNotificationSubscription").HandlerFunc(o.HandleAuthenticatedTransactional(o.HandleAuthorization(o.saveUserDevicePushNotificationSubscription, db.StudentFree, db.StudentPremium, db.Professor)))
@@ -783,6 +795,10 @@ func (o *Endpoints) listExercises(w http.ResponseWriter, r *http.Request, tx *sq
 	}
 }
 
+func (o *Endpoints) listEquipment(w http.ResponseWriter, r *http.Request, tx *sqlx.Tx) {
+	o.Respond(w, db.ListEquipment(o.db, tx), http.StatusOK)
+}
+
 func (o *Endpoints) listUserRms(w http.ResponseWriter, r *http.Request, tx *sqlx.Tx) {
 	userId := util.UserId(r)
 
@@ -1010,127 +1026,41 @@ func (o *Endpoints) saveExerciseBlockValidations(r *http.Request, tx *sqlx.Tx, r
 
 	if !db.CalculateUserOwnsPlanification(o.db, tx, userId, *planificationId) {
 		panic(&BadRequestResponse{ErrorCode: util.PString("no_access")})
-		//panic(errors.New("unauthorized to modify the requested planification"))
 	}
 
 	if len(exercises) == 0 {
 		panic(&BadRequestResponse{ErrorCode: util.PString("required_at_least_one_exercise")})
-		//panic(errors.New("you are not adding any exercises but at least one is required"))
 	}
 
 	if len(exercises) > *o.conf.ExercisesPerBlockLimit {
 		panic(&BadRequestResponse{ErrorCode: util.PString("work_exercises_limit")})
-		//panic(fmt.Errorf("you cannot add more than %d to an exercises block", *o.conf.ExercisesPerBlockLimit))
 	}
 
 	if routineId == nil {
 		last := db.CountRoutinesInPlanification(o.db, tx, *planificationId)
 		if *plan == db.StudentFree && *last > 0 {
 			panic(&BadRequestResponse{ErrorCode: util.PString("free_create_routine_limit")})
-			//panic(errors.New("free accounts cannot have more than one routine"))
 		}
 		routineId = db.CreateRoutineDefault(o.db, tx, fmt.Sprintf("Dia %d", *last+1), *planificationId, userId)
 	} else {
 		if !db.CalculateUserOwnsRoutine(o.db, tx, userId, *planificationId, *routineId) {
 			panic(&BadRequestResponse{ErrorCode: util.PString("no_access")})
-			//panic(errors.New("unauthorized to modify the requested routine"))
 		}
 
 		header := db.GetRoutineHeader(o.db, tx, *routineId, userId, userId)
 		if *header.TimesMarked > 0 {
 			panic(&BadRequestResponse{ErrorCode: util.PString("cannot_modify_routine")})
-			//panic(errors.New("you cannot add more exercise blocks to a routine that was already marked by any athlete"))
 		}
 
 		blocks := db.CalculateRoutineBlocksAmount(o.db, tx, *routineId)
 		if *plan == db.StudentFree && blocks >= *o.conf.StudentFreeAccountRoutineBlocksLimit {
 			panic(&BadRequestResponse{ErrorCode: util.PString("free_work_routine_limit")})
-			//panic(errors.New(fmt.Sprintf("you cannot add more than %d exercise blocks to a routine with a free account", *o.conf.StudentFreeAccountRoutineBlocksLimit)))
 		}
 	}
 
-	//todo exercise ID for newly created exercises may collide if several instructors are creating new exercises.
-	//	let's wait for people to complain to look for a solution
-	existingExercises, nonExistingExercisesUnsanitized, order := exercisesComparerCache.FilterExercisesByIds(exercises)
-	nonExistingToAdd := make([]ExerciseRequest, 0)
-	if *plan == db.Professor {
-		exerciseNamesComparer := make([]ExerciseComparer, 0)
-		sanitizedKeys := make([]string, 0)
-		re := regexp.MustCompile(`[^a-zA-Z0-9áéíóúÁÉÍÓÚñÑüÜ/]`)
-		for _, e := range nonExistingExercisesUnsanitized {
-			if len(*e.Name) > *o.conf.CustomExerciseNameCharacterLimit {
-				//todo validation mge not supported
-				continue
-			}
-			sanitizedKey := strings.ToLower(string(re.ReplaceAll([]byte(*e.Name), []byte(""))))
-			avoid := false
-			for _, s := range sanitizedKeys {
-				if s == sanitizedKey {
-					avoid = true
-					continue
-				}
-			}
-			if !avoid {
-				sanitizedKeys = append(sanitizedKeys, sanitizedKey)
-			}
-			toSanitizeName := strings.Split(*e.Name, " ")
-			for _, word := range toSanitizeName {
-				word = string(re.ReplaceAll([]byte(word), []byte("")))
-			}
-			sanitizedName := strings.Join(toSanitizeName, " ")
-			exerciseNamesComparer = append(exerciseNamesComparer, ExerciseComparer{
-				SanitizedKey:    &sanitizedKey,
-				SanitizedName:   &sanitizedName,
-				ShouldCreate:    util.PBool(!avoid),
-				ExerciseRequest: e,
-			})
-		}
-		_, nonExistingExercises := exercisesComparerCache.Exist(exerciseNamesComparer)
-		newExercisesCreated := false
-		for i, ex := range nonExistingExercises {
-			if !*ex.ShouldCreate {
-				for _, ex2 := range nonExistingExercises[0:i] {
-					if *ex2.SanitizedKey == *ex.SanitizedKey {
-						*ex.ExerciseRequest.Name = *ex2.SanitizedName
-						*ex.ExerciseRequest.Id = *ex2.Id
-						nonExistingToAdd = append(nonExistingToAdd, ex.ExerciseRequest)
-						break
-					}
-				}
-
-				continue
-			}
-			count := db.CountExercisesCreatedByUser(o.db, tx, userId)
-			if *count > *o.conf.CustomExercisesPerUserLimit {
-				panic(&BadRequestResponse{ErrorCode: util.PString("new_exercises_limit")})
-				//panic(errors.New("you cannot create more new exercises"))
-			}
-			exerciseId := db.CreateExercise(o.db, tx, *ex.SanitizedName, userId)
-			*ex.ExerciseRequest.Name = *ex.SanitizedName
-			*ex.ExerciseRequest.Id = *exerciseId
-			nonExistingToAdd = append(nonExistingToAdd, ex.ExerciseRequest)
-			exercisesComparerCache.Add(*exerciseId, *ex.SanitizedName)
-			newExercisesCreated = true
-		}
-
-		if newExercisesCreated {
-			listExercisesQueryCache.Invalidate()
-		}
-	}
-
-	exercisesToAddToBlock := make([]ExerciseRequest, 0)
-	existingExercisesIndex := 0
-	nonExistingExercisesIndex := 0
-	for _, o := range order {
-		if o {
-			exercisesToAddToBlock = append(exercisesToAddToBlock, existingExercises[existingExercisesIndex])
-			existingExercisesIndex++
-		} else {
-			exercisesToAddToBlock = append(exercisesToAddToBlock, nonExistingToAdd[nonExistingExercisesIndex])
-			nonExistingExercisesIndex++
-		}
-	}
-	return exercisesToAddToBlock, routineId
+	//check that exercises coming from UI exist. Exercises that do not exist are avoided.
+	existingExercises, _, _ := exercisesComparerCache.FilterExercisesByIds(exercises)
+	return existingExercises, routineId
 }
 
 func (o *Endpoints) saveExercisesBlockFree(w http.ResponseWriter, r *http.Request, tx *sqlx.Tx) {
@@ -1241,7 +1171,6 @@ func (o *Endpoints) createPlanification(w http.ResponseWriter, r *http.Request, 
 
 	if *t.Name == MyPlanificationReservedName || *t.Name == SharedRoutinesPlanificationReservedName {
 		panic(&BadRequestResponse{ErrorCode: util.PString("create_planification_reserved_names")})
-		//panic(errors.New("you cannot use reserved planification names"))
 	}
 
 	if len(*t.Name) > 50 {
@@ -1557,6 +1486,41 @@ func (o *Endpoints) savePlanificationEditions(w http.ResponseWriter, r *http.Req
 	db.UpdatePlanificationDays(o.db, tx, *p.PlanificationId, strings.Join(p.Week, ""))
 	for i := 0; i < len(p.RoutinesToDelete); i++ {
 		db.DeleteRoutine(o.db, tx, p.RoutinesToDelete[i])
+	}
+}
+
+func (o *Endpoints) createNewExercise(w http.ResponseWriter, r *http.Request, tx *sqlx.Tx) {
+	p := CreateNewExerciseRequest{}
+	err := o.Decode(r, &p)
+	util.Check(err)
+	userId := util.UserId(r)
+
+	if len(*p.Name) > *o.conf.CustomExerciseNameCharacterLimit {
+		panic(&BadRequestResponse{ErrorCode: util.PString("exercise_name_limit")})
+	}
+
+	count := db.CountExercisesCreatedByUser(o.db, tx, userId)
+	if *count > *o.conf.CustomExercisesPerUserLimit {
+		panic(&BadRequestResponse{ErrorCode: util.PString("new_exercises_limit")})
+	}
+
+	re := regexp.MustCompile(`[^a-zA-Z0-9áéíóúÁÉÍÓÚñÑüÜ/]`)
+	sanitizedKey := strings.ToLower(string(re.ReplaceAll([]byte(*p.Name), []byte(""))))
+
+	if id, ok := exercisesComparerCache.Exists(sanitizedKey); ok {
+		o.Respond(w, &CreateNewExerciseResponse{Id: &id}, http.StatusOK)
+	} else {
+		toSanitizeName := strings.Split(*p.Name, " ")
+		for _, word := range toSanitizeName {
+			word = string(re.ReplaceAll([]byte(word), []byte("")))
+		}
+		sanitizedName := strings.Join(toSanitizeName, " ")
+		exerciseId := db.CreateExercise(o.db, tx, sanitizedName, userId)
+		exercisesComparerCache.Add(*exerciseId, sanitizedKey)
+		listExercisesQueryCache.Invalidate()
+
+		db.AssociateExerciseEquipment(o.db, tx, *exerciseId, p.Equipment)
+		o.Respond(w, &CreateNewExerciseResponse{Id: exerciseId}, http.StatusOK)
 	}
 }
 
@@ -1894,12 +1858,13 @@ func (o *Endpoints) HandleFatal(handlerFunc http.HandlerFunc) http.HandlerFunc {
 			if e := recover(); e != nil {
 				switch e.(type) {
 				case *BadRequestResponse:
+					o.l.Println(*e.(*BadRequestResponse).ErrorCode)
 					o.Respond(w, e, http.StatusBadRequest)
 				case util.ValidationErrors:
 					o.Respond(w, e, http.StatusBadRequest)
 				default:
 					util.CheckNoPanic(e.(error))
-					o.Respond(w, nil, http.StatusInternalServerError)
+					o.Respond(w, &BadRequestResponse{ErrorCode: util.PString("unexpected_error")}, http.StatusInternalServerError)
 				}
 			}
 		}()

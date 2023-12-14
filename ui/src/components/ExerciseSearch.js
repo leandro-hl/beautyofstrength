@@ -1,9 +1,10 @@
 import React, {Component} from "react";
 import {Dropdown, Grid} from "semantic-ui-react";
 import {capitalize} from "../functions";
-import {listExercises} from "../service";
+import {createNewExercise, listEquipment, listExercises} from "../service";
 import {Chip} from "./Chip";
 import {AppContext, setData} from "../context";
+import {ModalExerciseCreate} from "./ModalExerciseCreate";
 
 export class ExerciseSearch extends Component {
     static contextType = AppContext
@@ -21,6 +22,20 @@ export class ExerciseSearch extends Component {
 
     async componentDidMount() {
         await this.calculateExercises()
+        await this.listEquipment()
+    }
+
+    async listEquipment() {
+        try {
+            const {state: {equipment}} = this.context
+
+            if (!equipment) {
+                const res = await listEquipment()
+                this.context.dispatch(setData({equipment: res.data}))
+            }
+        } catch (e) {
+            console.error(e)
+        }
     }
 
     async calculateExercises() {
@@ -81,33 +96,53 @@ export class ExerciseSearch extends Component {
         }
     }
 
-    onAddUnexistingExercise(value) {
-        const {exercisesBuffer, exerciseOptions, biggerId} = this.state;
-        const {state: {prepareExercises}} = this.context
+    sanitizeExerciseKey(newExerciseName) {
+        return newExerciseName.replace(this.getRegex(), "");
+    }
 
-        const regex = /[^a-zA-Z0-9áéíóúüÁÉÍÓÚÜÑñ/]/g
-        const sanitizedInput = value.replace(regex, "");
-        const ex = exerciseOptions.find(e => e.comparer === sanitizedInput)
+    getRegex() {
+        return /[^a-zA-Z0-9áéíóúüÁÉÍÓÚÜÑñ/]/g
+    }
 
-        if (!!ex) {
-            exercisesBuffer.push(ex)
-            this.setState({exercisesBuffer})
-        } else {
-            const words = value.split(' ')
-            for (let i = 0; i < words.length; i++) {
-                const sanitizedWord = words[i].replace(regex, "");
-                words[i] = capitalize(sanitizedWord)
+    async createNewExercise(name, selectedEquipment) {
+        try {
+            const {state: {prepareExercises}} = this.context
+            const {exerciseOptions, exercisesBuffer} = this.state
+            this.setState({creating: true})
+
+            //make sure this does not already exist
+            const newExerciseName = name
+            const sanitizedInput = this.sanitizeExerciseKey(newExerciseName)
+            const ex = exerciseOptions.find(e => e.comparer === sanitizedInput)
+
+            if (!ex) {
+                //sanitize whole input
+                const regex = this.getRegex()
+                const words = newExerciseName.split(' ')
+                for (let i = 0; i < words.length; i++) {
+                    const sanitizedWord = words[i].replace(regex, "");
+                    words[i] = capitalize(sanitizedWord)
+                }
+
+                const name = words.join(' ')
+                const res = await createNewExercise({name, equipment: selectedEquipment.map(s => ({id: s.id, occurrences: s.occurrences}))})
+
+                //adding exercise to current cached data
+                const exercise = {text: name, key: res.data.id, value: res.data.id, name:name, id:res.data.id}
+                exerciseOptions.push({...exercise, comparer: sanitizedInput})
+                exercisesBuffer.push(exercise)
+                this.setState({exerciseOptions, exercisesBuffer})
+                this.props.onSelected(exercisesBuffer.map(e => ({...e})))
+                prepareExercises.data.exercises.push(exercise)
+                this.context.dispatch(setData({prepareExercises: prepareExercises}))
+            } else {
+                exercisesBuffer.push(ex)
+                this.setState({exercisesBuffer})
             }
-
-            const name = words.join(' ')
-            const lastBiggerId = biggerId+1
-            const exercise = {text: name, key: lastBiggerId, value: lastBiggerId, draft: true, name:name, id:lastBiggerId}
-            exerciseOptions.push(exercise)
-            exercisesBuffer.push(exercise)
-            this.setState({exerciseOptions, exercisesBuffer, biggerId: lastBiggerId})
-            this.props.onSelected(exercisesBuffer.map(e => ({...e})))
-            prepareExercises.data.exercises.push(exercise)
-            this.context.dispatch(setData({prepareExercises: prepareExercises}))
+        } catch (e) {
+            console.error(e)
+        } finally {
+            this.setState({openNewExerciseModal: false, newExerciseName: null, creating: false})
         }
     }
 
@@ -122,26 +157,49 @@ export class ExerciseSearch extends Component {
         this.props.onSelected(exercises.map(e => ({...e})))
     }
 
+    onAddItem(value) {
+        const {exerciseOptions, exercisesBuffer} = this.state
+        this.setState({creating: true})
+
+        //make sure this does not already exist
+        const sanitizedInput = this.sanitizeExerciseKey(value)
+        const ex = exerciseOptions.find(e => e.comparer === sanitizedInput)
+
+        if (!ex) {
+            this.setState({openNewExerciseModal: true, newExerciseName: value})
+        } else {
+            exercisesBuffer.push(ex)
+            this.setState({exercisesBuffer})
+        }
+    }
+
     render() {
-        const {allowAdditions, exerciseOptions, exercisesBuffer, basic} = this.state
+        const {allowAdditions, exerciseOptions, exercisesBuffer, basic, openNewExerciseModal, newExerciseName} = this.state
         return (
-            <Dropdown
-                placeholder={basic ? 'Ejercicio' : 'Elegi los ejercicios'}
-                fluid
-                multiple={!basic}
-                search
-                selection
-                allowAdditions={allowAdditions}
-                additionLabel='Agregar '
-                onAddItem={(e, { value }) => this.onAddUnexistingExercise(value)}
-                options={exerciseOptions}
-                value={basic ? exercisesBuffer.map(e => e.value)[0] : exercisesBuffer.map(e => e.value)}
-                onChange={this.handleExerciseSelection}
-                openOnFocus={true}
-                tabIndex={0}
-                noResultsMessage={'No se encontro el ejercicio'}
-                selectOnBlur={false}
-            />
+            <>
+                <Dropdown
+                    placeholder={basic ? 'Ejercicio' : 'Elegi los ejercicios'}
+                    fluid
+                    multiple={!basic}
+                    search
+                    selection
+                    allowAdditions={allowAdditions}
+                    additionLabel='Agregar '
+                    onAddItem={(e, { value }) => this.onAddItem(value)}
+                    options={exerciseOptions}
+                    value={basic ? exercisesBuffer.map(e => e.value)[0] : exercisesBuffer.map(e => e.value)}
+                    onChange={this.handleExerciseSelection}
+                    openOnFocus={true}
+                    tabIndex={0}
+                    noResultsMessage={'No se encontro el ejercicio'}
+                    selectOnBlur={false}
+                />
+                {openNewExerciseModal && <ModalExerciseCreate
+                    handleConfirm={(name, selectedEquipment) => this.createNewExercise(name, selectedEquipment)}
+                    handleClose={() => this.setState({openNewExerciseModal: false, newExerciseName: null})}
+                    open={openNewExerciseModal}
+                    name={newExerciseName}/>}
+            </>
         )
     }
 }

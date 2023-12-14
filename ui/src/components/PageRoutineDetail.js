@@ -1,4 +1,4 @@
-import React, {Component} from "react";
+import React, {Component, useContext, useState} from "react";
 import {
     Accordion,
     Button,
@@ -33,6 +33,141 @@ import {PopUpContinueEditing} from "./PopUpContinueEditing";
 import {PopUpConfirmation} from "./PopUpConfirmation";
 import {ExerciseSearch} from "./ExerciseSearch";
 import {SegRepsButtonGroup} from "./SegRepsButtonGroup";
+
+const MenuHeaderRender = ({
+                              name,
+                              difficulty,
+                              duration,
+                              canEdit,
+                              actionable,
+                              isShared,
+                              isCopy,
+                              canBeSaved,
+                              savingSharedRoutine,
+                              alreadyCopied,
+                              redirectToPlanifications,
+                              redirectToPlanification,
+                              discardRoutineChanges,
+                              onRoutineNameChange,
+                              shareRoutine,
+                              enableEditionRoutine,
+                              saveRoutineEditions,
+                              saveSharedRoutine
+                          }) => {
+    const {state: {permissions: {editRoutine, canSaveSharedRoutines}}} = useContext(AppContext)
+
+    const [canBeSavedConf, setCanBeSavedConf] = useState(false)
+    const [routineName, setRoutineName] = useState(name)
+    const [showPopUp, setShowPopUp] = useState(false)
+    const [editionMode, setEditionMode] = useState(false)
+    const [savingEditions, setSavingEditions] = useState(false)
+
+    const savingMode = editionMode && canEdit && editRoutine
+    const canRoutineBeSavedByThirdPeople = (e, { name, value }) => setCanBeSavedConf(name === 'yes' && value)
+
+    return (
+        <>
+            {
+                !editionMode &&
+                <Button className={'header-back-arrow'} icon onClick={() => isShared? redirectToPlanifications() : redirectToPlanification()}>
+                    <Icon name={'arrow left'}/>
+                </Button>
+            }
+            {
+                editionMode &&
+                <PopUpContinueEditing onDiscardChanges={() => {
+                    discardRoutineChanges()
+                    setEditionMode(false)
+                }}/>
+            }
+            {
+                !editionMode ? routineName :
+                    <Input
+                        className={'input-header'}
+                        placeholder={routineName}
+                        value={routineName}
+                        onChange={(e, {value}) => {
+                            setRoutineName(value)
+                            onRoutineNameChange(value)
+                        }}/>
+            }
+            {
+                (!editionMode && actionable && !isCopy) &&
+                <PopUpConfirmation
+                    title={'Compartir Rutina'}
+                    primary={'Compartir'}
+                    secondary={'Cancelar'}
+                    isManaged
+                    open={showPopUp}
+                    trigger={<Icon name={'share square outline'} className={'header-icon'} onClick={() => setShowPopUp(true)}/>}
+                    onPrimaryAction={() => {
+                        shareRoutine(canBeSavedConf)
+                        setShowPopUp(false)
+                    }}
+                    onSecondaryAction={() => setShowPopUp(false)}
+                >
+                    <div className={'margin-bottom-1'}>
+                        Pueden los invitados guardar la rutina? Permite crear una copia de la rutina en la cuenta de los invitados, con acceso a tus videos (Cuenta instructor). El link expira en 14 dias. Si creas un nuevo link, reemplazara al existente pero los invitados que hayan guardado la rutina podran seguir accediendola.
+                    </div>
+                    <div className={'margin-bottom-half'}>
+                        <Radio
+                            label='Permitir Guardar'
+                            name='yes'
+                            value={true}
+                            checked={canBeSavedConf}
+                            onChange={canRoutineBeSavedByThirdPeople}
+                        />
+                    </div>
+                    <div>
+                        <Radio
+                            label='No Permitir'
+                            name='no'
+                            value={false}
+                            checked={!canBeSavedConf}
+                            onChange={canRoutineBeSavedByThirdPeople}
+                        />
+                    </div>
+                </PopUpConfirmation>
+            }
+            {
+                (!editionMode && actionable) ?
+                    editRoutine ?
+                        (canEdit ?
+                            <Icon name={'edit outline'} className={'header-icon'} onClick={() => {
+                                setEditionMode(true)
+                                enableEditionRoutine()
+                            }}/>
+                            :
+                            <PopUpDisabledAction
+                                disableHeader={'No es posible editar'}
+                                disableDescription={'Tu o un atleta ya marcaron esta rutina como completada u omitida'}
+                                trigger={<Icon name={'edit outline'} className={'header-icon disabled-btn'}/>}/>)
+                        :
+                        <PopUpDisabledAction trigger={<Icon name={'edit outline'} className={'header-icon disabled-btn'}/>}/>
+                    : null
+            }
+            {
+                savingMode &&
+                <Icon disabled={savingEditions} name={'save outline'} className={'header-icon'} onClick={async () => {
+                    setSavingEditions(true)
+                    await saveRoutineEditions()
+                    setSavingEditions(false)
+                    setEditionMode(false)
+                }}/>
+            }
+            {
+                !canSaveSharedRoutines ?
+                    <PopUpDisabledAction trigger={<Icon name={'save outline'} className={'header-icon disabled-btn'}/>}/> :
+                    (isShared && canBeSaved && canSaveSharedRoutines && !alreadyCopied) &&
+                    <Icon disabled={savingSharedRoutine} name={'save outline'} className={'header-icon'} onClick={() => saveSharedRoutine()}/>
+            }
+            <div>
+                <Chip style={{fontSize: 14}} success={difficulty===1} progress={difficulty===2} content={difficulty===1? 'Facil' : 'Intermedia'}/>
+                <Chip style={{fontSize: 14}}  omit content={duration}/>
+            </div>
+        </>
+    )
+}
 
 class PageRoutineDetail extends Component{
     static contextType = AppContext
@@ -90,6 +225,7 @@ class PageRoutineDetail extends Component{
             } else {
                 await this.refresh()
             }
+            this.setTopBar()
         } catch (e) {
             console.error(e)
         }
@@ -148,6 +284,31 @@ class PageRoutineDetail extends Component{
         this.setSecondaryActions()
     }
 
+    setTopBar() {
+        this.context.dispatch(setData({
+            MenuHeaderRender: <MenuHeaderRender
+                name={this.state.name}
+                difficulty={this.state.difficulty}
+                duration={this.state.duration}
+                isShared={this.state.isShared}
+                isCopy={this.state.isCopy}
+                canBeSaved={this.state.canBeSaved}
+                savingSharedRoutine={this.state.savingSharedRoutine}
+                actionable={this.state.actionable}
+                alreadyCopied={this.state.alreadyCopied}
+                canEdit={this.state.canEdit}
+                redirectToPlanifications={() => this.redirectToPlanifications()}
+                redirectToPlanification={() => this.redirectToPlanification()}
+                discardRoutineChanges={() => this.discardRoutineChanges()}
+                onRoutineNameChange={(newName) => this.onRoutineNameChange(newName)}
+                shareRoutine={(canBeSaved) => this.shareRoutine(canBeSaved)}
+                enableEditionRoutine={() => this.enableEditionRoutine()}
+                saveRoutineEditions={() => this.saveRoutineEditions()}
+                saveSharedRoutine={() => this.saveSharedRoutine()}
+            />
+        }))
+    }
+
     redirectToCreateBlock() {
         this.props.history.push('/block/create')
     }
@@ -177,10 +338,10 @@ class PageRoutineDetail extends Component{
         this.setState({ activeIndexes: activeIndexes })
     }
 
-    async shareRoutine() {
+    async shareRoutine(canBeSaved) {
         let res = {}
         try {
-            const {planificationId, routineId, canBeSaved} = this.state
+            const {planificationId, routineId} = this.state
             res = await shareRoutine({canBeSaved, planificationId, routineId})
 
             if (isLocalhost()) {
@@ -192,8 +353,6 @@ class PageRoutineDetail extends Component{
         } catch (e) {
             console.error(e)
             this.setState({routineLink: `${isLocalhost() ? 'localhost:3000/app' : 'https://bos.team/app'}${res.data}`, showModalCopyLink: true})
-        } finally {
-            this.setState({showPopUp: false})
         }
     }
 
@@ -256,11 +415,12 @@ class PageRoutineDetail extends Component{
             }));
 
             const exercisesToAddPayload = []
-            let lastToDeleteIndex = 0
             for (let i = 0; i < blockGroupers.length; i++) {
                 for (let j = 0; j < blockGroupers[i].blocks.length; j++) {
                     const workout = blockGroupers[i].blocks[j]
                     exercisesToAddPayload.push({grouperId: blockGroupers[i].id,workoutId: workout.id, exercises: []})
+                    let toDeleteAccumulator = 0
+                    const additionIndex = exercisesToAddPayload.length-1
                     if (workout.exercises.length === 0) {
                         //add activeDraftExercise
                         if (activeDraftExercise.ex.length>0 && activeDraftExercise.workoutId === workout.id) {
@@ -271,18 +431,17 @@ class PageRoutineDetail extends Component{
                                 exerciseId:activeDraftExercise.ex[0].value,
                                 [activeDraftExercise.type]: parseInt(activeDraftExercise.reps,10)
                             }
-                            exercisesToAddPayload[j].exercises.push(item)
+                            exercisesToAddPayload[additionIndex].exercises.push(item)
                         }
                     } else  {
                         for (let k = 0; k < workout.exercises.length; k++) {
                             const ex = workout.exercises[k]
                             if (ex.toDelete) {
-                                lastToDeleteIndex = k + 1
+                                toDeleteAccumulator++
                             } else if (ex.isDraft) {
                                 const order = activeDraftExercise.order < k && activeDraftExercise.workoutId === ex.workoutId ? k+1 : k
-                                exercisesToAddPayload[j].exercises.push({
-                                    order: order - lastToDeleteIndex,
-                                    // name: ex.name,
+                                exercisesToAddPayload[additionIndex].exercises.push({
+                                    order: order - toDeleteAccumulator,
                                     grouperId: ex.grouperId,
                                     workoutId: ex.workoutId,
                                     exerciseId: ex.exerciseId,
@@ -291,15 +450,15 @@ class PageRoutineDetail extends Component{
                             }
                             if (addExerciseInputK === k) {
                                 //add activeDraftExercise
-                                if (activeDraftExercise.ex.length>0 && activeDraftExercise.workoutId === ex.workoutId) {
+                                if (activeDraftExercise.ex.length>0 && activeDraftExercise.workoutId === workout.id) {
                                     const item = {
-                                        order: (k+1) - lastToDeleteIndex,
+                                        order: (k+1) - toDeleteAccumulator,
                                         grouperId: activeDraftExercise.grouperId,
                                         workoutId: activeDraftExercise.workoutId,
                                         exerciseId:activeDraftExercise.ex[0].value,
                                         [activeDraftExercise.type]: parseInt(activeDraftExercise.reps,10)
                                     }
-                                    exercisesToAddPayload[j].exercises.push(item)
+                                    exercisesToAddPayload[additionIndex].exercises.push(item)
                                 }
                             }
                         }
@@ -345,7 +504,9 @@ class PageRoutineDetail extends Component{
         } catch (e) {
             console.error(e)
         } finally {
-            this.setState({savingEditions: false})
+            this.setState({
+                savingEditions: false
+            })
         }
     }
 
@@ -421,7 +582,7 @@ class PageRoutineDetail extends Component{
 
     onRoutineNameChange(newName) {
         const {updates} = this.state
-        this.setState({name: newName, updates: {...updates, name:newName}})
+        this.setState({updates: {...updates, name:newName}})
     }
 
     onGrouperNameChange(id, index, newName) {
@@ -491,8 +652,6 @@ class PageRoutineDetail extends Component{
             this.setState({blockGroupers: [...blockGroupers],confirmWorkExerciseDeletionIndex: null})
         }
     }
-
-    canRoutineBeSavedByThirdPeople = (e, { name, value }) => this.setState({ canBeSaved: name === 'yes' && value })
 
     cancelAddNewExercise() {
         this.setState({
@@ -589,15 +748,14 @@ class PageRoutineDetail extends Component{
                     <Table.Row style={{position: 'relative'}}>
                         <Table.Cell colSpan={'3'} style={{position: 'relative'}}>
                             <Grid>
-                                <Grid.Row className={'padding-1'}>
+                                <Grid.Row className={'padding-1 add-exercise-row'}>
                                     <Grid.Column width={10} className={'no-padding'}>
                                         <ExerciseSearch
                                             basic
-                                            // allowAdditions
+                                            allowAdditions
                                             defaultSelected={activeDraftExercise.ex}
                                             onSelected={(selected)=> {
                                                 const newActiveDraftExercise = {...activeDraftExercise, grouperId: bg.id, workoutId: b.id, order: k, ex: selected}
-                                                console.log(newActiveDraftExercise)
                                                 this.setState({activeDraftExercise: newActiveDraftExercise})
                                             }}/>
                                     </Grid.Column>
@@ -762,122 +920,26 @@ class PageRoutineDetail extends Component{
     }
 
     renderRoutineDetails() {
-        const {state: {permissions: {executeRoutine, editRoutine, canSaveSharedRoutines}}} = this.context
+        const {state: {permissions: {editRoutine}}} = this.context
         const {
-            name,
             confirmBlockGroupDeletionIndex,
             confirmWorkDeletionIndex,
             confirmWorkExerciseDeletionIndex,
             addExerciseInputIndex,
             activeDraftExercise,
-            difficulty,
-            duration,
             editionMode,
             actionable,
             canEdit,
-            savingEditions,
             blockGroupers,
             activeIndexes,
-            isShared,
-            isCopy,
-            canBeSaved,
-            savingSharedRoutine,
-            showPopUp,
-            showLinkGenerated,
-            isOwner,
-            alreadyCopied,
             showCreateBlockModal,
             nextBlockNumber,
             showModalCopyLink,
             routineLink
         } = this.state;
-        const savingMode = editionMode && canEdit && editRoutine
 
         return (
             <>
-                <Header as={'h3'}>
-                    {
-                        !editionMode &&
-                        <Button className={'header-back-arrow'} icon onClick={() => isShared? this.redirectToPlanifications() : this.redirectToPlanification()}>
-                            <Icon name={'arrow left'}/>
-                        </Button>
-                    }
-                    {
-                        editionMode &&
-                        <PopUpContinueEditing onDiscardChanges={() => this.discardRoutineChanges()}/>
-                    }
-                    {
-                        !editionMode ? name :
-                        <Input
-                            className={'input-header'}
-                            placeholder={name}
-                            value={name}
-                            onChange={(e, {value}) => this.onRoutineNameChange(value)}/>
-                    }
-                    {
-                        (!editionMode && actionable && !isCopy) &&
-                        <PopUpConfirmation
-                            title={'Compartir Rutina'}
-                            primary={'Compartir'}
-                            secondary={'Cancelar'}
-                            isManaged
-                            open={showPopUp}
-                            trigger={<Icon name={'share square outline'} className={'header-icon'} onClick={() => this.setState({showPopUp: true})}/>}
-                            onPrimaryAction={() => this.shareRoutine()}
-                            onSecondaryAction={() => this.setState({showPopUp: false})}
-                        >
-                            <div className={'margin-bottom-1'}>
-                                Pueden los invitados guardar la rutina? Permite crear una copia de la rutina en la cuenta de los invitados, con acceso a tus videos. Sino, por defecto el link expira en 14 dias. Si creas un nuevo link, reemplazara al existente pero los invitados que hayan guardado la rutina podran seguir accediendola.
-                            </div>
-                            <div className={'margin-bottom-half'}>
-                                <Radio
-                                    label='Permitir Guardar'
-                                    name='yes'
-                                    value={true}
-                                    checked={this.state.canBeSaved}
-                                    onChange={this.canRoutineBeSavedByThirdPeople}
-                                />
-                            </div>
-                            <div>
-                                <Radio
-                                    label='No Permitir'
-                                    name='no'
-                                    value={false}
-                                    checked={!this.state.canBeSaved}
-                                    onChange={this.canRoutineBeSavedByThirdPeople}
-                                />
-                            </div>
-                        </PopUpConfirmation>
-                    }
-                    {
-                        (!editionMode && actionable) ?
-                            editRoutine ?
-                                (canEdit ?
-                                    <Icon name={'edit outline'} className={'header-icon'} onClick={() => this.enableEditionRoutine()}/>
-                                    :
-                                    <PopUpDisabledAction
-                                        disableHeader={'No es posible editar'}
-                                        disableDescription={'Tu o un atleta ya marcaron esta rutina como completada u omitida'}
-                                        trigger={<Icon name={'edit outline'} className={'header-icon disabled-btn'}/>}/>)
-                                :
-                                <PopUpDisabledAction trigger={<Icon name={'edit outline'} className={'header-icon disabled-btn'}/>}/>
-                            : null
-                    }
-                    {
-                        savingMode &&
-                        <Icon disabled={savingEditions} name={'save outline'} className={'header-icon'} onClick={() => this.saveRoutineEditions()}/>
-                    }
-                    {
-                        !canSaveSharedRoutines ?
-                            <PopUpDisabledAction trigger={<Icon name={'save outline'} className={'header-icon disabled-btn'}/>}/> :
-                            (isShared && canBeSaved && canSaveSharedRoutines && !alreadyCopied) &&
-                            <Icon disabled={savingSharedRoutine} name={'save outline'} className={'header-icon'} onClick={() => this.saveSharedRoutine()}/>
-                    }
-                    <div>
-                        <Chip style={{fontSize: 14}} success={difficulty===1} progress={difficulty===2} content={difficulty===1? 'Facil' : 'Intermedia'}/>
-                        <Chip style={{fontSize: 14}}  omit content={duration}/>
-                    </div>
-                </Header>
                 {/*{*/}
                 {/*    (isOwner || executeRoutine || isShared) &&*/}
                 {/*    <Button*/}

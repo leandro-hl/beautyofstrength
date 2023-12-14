@@ -1,8 +1,20 @@
 import React, {Component} from "react";
 import {withRouter} from "react-router-dom";
 import {Button, Header, Icon} from "semantic-ui-react";
+import {AppContext, setData} from "../context";
+
+const MenuHeaderRender = ({history}) => {
+    return <>
+        <Button className={'header-back-arrow'} icon onClick={() => history.goBack()}>
+            <Icon name={'arrow left'}/>
+        </Button>
+        Política de Privacidad
+    </>
+}
 
 class PagePrivacyPolicies extends Component {
+    static contextType = AppContext
+
     render2() {
             return (
                 <>
@@ -21,15 +33,14 @@ class PagePrivacyPolicies extends Component {
                 </>
             )
     }
+
+    componentDidMount() {
+        this.context.dispatch(setData({MenuHeaderRender: <MenuHeaderRender history={this.props.history}/>}))
+    }
+
     render() {
         return (
             <div className={'privacy-policy'}>
-                <Header as={'h3'}>
-                    <Button className={'header-back-arrow'} icon onClick={() => this.props.history.goBack()}>
-                        <Icon name={'arrow left'}/>
-                    </Button>
-                    Política de Privacidad
-                </Header>
                 <h2>1. Disponibilidad</h2>
 
                 Beauty of Strength pone a tu disposición esta Política de Privacidad (en adelante la “Política de Privacidad”), en la que puedes consultar las características del uso que realizamos sobre tus datos personales para poder prestar nuestro Servicio y otros fines.
