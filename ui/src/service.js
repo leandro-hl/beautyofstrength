@@ -80,6 +80,10 @@ export function saveNewRm(payload) {
     return axios.post("saveNewRm", payload)
 }
 
+export function addToMyEquipment(payload) {
+    return axios.post("addToMyEquipment", payload)
+}
+
 export function deletePlanification(id) {
     return axios.post("deletePlanification", {id})
 }
@@ -175,6 +179,10 @@ export function getUserLoadedTrainingToday() {
 
 export function getUserAccountDetails() {
     return axios.get("getUserAccountDetails")
+}
+
+export function listUserAccountEquipment() {
+    return axios.get("listUserAccountEquipment")
 }
 
 export function acceptPlanificationAccessRequest(payload) {

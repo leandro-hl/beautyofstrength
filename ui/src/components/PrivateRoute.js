@@ -3,7 +3,7 @@ import {Redirect, Route} from "react-router-dom"
 import {AppContext, setData} from "../context";
 import Cookies from "universal-cookie";
 import {isLocalhost} from "../functions";
-import {checkAuth, getLocalInfo, getUserPermissions} from "../service";
+import {checkAuth, getLocalInfo, getUserPermissions, listEquipment} from "../service";
 import axios from "axios";
 import {Loader} from "semantic-ui-react";
 
@@ -50,8 +50,22 @@ class PrivateRoute extends Component {
         }
     }
 
+    async listEquipment() {
+        try {
+            const {state: {equipment}} = this.context
+
+            if (!equipment) {
+                const res = await listEquipment()
+                this.context.dispatch(setData({equipment: res.data}))
+            }
+        } catch (e) {
+            console.error(e)
+        }
+    }
+
     async componentDidMount() {
         await this.checkAuth()
+        await this.listEquipment();
     }
 
     render() {

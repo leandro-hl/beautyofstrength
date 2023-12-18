@@ -1023,6 +1023,24 @@ func ListLast7UserRmHistory(db *DB, tx *sqlx.Tx, userId int64) []ListLast7UserRm
 	return des
 }
 
+func ListUserAccountEquipment(db *DB, tx *sqlx.Tx, userId int64) []ListUserAccountEquipmentQuery {
+	query := `
+		SELECT
+			e.name,
+			u.weight, 
+			u.height, 
+			u.width, 
+			u.units
+		FROM useraccountequipment u 
+		inner join equipment e on u.equipment_id = e.id
+		where u.useraccount_id=$1 order by e.name, u.weight`
+	stmt, err := getTxPreparedStmt(db, tx, query)
+	util.Check(err)
+	des := make([]ListUserAccountEquipmentQuery, 0)
+	stmt.Select(&des, userId)
+	return des
+}
+
 func InsertUserRoutineHistory(db *DB, tx *sqlx.Tx, completed bool, planificationId, routineId, userId int64) {
 	Insert(
 		tx,
@@ -1048,6 +1066,23 @@ func InsertNewUserRmHistory(db *DB, tx *sqlx.Tx, rmId int64, rm int) {
 		UeId:        &rmId,
 		Rm:          &rm,
 		CreatedDate: time.Now(),
+	})
+}
+
+func InsertUserAccountEquipment(
+	db *DB, tx *sqlx.Tx,
+	userId, equipmentId int64,
+	units int,
+	weight, height, width *float32) {
+	Insert(tx, &UserAccountEquipment{
+		EquipmentId:         &equipmentId,
+		UserAccountId:       &userId,
+		Weightmeasureunit:   util.PInt8(1),
+		Distancemeasureunit: util.PInt8(1),
+		Units:               &units,
+		Weight:              weight,
+		Height:              height,
+		Width:               width,
 	})
 }
 

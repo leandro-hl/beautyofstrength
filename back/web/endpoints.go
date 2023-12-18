@@ -313,6 +313,8 @@ func (o *Endpoints) Handle() http.Handler {
 	api.Path("/saveExercisesBlockAmrap").HandlerFunc(o.HandleAuthenticatedTransactional(o.HandleAuthorization(o.saveExercisesBlockAmrap, db.StudentFree, db.StudentPremium, db.Professor)))
 	api.Path("/saveExercisesBlockCombo").HandlerFunc(o.HandleAuthenticatedTransactional(o.HandleAuthorization(o.saveExercisesBlockCombo, db.StudentFree, db.StudentPremium, db.Professor)))
 	api.Path("/saveExerciseBlockPir").HandlerFunc(o.HandleAuthenticatedTransactional(o.HandleAuthorization(o.saveExerciseBlockPir, db.StudentFree, db.StudentPremium, db.Professor)))
+	api.Path("/addToMyEquipment").HandlerFunc(o.HandleAuthenticatedTransactional(o.HandleAuthorization(o.addToMyEquipment, db.StudentFree, db.StudentPremium, db.Professor)))
+	api.Path("/listUserAccountEquipment").HandlerFunc(o.HandleAuthenticatedTransactional(o.HandleAuthorization(o.listUserAccountEquipment, db.StudentFree, db.StudentPremium, db.Professor)))
 	api.Path("/listPlanifications").HandlerFunc(o.HandleAuthenticatedTransactional(o.HandleAuthorization(o.listPlanifications, db.StudentFree, db.StudentPremium, db.Professor)))
 	api.Path("/getPlanificationDetails").HandlerFunc(o.HandleAuthenticatedTransactional(o.HandleAuthorization(o.getPlanificationDetails, db.StudentFree, db.StudentPremium, db.Professor)))
 	api.Path("/listExercises").HandlerFunc(o.HandleAuthenticatedTransactional(o.HandleAuthorization(o.listExercises, db.StudentFree, db.StudentPremium, db.Professor)))
@@ -1158,6 +1160,19 @@ func (o *Endpoints) saveExerciseBlockPir(w http.ResponseWriter, r *http.Request,
 	db.SaveExercisesBlock(o.db, tx, *routineId, "pir", *t.BlockName, nil,
 		t.Laps, nil, nil, exercises, *t.NewBlockGroupName, t.NewBlockGroupId, *t.NewBlockGroupOrder)
 	o.Respond(w, &SaveExercisesBlockPirResponse{RoutineId: routineId}, http.StatusOK)
+}
+
+func (o *Endpoints) addToMyEquipment(w http.ResponseWriter, r *http.Request, tx *sqlx.Tx) {
+	t := AddToMyEquipmentRequest{}
+	err := o.Decode(r, &t)
+	util.Check(err)
+	userId := util.UserId(r)
+	db.InsertUserAccountEquipment(o.db, tx, userId, *t.Id, *t.Units, t.Weight, t.Height, t.Width)
+}
+
+func (o *Endpoints) listUserAccountEquipment(w http.ResponseWriter, r *http.Request, tx *sqlx.Tx) {
+	userId := util.UserId(r)
+	o.Respond(w, db.ListUserAccountEquipment(o.db, tx, userId), http.StatusOK)
 }
 
 func (o *Endpoints) createPlanification(w http.ResponseWriter, r *http.Request, tx *sqlx.Tx) {

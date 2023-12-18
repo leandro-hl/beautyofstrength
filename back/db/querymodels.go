@@ -110,6 +110,14 @@ type ListLast7UserRmHistoryQuery struct {
 	Date *time.Time `json:"date"`
 }
 
+type ListUserAccountEquipmentQuery struct {
+	Name   *string  `json:"name"`
+	Units  *int     `json:"units"`
+	Weight *float32 `json:"weight"`
+	Height *float32 `json:"height"`
+	Width  *float32 `json:"width"`
+}
+
 type CreateExerciseEquipment struct {
 	Id          *int64 `json:"id"`
 	Occurrences *int   `json:"occurrences"`
