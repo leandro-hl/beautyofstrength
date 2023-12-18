@@ -176,10 +176,10 @@ export function calculareError(code) {
                 title: '',
                 description: 'El nombre del bloque no debe tener mas de 50 letras'
             }
-        case 'update_routine_name_max_30':
+        case 'update_routine_name_max':
             return {
                 title: '',
-                description: 'El nombre de la rutina no debe tener mas de 30 letras'
+                description: 'El nombre de la rutina no debe tener mas de 50 letras'
             }
         case 'update_routine_blockgroup_name_max_35':
             return {

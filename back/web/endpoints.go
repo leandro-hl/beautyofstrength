@@ -943,8 +943,8 @@ func (o *Endpoints) saveRoutineEditions(w http.ResponseWriter, r *http.Request, 
 	}
 
 	if t.NewRoutineName != nil {
-		if len(*t.NewRoutineName) > 30 {
-			panic(&BadRequestResponse{ErrorCode: util.PString("update_routine_name_max_30")})
+		if len(*t.NewRoutineName) > 50 {
+			panic(&BadRequestResponse{ErrorCode: util.PString("update_routine_name_max")})
 		}
 		db.UpdateRoutineName(o.db, tx, *t.PlanificationId, *t.RoutineId, *t.NewRoutineName)
 	}
