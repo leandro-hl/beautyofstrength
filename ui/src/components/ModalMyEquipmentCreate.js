@@ -10,7 +10,6 @@ export class ModalMyEquipmentCreate extends Component {
         super(props);
 
         this.state = {
-            name: props.name,
             equipment: [],
             selectedEquipment: null
         }
@@ -76,10 +75,18 @@ export class ModalMyEquipmentCreate extends Component {
                            type={'number'}/>
                 </Modal.Content>
                 <Modal.Actions>
-                    <Button secondary onClick={() => this.props.handleClose()}>Cancelar</Button>
-                    <Button primary onClick={() => this.props.handleConfirm(this.state)}>Crear</Button>
+                    <Button secondary onClick={() => this.handleClose()}>Cancelar</Button>
+                    <Button primary onClick={() => this.handleConfirm()}>Crear</Button>
                 </Modal.Actions>
             </Modal>
         )
+    }
+    handleClose() {
+        this.props.handleClose()
+        this.setState({selectedEquipment: null})
+    }
+    handleConfirm() {
+        this.props.handleConfirm(this.state)
+        this.setState({selectedEquipment: null})
     }
 }
