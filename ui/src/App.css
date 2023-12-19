@@ -342,6 +342,25 @@ body > div#root {
   margin-bottom: 0px !important;
 }
 
+.no-top-margin {
+  margin-top: 0px !important;
+}
+
+.planification-mesocycle-index {
+  top: 50px !important;
+  height: 75% !important;
+  box-shadow: none !important;
+  border: none !important;
+}
+
+.planification-mesocycle-index > .item {
+  padding-top: 20px !important;
+}
+
+.planification-mesocycle-index > .item:first-child {
+  padding-top: 60px !important;
+}
+
 .input-header {
   max-width: 75% !important;
 }

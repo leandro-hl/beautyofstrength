@@ -1,5 +1,19 @@
 import React, {Component, useContext, useState} from "react";
-import {Button, Checkbox, Grid, Header, Icon,Input, List, Loader, Message, Modal, Popup, Segment} from "semantic-ui-react";
+import {
+    Button,
+    Checkbox,
+    Divider,
+    Grid,
+    Header,
+    Icon,
+    Input,
+    List,
+    Loader, Menu,
+    Message,
+    Modal,
+    Popup,
+    Segment
+} from "semantic-ui-react";
 import {
     actionateRoutine,
     getPlanificationDetails,
@@ -336,10 +350,25 @@ class PagePlanificationDetail extends Component {
             return <Loader active/>
         }
 
+        let mesocycleNumber=1
+        const menuItems = []
+        for (let i = 0; i < routines.length; i++) {
+            if (i%mesocycle === 0) {
+                routines[i].initMesocycle=true
+                routines[i].mesocycleNumber=mesocycleNumber
+                menuItems.push(<Menu.Item fitted={'horizontally'} as={'a'} href={'#M'+mesocycleNumber}>{mesocycleNumber}</Menu.Item>)
+                mesocycleNumber++
+            }
+        }
+
         let weekNumber = 1
         return (
             <>
-                <Header as={'h5'}>
+                <Menu compact vertical borderless fixed={"left"} className={'planification-mesocycle-index'}>
+                    <Menu.Item header fitted={'horizontally'}>M</Menu.Item>
+                    {menuItems}
+                </Menu>
+                <Header as={'h5'} className={'no-top-margin'}>
                     Dias
                     {
                         !editionMode && isOwner && repeatLastMesocycle &&
@@ -403,7 +432,11 @@ class PagePlanificationDetail extends Component {
                     const disableLookup = !p.id;
                     return (
                         <>
-                            {p.isStartOfWeek && <Header as={'h5'}>Semana {weekNumber++}</Header>}
+                            {
+                                p.initMesocycle &&
+                                <Divider horizontal id={'M'+p.mesocycleNumber}>Mesociclo {p.mesocycleNumber}</Divider>
+                            }
+                            {p.isStartOfWeek && <Header as={'h5'} className={p.initMesocycle? 'no-top-margin': null}>Semana {weekNumber++}</Header>}
                             <Segment style={{width: '100%'}} key={i} disabled={disableLookup}>
                                 <Grid>
                                     <Grid.Column width={!disableLookup? 11 : 16} onClick={() => !editionMode ? this.redirectToRoutine(p.id) : null}>
