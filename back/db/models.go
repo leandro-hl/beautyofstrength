@@ -69,6 +69,18 @@ type ExerciseEquipment struct {
 	LastUpdatedDate time.Time `json:"lastupdateddate"`
 }
 
+type UserAccountEquipment struct {
+	Id                  *int64   `json:"id"`
+	EquipmentId         *int64   `json:"equipment_id"`
+	UserAccountId       *int64   `json:"useraccount_id"`
+	Weightmeasureunit   *int8    `json:"weightmeasureunit"`
+	Distancemeasureunit *int8    `json:"distancemeasureunit"`
+	Units               *int     `json:"units"`
+	Weight              *float32 `json:"weight"`
+	Height              *float32 `json:"height"`
+	Width               *float32 `json:"width"`
+}
+
 type Routine struct {
 	Id              *int64    `json:"id"`
 	Name            *string   `json:"name"`

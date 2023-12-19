@@ -1,7 +1,7 @@
 import React, {Component} from "react";
 import {Dropdown, Grid} from "semantic-ui-react";
 import {capitalize} from "../functions";
-import {createNewExercise, listEquipment, listExercises} from "../service";
+import {createNewExercise, listExercises} from "../service";
 import {Chip} from "./Chip";
 import {AppContext, setData} from "../context";
 import {ModalExerciseCreate} from "./ModalExerciseCreate";
@@ -22,20 +22,6 @@ export class ExerciseSearch extends Component {
 
     async componentDidMount() {
         await this.calculateExercises()
-        await this.listEquipment()
-    }
-
-    async listEquipment() {
-        try {
-            const {state: {equipment}} = this.context
-
-            if (!equipment) {
-                const res = await listEquipment()
-                this.context.dispatch(setData({equipment: res.data}))
-            }
-        } catch (e) {
-            console.error(e)
-        }
     }
 
     async calculateExercises() {

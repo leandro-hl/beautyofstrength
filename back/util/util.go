@@ -183,6 +183,10 @@ func PInt64(i int64) *int64 {
 	return &i
 }
 
+func PInt8(i int8) *int8 {
+	return &i
+}
+
 func PInt(i int) *int {
 	return &i
 }

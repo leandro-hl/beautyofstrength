@@ -320,3 +320,11 @@ type CreateNewExerciseRequest struct {
 type CreateNewExerciseResponse struct {
 	Id *int `json:"id"`
 }
+
+type AddToMyEquipmentRequest struct {
+	Id     *int64   `json:"id"`
+	Units  *int     `json:"units"`
+	Weight *float32 `json:"weight"`
+	Height *float32 `json:"height"`
+	Width  *float32 `json:"width"`
+}

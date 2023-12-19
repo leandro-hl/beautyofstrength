@@ -58,3 +58,4 @@ values ('Anilla', false, now(), now()),
 
 GRANT select, update, insert ON TABLE equipment TO db;
 GRANT select, update, insert ON TABLE exerciseequipment TO db;
+GRANT select, update, insert ON TABLE useraccountequipment TO db;
