@@ -74,6 +74,7 @@ class PagePlanificationList extends Component {
             const ownedPlanifications = res.data.filter(p => p.owner);
             const sharedPlanifications = res.data.filter(p => !p.owner)
             this.setState({loading: false, ownedPlanifications, sharedPlanifications})
+            this.context.dispatch(setData({myPlanifications: ownedPlanifications}, true))
         } catch (e) {
             console.error(e)
         }

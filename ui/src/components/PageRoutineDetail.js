@@ -15,6 +15,7 @@ import {
 } from "semantic-ui-react";
 import {Link, withRouter} from "react-router-dom";
 import {
+    copyTemplateRoutineToPlanification,
     getRoutineDetails,
     getSharedRoutineDetails,
     saveRoutineEditions,
@@ -33,6 +34,7 @@ import {PopUpContinueEditing} from "./PopUpContinueEditing";
 import {PopUpConfirmation} from "./PopUpConfirmation";
 import {ExerciseSearch} from "./ExerciseSearch";
 import {SegRepsButtonGroup} from "./SegRepsButtonGroup";
+import {ModalRoutineToPlanificationCopy} from "./ModalRoutineToPlanificationCopy";
 
 const MenuHeaderRender = ({
                               name,
@@ -47,14 +49,16 @@ const MenuHeaderRender = ({
                               alreadyCopied,
                               redirectToPlanifications,
                               redirectToPlanification,
+                              redirectToSuite,
                               discardRoutineChanges,
                               onRoutineNameChange,
                               shareRoutine,
                               enableEditionRoutine,
                               saveRoutineEditions,
-                              saveSharedRoutine
+                              saveSharedRoutine,
+                              openCopyToPlanificationModal
                           }) => {
-    const {state: {permissions: {editRoutine, canSaveSharedRoutines}}} = useContext(AppContext)
+    const {state: {permissions: {editRoutine, canSaveSharedRoutines}, isTemplate}} = useContext(AppContext)
 
     const [canBeSavedConf, setCanBeSavedConf] = useState(false)
     const [routineName, setRoutineName] = useState(name)
@@ -69,7 +73,7 @@ const MenuHeaderRender = ({
         <>
             {
                 !editionMode &&
-                <Button className={'header-back-arrow'} icon onClick={() => isShared? redirectToPlanifications() : redirectToPlanification()}>
+                <Button className={'header-back-arrow'} icon onClick={() => isTemplate ? redirectToSuite() : isShared? redirectToPlanifications() : redirectToPlanification()}>
                     <Icon name={'arrow left'}/>
                 </Button>
             }
@@ -92,7 +96,11 @@ const MenuHeaderRender = ({
                         }}/>
             }
             {
-                (!editionMode && actionable && !isCopy) &&
+                isTemplate && !editionMode &&
+                <Icon name={'copy outline'} className={'header-icon'}  onClick={() => openCopyToPlanificationModal()}/>
+            }
+            {
+                (!isTemplate && !editionMode && actionable && !isCopy) &&
                 <PopUpConfirmation
                     title={'Compartir Rutina'}
                     primary={'Compartir'}
@@ -209,7 +217,7 @@ class PageRoutineDetail extends Component{
                     noBottomBar: false,
                     menuButtonSelected: MENU.PLANIFICATIONS,
                     nextBlockNumber: res.data.blockGroupers.length+1}))
-                this.context.dispatch(setData({routineId: res.data.id, shared: true}, true))
+                this.context.dispatch(setData({routineId: res.data.id, isTemplate: false, shared: true}, true))
                 this.setState({
                     loading: false,
                     isShared: !isShared,
@@ -232,8 +240,8 @@ class PageRoutineDetail extends Component{
     }
 
     async refresh() {
-        const {state: {routineId, planificationId, isOwner, draftBlockGroupers}} = this.context
-        const res = await getRoutineDetails(routineId);
+        const {state: {routineId, planificationId, isOwner, draftBlockGroupers, isTemplate}} = this.context
+        const res = await getRoutineDetails(routineId, isTemplate);
 
         const actionable = isOwner
         let canEdit = false
@@ -257,7 +265,7 @@ class PageRoutineDetail extends Component{
         }
         this.context.dispatch(setData({
             noBottomBar: false,
-            menuButtonSelected: MENU.PLANIFICATIONS,
+            menuButtonSelected: isTemplate? MENU.INSTRUCTOR_SUITE : MENU.PLANIFICATIONS,
         }))
         this.context.dispatch(setData({
             nextBlockNumber: res.data.blockGroupers.length+draftBlockGroupers.length+1
@@ -284,6 +292,10 @@ class PageRoutineDetail extends Component{
         this.setSecondaryActions()
     }
 
+    openCopyToPlanificationModal() {
+        this.setState({openCopyToPlanificationModal: true})
+    }
+
     setTopBar() {
         this.context.dispatch(setData({
             MenuHeaderRender: <MenuHeaderRender
@@ -299,12 +311,14 @@ class PageRoutineDetail extends Component{
                 canEdit={this.state.canEdit}
                 redirectToPlanifications={() => this.redirectToPlanifications()}
                 redirectToPlanification={() => this.redirectToPlanification()}
+                redirectToSuite={() => this.redirectToSuite()}
                 discardRoutineChanges={() => this.discardRoutineChanges()}
                 onRoutineNameChange={(newName) => this.onRoutineNameChange(newName)}
                 shareRoutine={(canBeSaved) => this.shareRoutine(canBeSaved)}
                 enableEditionRoutine={() => this.enableEditionRoutine()}
                 saveRoutineEditions={() => this.saveRoutineEditions()}
                 saveSharedRoutine={() => this.saveSharedRoutine()}
+                openCopyToPlanificationModal={() => this.openCopyToPlanificationModal()}
             />
         }))
     }
@@ -319,6 +333,10 @@ class PageRoutineDetail extends Component{
 
     redirectToPlanifications() {
         this.props.history.push('/my-planifications')
+    }
+
+    redirectToSuite() {
+        this.props.history.push('/suite')
     }
 
     redirectToRoutineExecution() {
@@ -406,6 +424,7 @@ class PageRoutineDetail extends Component{
 
     async saveRoutineEditions() {
         try {
+            const {state: {isTemplate}} = this.context
             const {planificationId, routineId, activeDraftExercise, updates, blockGroupers, addExerciseInputK} = this.state
             this.setState({savingEditions: true})
 
@@ -487,7 +506,8 @@ class PageRoutineDetail extends Component{
                 exercisesToAdd: exercisesToAddPayload,
                 workoutsToDelete: workoutsToDeletePayload,
                 exercisesToDelete: exercisesToDeletePayload,
-                grouperIdsToDelete: grouperIdsToDelete
+                grouperIdsToDelete: grouperIdsToDelete,
+                isTemplate
             }
             await saveRoutineEditions(payload)
             await this.refresh()
@@ -919,6 +939,17 @@ class PageRoutineDetail extends Component{
         )
     }
 
+    async copyTemplateRoutineToPlanification(planificationId) {
+        try {
+            const {state: {routineId}} = this.context
+            await copyTemplateRoutineToPlanification({templateRoutineId: routineId, planificationId})
+            this.setState({openCopyToPlanificationModal: false})
+            showSuccess(this.context, '', 'Rutina copiada a la planificacion!')
+        } catch (e) {
+            console.error(e)
+        }
+    }
+
     renderRoutineDetails() {
         const {state: {permissions: {editRoutine}}} = this.context
         const {
@@ -935,7 +966,8 @@ class PageRoutineDetail extends Component{
             showCreateBlockModal,
             nextBlockNumber,
             showModalCopyLink,
-            routineLink
+            routineLink,
+            openCopyToPlanificationModal
         } = this.state;
 
         return (
@@ -1028,6 +1060,13 @@ class PageRoutineDetail extends Component{
                     onChange={(name)=> this.setState({newBlockName: name})}
                     onClose={() => this.addNewBlockGroupClose()}
                     onConfirm={() => this.addNewBlockGroupConfirm()}/>
+                {
+                    openCopyToPlanificationModal &&
+                    <ModalRoutineToPlanificationCopy
+                        handleClose={() => this.setState({openCopyToPlanificationModal: false})}
+                        handleConfirm={(planificationId) => this.copyTemplateRoutineToPlanification(planificationId)}
+                    />
+                }
                 {
                     showModalCopyLink &&
                     <Modal dimmer={'blurring'} size="mini" open={showModalCopyLink} onClose={() => this.setState({showModalCopyLink: false, routineLink:null})}>

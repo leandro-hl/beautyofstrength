@@ -77,12 +77,20 @@ class PageBlockCreate extends Component {
     }
     
     redirectBackToRoutine() {
-        const {state: {routineId}} = this.context
+        const {state: {routineId, isTemplate}} = this.context
         if (routineId) {
             this.props.history.push('/routine')
         } else {
-            this.props.history.push('/planification')
+            if (isTemplate) {
+                this.redirectToSuite()
+            } else {
+                this.props.history.push('/planification')
+            }
         }
+    }
+
+    redirectToSuite() {
+        this.props.history.push('/suite')
     }
 
     async componentDidMount() {
@@ -172,7 +180,7 @@ class PageBlockCreate extends Component {
         this.props.history.push('/routine')
     }
 
-    async saveExercisesBlockCpt() {
+    async saveExercisesBlockCpt(isTemplate) {
         try {
             const {exercises, laps, workingInterval, restingInteval, blockName, planificationId, routineId, newBlockGroupName,newBlockGroupId,nextBlockNumber} = this.state
             this.setState({saving: true})
@@ -191,7 +199,8 @@ class PageBlockCreate extends Component {
                 exercises: exercises.map(e => ({id:e.key, name:e.text})),
                 laps: parseInt(laps, 10),
                 workingInterval: parseInt(workingInterval, 10),
-                restingInteval: parseInt(restingInteval, 10)
+                restingInteval: parseInt(restingInteval, 10),
+                isTemplate
             }
             const res = await saveExercisesBlockCpt(request)
             showSuccess(this.context, '', 'Operacion completada con exito!')
@@ -201,7 +210,7 @@ class PageBlockCreate extends Component {
         }
     }
 
-    async saveExercisesBlockFree() {
+    async saveExercisesBlockFree(isTemplate) {
         try {
             const {exercises, laps, exeRestingInteval, restingInteval, blockName, planificationId, routineId, newBlockGroupName,newBlockGroupId,nextBlockNumber} = this.state
             this.setState({saving: true})
@@ -220,7 +229,8 @@ class PageBlockCreate extends Component {
                 exercises: exercises.map(e => ({id:e.key, name:e.text, reps: parseInt(e.reps, 10), type: e.type})),
                 laps: parseInt(laps, 10),
                 restingInteval: parseInt(restingInteval, 10),
-                exeRestingInteval: parseInt(exeRestingInteval, 10)
+                exeRestingInteval: parseInt(exeRestingInteval, 10),
+                isTemplate
             }
             const res = await saveExercisesBlockFree(request)
             showSuccess(this.context, '', 'Operacion completada con exito!')
@@ -230,11 +240,11 @@ class PageBlockCreate extends Component {
         }
     }
 
-    async saveExercisesBlockSpr() {
-        await this.saveExercisesBlockFree()
+    async saveExercisesBlockSpr(isTemplate) {
+        await this.saveExercisesBlockFree(isTemplate)
     }
 
-    async saveExercisesBlockAmrap() {
+    async saveExercisesBlockAmrap(isTemplate) {
         try {
             const {exercises, blockName, blockDuration, planificationId, routineId,newBlockGroupName, newBlockGroupId,nextBlockNumber} = this.state
             this.setState({saving: true})
@@ -254,7 +264,8 @@ class PageBlockCreate extends Component {
                 blockDuration: parseInt(blockDuration,10),
                 laps: null,
                 workingInterval: null,
-                restingInteval: null
+                restingInteval: null,
+                isTemplate
             }
             const res = await saveExercisesBlockAmrap(request)
             showSuccess(this.context, '', 'Operacion completada con exito!')
@@ -264,7 +275,7 @@ class PageBlockCreate extends Component {
         }
     }
 
-    async saveExercisesBlockCombo() {
+    async saveExercisesBlockCombo(isTemplate) {
         try {
             const {exercises, laps, blockName, planificationId, routineId,newBlockGroupName,newBlockGroupId,nextBlockNumber} = this.state
             this.setState({saving: true})
@@ -278,6 +289,7 @@ class PageBlockCreate extends Component {
                 newBlockGroupOrder: nextBlockNumber,
                 exercises: exercises.map(e => ({id:e.key, name:e.text})),
                 laps: parseInt(laps, 10),
+                isTemplate
             }
             const res = await saveExercisesBlockCombo(request)
             showSuccess(this.context, '', 'Operacion completada con exito!')
@@ -287,7 +299,7 @@ class PageBlockCreate extends Component {
         }
     }
 
-    async saveExerciseBlockPir() {
+    async saveExerciseBlockPir(isTemplate) {
         try {
             const {exercises, laps, blockName, planificationId, routineId,newBlockGroupName,newBlockGroupId,nextBlockNumber} = this.state
             this.setState({saving: true})
@@ -301,6 +313,7 @@ class PageBlockCreate extends Component {
                 newBlockGroupOrder: nextBlockNumber,
                 exercises: exercises.map(e => ({id:e.key, name:e.text, reps: parseInt(e.reps, 10)})),
                 laps: parseInt(laps, 10),
+                isTemplate
             }
             const res = await saveExerciseBlockPir(request)
             showSuccess(this.context, '', 'Operacion completada con exito!')
@@ -311,6 +324,7 @@ class PageBlockCreate extends Component {
     }
 
     generateBlockTypeUI(id, name) {
+        const {state: {isTemplate}} = this.context
         const {
             exercisesBuffer,
             blockName,
@@ -325,22 +339,22 @@ class PageBlockCreate extends Component {
 
         switch (id) {
             case 'free':
-                secondaryActions[0].func = () => this.saveExercisesBlockFree()
+                secondaryActions[0].func = () => this.saveExercisesBlockFree(isTemplate)
                 break
             case 'spr':
-                secondaryActions[0].func = () => this.saveExercisesBlockSpr()
+                secondaryActions[0].func = () => this.saveExercisesBlockSpr(isTemplate)
                 break
             case 'cpt':
-                secondaryActions[0].func = () => this.saveExercisesBlockCpt()
+                secondaryActions[0].func = () => this.saveExercisesBlockCpt(isTemplate)
                 break
             case 'amrap':
-                secondaryActions[0].func = () => this.saveExercisesBlockAmrap()
+                secondaryActions[0].func = () => this.saveExercisesBlockAmrap(isTemplate)
                 break
             case 'cbo':
-                secondaryActions[0].func = () => this.saveExercisesBlockCombo()
+                secondaryActions[0].func = () => this.saveExercisesBlockCombo(isTemplate)
                 break
             case 'pir':
-                secondaryActions[0].func = () => this.saveExerciseBlockPir()
+                secondaryActions[0].func = () => this.saveExerciseBlockPir(isTemplate)
                 //if there were multiple exercises selected only the first one is considered valid
                 exercisesBuffer.splice(1)
                 exercisesBuffer[0].reps = defaultPiramidTop

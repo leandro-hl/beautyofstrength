@@ -27,6 +27,11 @@ func (o *Worker) Finished() {
 }
 
 func (o *Worker) Start() {
+	go o.StartWorker1()
+	go o.StartWorker2()
+}
+
+func (o *Worker) StartWorker1() {
 	ticker := time.NewTicker(1 * time.Minute)
 	defer ticker.Stop()
 	o.execute()
@@ -37,6 +42,29 @@ func (o *Worker) Start() {
 			fmt.Println("worker: currently processing")
 		}
 	}
+}
+
+func (o *Worker) StartWorker2() {
+	ticker := time.NewTicker(24 * time.Hour)
+	defer ticker.Stop()
+	for range ticker.C {
+		if !o.IsProcessing() {
+			o.execute2()
+		} else {
+			fmt.Println("worker: currently processing")
+		}
+	}
+}
+
+func (o *Worker) execute2() {
+	defer func() {
+		if e := recover(); e != nil {
+			util.CheckNoPanic(e.(error))
+		}
+	}()
+
+	fmt.Println("worker: athlete to basic starting at " + time.Now().String())
+	db.UpdateAccountToAthleteBasic(o.db)
 }
 
 func (o *Worker) execute() {
@@ -55,11 +83,56 @@ func (o *Worker) execute() {
 		case db.PlanificationCopyMesocycle:
 			o.planificationCopyMesocycle(op)
 			break
+		case db.TemplateRoutineToPlanification:
+			o.copyRoutineTemplateToPlanification(op)
+			break
 		}
 	}
 
 	fmt.Println("worker: finished at " + time.Now().String())
 	o.Finished()
+}
+
+func (o *Worker) copyRoutineTemplateToPlanification(op db.QueuePlanificationOperation) {
+	defer func() {
+		if e := recover(); e != nil {
+			util.CheckNoPanic(e.(error))
+		}
+	}()
+
+	//routine copy
+	schema := "template."
+	tx, err := o.db.Db.Beginx()
+	util.Check(err)
+	original := db.GetRoutineHeaderTemplate(o.db, tx, *op.RoutineId, *op.UserAccountId)
+	originalGroupers := db.ListBlockGroupGrouperByRoutineId(o.db, tx, *original.Routineid, schema)
+	newRoutineId := db.CreateRoutine(
+		o.db,
+		tx,
+		*original.Routinename,
+		*op.PlanificationId,
+		*op.UserAccountId,
+		*original.Difficulty,
+		*original.Duration)
+
+	for _, bg := range originalGroupers {
+		newBgId := db.CreateBlockGrouper(o.db, tx, *bg.Name, *newRoutineId, *bg.Order)
+		originalGroups := db.ListBlockGroupByRoutineId(o.db, tx, *bg.RoutineId, *bg.Id, schema)
+
+		for _, b := range originalGroups {
+			newBlockGroupId := db.CreateBlockGroup(o.db, tx, *b.Type, *b.Name, *newRoutineId, *newBgId, b.Duration, b.Laps, b.LapRestInterval, b.ExeRestInterval)
+			originalExercises := db.ListBlockGroupExerciseByBlockId(o.db, tx, *b.Id, schema)
+
+			for _, ex := range originalExercises {
+				db.CreateExerciseBlockGroup(o.db, tx, *newBlockGroupId, *ex.ExerciseId, *ex.Order, ex.Reps, ex.Secs, "")
+			}
+		}
+	}
+
+	db.MarkPlanificationOperationCompleted(o.db, tx, *op.Id)
+	db.InsertEventUser(o.db, tx, db.TemplateRoutineCopiedToPlanification, *op.UserAccountId, *op.UserAccountId, op.PlanificationId, newRoutineId)
+	err = tx.Commit()
+	util.Check(err)
 }
 
 func (o *Worker) planificationCopyMesocycle(op db.QueuePlanificationOperation) {
@@ -80,7 +153,7 @@ func (o *Worker) planificationCopyMesocycle(op db.QueuePlanificationOperation) {
 	//from oldest to newest
 	for i := len(originals) - 1; i >= 0; i-- {
 		original := originals[i]
-		originalGroupers := db.ListBlockGroupGrouperByRoutineId(o.db, tx, *original.Id)
+		originalGroupers := db.ListBlockGroupGrouperByRoutineId(o.db, tx, *original.Id, "")
 		newRoutineId := db.CreateRoutine(
 			o.db,
 			tx,
@@ -92,14 +165,14 @@ func (o *Worker) planificationCopyMesocycle(op db.QueuePlanificationOperation) {
 
 		for _, bg := range originalGroupers {
 			newBgId := db.CreateBlockGrouper(o.db, tx, *bg.Name, *newRoutineId, *bg.Order)
-			originalGroups := db.ListBlockGroupByRoutineId(o.db, tx, *bg.RoutineId, *bg.Id)
+			originalGroups := db.ListBlockGroupByRoutineId(o.db, tx, *bg.RoutineId, *bg.Id, "")
 
 			for _, b := range originalGroups {
 				newBlockGroupId := db.CreateBlockGroup(o.db, tx, *b.Type, *b.Name, *newRoutineId, *newBgId, b.Duration, b.Laps, b.LapRestInterval, b.ExeRestInterval)
-				originalExercises := db.ListBlockGroupExerciseByBlockId(o.db, tx, *b.Id)
+				originalExercises := db.ListBlockGroupExerciseByBlockId(o.db, tx, *b.Id, "")
 
 				for _, ex := range originalExercises {
-					db.CreateExerciseBlockGroup(o.db, tx, *newBlockGroupId, *ex.ExerciseId, *ex.Order, ex.Reps, ex.Secs)
+					db.CreateExerciseBlockGroup(o.db, tx, *newBlockGroupId, *ex.ExerciseId, *ex.Order, ex.Reps, ex.Secs, "")
 				}
 			}
 		}

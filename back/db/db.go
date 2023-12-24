@@ -42,13 +42,27 @@ func formatIndex(i int) string {
 }
 
 func Insert(tx *sqlx.Tx, t interface{}) *int64 {
+	return InsertSchema(tx, t, "")
+}
+
+func InsertSchema(tx *sqlx.Tx, t interface{}, schema string) *int64 {
 	val := reflect.ValueOf(t)
 
 	if val.Kind() == reflect.Ptr {
 		val = val.Elem()
 	}
 
-	table := strings.ToLower(val.Type().Name())
+	table := ""
+	if schema != "" {
+		if strings.Contains(schema, ".") {
+			table = schema + strings.ToLower(val.Type().Name())
+		} else {
+			table = schema + "." + strings.ToLower(val.Type().Name())
+		}
+	} else {
+		table = strings.ToLower(val.Type().Name())
+	}
+
 	fields := val.NumField()
 
 	columns := make([]string, 0, fields)

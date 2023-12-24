@@ -525,6 +525,10 @@ div#g_id_onload, div.g_id_signin {
   box-shadow: 0px 0px 0px 0px rgba(34, 36, 38, 0.15) inset !important;
 }
 
+.tab-menu-header.ui.secondary.pointing.menu .item {
+  padding: 1.85714286em 2.14285714em !important;
+}
+
 @media only screen and (max-width: 767px) {
   .ui.modal>.content.no-padding{
     padding: 0px !important;

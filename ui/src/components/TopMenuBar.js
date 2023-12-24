@@ -14,12 +14,12 @@ export class TopMenuBar extends Component {
     }
 
     render() {
-        const {state: {MenuHeaderRender}} = this.context
+        const {state: {MenuHeaderRender, removeMenuHeaderPadding}} = this.context
         return (
             <>
                 {
                     MenuHeaderRender &&
-                    <Segment className={'no-margin top-menu-bar'}>
+                    <Segment className={'no-margin top-menu-bar'+ (removeMenuHeaderPadding ? ' no-padding' : '')}>
                         <Header as={'h3'} className={'top-bar'}>
                             {MenuHeaderRender}
                         </Header>

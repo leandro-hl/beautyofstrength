@@ -172,7 +172,7 @@ class PagePlanificationDetail extends Component {
 
     redirectToRoutine(id) {
         if (id) {
-            this.context.dispatch(setData({routineId: id}, true))
+            this.context.dispatch(setData({routineId: id, isTemplate: false}, true))
             this.props.history.push('/routine')
         }
     }
@@ -182,12 +182,7 @@ class PagePlanificationDetail extends Component {
         this.context.dispatch(setData({
             routineId: null,
             routineNumber: routines.length+1,
-            //todo: routineDetails I believe is not in use...
-            routineDetails: {
-                name: '',
-                blocks: [],
-                nextBlockNumber: null
-            }}))
+            routineName: 'Dia '+ (routines.length+1)}))
         this.props.history.push('/routine/create')
     }
 
