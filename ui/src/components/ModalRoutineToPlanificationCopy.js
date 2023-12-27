@@ -10,12 +10,16 @@ export class ModalRoutineToPlanificationCopy extends Component {
         try {
             const {state: {myPlanifications}} = this.context
 
+            const options = myPlanifications
+                .filter(p => p.name !== "Rutinas Compartidas")
+                .map(e => ({key: e.id, value: e.id, text: e.name}));
+
             if (myPlanifications) {
-                this.setState({loading: false, options: myPlanifications.map(e => ({key: e.id, value: e.id, text: e.name}))})
+                this.setState({loading: false, options: options})
             } else {
                 const res = await listPlanifications();
                 const ownedPlanifications = res.data.filter(p => p.owner);
-                this.setState({loading: false, options: ownedPlanifications.map(e => ({key: e.id, value: e.id, text: e.name}))})
+                this.setState({loading: false, options: options})
                 this.context.dispatch(setData({myPlanifications: ownedPlanifications}, true))
             }
         } catch (e) {

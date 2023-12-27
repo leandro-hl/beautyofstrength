@@ -111,6 +111,7 @@ class PageCreateSuite extends Component {
             routineId: null,
             routineNumber: routines.length+1,
             isTemplate: true,
+            isOwner: true,
             routineName: 'Rutina Nro '+ (routines.length+1)}))
         this.props.history.push('/routine/create')
     }
