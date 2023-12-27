@@ -36,6 +36,18 @@ export function signUp(username) {
     return axios.post("signUp", {username: username, password: 'password'})
 }
 
+export function listRoutineTemplates() {
+    return axios.get("listRoutineTemplates")
+}
+
+export function listWorkoutTemplates() {
+    return axios.get("listWorkoutTemplates")
+}
+
+export function listMyVideos() {
+    return axios.get("listMyVideos")
+}
+
 export function listPlanifications() {
     return axios.get("listPlanifications")
 }
@@ -48,8 +60,8 @@ export function getPlanificationDetails(planificationId) {
     return axios.get("getPlanificationDetails?planificationId=" + planificationId)
 }
 
-export function getRoutineDetails(routineId) {
-    return axios.get("getRoutineDetails?routineId=" + routineId)
+export function getRoutineDetails(routineId, isTemplate) {
+    return axios.get("getRoutineDetails?routineId=" + routineId + (isTemplate? "&template=true":""))
 }
 
 export function getSharedRoutineDetails(share) {
@@ -84,6 +96,10 @@ export function addToMyEquipment(payload) {
     return axios.post("addToMyEquipment", payload)
 }
 
+export function copyTemplateRoutineToPlanification(payload) {
+    return axios.post("copyTemplateRoutineToPlanification", payload)
+}
+
 export function deletePlanification(id) {
     return axios.post("deletePlanification", {id})
 }
@@ -102,10 +118,6 @@ export function saveRoutineEditions(payload) {
 
 export function saveSharedRoutine(payload) {
     return axios.post("saveSharedRoutine", payload)
-}
-
-export function saveExercisesBlock(payload) {
-    return axios.post("saveExercisesBlock", payload)
 }
 
 export function saveExercisesBlockFree(payload) {

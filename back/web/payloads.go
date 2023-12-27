@@ -14,6 +14,11 @@ type SignInRequest struct {
 	Password *string `json:"password"`
 }
 
+type CopyTemplateRoutineToPlanificationRequest struct {
+	RoutineId       *int64 `json:"templateRoutineId"`
+	PlanificationId *int64 `json:"planificationId"`
+}
+
 type SaveExercisesBlockCptRequest struct {
 	RoutineId          *int64            `json:"routineId"`
 	PlanificationId    *int64            `json:"planificationId"`
@@ -25,6 +30,7 @@ type SaveExercisesBlockCptRequest struct {
 	NewBlockGroupOrder *int              `json:"newBlockGroupOrder"`
 	WorkingInterval    *int              `json:"workingInterval"`
 	RestingInteval     *int              `json:"restingInteval"`
+	IsTemplate         bool              `json:"isTemplate"`
 }
 
 type SaveExercisesBlockFreeRequest struct {
@@ -38,6 +44,7 @@ type SaveExercisesBlockFreeRequest struct {
 	NewBlockGroupOrder *int              `json:"newBlockGroupOrder"`
 	RestingInteval     *int              `json:"restingInteval"`
 	ExeRestingInteval  *int              `json:"exeRestingInteval"`
+	IsTemplate         bool              `json:"isTemplate"`
 }
 
 type SaveExercisesBlockAmrapRequest struct {
@@ -49,6 +56,7 @@ type SaveExercisesBlockAmrapRequest struct {
 	NewBlockGroupId    *int64            `json:"newBlockGroupId"`
 	NewBlockGroupName  *string           `json:"newBlockGroupName"`
 	NewBlockGroupOrder *int              `json:"newBlockGroupOrder"`
+	IsTemplate         bool              `json:"isTemplate"`
 }
 
 type SaveExercisesBlockComboRequest struct {
@@ -60,10 +68,7 @@ type SaveExercisesBlockComboRequest struct {
 	NewBlockGroupName  *string           `json:"newBlockGroupName"`
 	NewBlockGroupOrder *int              `json:"newBlockGroupOrder"`
 	Laps               *int              `json:"laps"`
-}
-
-type SaveExercisesBlockComboResponse struct {
-	RoutineId *int64 `json:"routineId"`
+	IsTemplate         bool              `json:"isTemplate"`
 }
 
 type SaveExercisesBlockPirRequest struct {
@@ -75,6 +80,11 @@ type SaveExercisesBlockPirRequest struct {
 	NewBlockGroupName  *string           `json:"newBlockGroupName"`
 	NewBlockGroupOrder *int              `json:"newBlockGroupOrder"`
 	Laps               *int              `json:"laps"`
+	IsTemplate         bool              `json:"isTemplate"`
+}
+
+type SaveExercisesBlockComboResponse struct {
+	RoutineId *int64 `json:"routineId"`
 }
 
 type SaveExercisesBlockPirResponse struct {
@@ -240,6 +250,7 @@ type EditRoutineRequest struct {
 	PlanificationId *int64  `json:"planificationId"`
 	RoutineId       *int64  `json:"routineId"`
 	NewRoutineName  *string `json:"name"`
+	IsTemplate      bool    `json:"isTemplate"`
 	NewGrouperNames []struct {
 		Id   *int64  `json:"id"`
 		Name *string `json:"name"`

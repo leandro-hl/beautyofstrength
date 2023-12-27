@@ -290,6 +290,9 @@ func (o *Endpoints) Handle() http.Handler {
 	api.Path("/declinePlanificationAccessRequest").HandlerFunc(o.HandleAuthenticatedTransactional(o.HandleAuthorization(o.declinePlanificationAccessRequest, db.Professor)))
 	api.Path("/repeatLastMesocycle").HandlerFunc(o.HandleAuthenticatedTransactional(o.HandleAuthorization(o.repeatLastMesocycle, db.Professor)))
 	api.Path("/createNewExercise").HandlerFunc(o.HandleAuthenticatedTransactional(o.HandleAuthorization(o.createNewExercise, db.Professor)))
+	api.Path("/listRoutineTemplates").HandlerFunc(o.HandleAuthenticatedTransactional(o.HandleAuthorization(o.listRoutineTemplates, db.Professor)))
+	api.Path("/listWorkoutTemplates").HandlerFunc(o.HandleAuthenticatedTransactional(o.HandleAuthorization(o.listWorkoutTemplates, db.Professor)))
+	api.Path("/copyTemplateRoutineToPlanification").HandlerFunc(o.HandleAuthenticatedTransactional(o.HandleAuthorization(o.copyTemplateRoutineToPlanification, db.Professor)))
 
 	//Premium services
 	api.Path("/savePlanificationEditions").HandlerFunc(o.HandleAuthenticatedTransactional(o.HandleAuthorization(o.savePlanificationEditions, db.StudentPremium, db.Professor)))
@@ -422,14 +425,24 @@ func (o *Endpoints) getUserAccountDetails(w http.ResponseWriter, r *http.Request
 func (o *Endpoints) getRoutineDetails(w http.ResponseWriter, r *http.Request, tx *sqlx.Tx) {
 	routineId, err := strconv.ParseInt(r.URL.Query().Get("routineId"), 10, 64)
 	util.Check(err)
+
+	isTemplate := r.URL.Query().Get("template") != ""
 	userId := util.UserId(r)
 
 	//todo: if owner??
-	header := db.GetRoutineHeader(o.db, tx, routineId, userId, userId)
-	result := db.GetRoutineDetails(o.db, tx, routineId, userId)
-	res := o.calculateRoutineDetailsResponse(header, result, false)
+	if isTemplate {
+		header := db.GetRoutineHeaderTemplate(o.db, tx, routineId, userId)
+		result := db.GetRoutineDetailsTemplate(o.db, tx, routineId, userId)
+		res := o.calculateRoutineDetailsResponse(header, result, false)
 
-	o.Respond(w, &res, http.StatusOK)
+		o.Respond(w, &res, http.StatusOK)
+	} else {
+		header := db.GetRoutineHeader(o.db, tx, routineId, userId, userId)
+		result := db.GetRoutineDetails(o.db, tx, routineId, userId)
+		res := o.calculateRoutineDetailsResponse(header, result, false)
+
+		o.Respond(w, &res, http.StatusOK)
+	}
 }
 
 func (o *Endpoints) getSharedRoutineDetails(w http.ResponseWriter, r *http.Request, tx *sqlx.Tx) {
@@ -560,6 +573,9 @@ func (o *Endpoints) listLatestEvents(w http.ResponseWriter, r *http.Request, tx 
 		case db.LastMesocycleGenerated:
 			res = append(res, fmt.Sprintf("Mesociclo para la planificacion %s generado!", *e.PlanificationName))
 			break
+		case db.TemplateRoutineCopiedToPlanification:
+			res = append(res, fmt.Sprintf("Rutina %s agregada a la planificacion %s!", *e.RoutineName, *e.PlanificationName))
+			break
 		}
 	}
 
@@ -600,7 +616,7 @@ func (o *Endpoints) saveSharedRoutine(w http.ResponseWriter, r *http.Request, tx
 
 		//routine copy
 		original := db.GetRoutineById(o.db, tx, *t.RoutineId)
-		originalGroupers := db.ListBlockGroupGrouperByRoutineId(o.db, tx, *t.RoutineId)
+		originalGroupers := db.ListBlockGroupGrouperByRoutineId(o.db, tx, *t.RoutineId, "")
 		newRoutineId := db.CreateRoutine(
 			o.db,
 			tx,
@@ -612,14 +628,14 @@ func (o *Endpoints) saveSharedRoutine(w http.ResponseWriter, r *http.Request, tx
 
 		for _, bg := range originalGroupers {
 			newBgId := db.CreateBlockGrouper(o.db, tx, *bg.Name, *newRoutineId, *bg.Order)
-			originalGroups := db.ListBlockGroupByRoutineId(o.db, tx, *bg.RoutineId, *bg.Id)
+			originalGroups := db.ListBlockGroupByRoutineId(o.db, tx, *bg.RoutineId, *bg.Id, "")
 
 			for _, b := range originalGroups {
 				newBlockGroupId := db.CreateBlockGroup(o.db, tx, *b.Type, *b.Name, *newRoutineId, *newBgId, b.Duration, b.Laps, b.LapRestInterval, b.ExeRestInterval)
-				originalExercises := db.ListBlockGroupExerciseByBlockId(o.db, tx, *b.Id)
+				originalExercises := db.ListBlockGroupExerciseByBlockId(o.db, tx, *b.Id, "")
 
 				for _, ex := range originalExercises {
-					db.CreateExerciseBlockGroup(o.db, tx, *newBlockGroupId, *ex.ExerciseId, *ex.Order, ex.Reps, ex.Secs)
+					db.CreateExerciseBlockGroup(o.db, tx, *newBlockGroupId, *ex.ExerciseId, *ex.Order, ex.Reps, ex.Secs, "")
 				}
 			}
 		}
@@ -660,18 +676,39 @@ func (o *Endpoints) actionateRoutine(w http.ResponseWriter, r *http.Request, tx 
 	}
 }
 
+func (o *Endpoints) listRoutineTemplates(w http.ResponseWriter, r *http.Request, tx *sqlx.Tx) {
+	plan := o.plan(r)
+	iAmInstructor := *plan == db.Professor
+	if !iAmInstructor {
+		panic(&BadRequestResponse{ErrorCode: util.PString("no_access")})
+	}
+	usr := util.UserId(r)
+	templates := db.ListRoutineTemplates(o.db, tx, usr)
+	o.Respond(w, templates, http.StatusOK)
+}
+
+func (o *Endpoints) listWorkoutTemplates(w http.ResponseWriter, r *http.Request, tx *sqlx.Tx) {
+	plan := o.plan(r)
+	iAmInstructor := *plan == db.Professor
+	if !iAmInstructor {
+		panic(&BadRequestResponse{ErrorCode: util.PString("no_access")})
+	}
+	usr := util.UserId(r)
+	templates := db.ListWorkoutTemplates(o.db, tx, usr)
+	o.Respond(w, templates, http.StatusOK)
+}
+
 func (o *Endpoints) getPlanificationDetails(w http.ResponseWriter, r *http.Request, tx *sqlx.Tx) {
 	id := r.URL.Query().Get("planificationId")
 	if id == "" {
 		panic(&BadRequestResponse{ErrorCode: util.PString("required_planificationid")})
-		//panic(errors.New("planification id is required"))
 	}
 	planificationId, err := strconv.ParseInt(id, 10, 64)
 	util.Check(err)
 
 	usr := util.UserId(r)
 	routines := make([]db.ListRoutinesQuery, 0)
-	plan := db.GetAccountPlanIdentifierByUserId(o.db, tx, usr)
+	plan := o.plan(r)
 	iAmPremium := *plan == db.StudentPremium || *plan == db.Professor
 	iAmOwner := db.CalculateUserOwnsPlanification(o.db, tx, usr, planificationId)
 	isEditable := false
@@ -790,6 +827,11 @@ func (o *Endpoints) listExercises(w http.ResponseWriter, r *http.Request, tx *sq
 	} else {
 		//todo: for students there will be another query that retrieves exercise videos from a round robin of instructors
 		//in the case that the student is not inside a planification owned by an instructor
+		for i := 0; i < len(exercises); i++ {
+			exercises[i].Code = nil
+			exercises[i].Link = nil
+		}
+
 		o.Respond(w, &ListExercisesResponse{
 			ShowVideoInfo: util.PBool(false),
 			Exercises:     exercises,
@@ -935,20 +977,33 @@ func (o *Endpoints) saveRoutineEditions(w http.ResponseWriter, r *http.Request, 
 	util.Check(err)
 
 	userId := util.UserId(r)
-	if !db.CalculateUserOwnsRoutine(o.db, tx, userId, *t.PlanificationId, *t.RoutineId) {
+	if !t.IsTemplate && !db.CalculateUserOwnsRoutine(o.db, tx, userId, *t.PlanificationId, *t.RoutineId) {
+		panic(&BadRequestResponse{ErrorCode: util.PString("no_access")})
+	}
+
+	if t.IsTemplate && !db.CalculateUserOwnsRoutineTemplate(o.db, tx, userId, *t.RoutineId) {
 		panic(&BadRequestResponse{ErrorCode: util.PString("no_access")})
 	}
 
 	plan := o.plan(r)
-	if *plan != db.StudentPremium && *plan != db.Professor {
+	if !t.IsTemplate && *plan != db.StudentPremium && *plan != db.Professor {
 		panic(&BadRequestResponse{ErrorCode: util.PString("no_access_premium")})
+	}
+
+	if t.IsTemplate && *plan != db.Professor {
+		panic(&BadRequestResponse{ErrorCode: util.PString("no_access")})
+	}
+
+	schema := ""
+	if t.IsTemplate {
+		schema = "template."
 	}
 
 	if t.NewRoutineName != nil {
 		if len(*t.NewRoutineName) > 50 {
 			panic(&BadRequestResponse{ErrorCode: util.PString("update_routine_name_max")})
 		}
-		db.UpdateRoutineName(o.db, tx, *t.PlanificationId, *t.RoutineId, *t.NewRoutineName)
+		db.UpdateRoutineName(o.db, tx, *t.RoutineId, *t.NewRoutineName, schema)
 	}
 
 	if len(t.NewGrouperNames) > 10 {
@@ -972,22 +1027,22 @@ func (o *Endpoints) saveRoutineEditions(w http.ResponseWriter, r *http.Request, 
 			panic(&BadRequestResponse{ErrorCode: util.PString("update_routine_blockgroup_name_max_35")})
 		}
 
-		db.UpdateGrouperNames(o.db, tx, *t.PlanificationId, *t.RoutineId, *g.Id, *g.Name)
+		db.UpdateGrouperNames(o.db, tx, *t.RoutineId, *g.Id, *g.Name, schema)
 	}
 
 	for _, bg := range t.GrouperIdsToDelete {
-		db.DeleteBlockGrouper(o.db, tx, *t.RoutineId, bg)
-		db.DeleteWorkoutsByGrouperId(o.db, tx, *t.RoutineId, bg)
-		db.DeleteExerciseBlockGroupByGrouperId(o.db, tx, *t.RoutineId, bg)
+		db.DeleteBlockGrouper(o.db, tx, *t.RoutineId, bg, schema)
+		db.DeleteWorkoutsByGrouperId(o.db, tx, *t.RoutineId, bg, schema)
+		db.DeleteExerciseBlockGroupByGrouperId(o.db, tx, *t.RoutineId, bg, schema)
 	}
 
 	for _, wo := range t.WorkOutToDelete {
-		db.DeleteWorkout(o.db, tx, *t.RoutineId, *wo.GrouperId, *wo.WorkoutId)
-		db.DeleteExerciseBlockGroupByWorkoutId(o.db, tx, *t.RoutineId, *wo.GrouperId, *wo.WorkoutId)
+		db.DeleteWorkout(o.db, tx, *t.RoutineId, *wo.GrouperId, *wo.WorkoutId, schema)
+		db.DeleteExerciseBlockGroupByWorkoutId(o.db, tx, *t.RoutineId, *wo.GrouperId, *wo.WorkoutId, schema)
 	}
 
 	for _, e := range t.ExercisesToDelete {
-		db.DeleteExerciseBlockGroup(o.db, tx, *t.RoutineId, *e.GrouperId, *e.WorkoutId, *e.ExerciseId)
+		db.DeleteExerciseBlockGroup(o.db, tx, *t.RoutineId, *e.GrouperId, *e.WorkoutId, *e.ExerciseId, schema)
 	}
 
 	for _, wk := range t.ExercisesToAdd {
@@ -995,30 +1050,36 @@ func (o *Endpoints) saveRoutineEditions(w http.ResponseWriter, r *http.Request, 
 			panic(&BadRequestResponse{ErrorCode: util.PString("update_routine_exercise_limit")})
 		}
 
-		if !db.CalculateGrouperWorkoutBelongToRoutine(o.db, tx, *t.RoutineId, *wk.GrouperId, *wk.WorkoutId) {
+		if !db.CalculateGrouperWorkoutBelongToRoutine(o.db, tx, *t.RoutineId, *wk.GrouperId, *wk.WorkoutId, schema) {
 			panic(&BadRequestResponse{ErrorCode: util.PString("no_access")})
 		}
 
-		currentValid := db.ListBlockGroupExerciseByBlockId(o.db, tx, *wk.WorkoutId)
-		db.DeleteExerciseBlockGroupByWorkoutId(o.db, tx, *t.RoutineId, *wk.GrouperId, *wk.WorkoutId)
+		currentValid := db.ListBlockGroupExerciseByBlockId(o.db, tx, *wk.WorkoutId, schema)
+		db.DeleteExerciseBlockGroupByWorkoutId(o.db, tx, *t.RoutineId, *wk.GrouperId, *wk.WorkoutId, schema)
 
 		iNew := 0
 		iCurrent := 0
 		for i := 0; i < len(currentValid)+len(wk.Exercises); i++ {
 			if iNew < len(wk.Exercises) && i == *wk.Exercises[iNew].Order {
 				e := wk.Exercises[iNew]
-				db.CreateExerciseBlockGroup(o.db, tx, *e.WorkoutId, *e.ExerciseId, i, e.Reps, e.Secs)
+				db.CreateExerciseBlockGroup(o.db, tx, *e.WorkoutId, *e.ExerciseId, i, e.Reps, e.Secs, schema)
 				iNew++
 			} else {
 				e := currentValid[iCurrent]
-				db.CreateExerciseBlockGroup(o.db, tx, *e.BlockGroupId, *e.ExerciseId, i, e.Reps, e.Secs)
+				db.CreateExerciseBlockGroup(o.db, tx, *e.BlockGroupId, *e.ExerciseId, i, e.Reps, e.Secs, schema)
 				iCurrent++
 			}
 		}
 	}
 }
 
-func (o *Endpoints) saveExerciseBlockValidations(r *http.Request, tx *sqlx.Tx, routineId, planificationId *int64, exercises []ExerciseRequest, newName *string) ([]ExerciseRequest, *int64) {
+func (o *Endpoints) saveExerciseBlockValidations(
+	r *http.Request,
+	tx *sqlx.Tx,
+	routineId, planificationId *int64,
+	exercises []ExerciseRequest,
+	newName *string,
+	isTemplate bool) ([]ExerciseRequest, *int64) {
 	userId := util.UserId(r)
 	plan := o.plan(r)
 
@@ -1026,7 +1087,7 @@ func (o *Endpoints) saveExerciseBlockValidations(r *http.Request, tx *sqlx.Tx, r
 		panic(&BadRequestResponse{ErrorCode: util.PString("create_blockgroup_name_max_50")})
 	}
 
-	if !db.CalculateUserOwnsPlanification(o.db, tx, userId, *planificationId) {
+	if !isTemplate && !db.CalculateUserOwnsPlanification(o.db, tx, userId, *planificationId) {
 		panic(&BadRequestResponse{ErrorCode: util.PString("no_access")})
 	}
 
@@ -1038,13 +1099,20 @@ func (o *Endpoints) saveExerciseBlockValidations(r *http.Request, tx *sqlx.Tx, r
 		panic(&BadRequestResponse{ErrorCode: util.PString("work_exercises_limit")})
 	}
 
-	if routineId == nil {
+	if routineId == nil && isTemplate {
+		n := db.CalculateRoutineNumber(o.db, tx, userId)
+		routineId = db.CreateRoutineTemplateDefault(o.db, tx, fmt.Sprintf("Rutina Nro %d", n+1), userId)
+	} else if routineId != nil && isTemplate {
+		if !db.CalculateUserOwnsRoutineTemplate(o.db, tx, userId, *routineId) {
+			panic(&BadRequestResponse{ErrorCode: util.PString("no_access")})
+		}
+	} else if routineId == nil && !isTemplate {
 		last := db.CountRoutinesInPlanification(o.db, tx, *planificationId)
 		if *plan == db.StudentFree && *last > 0 {
 			panic(&BadRequestResponse{ErrorCode: util.PString("free_create_routine_limit")})
 		}
 		routineId = db.CreateRoutineDefault(o.db, tx, fmt.Sprintf("Dia %d", *last+1), *planificationId, userId)
-	} else {
+	} else if routineId != nil && !isTemplate {
 		if !db.CalculateUserOwnsRoutine(o.db, tx, userId, *planificationId, *routineId) {
 			panic(&BadRequestResponse{ErrorCode: util.PString("no_access")})
 		}
@@ -1070,7 +1138,7 @@ func (o *Endpoints) saveExercisesBlockFree(w http.ResponseWriter, r *http.Reques
 	err := o.Decode(r, &t)
 	util.Check(err)
 
-	validExercises, routineId := o.saveExerciseBlockValidations(r, tx, t.RoutineId, t.PlanificationId, t.Exercises, t.NewBlockGroupName)
+	validExercises, routineId := o.saveExerciseBlockValidations(r, tx, t.RoutineId, t.PlanificationId, t.Exercises, t.NewBlockGroupName, t.IsTemplate)
 	exercises := make([]db.ExerciseBlockGroup, 0)
 	for _, e := range validExercises {
 		if e.Type != nil && *e.Type == "secs" {
@@ -1087,7 +1155,7 @@ func (o *Endpoints) saveExercisesBlockFree(w http.ResponseWriter, r *http.Reques
 	}
 	db.SaveExercisesBlock(o.db, tx, *routineId, "cpt",
 		*t.BlockName, nil, t.Laps, t.RestingInteval,
-		t.ExeRestingInteval, exercises, *t.NewBlockGroupName, t.NewBlockGroupId, *t.NewBlockGroupOrder)
+		t.ExeRestingInteval, exercises, *t.NewBlockGroupName, t.NewBlockGroupId, *t.NewBlockGroupOrder, t.IsTemplate, util.UserId(r))
 	o.Respond(w, &SaveExercisesBlockCptResponse{RoutineId: routineId}, http.StatusOK)
 }
 
@@ -1096,7 +1164,7 @@ func (o *Endpoints) saveExercisesBlockCpt(w http.ResponseWriter, r *http.Request
 	err := o.Decode(r, &t)
 	util.Check(err)
 
-	validExercises, routineId := o.saveExerciseBlockValidations(r, tx, t.RoutineId, t.PlanificationId, t.Exercises, t.NewBlockGroupName)
+	validExercises, routineId := o.saveExerciseBlockValidations(r, tx, t.RoutineId, t.PlanificationId, t.Exercises, t.NewBlockGroupName, t.IsTemplate)
 	exercises := make([]db.ExerciseBlockGroup, 0)
 	for _, e := range validExercises {
 		exercises = append(exercises, db.ExerciseBlockGroup{
@@ -1105,7 +1173,8 @@ func (o *Endpoints) saveExercisesBlockCpt(w http.ResponseWriter, r *http.Request
 		})
 	}
 	db.SaveExercisesBlock(o.db, tx, *routineId, "cpt", *t.BlockName,
-		nil, t.Laps, t.RestingInteval, t.RestingInteval, exercises, *t.NewBlockGroupName, t.NewBlockGroupId, *t.NewBlockGroupOrder)
+		nil, t.Laps, t.RestingInteval, t.RestingInteval, exercises,
+		*t.NewBlockGroupName, t.NewBlockGroupId, *t.NewBlockGroupOrder, t.IsTemplate, util.UserId(r))
 	o.Respond(w, &SaveExercisesBlockCptResponse{RoutineId: routineId}, http.StatusOK)
 }
 
@@ -1114,7 +1183,7 @@ func (o *Endpoints) saveExercisesBlockAmrap(w http.ResponseWriter, r *http.Reque
 	err := o.Decode(r, &t)
 	util.Check(err)
 
-	validExercises, routineId := o.saveExerciseBlockValidations(r, tx, t.RoutineId, t.PlanificationId, t.Exercises, t.NewBlockGroupName)
+	validExercises, routineId := o.saveExerciseBlockValidations(r, tx, t.RoutineId, t.PlanificationId, t.Exercises, t.NewBlockGroupName, t.IsTemplate)
 	exercises := make([]db.ExerciseBlockGroup, 0)
 	for _, e := range validExercises {
 		exercises = append(exercises, db.ExerciseBlockGroup{
@@ -1123,7 +1192,8 @@ func (o *Endpoints) saveExercisesBlockAmrap(w http.ResponseWriter, r *http.Reque
 		})
 	}
 	db.SaveExercisesBlock(o.db, tx, *routineId, "amrap", *t.BlockName,
-		t.BlockDuration, nil, nil, nil, exercises, *t.NewBlockGroupName, t.NewBlockGroupId, *t.NewBlockGroupOrder)
+		t.BlockDuration, nil, nil, nil, exercises,
+		*t.NewBlockGroupName, t.NewBlockGroupId, *t.NewBlockGroupOrder, t.IsTemplate, util.UserId(r))
 	o.Respond(w, &SaveExercisesBlockAmrapResponse{RoutineId: routineId}, http.StatusOK)
 }
 
@@ -1132,7 +1202,7 @@ func (o *Endpoints) saveExercisesBlockCombo(w http.ResponseWriter, r *http.Reque
 	err := o.Decode(r, &t)
 	util.Check(err)
 
-	validExercises, routineId := o.saveExerciseBlockValidations(r, tx, t.RoutineId, t.PlanificationId, t.Exercises, t.NewBlockGroupName)
+	validExercises, routineId := o.saveExerciseBlockValidations(r, tx, t.RoutineId, t.PlanificationId, t.Exercises, t.NewBlockGroupName, t.IsTemplate)
 	exercises := make([]db.ExerciseBlockGroup, 0)
 	for _, e := range validExercises {
 		exercises = append(exercises, db.ExerciseBlockGroup{
@@ -1140,7 +1210,8 @@ func (o *Endpoints) saveExercisesBlockCombo(w http.ResponseWriter, r *http.Reque
 		})
 	}
 	db.SaveExercisesBlock(o.db, tx, *routineId, "cbo", *t.BlockName, nil,
-		t.Laps, nil, nil, exercises, *t.NewBlockGroupName, t.NewBlockGroupId, *t.NewBlockGroupOrder)
+		t.Laps, nil, nil, exercises, *t.NewBlockGroupName,
+		t.NewBlockGroupId, *t.NewBlockGroupOrder, t.IsTemplate, util.UserId(r))
 	o.Respond(w, &SaveExercisesBlockComboResponse{RoutineId: routineId}, http.StatusOK)
 }
 
@@ -1149,7 +1220,7 @@ func (o *Endpoints) saveExerciseBlockPir(w http.ResponseWriter, r *http.Request,
 	err := o.Decode(r, &t)
 	util.Check(err)
 
-	validExercises, routineId := o.saveExerciseBlockValidations(r, tx, t.RoutineId, t.PlanificationId, t.Exercises, t.NewBlockGroupName)
+	validExercises, routineId := o.saveExerciseBlockValidations(r, tx, t.RoutineId, t.PlanificationId, t.Exercises, t.NewBlockGroupName, t.IsTemplate)
 	exercises := make([]db.ExerciseBlockGroup, 0)
 	for _, e := range validExercises {
 		exercises = append(exercises, db.ExerciseBlockGroup{
@@ -1158,7 +1229,8 @@ func (o *Endpoints) saveExerciseBlockPir(w http.ResponseWriter, r *http.Request,
 		})
 	}
 	db.SaveExercisesBlock(o.db, tx, *routineId, "pir", *t.BlockName, nil,
-		t.Laps, nil, nil, exercises, *t.NewBlockGroupName, t.NewBlockGroupId, *t.NewBlockGroupOrder)
+		t.Laps, nil, nil, exercises,
+		*t.NewBlockGroupName, t.NewBlockGroupId, *t.NewBlockGroupOrder, t.IsTemplate, util.UserId(r))
 	o.Respond(w, &SaveExercisesBlockPirResponse{RoutineId: routineId}, http.StatusOK)
 }
 
@@ -1539,6 +1611,47 @@ func (o *Endpoints) createNewExercise(w http.ResponseWriter, r *http.Request, tx
 	}
 }
 
+func (o *Endpoints) copyTemplateRoutineToPlanification(w http.ResponseWriter, r *http.Request, tx *sqlx.Tx) {
+	p := CopyTemplateRoutineToPlanificationRequest{}
+	err := o.Decode(r, &p)
+	util.Check(err)
+	userId := util.UserId(r)
+
+	if !db.CalculateUserOwnsRoutineTemplate(o.db, tx, userId, *p.RoutineId) {
+		panic(&BadRequestResponse{ErrorCode: util.PString("no_access")})
+	}
+
+	if !db.CalculateUserOwnsPlanification(o.db, tx, userId, *p.PlanificationId) {
+		panic(&BadRequestResponse{ErrorCode: util.PString("no_access")})
+	}
+
+	schema := "template."
+	original := db.GetRoutineHeaderTemplate(o.db, tx, *p.RoutineId, userId)
+	originalGroupers := db.ListBlockGroupGrouperByRoutineId(o.db, tx, *original.Routineid, schema)
+	newRoutineId := db.CreateRoutine(
+		o.db,
+		tx,
+		*original.Routinename,
+		*p.PlanificationId,
+		userId,
+		*original.Difficulty,
+		*original.Duration)
+
+	for _, bg := range originalGroupers {
+		newBgId := db.CreateBlockGrouper(o.db, tx, *bg.Name, *newRoutineId, *bg.Order)
+		originalGroups := db.ListBlockGroupByRoutineId(o.db, tx, *bg.RoutineId, *bg.Id, schema)
+
+		for _, b := range originalGroups {
+			newBlockGroupId := db.CreateBlockGroup(o.db, tx, *b.Type, *b.Name, *newRoutineId, *newBgId, b.Duration, b.Laps, b.LapRestInterval, b.ExeRestInterval)
+			originalExercises := db.ListBlockGroupExerciseByBlockId(o.db, tx, *b.Id, schema)
+
+			for _, ex := range originalExercises {
+				db.CreateExerciseBlockGroup(o.db, tx, *newBlockGroupId, *ex.ExerciseId, *ex.Order, ex.Reps, ex.Secs, "")
+			}
+		}
+	}
+}
+
 func (o *Endpoints) repeatLastMesocycle(w http.ResponseWriter, r *http.Request, tx *sqlx.Tx) {
 	p := CopyMesocycleRequest{}
 	err := o.Decode(r, &p)
@@ -1550,7 +1663,7 @@ func (o *Endpoints) repeatLastMesocycle(w http.ResponseWriter, r *http.Request, 
 	}
 
 	db.UpdatePlanificationMesocycleCopiedDate(o.db, tx, *p.PlanificationId)
-	db.EnqueuePlanificationOperation(o.db, tx, userId, *p.PlanificationId, db.PlanificationCopyMesocycle)
+	db.EnqueuePlanificationOperation(o.db, tx, userId, *p.PlanificationId, db.PlanificationCopyMesocycle, nil, false)
 }
 
 func (o *Endpoints) sharePlanification(w http.ResponseWriter, r *http.Request, tx *sqlx.Tx) {

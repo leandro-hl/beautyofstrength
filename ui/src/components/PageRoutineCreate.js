@@ -22,9 +22,9 @@ import LayoutMobile from "./LayoutMobile";
 import {MENU} from "../enums";
 import {ModalBlockCreate} from "./ModalBlockCreate";
 
-const MenuHeaderRender = ({routineName, redirectToPlanification}) => {
+const MenuHeaderRender = ({routineName, onGoBack}) => {
     return <>
-        <Button className={'header-back-arrow'} icon onClick={() => redirectToPlanification()}>
+        <Button className={'header-back-arrow'} icon onClick={() => onGoBack()}>
             <Icon name={'arrow left'}/>
         </Button>
         {routineName}
@@ -48,18 +48,17 @@ class PageRoutineCreate extends Component {
     async componentDidMount() {
         try {
             const {nextBlockNumber} = this.state
-            const {state: {routineNumber, planificationId}} = this.context
-
-            //todo: this should change to avoid mixing planification and routine. The routine should be able to live outside a planification.
-            const routineName = 'Dia '+routineNumber
-
+            const {state: {routineName, routineNumber, planificationId, isTemplate}} = this.context
             this.context.dispatch(setData({
                 secondaryActions: [
                     {func: () => this.addBlock(), description: 'Agregar Bloque'}
                 ],
                 noBottomBar: false,
                 menuButtonSelected: MENU.PLANIFICATIONS,
-                MenuHeaderRender: <MenuHeaderRender routineName={routineName} redirectToPlanification={() => this.redirectToPlanification()}/>
+                MenuHeaderRender: <MenuHeaderRender
+                    routineName={routineName}
+                    onGoBack={() => isTemplate ? this.redirectToSuite() : this.redirectToPlanification()}
+                />
             }))
             this.context.dispatch(setData({routineId: null, nextBlockNumber}, true))
             this.setState({
@@ -84,6 +83,10 @@ class PageRoutineCreate extends Component {
 
     redirectToPlanification() {
         this.props.history.push('/planification')
+    }
+
+    redirectToSuite() {
+        this.props.history.push('/suite')
     }
 
     handleConfirm() {

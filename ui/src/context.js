@@ -27,11 +27,6 @@ const initialState = {
     routineId: null,
     noMenu: true,
     secondaryActions: [],
-    routineDetails: {
-        name: '',
-        blocks: [],
-        nextBlockNumber: null
-    },
     darkTheme: false,
     prepareExercises: {
         data: {

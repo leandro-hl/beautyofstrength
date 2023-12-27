@@ -20,8 +20,9 @@ const (
 type EventUserType string
 
 const (
-	SavedCopyOfRoutine     EventUserType = "scr"
-	LastMesocycleGenerated               = "pcm"
+	SavedCopyOfRoutine                   EventUserType = "scr"
+	LastMesocycleGenerated                             = "pcm"
+	TemplateRoutineCopiedToPlanification               = "trc"
 )
 
 type EventUser struct {
@@ -104,6 +105,7 @@ type BlockGroupGrouper struct {
 	Id              *int64    `json:"id"`
 	Name            *string   `json:"name"`
 	RoutineId       *int64    `json:"routine_id"`
+	CreatorId       *int64    `json:"creator_id"`
 	Order           *int      `json:"order"`
 	LastUpdatedDate time.Time `json:"lastupdateddate"`
 	Active          *bool     `json:"active"`
@@ -245,6 +247,8 @@ type QueuePlanificationOperation struct {
 	UserAccountId   *int64                  `json:"useraccount_id"`
 	PlanificationId *int64                  `json:"planification_id"`
 	Operation       *PlanificationOperation `json:"operation"`
+	IsTemplate      *bool                   `json:"istemplate"`
+	RoutineId       *int64                  `json:"routineid"`
 	Completed       *bool                   `json:"completed"`
 	CreatedDate     time.Time               `json:"createddate"`
 	LastUpdatedDate time.Time               `json:"lastupdateddate"`

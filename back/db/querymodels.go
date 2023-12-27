@@ -11,7 +11,9 @@ type ListExerciseQuery struct {
 	Id   *int    `json:"id"`
 	Name *string `json:"name"`
 	//CreatedByUser      *string `json:"createdbyuser"`
-	NoCurrentUserVideo *bool `json:"nocurrentuservideo"`
+	NoCurrentUserVideo *bool   `json:"nocurrentuservideo"`
+	Code               *string `json:"code"`
+	Link               *string `json:"link"`
 }
 
 type ListEquipmentQuery struct {
@@ -67,6 +69,20 @@ type GetRoutineDetailsQuery struct {
 	ExerciseBGID    *int64  `json:"exercisebgid"`
 	Exercisename    *string `json:"exercisename"`
 	VideoCode       *string `json:"videocode"`
+}
+
+type ListRoutineTemplatesQuery struct {
+	Id         *int    `json:"id"`
+	Name       *string `json:"name"`
+	Difficulty *int    `json:"difficulty"`
+	Duration   *string `json:"duration"`
+	BlockCount *int    `json:"blockcount"`
+	WorkCount  *int    `json:"workcount"`
+}
+
+type ListWorkoutTemplatesQuery struct {
+	Id   *int    `json:"id"`
+	Name *string `json:"name"`
 }
 
 type ListRoutinesQuery struct {

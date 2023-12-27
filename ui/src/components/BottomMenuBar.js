@@ -64,9 +64,13 @@ class BottomMenuBar extends Component {
                             <Icon name={MENU.HOME}  />
                             <span>Inicio</span>
                         </Button>}
-                        {menuhomeprofessor && <Button className={selected === MENU.HOME ? 'button-bottom-bar-selected' : 'button-bottom-bar'} icon onClick={() => this.onClick(MENU.HOME, '/professor')}>
-                            <Icon name={MENU.HOME}  />
-                            <span>Inicio</span>
+                        {/*{menuhomeprofessor && <Button className={selected === MENU.HOME ? 'button-bottom-bar-selected' : 'button-bottom-bar'} icon onClick={() => this.onClick(MENU.HOME, '/professor')}>*/}
+                        {/*    <Icon name={MENU.HOME}  />*/}
+                        {/*    <span>Inicio</span>*/}
+                        {/*</Button>}*/}
+                        {menuhomeprofessor && <Button className={selected === MENU.INSTRUCTOR_SUITE ? 'button-bottom-bar-selected' : 'button-bottom-bar'} icon onClick={() => this.onClick(MENU.INSTRUCTOR_SUITE, '/suite')}>
+                            <Icon name={MENU.INSTRUCTOR_SUITE}  />
+                            <span>Crear</span>
                         </Button>}
                         {menuplanifications && <Button className={selected === MENU.PLANIFICATIONS ? 'button-bottom-bar-selected' : 'button-bottom-bar'}
                                  icon onClick={() => this.onClick(MENU.PLANIFICATIONS, '/my-planifications')}>
