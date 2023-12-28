@@ -145,6 +145,7 @@ class PagePlanificationDetail extends Component {
                 days: days,
                 daysBackup: days.map(d => ({...d})),
                 mesocycle: res.data.mesocycle,
+                objective: res.data.objective,
                 week: week,
                 routines: res.data.routines,
                 routinesBackup: res.data.routines.map(d => ({...d})),
@@ -261,14 +262,19 @@ class PagePlanificationDetail extends Component {
             const {changes} = this.state
             if(changes) {
                 this.setState({savingEditions: true})
-                const {days, routinesToDelete, planificationId, newMesocycle} = this.state;
+                const {days, routinesToDelete, planificationId, newMesocycle, newObjective} = this.state;
                 const week = []
                 for (let i = 0; i < days.length; i++) {
                     if (days[i].checked) {
                         week.push(i.toString())
                     }
                 }
-                await savePlanificationEditions({planificationId, week, routinesToDelete, newMesocycle:parseInt(newMesocycle, 10)})
+                await savePlanificationEditions({
+                    planificationId,
+                    week,
+                    routinesToDelete,
+                    newObjective,
+                    newMesocycle:parseInt(newMesocycle, 10)})
                 await this.refresh()
                 showSuccess(this.context, '', 'Planificacion actualizada!')
             }
@@ -329,6 +335,7 @@ class PagePlanificationDetail extends Component {
             savingEditions,
             days,
             mesocycle,
+            objective,
             week,
             routines,
             showPopUpCopyMesocycle,
@@ -397,6 +404,15 @@ class PagePlanificationDetail extends Component {
                 </Segment>
                 <Segment>
                     <List>
+                        <List.Item>
+                            Objetivo: {editionMode ?
+                            <Input
+                                placeholder={objective}
+                                onChange={(e, {value}) => this.setState({newObjective: value, changes: !!value})}
+                            />
+                            : (objective ?? 'No definido')
+                        }
+                        </List.Item>
                         <List.Item>
                             Fecha de inicio: A definir
                         </List.Item>

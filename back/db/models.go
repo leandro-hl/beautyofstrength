@@ -40,6 +40,7 @@ type Planification struct {
 	Name                    *string    `json:"name"`
 	Starred                 *bool      `json:"starred"`
 	Mesocycle               *int       `json:"mesocycle"`
+	Objective               *string    `json:"objective"`
 	CreatorId               *int64     `json:"creator_id"`
 	Active                  *bool      `json:"active"`
 	LastMesocycleCopiedDate *time.Time `json:"lastmesocyclecopieddate"`

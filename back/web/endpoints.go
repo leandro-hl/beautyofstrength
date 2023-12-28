@@ -798,6 +798,7 @@ func (o *Endpoints) getPlanificationDetails(w http.ResponseWriter, r *http.Reque
 		IsEditable: &isEditable,
 		Week:       schedule.Days,
 		Mesocycle:  details.Mesocycle,
+		Objective:  details.Objective,
 		Routines:   routinesResponse,
 	}, http.StatusOK)
 }
@@ -1564,12 +1565,17 @@ func (o *Endpoints) savePlanificationEditions(w http.ResponseWriter, r *http.Req
 	}
 
 	if p.NewMesocycle != nil {
-		if *p.NewMesocycle <= 30 {
-			db.UpdatePlanificationMesocycle(o.db, tx, *p.PlanificationId, *p.NewMesocycle)
-		} else {
+		if *p.NewMesocycle > 30 {
 			panic(&BadRequestResponse{ErrorCode: util.PString("planification_mesocycle_max")})
 		}
+
+		db.UpdatePlanificationMesocycle(o.db, tx, *p.PlanificationId, *p.NewMesocycle)
 	}
+
+	if p.NewObjective != nil {
+		db.UpdatePlanificationObjective(o.db, tx, *p.PlanificationId, *p.NewObjective)
+	}
+
 	db.UpdatePlanificationDays(o.db, tx, *p.PlanificationId, strings.Join(p.Week, ""))
 	for i := 0; i < len(p.RoutinesToDelete); i++ {
 		db.DeleteRoutine(o.db, tx, p.RoutinesToDelete[i])

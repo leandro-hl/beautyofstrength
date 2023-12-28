@@ -645,6 +645,14 @@ func UpdatePlanificationMesocycle(db *DB, tx *sqlx.Tx, planificationId int64, ne
 	stmt.Exec(newMesocycle, planificationId)
 }
 
+func UpdatePlanificationObjective(db *DB, tx *sqlx.Tx, planificationId int64, newObjective string) {
+	query := `update planification set objective=$1 where id=$2`
+	stmt, err := getTxPreparedStmt(db, tx, query)
+	util.Check(err)
+
+	stmt.Exec(newObjective, planificationId)
+}
+
 func UpdatePlanificationMesocycleCopiedDate(db *DB, tx *sqlx.Tx, planificationId int64) {
 	query := `update planification set lastmesocyclecopieddate=now() where id=$1`
 	stmt, err := getTxPreparedStmt(db, tx, query)

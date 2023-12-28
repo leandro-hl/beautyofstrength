@@ -202,6 +202,7 @@ type SavePlanificationEditionsRequest struct {
 	PlanificationId  *int64   `json:"planificationId"`
 	RoutinesToDelete []int64  `json:"routinesToDelete"`
 	NewMesocycle     *int     `json:"newMesocycle"`
+	NewObjective     *string  `json:"newObjective"`
 	Week             []string `json:"week"`
 }
 
@@ -231,6 +232,7 @@ type GetPlanificationDetailsResponse struct {
 	IsEditable *bool                         `json:"isEditable"`
 	Week       *string                       `json:"week"`
 	Mesocycle  *int                          `json:"mesocycle"`
+	Objective  *string                       `json:"objective"`
 	Routines   []ListRoutinesRoutineResponse `json:"routines"`
 }
 
