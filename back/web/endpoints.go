@@ -1693,6 +1693,8 @@ func (o *Endpoints) uploadExerciseVideoLink(w http.ResponseWriter, r *http.Reque
 
 	if strings.Contains(*p.Link, shortsPath) {
 		*p.Link = strings.ReplaceAll(*p.Link, shortsPath, embedPath)
+	} else {
+		panic(&BadRequestResponse{ErrorCode: util.PString("expected_youtube_short")})
 	}
 
 	if strings.Contains(*p.Link, "?") {
