@@ -201,6 +201,11 @@ export function calculareError(code) {
                 title: '',
                 description: 'Estas superando la cantidad de bloques que se pueden actualizar al mismo tiempo. Contactate con soporte.'
             }
+        case 'expected_youtube':
+            return {
+                title: '',
+                description: 'Solo YouTube links'
+            }
         case 'no_access':
             return {
                 title: '',

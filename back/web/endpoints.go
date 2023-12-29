@@ -1685,6 +1685,12 @@ func (o *Endpoints) uploadExerciseVideoLink(w http.ResponseWriter, r *http.Reque
 
 	shortsPath := "/shorts/"
 	embedPath := "/embed/"
+	expectedDomain := "youtube"
+
+	if !strings.Contains(*p.Link, expectedDomain) {
+		panic(&BadRequestResponse{ErrorCode: util.PString("expected_youtube")})
+	}
+
 	if strings.Contains(*p.Link, shortsPath) {
 		*p.Link = strings.ReplaceAll(*p.Link, shortsPath, embedPath)
 	}
