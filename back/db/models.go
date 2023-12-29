@@ -83,6 +83,14 @@ type UserAccountEquipment struct {
 	Width               *float32 `json:"width"`
 }
 
+type InstructorExercise struct {
+	Id            *int64  `json:"id"`
+	UserAccountId *int64  `json:"useraccount_id"`
+	ExerciseId    *int64  `json:"exercise_id"`
+	VideoCode     *string `json:"video_code"`
+	Link          *string `json:"link"`
+}
+
 type Routine struct {
 	Id              *int64    `json:"id"`
 	Name            *string   `json:"name"`

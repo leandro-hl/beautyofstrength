@@ -293,6 +293,7 @@ func (o *Endpoints) Handle() http.Handler {
 	api.Path("/listRoutineTemplates").HandlerFunc(o.HandleAuthenticatedTransactional(o.HandleAuthorization(o.listRoutineTemplates, db.Professor)))
 	api.Path("/listWorkoutTemplates").HandlerFunc(o.HandleAuthenticatedTransactional(o.HandleAuthorization(o.listWorkoutTemplates, db.Professor)))
 	api.Path("/copyTemplateRoutineToPlanification").HandlerFunc(o.HandleAuthenticatedTransactional(o.HandleAuthorization(o.copyTemplateRoutineToPlanification, db.Professor)))
+	api.Path("/uploadExerciseVideoLink").HandlerFunc(o.HandleAuthenticatedTransactional(o.HandleAuthorization(o.uploadExerciseVideoLink, db.Professor)))
 
 	//Premium services
 	api.Path("/savePlanificationEditions").HandlerFunc(o.HandleAuthenticatedTransactional(o.HandleAuthorization(o.savePlanificationEditions, db.StudentPremium, db.Professor)))
@@ -522,7 +523,13 @@ func (o *Endpoints) calculateRoutineDetailsResponse(header *db.GetRoutineHeaderQ
 					Exercises:       make([]GetRoutineDetailsBlockExercise, 0),
 				}
 				if re.ExerciseBGID != nil {
-					block.Exercises = append(block.Exercises, GetRoutineDetailsBlockExercise{Id: re.ExerciseBGID, Name: re.Exercisename, Secs: re.Secs, Reps: re.Reps, VideoCode: re.VideoCode})
+					block.Exercises = append(block.Exercises, GetRoutineDetailsBlockExercise{
+						Id:        re.ExerciseBGID,
+						Name:      re.Exercisename,
+						Secs:      re.Secs,
+						Reps:      re.Reps,
+						Link:      re.Link,
+						VideoCode: re.VideoCode})
 				}
 				grouper.Blocks = append(grouper.Blocks, *block)
 			}
@@ -541,7 +548,13 @@ func (o *Endpoints) calculateRoutineDetailsResponse(header *db.GetRoutineHeaderQ
 					Exercises:       make([]GetRoutineDetailsBlockExercise, 0),
 				}
 				if re.ExerciseBGID != nil {
-					block.Exercises = append(block.Exercises, GetRoutineDetailsBlockExercise{Id: re.ExerciseBGID, Name: re.Exercisename, Secs: re.Secs, Reps: re.Reps, VideoCode: re.VideoCode})
+					block.Exercises = append(block.Exercises, GetRoutineDetailsBlockExercise{
+						Id:        re.ExerciseBGID,
+						Name:      re.Exercisename,
+						Secs:      re.Secs,
+						Reps:      re.Reps,
+						Link:      re.Link,
+						VideoCode: re.VideoCode})
 				}
 				grouper.Blocks = append(grouper.Blocks, *block)
 			} else if re.ExerciseBGID != nil {
@@ -550,6 +563,7 @@ func (o *Endpoints) calculateRoutineDetailsResponse(header *db.GetRoutineHeaderQ
 					Name:      re.Exercisename,
 					Secs:      re.Secs,
 					Reps:      re.Reps,
+					Link:      re.Link,
 					VideoCode: re.VideoCode,
 				})
 			}
@@ -811,13 +825,16 @@ func (o *Endpoints) listPlanifications(w http.ResponseWriter, r *http.Request, t
 func (o *Endpoints) listExercises(w http.ResponseWriter, r *http.Request, tx *sqlx.Tx) {
 	userId := util.UserId(r)
 
-	var exercises []db.ListExerciseQuery
-	if listExercisesQueryCache.IsValid() {
-		exercises = listExercisesQueryCache.Fetch()
-	} else {
-		exercises = db.ListExercises(o.db, tx, userId)
-		listExercisesQueryCache.Populate(exercises)
-	}
+	//var exercises []db.ListExerciseQuery
+	//todo: what about if we have MANY instructors?
+	//if listExercisesQueryCache.IsValid() {
+	//	exercises = listExercisesQueryCache.Fetch()
+	//} else {
+	//	exercises = db.ListExercises(o.db, tx, userId)
+	//	listExercisesQueryCache.Populate(exercises)
+	//}
+
+	exercises := db.ListExercises(o.db, tx, userId)
 	//todo: use a Response struct to not expose db data.
 	plan := o.plan(r)
 	if *plan == db.Professor {
@@ -1656,6 +1673,31 @@ func (o *Endpoints) copyTemplateRoutineToPlanification(w http.ResponseWriter, r 
 			}
 		}
 	}
+}
+
+func (o *Endpoints) uploadExerciseVideoLink(w http.ResponseWriter, r *http.Request, tx *sqlx.Tx) {
+	//todo: I might need to put in place some kind of validation in order to avoid videos
+	// that are not about the exercise and from the actual instructor.
+	p := UploadExerciseVideoLinkRequest{}
+	err := o.Decode(r, &p)
+	util.Check(err)
+	userId := util.UserId(r)
+
+	shortsPath := "/shorts/"
+	embedPath := "/embed/"
+	if strings.Contains(*p.Link, shortsPath) {
+		*p.Link = strings.ReplaceAll(*p.Link, shortsPath, embedPath)
+	}
+
+	if strings.Contains(*p.Link, "?") {
+		*p.Link = strings.Split(*p.Link, "?")[0]
+	}
+
+	db.InsertInstructorVideoLink(o.db, tx, userId, *p.Id, *p.Link)
+	//todo: kind of a shame to invalidate it for all users when it changes only for a few.
+	listExercisesQueryCache.Invalidate()
+
+	o.Respond(w, &UploadExerciseVideoLinkResponse{Link: p.Link}, http.StatusOK)
 }
 
 func (o *Endpoints) repeatLastMesocycle(w http.ResponseWriter, r *http.Request, tx *sqlx.Tx) {

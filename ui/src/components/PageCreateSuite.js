@@ -16,7 +16,7 @@ import {
     createPlanification, deletePlanification, getUserPermissions, listExercises, listExerciseVideos,
     listPlanifications,
     listQueuedPlanificationAccessRequests, listRoutineTemplates, listWorkoutTemplates,
-    requestAccessToSharedPlanification
+    requestAccessToSharedPlanification, uploadExerciseVideoLink
 } from "../service";
 import {Link, withRouter} from "react-router-dom";
 import {AppContext, setData, showSuccess} from "../context";
@@ -28,6 +28,7 @@ import {ModalPlanificationRequestAccess} from "./ModalPlanificationRequestAccess
 import {ModalPlanificationsPendingRequests} from "./ModalPlanificationsPendingRequests";
 import {PopUpConfirmation} from "./PopUpConfirmation";
 import {Chip} from "./Chip";
+import {ModalExerciseVideoLinkUpload} from "./ModalExerciseVideoLinkUpload";
 
 const MenuHeaderRender = ({onMenuChange}) => {
     const [activeItem, setActiveItem] = useState(1)
@@ -177,9 +178,25 @@ class PageCreateSuite extends Component {
         this.context.dispatch(setData({videoCode: videoCode}))
     }
 
+    async uploadExerciseVideoLink(link) {
+        try {
+            const {exerciseToUploadLinkTo, i, videos} = this.state
+            const res = await uploadExerciseVideoLink({id: exerciseToUploadLinkTo.id, link})
+            videos[i].nocurrentuservideo= false
+            videos[i].link= res.data.link
+            this.setState({openModalUploadExerciseVideoLink: false, exerciseToUploadLinkTo: null, i: null})
+        } catch (e) {
+            console.error(e)
+        }
+    }
+
+    openModalUploadExerciseVideoLink(e, i) {
+        this.setState({openModalUploadExerciseVideoLink: true, exerciseToUploadLinkTo: e, i})
+    }
+
     render() {
         const {state: {permissions: {}}} = this.context
-        const {loading, routines, workouts, videos, title, show} = this.state;
+        const {loading, routines, workouts, openModalUploadExerciseVideoLink, exerciseToUploadLinkTo, videos, title, show} = this.state;
 
         if (loading) {
             return <Loader active/>
@@ -214,10 +231,12 @@ class PageCreateSuite extends Component {
                                                     {e.name}
                                                 </Grid.Column>
                                                 <Grid.Column width={5} className={'no-padding'}>
-                                                    <Chip omit content={'Sin video'}/>
+                                                    <Button
+                                                        onClick={() => this.openModalUploadExerciseVideoLink(e, i)}
+                                                        basic secondary icon='plus' style={{position: 'relative', float: 'right'}}/>
                                                 </Grid.Column>
                                             </> : <Grid.Column>
-                                                <Link to={'#'} onClick={() => this.openExerciseVideo(e.code)}>{e.name}</Link>
+                                                <Link to={'#'} onClick={() => this.openExerciseVideo(e.link)}>{e.name}</Link>
                                             </Grid.Column>
                                     }
                                 </Grid.Row>
@@ -225,6 +244,11 @@ class PageCreateSuite extends Component {
                         </Segment>
                     )
                 })}
+                <ModalExerciseVideoLinkUpload
+                    open={openModalUploadExerciseVideoLink}
+                    item={exerciseToUploadLinkTo}
+                    handleClose={() => this.setState({openModalUploadExerciseVideoLink: false, exerciseToUploadLinkTo: null, i: null})}
+                    handleConfirm={(link)=> this.uploadExerciseVideoLink(link)}/>
             </>
         )
     }

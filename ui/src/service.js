@@ -92,6 +92,10 @@ export function saveNewRm(payload) {
     return axios.post("saveNewRm", payload)
 }
 
+export function uploadExerciseVideoLink(payload) {
+    return axios.post("uploadExerciseVideoLink", payload)
+}
+
 export function addToMyEquipment(payload) {
     return axios.post("addToMyEquipment", payload)
 }

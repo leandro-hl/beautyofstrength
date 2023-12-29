@@ -891,7 +891,7 @@ class PageRoutineDetail extends Component{
                         <Grid>
                             <Grid.Column width={editionMode ? !hasValue ? 13 : 8 : 16}>
                                 {e.isDraft && <div className={'label-new-item'}/>}
-                                {e.videoCode ? <Link to={'#'} onClick={() => this.openExerciseVideo(e.videoCode)}>{e.name}</Link> : e.name}
+                                {e.link ? <Link to={'#'} onClick={() => this.openExerciseVideo(e.link)}>{e.name}</Link> : e.name}
                             </Grid.Column>
                             {
                                 editionMode &&

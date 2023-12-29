@@ -19,6 +19,15 @@ type CopyTemplateRoutineToPlanificationRequest struct {
 	PlanificationId *int64 `json:"planificationId"`
 }
 
+type UploadExerciseVideoLinkRequest struct {
+	Id   *int64  `json:"id"`
+	Link *string `json:"link"`
+}
+
+type UploadExerciseVideoLinkResponse struct {
+	Link *string `json:"link"`
+}
+
 type SaveExercisesBlockCptRequest struct {
 	RoutineId          *int64            `json:"routineId"`
 	PlanificationId    *int64            `json:"planificationId"`
@@ -152,6 +161,7 @@ type GetRoutineDetailsBlockExercise struct {
 	Reps      *int    `json:"reps"`
 	Secs      *int    `json:"secs"`
 	Name      *string `json:"name"`
+	Link      *string `json:"link"`
 	VideoCode *string `json:"videoCode"`
 }
 

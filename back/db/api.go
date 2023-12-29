@@ -183,7 +183,8 @@ func GetRoutineDetails(db *DB, tx *sqlx.Tx, routineId int64, userId int64) []Get
 			eb.secs,
 			eb.id exercisebgid,
 			e.name exercisename,
-			ie.video_code videocode
+			ie.video_code videocode,
+			ie.link
 			from routine r
 		inner join planification p on p.id = r.planification_id
 		inner join userplanification u on r.planification_id = u.planification_id
@@ -403,11 +404,10 @@ func ListExercises(db *DB, tx *sqlx.Tx, userId int64) []ListExerciseQuery {
 		    e.id, 
 		    e.name, 
 			--u.name as createdbyuser,
-		    ie.id is null as nocurrentuservideo,
+		    ie.link is null as nocurrentuservideo,
 		    ie.video_code as code,
 		    ie.link
 		FROM exercise e 
-		inner join useraccount u on u.id = e.createdbyuser_id  
 		left join instructorexercise ie on e.id = ie.exercise_id and ie.useraccount_id=$1
 		ORDER BY e.name`
 	stmt, err := getTxPreparedStmt(db, tx, query)
@@ -1230,6 +1230,18 @@ func InsertUserAccountEquipment(
 		Weight:              weight,
 		Height:              height,
 		Width:               width,
+	})
+}
+
+func InsertInstructorVideoLink(
+	db *DB, tx *sqlx.Tx,
+	userId, exerciseId int64,
+	link string) {
+	Insert(tx, &InstructorExercise{
+		ExerciseId:    &exerciseId,
+		UserAccountId: &userId,
+		VideoCode:     util.PString(""),
+		Link:          &link,
 	})
 }
 

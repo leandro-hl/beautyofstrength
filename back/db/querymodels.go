@@ -69,6 +69,7 @@ type GetRoutineDetailsQuery struct {
 	ExerciseBGID    *int64  `json:"exercisebgid"`
 	Exercisename    *string `json:"exercisename"`
 	VideoCode       *string `json:"videocode"`
+	Link            *string `json:"link"`
 }
 
 type ListRoutineTemplatesQuery struct {
