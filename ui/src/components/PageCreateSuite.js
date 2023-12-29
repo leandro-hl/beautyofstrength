@@ -185,6 +185,7 @@ class PageCreateSuite extends Component {
             videos[i].nocurrentuservideo= false
             videos[i].link= res.data.link
             this.setState({openModalUploadExerciseVideoLink: false, exerciseToUploadLinkTo: null, i: null})
+            showSuccess(this.context, '', 'Link subido con exito!')
         } catch (e) {
             console.error(e)
         }

@@ -148,6 +148,7 @@ grant insert, select, update on template.exerciseblockgroup to db;
 grant insert, select, update on template.blockgroup to db;
 grant insert, select, update on template.blockgroupgrouper to db;
 grant insert, select, update on template.routine to db;
+grant insert, select, update on instructorexercise to db;
 
 GRANT USAGE ON SCHEMA template TO db;
 
