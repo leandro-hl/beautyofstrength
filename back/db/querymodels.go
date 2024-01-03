@@ -41,6 +41,8 @@ type GetUserAccountDetailsQuery struct {
 	Email       *string `json:"email"`
 	PictureUrl  *string `json:"pictureurl"`
 	AccountType *string `json:"accounttype"`
+	Trainer     *int64  `json:"trainer"`
+	Code        *string `json:"code"`
 }
 
 type GetRoutineHeaderQuery struct {
@@ -79,6 +81,11 @@ type ListRoutineTemplatesQuery struct {
 	Duration   *string `json:"duration"`
 	BlockCount *int    `json:"blockcount"`
 	WorkCount  *int    `json:"workcount"`
+}
+
+type ListMyAthletesQuery struct {
+	Name *string `json:"name"`
+	Plan *string `json:"plan"`
 }
 
 type ListWorkoutTemplatesQuery struct {

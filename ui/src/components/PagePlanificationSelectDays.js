@@ -4,6 +4,15 @@ import {Header, Checkbox, Loader, Button, Icon, Message} from "semantic-ui-react
 import {AppContext, setData, showSuccess} from "../context";
 import {savePlanificationDays} from "../service";
 
+const MenuHeaderRender = ({planificationName, onGoBack}) => {
+    return <>
+        <Button className={'header-back-arrow'} icon onClick={() => onGoBack()}>
+            <Icon name={'arrow left'}/>
+        </Button>
+        {planificationName ?? 'Mis Rutinas'}
+    </>
+}
+
 class PagePlanificationSelectDays extends Component {
     static contextType = AppContext
     state = {loading:true, selectedDays: {}}
@@ -39,6 +48,12 @@ class PagePlanificationSelectDays extends Component {
     }
 
     componentDidMount() {
+        const {state: {planificationName}} = this.context
+        this.context.dispatch(setData({
+            MenuHeaderRender: <MenuHeaderRender
+                planificationName={planificationName}
+                onGoBack={() => this.props.history.push('/my-planifications')}
+            />}))
         this.setSaveButtonStatus(true)
         this.setState({loading:false})
     }
@@ -54,17 +69,9 @@ class PagePlanificationSelectDays extends Component {
         if (this.state.loading) {
             return <Loader active/>
         }
-
-        const {state: {planificationName}} = this.context
         const days = ['Lunes', 'Martes', 'Miercoles', 'Jueves', 'Viernes', 'Sabado', 'Domingo']
         return (
             <>
-                <Header as={'h3'}>
-                    <Button className={'header-back-arrow'} icon onClick={() => this.props.history.push('/my-planifications')}>
-                        <Icon name={'arrow left'}/>
-                    </Button>
-                    <span>{planificationName ?? 'Mis Rutinas'}</span>
-                </Header>
                 <Message>
                     <Message.Header>Semana</Message.Header>
                     <p>

@@ -10,12 +10,37 @@
       content="Beauty Of Strength, el sistema operativo del entrenamiento"
     />
 
+    <script>
+      function getTokenFromUrl() {
+        const urlParams = new URLSearchParams(window.location.search);
+        return urlParams.get('invite');
+      }
+
+      function addManifestLink(token) {
+        const link = document.createElement('link');
+        link.rel = 'manifest';
+        let domain = 'https://bos.team'
+        if (window.location.hostname === 'localhost') {
+          domain = 'http://localhost:3001'
+        }
+        link.href = `${domain}/api/manifest.json?invite=${token}`;
+        document.head.appendChild(link);
+      }
+
+      function init() {
+        const token = getTokenFromUrl();
+        addManifestLink(token);
+      }
+
+      init();
+    </script>
+
     <link rel="apple-touch-icon" href="%PUBLIC_URL%/logo192.png" />
     <!--
       manifest.json provides metadata used when your web app is installed on a
       user's mobile device or desktop. See https://developers.google.com/web/fundamentals/web-app-manifest/
     -->
-    <link rel="manifest" href="%PUBLIC_URL%/manifest.json" />
+<!--    <link rel="manifest" href="%PUBLIC_URL%/manifest.json" />-->
     <!--
       Notice the use of %PUBLIC_URL% in the tags above.
       It will be replaced with the URL of the `public` folder during the build.

@@ -78,7 +78,7 @@ class PageRoot extends Component {
 
             if (isAuthenticated && menuhomeprofessor) {
                 return <Redirect to={{
-                    pathname: '/professor',
+                    pathname: '/my-planifications',
                     search: props.location.search,
                     state: { from: props.location }
                 }} />

@@ -163,6 +163,7 @@ type UserAccount struct {
 	Locale        *string   `json:"locale"`
 	AccountPlanId *int      `json:"accountplan_id"`
 	CreatedDate   time.Time `json:"createddate"`
+	Code          *string   `json:"code"`
 }
 
 type UserAccountSession struct {

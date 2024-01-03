@@ -1,6 +1,6 @@
 import {createContext, useContext, useEffect, useReducer, useState} from "react";
 import axios from "axios";
-import {isLocalhost} from "./functions";
+import {isLocalhost, queryParam} from "./functions";
 import {useHistory} from "react-router-dom";
 import {MENU} from "./enums";
 
@@ -305,7 +305,7 @@ function RegisterServiceWorkers({children}) {
 }
 
 function ResponseInterceptor({children}) {
-    const {dispatch} = useContext(AppContext)
+    const {state: {auth_token}, dispatch} = useContext(AppContext)
     const history = useHistory();
 
     useEffect(() => {
@@ -328,6 +328,21 @@ function ResponseInterceptor({children}) {
                 throw err
             }
         )
+
+        // axios.interceptors.request.use(function (config) {
+        //     if (config.url.includes('api/logo')) {
+        //         const url = new URL(window.location);
+        //         const params = new URLSearchParams(url.search);
+        //         const invite = params.get('invite')
+        //         config.headers.common['Authorization'] = `Bearer ${auth_token}`;
+        //         if(!!invite) {
+        //             config.url += (config.url.includes('?') ? '&' : '?') + 'invite='+invite;
+        //         }
+        //     }
+        //     return config;
+        // }, function (error) {
+        //     return Promise.reject(error);
+        // });
     }, [])
 
     return <>{children}</>

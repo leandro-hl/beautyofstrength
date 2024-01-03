@@ -18,15 +18,17 @@ class StartUp extends Component {
     async componentDidMount() {
         const planShareParam = queryParam(this.props, 'pshare')
         const shareParam = queryParam(this.props, 'share')
+        const inviteParam = queryParam(this.props, 'invite')
         if (shareParam) {
             localStorage.setItem('routine-shared', shareParam)
-        }
-        if (planShareParam) {
+        } else if (planShareParam) {
             const url = new URL(window.location);
             const params = new URLSearchParams(url.search);
             params.delete('pshare');
             window.history.replaceState({}, '', `${url.pathname}?${params}${url.hash}`);
             localStorage.setItem('planification-shared', planShareParam)
+        } else if (inviteParam) {
+            localStorage.setItem('instructor-invite', inviteParam)
         }
         this.setTheme()
         this.setState({loading: false})

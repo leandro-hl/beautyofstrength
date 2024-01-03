@@ -205,7 +205,7 @@ class PageAccount extends Component {
                         <Image src={userAccount.pictureurl} size='tiny' circular/>
                     </Grid.Row>
                     <Grid.Row>
-                        <Segment className={'no-padding'}>
+                        <Segment className={'no-padding background'}>
                             <Table basic unstackable style={{border: 'unset'}}>
                                 <Table.Body>
                                     <Table.Row>
@@ -225,8 +225,8 @@ class PageAccount extends Component {
                                         <Table.Cell>{userAccount.accounttype}</Table.Cell>
                                     </Table.Row>
                                     <Table.Row>
-                                        <Table.Cell>Contacto</Table.Cell>
-                                        <Table.Cell>
+                                        <Table.Cell className={'last-child-no-bottom'}>Contacto</Table.Cell>
+                                        <Table.Cell className={'last-child-no-bottom'}>
                                             <Icon name={'whatsapp'} size={'large'} className={'icon-pointer'}
                                                   onClick={() => contactByWhatsapp(userAccount.accounttype)}/></Table.Cell>
                                     </Table.Row>
@@ -236,14 +236,14 @@ class PageAccount extends Component {
                     </Grid.Row>
                     <Grid.Row>
                         <Divider hidden/>
-                        <Segment>
+                        <Segment className={'background'}>
                             Mi Equipamiento<br/>
                             {this.renderMyEquipment()}
                         </Segment>
                     </Grid.Row>
                     <Grid.Row>
                         <Divider hidden/>
-                        <Segment>
+                        <Segment className={'background'}>
                             <Grid>
                                 <Grid.Row>
                                     <Grid.Column>
