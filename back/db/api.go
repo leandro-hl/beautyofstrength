@@ -682,6 +682,20 @@ func UpdateGrouperNames(db *DB, tx *sqlx.Tx, routineId, grouperId int64, name, s
 	stmt.Exec(name, routineId, grouperId)
 }
 
+func UpdateWorkout(db *DB, tx *sqlx.Tx,
+	routineId, grouperId, workoutId int64,
+	laps, exeInterval, lapInterval *int,
+	schema string) {
+	query := fmt.Sprintf(`
+		update %sblockgroup set laps=$4, exerestinterval=$5, laprestinterval=$6, lastupdateddate=now() 
+		where id=$1 and blockgroupgrouper_id=$2 and routine_id=$3`, schema)
+
+	stmt, err := getTxPreparedStmt(db, tx, query)
+	util.Check(err)
+
+	stmt.Exec(workoutId, grouperId, routineId, laps, exeInterval, lapInterval)
+}
+
 //func UpdateExercisesBlockGroupOrderingByRoutine(db *DB, tx *sqlx.Tx, routineId int64) {
 //	query := `
 //		WITH Ordered AS (

@@ -492,6 +492,14 @@ class PageRoutineDetail extends Component{
                 workoutId: value.workoutId
             }));
 
+            const workoutsToUpdatePayload = Object.entries(updates.workoutsToUpdate ?? []).map(([key, value]) => ({
+                grouperId: value.grouperId,
+                workoutId: value.workoutId,
+                laps: value.laps ? parseInt(value.laps, 10) : value.deflaps,
+                exerestinterval: value.exerestinterval ? parseInt(value.exerestinterval, 10) : value.defexerestinterval,
+                laprestinterval: value.laprestinterval ? parseInt(value.laprestinterval, 10) : value.deflaprestinterval,
+            }));
+
             const exercisesToDeletePayload = Object.entries(updates.workOutExercisesToDelete ?? []).map(([key, value]) => ({
                 grouperId: value.grouperId,
                 workoutId: value.workoutId,
@@ -507,8 +515,10 @@ class PageRoutineDetail extends Component{
                 workoutsToDelete: workoutsToDeletePayload,
                 exercisesToDelete: exercisesToDeletePayload,
                 grouperIdsToDelete: grouperIdsToDelete,
+                workoutsToUpdate: workoutsToUpdatePayload,
                 isTemplate
             }
+
             await saveRoutineEditions(payload)
             await this.refresh()
             this.setState({
@@ -652,6 +662,33 @@ class PageRoutineDetail extends Component{
         }
 
         this.setState({updates: {...buff}, blockGroupers: [...blockGroupers],confirmWorkDeletionIndex: null})
+    }
+
+    onWorkoutUpdate(bgId, workId, j, i, name, value) {
+        const {updates, blockGroupers} = this.state
+
+        let buff = {...updates}
+        const defaults = {
+            deflaps: blockGroupers[j].blocks[i].laps,
+            defexerestinterval: blockGroupers[j].blocks[i].exerestinterval,
+            deflaprestinterval: blockGroupers[j].blocks[i].laprestinterval
+        }
+        if(buff.workoutsToUpdate) {
+            if (buff.workoutsToUpdate[bgId+'-'+workId]) {
+                const newData = {...buff.workoutsToUpdate[bgId+'-'+workId], [name]: value}
+                buff.workoutsToUpdate[bgId+'-'+workId] = newData
+            } else {
+                buff.workoutsToUpdate[bgId+'-'+workId] = {...defaults, grouperId: bgId, workoutId: workId, [name]: value}
+            }
+        } else {
+            buff.workoutsToUpdate = {[bgId+'-'+workId]: {...defaults, grouperId: bgId, workoutId: workId, [name]: value}}
+        }
+
+        // laps
+        // exerestinterval
+        // laprestinterval
+        blockGroupers[j].blocks[i][name]=value
+        this.setState({updates: {...buff}, blockGroupers})
     }
 
     deleteExerciseFromWork(bgId, workId, exId, j,i,k, isDraft) {
@@ -834,20 +871,72 @@ class PageRoutineDetail extends Component{
                 </Accordion.Title>
                 <Accordion.Content active={activeIndexes.indexOf(j+'-'+i) !== -1}>
                     <Segment basic className={'no-top-padding no-bottom-padding no-margin'}>
-                        {b.duration && <div><b>{b.duration} minutos</b> de duracion</div>}
-                        {b.laps && <div className={'margin-bottom-1'}><b>{b.laps}</b> rondas</div>}
                         {
-                            (b.laprestinterval || b.exerestinterval) &&
+                            editionMode &&
+                            <Table basic={'very'} compact unstackable>
+                                <Table.Row>
+                                    <Table.Cell>
+                                        Rondas
+                                    </Table.Cell>
+                                    <Table.Cell>
+                                        <Input
+                                            placeholder={b.laps}
+                                            className={'input-centered size-two-digits'}
+                                            type={'number'}
+                                            value={b.laps}
+                                            name={'laps'}
+                                            onChange={(e, {value,name}) => this.onWorkoutUpdate(bg.id, b.id, j, i, name, value)}/>
+                                    </Table.Cell>
+                                </Table.Row>
+                                <Table.Row>
+                                    <Table.Cell>
+                                        Descanso Por Ejercicio
+                                    </Table.Cell>
+                                    <Table.Cell>
+                                        <Input
+                                            placeholder={b.exerestinterval}
+                                            className={'input-centered size-two-digits'}
+                                            type={'number'}
+                                            value={b.exerestinterval}
+                                            name={'exerestinterval'}
+                                            onChange={(e, {value,name}) => this.onWorkoutUpdate(bg.id, b.id, j, i, name, value)}/>
+                                    </Table.Cell>
+                                </Table.Row>
+                                <Table.Row>
+                                    <Table.Cell>
+                                        Descanso Por Ronda
+                                    </Table.Cell>
+                                    <Table.Cell>
+                                        <Input
+                                            placeholder={b.laprestinterval}
+                                            className={'input-centered size-two-digits'}
+                                            type={'number'}
+                                            value={b.laprestinterval}
+                                            name={'laprestinterval'}
+                                            onChange={(e, {value,name}) => this.onWorkoutUpdate(bg.id, b.id, j, i, name, value)}/>
+                                    </Table.Cell>
+                                </Table.Row>
+                            </Table>
+                        }
+                        {
+                            !editionMode &&
                             <>
-                                Descanso
-                                {b.exerestinterval &&
-                                    <div>
-                                        <b>{b.exerestinterval} segs</b> por ejercicio
-                                    </div>}
-                                {b.laprestinterval &&
-                                    <div>
-                                        <b>{b.laprestinterval} segs</b> por ronda
-                                    </div>}
+                                {b.duration && <div><b>{b.duration} minutos</b> de duracion</div>}
+                                {b.laps && <div className={'margin-bottom-1'}><b>{b.laps}</b> rondas</div>}
+                                {
+                                    (b.laprestinterval || b.exerestinterval) &&
+                                    <>
+                                        Descanso
+                                        {b.exerestinterval &&
+                                            <div>
+                                                <b>{b.exerestinterval} segs</b> por ejercicio
+                                            </div>}
+                                        {b.laprestinterval &&
+                                            <div>
+                                                <b>{b.laprestinterval} segs</b> por ronda
+                                            </div>}
+                                    </>
+                                }
                             </>
                         }
                     </Segment>
