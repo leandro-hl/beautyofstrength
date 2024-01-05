@@ -225,7 +225,8 @@ func GetRoutineDetailsTemplate(db *DB, tx *sqlx.Tx, routineId int64, userId int6
 			eb.secs,
 			eb.id exercisebgid,
 			e.name exercisename,
-			ie.video_code videocode
+			ie.video_code videocode,
+			ie.link
 			from template.routine r
 		left join template.blockgroupgrouper bg on r.id = bg.routine_id and bg.active=true
 		left join template.blockgroup b on r.id = b.routine_id and bg.id=b.blockgroupgrouper_id and b.active=true
