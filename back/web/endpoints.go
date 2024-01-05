@@ -1048,6 +1048,10 @@ func (o *Endpoints) saveRoutineEditions(w http.ResponseWriter, r *http.Request, 
 		db.UpdateGrouperNames(o.db, tx, *t.RoutineId, *g.Id, *g.Name, schema)
 	}
 
+	for _, wo := range t.WorkOutsToUpdate {
+		db.UpdateWorkout(o.db, tx, *t.RoutineId, *wo.GrouperId, *wo.WorkoutId, wo.Laps, wo.ExeRestInterval, wo.LapRestInterval, schema)
+	}
+
 	for _, bg := range t.GrouperIdsToDelete {
 		db.DeleteBlockGrouper(o.db, tx, *t.RoutineId, bg, schema)
 		db.DeleteWorkoutsByGrouperId(o.db, tx, *t.RoutineId, bg, schema)
