@@ -1485,14 +1485,13 @@ func (o *Endpoints) logo(w http.ResponseWriter, r *http.Request, tx *sqlx.Tx) {
 			baseDirectory = "img/" + *trainer.Code
 		}
 	}
-
-	if !o.conf.IsDevelopment() {
-		exePath, _ := filepath.Abs(filepath.Dir("."))
-		baseDirectory = filepath.Join(exePath, baseDirectory)
-	}
+	//
+	//if !o.conf.IsDevelopment() {
+	//	exePath, _ := filepath.Abs(filepath.Dir("."))
+	//	baseDirectory = filepath.Join(exePath, baseDirectory)
+	//}
 
 	input := r.URL.Query().Get("type")
-	o.l.Println(baseDirectory + input)
 	serveFile(w, r, input, baseDirectory, []string{".png", ".ico"})
 }
 
@@ -1908,6 +1907,7 @@ func serveFile(w http.ResponseWriter, r *http.Request, input, baseDirectory stri
 	sanitizedPath := filepath.Clean(input)
 
 	fullPath := filepath.Join(baseDirectory, sanitizedPath)
+	fmt.Println(fullPath)
 	if !strings.HasPrefix(fullPath, baseDirectory) {
 		http.Error(w, "Invalid path.", http.StatusBadRequest)
 		return

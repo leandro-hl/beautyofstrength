@@ -40,6 +40,6 @@ FROM alpine
 WORKDIR /root/
 RUN apk --no-cache add ca-certificates
 COPY --from=go-builder /beautyofstrenght/back/web/main /usr/local/bin/
-COPY --from=go-builder /beautyofstrenght/img /usr/local/bin/img
+COPY --from=go-builder /beautyofstrenght/img /img
 COPY --from=react-builder /app/build/ /root/ui/build
 CMD ["main"]
