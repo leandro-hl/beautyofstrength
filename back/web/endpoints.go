@@ -1424,39 +1424,38 @@ func (o *Endpoints) manifest(w http.ResponseWriter, r *http.Request, tx *sqlx.Tx
 		}
 	}
 
-	hostBk := *o.conf.Address
 	manifest := `
 		{
 		  "name": "` + name + `",
 		  "short_name": "` + shortName + `",
 		  "icons": [
 			{
-			  "src": "` + hostBk + `/api/logo?type=favicon.ico&invite=` + input + `",
+			  "src": "/api/logo?type=favicon.ico&invite=` + input + `",
 			  "sizes": "16x16",
 			  "type": "image/x-icon"
 			},
 			{
-			  "src": "` + hostBk + `/api/logo?type=logo24.png&invite=` + input + `",
+			  "src": "/api/logo?type=logo24.png&invite=` + input + `",
 			  "sizes": "24x24",
 			  "type": "image/png"
 			},
 			{
-			  "src": "` + hostBk + `/api/logo?type=logo32.png&invite=` + input + `",
+			  "src": "/api/logo?type=logo32.png&invite=` + input + `",
 			  "sizes": "32x32",
 			  "type": "image/png"
 			},
 			{
-			  "src": "` + hostBk + `/api/logo?type=logo64.png&invite=` + input + `",
+			  "src": "/api/logo?type=logo64.png&invite=` + input + `",
 			  "sizes": "64x64",
 			  "type": "image/png"
 			},
 			{
-			  "src": "` + hostBk + `/api/logo?type=logo192.png&invite=` + input + `",
+			  "src": "/api/logo?type=logo192.png&invite=` + input + `",
 			  "type": "image/png",
 			  "sizes": "192x192"
 			},
 			{
-			  "src": "` + hostBk + `/api/logo?type=logo512.png&invite=` + input + `",
+			  "src": "/api/logo?type=logo512.png&invite=` + input + `",
 			  "type": "image/png",
 			  "sizes": "512x512"
 			}
