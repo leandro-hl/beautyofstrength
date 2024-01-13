@@ -1492,6 +1492,7 @@ func (o *Endpoints) logo(w http.ResponseWriter, r *http.Request, tx *sqlx.Tx) {
 	}
 
 	input := r.URL.Query().Get("type")
+	o.l.Println(baseDirectory + input)
 	serveFile(w, r, input, baseDirectory, []string{".png", ".ico"})
 }
 
