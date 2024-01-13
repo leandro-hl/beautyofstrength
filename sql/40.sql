@@ -16,4 +16,6 @@ update useraccount set code='sergio.suares' where username='segiosuaress9@gmail.
 update useraccount set code='delparque.fit' where username='leandronherenu@gmail.com';
 update useraccount set code='guille.panak' where username='guillermopanak@gmail.com';
 
+grant update on useraccount to db;
+
 
