@@ -282,7 +282,12 @@ func GenerateSessionID() (string, error) {
 }
 
 func UserId(r *http.Request) int64 {
-	return r.Context().Value("userId").(int64)
+	usr := r.Context().Value("userId")
+
+	if usr != nil {
+		return usr.(int64)
+	}
+	return 0
 }
 
 func Check(err error) {

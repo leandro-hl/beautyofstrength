@@ -40,6 +40,10 @@ export function listRoutineTemplates() {
     return axios.get("listRoutineTemplates")
 }
 
+export function listMyAthletes() {
+    return axios.get("listMyAthletes")
+}
+
 export function listWorkoutTemplates() {
     return axios.get("listWorkoutTemplates")
 }
@@ -168,6 +172,9 @@ export function requestAccessToSharedPlanification(payload) {
     return axios.post("requestAccessToSharedPlanification", payload)
 }
 
+export function acceptInstructorInvite(payload) {
+    return axios.post("acceptInstructorInvite", payload)
+}
 
 export function shareRoutine(payload) {
     return axios.post("shareRoutine", payload)
@@ -175,6 +182,10 @@ export function shareRoutine(payload) {
 
 export function sharePlanification(payload) {
     return axios.post("sharePlanification", payload)
+}
+
+export function inviteAthletes() {
+    return axios.post("inviteAthletesToAssociateWithMe")
 }
 
 export function actionateRoutine(payload) {

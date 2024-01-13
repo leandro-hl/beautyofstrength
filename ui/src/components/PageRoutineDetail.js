@@ -843,14 +843,20 @@ class PageRoutineDetail extends Component{
     renderWorkoutGroup(bg, b, j, i, editionMode, activeIndexes, confirmWorkDeletionIndex, addExerciseInputIndex, activeDraftExercise, confirmWorkExerciseDeletionIndex) {
         //todo: fix separate type from workout name.
         const name = b.name.split(' - ')
+        const lastExerciseIndex=b.exercises.length-1
         return (
-            <Segment style={{width: '100%'}} className={'no-left-padding no-right-padding'} key={b.id}>
+            <Segment style={{width: '100%'}} className={'no-left-padding no-right-padding white-border'} key={b.id}>
                 <Accordion.Title
                     className={'no-top-padding no-bottom-padding padding-left-1 padding-right-1'}
                     active={activeIndexes.indexOf(j+'-'+i) !== -1}
                     index={j+'-'+i}
                     onClick={!editionMode? this.handleActiveBlocks : () => {}}>
-                    Trabajo {i+1} {name[1] ? <Chip feel content={capitalize(name[1])}/> : null}
+
+                    <span className={'title'}>
+                        Trabajo {i+1}
+                    </span>
+                    {name[1] ? <Chip feel content={capitalize(name[1])}/> : null}
+
                     {
                         editionMode &&
                         <PopUpConfirmation
@@ -962,7 +968,7 @@ class PageRoutineDetail extends Component{
                                 </>
                             }
                             {b.exercises.map((e, k) => (this.renderExercise(
-                                bg, b, e, j, i, k, editionMode, addExerciseInputIndex, activeDraftExercise, confirmWorkExerciseDeletionIndex
+                                bg, b, e, j, i, k, editionMode, addExerciseInputIndex, activeDraftExercise, confirmWorkExerciseDeletionIndex, lastExerciseIndex
                             )))}
                         </Table.Body>
                     </Table>
@@ -971,12 +977,12 @@ class PageRoutineDetail extends Component{
         )
     }
 
-    renderExercise(bg, b, e, j, i, k, editionMode, addExerciseInputIndex, activeDraftExercise, confirmWorkExerciseDeletionIndex) {
+    renderExercise(bg, b, e, j, i, k, editionMode, addExerciseInputIndex, activeDraftExercise, confirmWorkExerciseDeletionIndex, lastExercise) {
         const hasValue = e.reps || e.secs
         return (
             <>
                 <Table.Row key={k} className={'table-row-item'}>
-                    <Table.Cell style={{position: 'relative'}} colSpan={editionMode ? '3' : null}>
+                    <Table.Cell style={{position: 'relative'}} colSpan={editionMode ? '3' : null} className={k === lastExercise ? 'last-child-no-bottom' : ''}>
                         <Grid>
                             <Grid.Column width={editionMode ? !hasValue ? 13 : 8 : 16}>
                                 {e.isDraft && <div className={'label-new-item'}/>}

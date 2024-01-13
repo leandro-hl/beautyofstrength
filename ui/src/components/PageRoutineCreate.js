@@ -54,7 +54,7 @@ class PageRoutineCreate extends Component {
                     {func: () => this.addBlock(), description: 'Agregar Bloque'}
                 ],
                 noBottomBar: false,
-                menuButtonSelected: MENU.PLANIFICATIONS,
+                menuButtonSelected: isTemplate? MENU.INSTRUCTOR_SUITE : MENU.PLANIFICATIONS,
                 MenuHeaderRender: <MenuHeaderRender
                     routineName={routineName}
                     onGoBack={() => isTemplate ? this.redirectToSuite() : this.redirectToPlanification()}

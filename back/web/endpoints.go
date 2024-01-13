@@ -279,6 +279,8 @@ func (o *Endpoints) Handle() http.Handler {
 		api.Path("/createTestUser").HandlerFunc(o.HandleOptionsRequest(o.HandleIPWhiteListing(o.HandleFatal(o.HandleTransactional(o.createTestUser)))))
 	}
 	api.Path("/googlesignin").HandlerFunc(o.HandleOptionsRequest(o.HandleIPWhiteListing(o.HandleFatal(o.HandleTransactional(o.googleSignIn)))))
+	api.Path("/logo").HandlerFunc(o.HandleOptionsRequest(o.HandleIPWhiteListing(o.HandleFatal(o.HandleTransactional(o.logo)))))
+	api.Path("/manifest.json").HandlerFunc(o.HandleOptionsRequest(o.HandleIPWhiteListing(o.HandleFatal(o.HandleTransactional(o.manifest)))))
 
 	//Instructor services (all premium)
 	api.Path("/sharePlanification").HandlerFunc(o.HandleAuthenticatedTransactional(o.HandleAuthorization(o.sharePlanification, db.Professor)))
@@ -291,24 +293,27 @@ func (o *Endpoints) Handle() http.Handler {
 	api.Path("/repeatLastMesocycle").HandlerFunc(o.HandleAuthenticatedTransactional(o.HandleAuthorization(o.repeatLastMesocycle, db.Professor)))
 	api.Path("/createNewExercise").HandlerFunc(o.HandleAuthenticatedTransactional(o.HandleAuthorization(o.createNewExercise, db.Professor)))
 	api.Path("/listRoutineTemplates").HandlerFunc(o.HandleAuthenticatedTransactional(o.HandleAuthorization(o.listRoutineTemplates, db.Professor)))
+	api.Path("/listMyAthletes").HandlerFunc(o.HandleAuthenticatedTransactional(o.HandleAuthorization(o.listMyAthletes, db.Professor)))
 	api.Path("/listWorkoutTemplates").HandlerFunc(o.HandleAuthenticatedTransactional(o.HandleAuthorization(o.listWorkoutTemplates, db.Professor)))
 	api.Path("/copyTemplateRoutineToPlanification").HandlerFunc(o.HandleAuthenticatedTransactional(o.HandleAuthorization(o.copyTemplateRoutineToPlanification, db.Professor)))
 	api.Path("/uploadExerciseVideoLink").HandlerFunc(o.HandleAuthenticatedTransactional(o.HandleAuthorization(o.uploadExerciseVideoLink, db.Professor)))
+	api.Path("/inviteAthletesToAssociateWithMe").HandlerFunc(o.HandleAuthenticatedTransactional(o.HandleAuthorization(o.inviteAthletesToAssociateWithMe, db.Professor)))
 
 	//Premium services
 	api.Path("/savePlanificationEditions").HandlerFunc(o.HandleAuthenticatedTransactional(o.HandleAuthorization(o.savePlanificationEditions, db.StudentPremium, db.Professor)))
 	api.Path("/saveRoutineEditions").HandlerFunc(o.HandleAuthenticatedTransactional(o.HandleAuthorization(o.saveRoutineEditions, db.StudentPremium, db.Professor)))
 	api.Path("/saveNewRm").HandlerFunc(o.HandleAuthenticatedTransactional(o.HandleAuthorization(o.saveNewRm, db.StudentPremium)))
 
+	//Student services
 	api.Path("/listUserRms").HandlerFunc(o.HandleAuthenticatedTransactional(o.HandleAuthorization(o.listUserRms, db.StudentFree, db.StudentPremium)))
 	api.Path("/listLastUserRmHistoryStats").HandlerFunc(o.HandleAuthenticatedTransactional(o.HandleAuthorization(o.listLastUserRmHistoryStats, db.StudentFree, db.StudentPremium)))
-
-	//Student services
+	api.Path("/listLastUserRmHistoryStats").HandlerFunc(o.HandleAuthenticatedTransactional(o.HandleAuthorization(o.listLastUserRmHistoryStats, db.StudentFree, db.StudentPremium)))
 	api.Path("/saveUserTrainedToday").HandlerFunc(o.HandleAuthenticatedTransactional(o.HandleAuthorization(o.saveUserTrainedToday, db.StudentFree, db.StudentPremium)))
 	api.Path("/getUserLoadedTrainingToday").HandlerFunc(o.HandleAuthenticatedTransactional(o.HandleAuthorization(o.getUserLoadedTrainingToday, db.StudentFree, db.StudentPremium)))
+	api.Path("/acceptInstructorInvite").HandlerFunc(o.HandleAuthenticatedTransactional(o.HandleAuthorization(o.acceptInstructorInvite, db.StudentFree, db.StudentPremium)))
 
 	//General Services
-	//o.r.Path("/serveImage").HandlerFunc(o.HandleAuthenticatedTransactional(o.serveImage))
+	//o.r.Path("/serveFile").HandlerFunc(o.HandleAuthenticatedTransactional(o.serveFile))
 	//redirect directly to the api. check the domain is mercado pago. implement some shit like google auth sec
 	api.Path("/teacherSubscriptionApproved").HandlerFunc(o.HandleAuthenticatedTransactional(o.HandleAuthorization(o.teacherSubscriptionApproved, db.StudentFree, db.StudentPremium, db.Professor)))
 	api.Path("/eliteSubscriptionApproved").HandlerFunc(o.HandleAuthenticatedTransactional(o.HandleAuthorization(o.eliteSubscriptionApproved, db.StudentFree, db.StudentPremium, db.Professor)))
@@ -400,6 +405,7 @@ func (o *Endpoints) getUserPermissions(w http.ResponseWriter, r *http.Request, t
 
 	if *plan == db.StudentPremium {
 		permissions["statistics"] = true
+		permissions["canMarkRoutine"] = true
 	}
 
 	if *plan == db.Professor {
@@ -699,6 +705,17 @@ func (o *Endpoints) listRoutineTemplates(w http.ResponseWriter, r *http.Request,
 	usr := util.UserId(r)
 	templates := db.ListRoutineTemplates(o.db, tx, usr)
 	o.Respond(w, templates, http.StatusOK)
+}
+
+func (o *Endpoints) listMyAthletes(w http.ResponseWriter, r *http.Request, tx *sqlx.Tx) {
+	plan := o.plan(r)
+	iAmInstructor := *plan == db.Professor
+	if !iAmInstructor {
+		panic(&BadRequestResponse{ErrorCode: util.PString("no_access")})
+	}
+	usr := util.UserId(r)
+	at := db.ListMyAthletes(o.db, tx, usr)
+	o.Respond(w, at, http.StatusOK)
 }
 
 func (o *Endpoints) listWorkoutTemplates(w http.ResponseWriter, r *http.Request, tx *sqlx.Tx) {
@@ -1369,6 +1386,111 @@ func (o *Endpoints) getUserLoadedTrainingToday(w http.ResponseWriter, r *http.Re
 	}, http.StatusOK)
 }
 
+// todo: merge with db or something
+var validManifests = map[string]string{
+	"juan.solanilla": "Juan Solanilla",
+	"guille.panak":   "Guillermo Panak",
+	"delparque.fit":  "Del Parque Fit",
+	"sergio.suares":  "Sergio Suares",
+}
+
+func isValid(input, name, shortName string) (bool, string, string) {
+	ok := false
+	if instructorName, ok := validManifests[input]; ok {
+		name += " | " + instructorName
+
+		words := strings.Split(instructorName, " ")
+		initials := ""
+		for _, n := range words {
+			initials += string(n[0])
+		}
+		shortName += " | " + initials
+	}
+	return ok, name, shortName
+}
+func (o *Endpoints) manifest(w http.ResponseWriter, r *http.Request, tx *sqlx.Tx) {
+	input := r.URL.Query().Get("invite")
+	name := "Beauty Of Strength"
+	shortName := "bOS"
+
+	ok, name, shortName := isValid(input, name, shortName)
+	if !ok {
+		if id, _ := o.retrieveSessionData(r); id != nil {
+			user := db.GetUserAccountDetails(o.db, tx, *id)
+			if user.Trainer != nil {
+				trainer := db.GetUserAccountDetails(o.db, tx, *user.Trainer)
+				_, name, shortName = isValid(*trainer.Code, name, shortName)
+			}
+		}
+	}
+
+	hostBk := *o.conf.Address
+	manifest := `
+		{
+		  "name": "` + name + `",
+		  "short_name": "` + shortName + `",
+		  "icons": [
+			{
+			  "src": "` + hostBk + `/api/logo?type=favicon.ico&invite=` + input + `",
+			  "sizes": "16x16",
+			  "type": "image/x-icon"
+			},
+			{
+			  "src": "` + hostBk + `/api/logo?type=logo24.png&invite=` + input + `",
+			  "sizes": "24x24",
+			  "type": "image/png"
+			},
+			{
+			  "src": "` + hostBk + `/api/logo?type=logo32.png&invite=` + input + `",
+			  "sizes": "32x32",
+			  "type": "image/png"
+			},
+			{
+			  "src": "` + hostBk + `/api/logo?type=logo64.png&invite=` + input + `",
+			  "sizes": "64x64",
+			  "type": "image/png"
+			},
+			{
+			  "src": "` + hostBk + `/api/logo?type=logo192.png&invite=` + input + `",
+			  "type": "image/png",
+			  "sizes": "192x192"
+			},
+			{
+			  "src": "` + hostBk + `/api/logo?type=logo512.png&invite=` + input + `",
+			  "type": "image/png",
+			  "sizes": "512x512"
+			}
+		  ],
+		  "start_url": "` + *o.conf.AddressUi + `/app",
+		  "display": "standalone",
+		  "theme_color": "#000000",
+		  "background_color": "#121212",
+		  "description": "El sistema operativo del entrenamiento"
+		}`
+
+	w.Header().Set("Content-Type", "application/json")
+	w.Write([]byte(manifest))
+}
+
+func (o *Endpoints) logo(w http.ResponseWriter, r *http.Request, tx *sqlx.Tx) {
+	token := r.URL.Query().Get("invite")
+
+	baseDirectory := "img/default"
+	if token != "" && token != "null" {
+		baseDirectory = "img/" + token
+	} else if id, _ := o.retrieveSessionData(r); id != nil {
+		user := db.GetUserAccountDetails(o.db, tx, *id)
+
+		if user.Trainer != nil {
+			trainer := db.GetUserAccountDetails(o.db, tx, *user.Trainer)
+			baseDirectory = "img/" + *trainer.Code
+		}
+	}
+
+	input := r.URL.Query().Get("type")
+	serveFile(w, r, input, baseDirectory, []string{".png", ".ico"})
+}
+
 func (o *Endpoints) teacherSubscriptionApproved(w http.ResponseWriter, r *http.Request, tx *sqlx.Tx) {
 	//todo: teacherSubscriptionApproved make sure they did paid
 	//make sure domain is meli
@@ -1726,6 +1848,26 @@ func (o *Endpoints) repeatLastMesocycle(w http.ResponseWriter, r *http.Request, 
 	db.EnqueuePlanificationOperation(o.db, tx, userId, *p.PlanificationId, db.PlanificationCopyMesocycle, nil, false)
 }
 
+func (o *Endpoints) inviteAthletesToAssociateWithMe(w http.ResponseWriter, r *http.Request, tx *sqlx.Tx) {
+	userId := util.UserId(r)
+	usr := db.GetUserAccountDetails(o.db, tx, userId)
+	o.Respond(w, fmt.Sprintf("/my-planifications?invite=%s", *usr.Code), http.StatusOK)
+}
+
+func (o *Endpoints) acceptInstructorInvite(w http.ResponseWriter, r *http.Request, tx *sqlx.Tx) {
+	type Payload struct {
+		InstructorInvite *string `json:"instructorInvite"`
+	}
+	p := &Payload{}
+	err := o.Decode(r, &p)
+	util.Check(err)
+
+	userId := util.UserId(r)
+	trainerId := db.GetUserIdByCode(o.db, tx, *p.InstructorInvite)
+
+	db.UpdateUserAccountInstructor(o.db, tx, userId, trainerId)
+}
+
 func (o *Endpoints) sharePlanification(w http.ResponseWriter, r *http.Request, tx *sqlx.Tx) {
 	t := SharePlanificationRequest{}
 	err := o.Decode(r, &t)
@@ -1750,10 +1892,9 @@ func (o *Endpoints) sharePlanification(w http.ResponseWriter, r *http.Request, t
 	}
 }
 
-func (o *Endpoints) serveImage(w http.ResponseWriter, r *http.Request, tx *sqlx.Tx) {
-	input := r.URL.Query().Get("name")
-	baseDirectory := "img"
+type extensions []string
 
+func serveFile(w http.ResponseWriter, r *http.Request, input, baseDirectory string, exts extensions) {
 	if strings.Contains(input, "..") {
 		http.Error(w, "Invalid path.", http.StatusBadRequest)
 		return
@@ -1773,7 +1914,15 @@ func (o *Endpoints) serveImage(w http.ResponseWriter, r *http.Request, tx *sqlx.
 	}
 
 	ext := filepath.Ext(sanitizedPath)
-	if ext != ".jpg" && ext != ".png" {
+	isValid := false
+	for _, e := range exts {
+		if ext == e {
+			isValid = true
+			break
+		}
+	}
+
+	if !isValid {
 		http.Error(w, "Invalid file type.", http.StatusBadRequest)
 		return
 	}
@@ -1875,6 +2024,7 @@ func (o *Endpoints) createTestUser(w http.ResponseWriter, r *http.Request, tx *s
 		Locale:        util.PString(""),
 		AccountPlanId: planId,
 		CreatedDate:   time.Now(),
+		Code:          util.PString("Test" + result),
 	})
 	days := "01234"
 	planificationId := db.CreatePlanification(o.db, tx, *userId, MyPlanificationReservedName, true, len(days))

@@ -13,6 +13,7 @@ import {
     Segment
 } from "semantic-ui-react";
 import {
+    acceptInstructorInvite,
     createPlanification, deletePlanification, getUserPermissions,
     listPlanifications,
     listQueuedPlanificationAccessRequests,
@@ -27,6 +28,7 @@ import {ModalPlanificationCreate} from "./ModalPlanificationCreate";
 import {ModalPlanificationRequestAccess} from "./ModalPlanificationRequestAccess";
 import {ModalPlanificationsPendingRequests} from "./ModalPlanificationsPendingRequests";
 import {PopUpConfirmation} from "./PopUpConfirmation";
+import {ModalInstructorInviteAccept} from "./ModalInstructorInviteAccept";
 
 const MenuHeaderRender = ({onRefresh}) => {
     const [refreshing, setRefreshing] = useState(false)
@@ -52,6 +54,12 @@ class PagePlanificationList extends Component {
                 this.props.history.push('/routine')
                 return
             }
+
+            const instructorInvite = localStorage.getItem('instructor-invite')
+            if (instructorInvite) {
+                this.setState({instructorInvite})
+            }
+
             const planificationShared = localStorage.getItem('planification-shared')
             if(planificationShared) {
                 this.setState({planificationShared: true, sharedPlanification: planificationShared})
@@ -140,8 +148,24 @@ class PagePlanificationList extends Component {
         }
     }
 
+    async acceptInstructorInvite() {
+        try {
+            const {instructorInvite} = this.state
+            await acceptInstructorInvite({instructorInvite})
+            this.onCancelRequest2()
+            showSuccess(this.context, '', 'Aceptaste la invitacion de tu coach!')
+        } catch (e) {
+            console.error(e)
+        }
+    }
+
     onCancelRequest() {
         localStorage.removeItem('planification-shared')
+    }
+
+    onCancelRequest2() {
+        localStorage.removeItem('instructor-invite')
+        this.setState({instructorInvite: null})
     }
 
     async fetchPendingRequests() {
@@ -191,7 +215,15 @@ class PagePlanificationList extends Component {
 
     render() {
         const {state: {permissions: {createPlanification, sharePlanification, deletePlanification}}} = this.context
-        const {ownedPlanifications, sharedPlanifications , planificationShared, showPendingRequests, requests, refreshing, confirmPlanificationDeletionIndex} = this.state;
+        const {
+            ownedPlanifications,
+            sharedPlanifications ,
+            planificationShared,
+            showPendingRequests,
+            requests,
+            refreshing,
+            confirmPlanificationDeletionIndex,
+            instructorInvite} = this.state;
         const {loading} = this.state;
 
         if (loading) {
@@ -259,6 +291,7 @@ class PagePlanificationList extends Component {
                     </>
                 }
                 {createPlanification && this.renderCreatePlanificationModal()}
+                {instructorInvite && <ModalInstructorInviteAccept onCancelRequest={() => this.onCancelRequest2()} onRequestAccess={() => this.acceptInstructorInvite()}/>}
                 {planificationShared && <ModalPlanificationRequestAccess onCancelRequest={() => this.onCancelRequest()} onRequestAccess={() => this.requestAccessToSharedPlanification()}/>}
                 {showPendingRequests && <ModalPlanificationsPendingRequests requests={requests} onRemove={(i) => this.onRemoveRequest(i)} onClose={() => this.setState({showPendingRequests: false})}/>}
             </>

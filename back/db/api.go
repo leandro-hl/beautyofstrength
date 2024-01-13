@@ -280,6 +280,22 @@ func ListRoutineTemplates(db *DB, tx *sqlx.Tx, userId int64) []ListRoutineTempla
 	return dest
 }
 
+func ListMyAthletes(db *DB, tx *sqlx.Tx, userId int64) []ListMyAthletesQuery {
+	query := `
+	select u.name, a.name plan 
+	from useraccount u 
+    inner join accountplan a on u.accountplan_id = a.id
+    where u.trainer=$1`
+	stmt, err := getTxPreparedStmt(db, tx, query)
+	util.Check(err)
+	dest := make([]ListMyAthletesQuery, 0)
+
+	err = stmt.Select(&dest, userId)
+	util.Check(err)
+
+	return dest
+}
+
 func ListWorkoutTemplates(db *DB, tx *sqlx.Tx, userId int64) []ListWorkoutTemplatesQuery {
 	query := `
 		select 
@@ -397,6 +413,13 @@ func UpdateUserPlanificationRoutineAccess(db *DB, tx *sqlx.Tx, planificationId, 
 	stmt, err := getTxPreparedStmt(db, tx, query)
 	util.Check(err)
 	stmt.Exec(newUpToRoutineAccess, planificationId, userId)
+}
+
+func UpdateUserAccountInstructor(db *DB, tx *sqlx.Tx, userId, instructorId int64) {
+	query := `update useraccount set trainer=$1 where id=$2 and trainer is null`
+	stmt, err := getTxPreparedStmt(db, tx, query)
+	util.Check(err)
+	stmt.Exec(instructorId, userId)
 }
 
 func ListExercises(db *DB, tx *sqlx.Tx, userId int64) []ListExerciseQuery {
@@ -844,13 +867,13 @@ func GetUserLoadedTrainingToday(db *DB, tx *sqlx.Tx, userId int64) bool {
 	return lastYear == year && lastMonth == month && lastDay == day
 }
 
-func GetUserIdByUserName(db *DB, tx *sqlx.Tx, userName string) int64 {
-	query := "select id from useraccount where username=$1"
+func GetUserIdByCode(db *DB, tx *sqlx.Tx, code string) int64 {
+	query := "select id from useraccount where code=$1"
 	stmt, err := getTxPreparedStmt(db, tx, query)
 	util.Check(err)
 
 	var userId int64
-	err = stmt.Get(&userId, userName)
+	err = stmt.Get(&userId, code)
 	util.Check(err)
 	return userId
 }
@@ -891,7 +914,7 @@ func GetAccountPlanIdentifierByUserId(db *DB, tx *sqlx.Tx, userId int64) *Accoun
 
 func GetUserAccountDetails(db *DB, tx *sqlx.Tx, userId int64) *GetUserAccountDetailsQuery {
 	query := `
-	   select u.name, u.email, u.pictureurl, a.name as accounttype from useraccount u
+	   select u.name, u.email, u.pictureurl, a.name as accounttype, u.trainer, u.code from useraccount u
 	   inner join accountplan a on u.accountplan_id = a.id
 	   where u.id=$1`
 	stmt, err := getTxPreparedStmt(db, tx, query)

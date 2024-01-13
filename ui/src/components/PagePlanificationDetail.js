@@ -327,7 +327,7 @@ class PagePlanificationDetail extends Component {
     }
 
     render() {
-        const {state: {planificationName, isOwner, permissions: {sharePlanification, editPlanification, repeatLastMesocycle}}} = this.context
+        const {state: {planificationName, isOwner, permissions: {sharePlanification, editPlanification, repeatLastMesocycle, canMarkRoutine}}} = this.context
         const {
             loading,
             isEditable,
@@ -366,7 +366,7 @@ class PagePlanificationDetail extends Component {
         let weekNumber = 1
         return (
             <>
-                <Menu compact vertical borderless fixed={"left"} className={'planification-mesocycle-index'}>
+                <Menu compact vertical borderless className={'planification-mesocycle-index'}>
                     <Menu.Item header fitted={'horizontally'}>M</Menu.Item>
                     {menuItems}
                 </Menu>
@@ -418,14 +418,14 @@ class PagePlanificationDetail extends Component {
                         </List.Item>
                         <List.Item>
                             Mesociclo: {editionMode ?
-                                    <Input
-                                        type={'number'}
-                                        placeholder={mesocycle}
-                                        className={'size-two-digits align-center'}
-                                        onChange={(e, {value}) => this.setState({newMesocycle: value, changes: !!value})}
-                                    />
-                                    : mesocycle
-                                } dias
+                            <Input
+                                type={'number'}
+                                placeholder={mesocycle}
+                                className={'size-two-digits align-center'}
+                                onChange={(e, {value}) => this.setState({newMesocycle: value, changes: !!value})}
+                            />
+                            : mesocycle
+                        } dias
                         </List.Item>
                     </List>
                 </Segment>
@@ -475,7 +475,7 @@ class PagePlanificationDetail extends Component {
                                         </Grid.Column>
                                     }
                                     {
-                                        (!editionMode && !disableActions) &&
+                                        (!editionMode && !disableActions && canMarkRoutine) &&
                                         <Grid.Column width={5} className={'no-right-padding no-left-padding'}>
                                             <Button disabled={disableActions}
                                                     onClick={() => this.setState({showModalRoutineActionated: true, actionatedRoutineIndex: i, actionatedRoutineId: p.id, actionatedRoutineAction: 'finished'})}

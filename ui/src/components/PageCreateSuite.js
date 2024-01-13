@@ -13,10 +13,19 @@ import {
     Segment
 } from "semantic-ui-react";
 import {
-    createPlanification, deletePlanification, getUserPermissions, listExercises, listExerciseVideos,
+    createPlanification,
+    deletePlanification,
+    getUserPermissions,
+    inviteAthletes,
+    listExercises,
+    listExerciseVideos,
+    listMyAthletes,
     listPlanifications,
-    listQueuedPlanificationAccessRequests, listRoutineTemplates, listWorkoutTemplates,
-    requestAccessToSharedPlanification, uploadExerciseVideoLink
+    listQueuedPlanificationAccessRequests,
+    listRoutineTemplates,
+    listWorkoutTemplates,
+    requestAccessToSharedPlanification,
+    uploadExerciseVideoLink
 } from "../service";
 import {Link, withRouter} from "react-router-dom";
 import {AppContext, setData, showSuccess} from "../context";
@@ -29,6 +38,7 @@ import {ModalPlanificationsPendingRequests} from "./ModalPlanificationsPendingRe
 import {PopUpConfirmation} from "./PopUpConfirmation";
 import {Chip} from "./Chip";
 import {ModalExerciseVideoLinkUpload} from "./ModalExerciseVideoLinkUpload";
+import {isLocalhost} from "../functions";
 
 const MenuHeaderRender = ({onMenuChange}) => {
     const [activeItem, setActiveItem] = useState(1)
@@ -56,6 +66,14 @@ const MenuHeaderRender = ({onMenuChange}) => {
                 onClick={() => {
                     setActiveItem(3)
                     onMenuChange(3)
+                }}
+            />
+            <Menu.Item
+                name='athletes'
+                active={activeItem === 4}
+                onClick={() => {
+                    setActiveItem(4)
+                    onMenuChange(4)
                 }}
             />
         </Menu>
@@ -122,7 +140,7 @@ class PageCreateSuite extends Component {
     }
 
     async onMenuChanged(i) {
-        const {routines, workouts, videos} = this.state;
+        const {routines, workouts, videos, athletes} = this.state;
         switch (i) {
             case 1:
                 if (!routines) {
@@ -158,6 +176,33 @@ class PageCreateSuite extends Component {
                 this.context.dispatch(setData({secondaryActions: []}))
                 this.setState({title: 'Mis Videos', show: 3})
                 break
+            case 4:
+                const res = await listMyAthletes()
+                this.setState({loading: false, athletes: res.data})
+                this.context.dispatch(setData({secondaryActions: [
+                        {
+                            func: () => this.inviteAthletes(),
+                            description: <span><Icon name={'share alternate'}/> Invitar Atletas</span>}
+                    ]}))
+                this.setState({title: 'Mis Atletas', show: 4})
+                break
+        }
+    }
+
+    async inviteAthletes() {
+        let res = {}
+        try {
+            res = await inviteAthletes()
+
+            if (isLocalhost()) {
+                await navigator.clipboard.writeText(`localhost:3000/app${res.data}`);
+            } else {
+                await navigator.clipboard.writeText(`https://bos.team/app${res.data}`);
+            }
+            showSuccess(this.context, '', 'Link copiado al portapapeles!')
+        } catch (e) {
+            console.error(e)
+            this.setState({inviteLink: `${isLocalhost() ? 'localhost:3000/app' : 'https://bos.team/app'}${res.data}`, showModalCopyLink: true})
         }
     }
 
@@ -197,7 +242,18 @@ class PageCreateSuite extends Component {
 
     render() {
         const {state: {permissions: {}}} = this.context
-        const {loading, routines, workouts, openModalUploadExerciseVideoLink, exerciseToUploadLinkTo, videos, title, show} = this.state;
+        const {
+            loading,
+            routines,
+            workouts,
+            openModalUploadExerciseVideoLink,
+            exerciseToUploadLinkTo,
+            videos,
+            athletes,
+            title,
+            show,
+            showModalCopyLink,
+            inviteLink} = this.state;
 
         if (loading) {
             return <Loader active/>
@@ -245,6 +301,26 @@ class PageCreateSuite extends Component {
                         </Segment>
                     )
                 })}
+                {show === 4 && athletes.map((e,i) => {
+                    return (
+                        <Segment style={{width: '100%'}} key={i}>
+                            <Header sub>{e.name}</Header>
+                            {e.plan}
+                        </Segment>
+                    )
+                })}
+                {
+                    showModalCopyLink &&
+                    <Modal dimmer={'blurring'} size="mini" open={showModalCopyLink} onClose={() => this.setState({showModalCopyLink: false, inviteLink:null})}>
+                        <Modal.Header>Link Generado!</Modal.Header>
+                        <Modal.Content style={{lineBreak: 'anywhere'}}>
+                            <p>{inviteLink}</p>
+                        </Modal.Content>
+                        <Modal.Actions>
+                            <Button secondary onClick={() => this.setState({showModalCopyLink: false, inviteLink:null})}>Cerrar</Button>
+                        </Modal.Actions>
+                    </Modal>
+                }
                 <ModalExerciseVideoLinkUpload
                     open={openModalUploadExerciseVideoLink}
                     item={exerciseToUploadLinkTo}
