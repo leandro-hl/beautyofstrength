@@ -1482,7 +1482,10 @@ func (o *Endpoints) logo(w http.ResponseWriter, r *http.Request, tx *sqlx.Tx) {
 
 		if user.Trainer != nil {
 			trainer := db.GetUserAccountDetails(o.db, tx, *user.Trainer)
-			baseDirectory = "img/" + *trainer.Code
+
+			if trainer.Code != nil {
+				baseDirectory = "img/" + *trainer.Code
+			}
 		}
 	}
 
