@@ -310,11 +310,11 @@ func (o *Endpoints) Handle() http.Handler {
 	api.Path("/listLastUserRmHistoryStats").HandlerFunc(o.HandleAuthenticatedTransactional(o.HandleAuthorization(o.listLastUserRmHistoryStats, db.StudentFree, db.StudentPremium)))
 	api.Path("/saveUserTrainedToday").HandlerFunc(o.HandleAuthenticatedTransactional(o.HandleAuthorization(o.saveUserTrainedToday, db.StudentFree, db.StudentPremium)))
 	api.Path("/getUserLoadedTrainingToday").HandlerFunc(o.HandleAuthenticatedTransactional(o.HandleAuthorization(o.getUserLoadedTrainingToday, db.StudentFree, db.StudentPremium)))
-	api.Path("/acceptInstructorInvite").HandlerFunc(o.HandleAuthenticatedTransactional(o.HandleAuthorization(o.acceptInstructorInvite, db.StudentFree, db.StudentPremium)))
 
 	//General Services
 	//o.r.Path("/serveFile").HandlerFunc(o.HandleAuthenticatedTransactional(o.serveFile))
 	//redirect directly to the api. check the domain is mercado pago. implement some shit like google auth sec
+	api.Path("/acceptInstructorInvite").HandlerFunc(o.HandleAuthenticatedTransactional(o.HandleAuthorization(o.acceptInstructorInvite, db.StudentFree, db.StudentPremium, db.Professor)))
 	api.Path("/teacherSubscriptionApproved").HandlerFunc(o.HandleAuthenticatedTransactional(o.HandleAuthorization(o.teacherSubscriptionApproved, db.StudentFree, db.StudentPremium, db.Professor)))
 	api.Path("/eliteSubscriptionApproved").HandlerFunc(o.HandleAuthenticatedTransactional(o.HandleAuthorization(o.eliteSubscriptionApproved, db.StudentFree, db.StudentPremium, db.Professor)))
 	api.Path("/saveExercisesBlockFree").HandlerFunc(o.HandleAuthenticatedTransactional(o.HandleAuthorization(o.saveExercisesBlockFree, db.StudentFree, db.StudentPremium, db.Professor)))
