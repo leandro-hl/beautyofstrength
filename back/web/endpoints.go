@@ -1486,6 +1486,11 @@ func (o *Endpoints) logo(w http.ResponseWriter, r *http.Request, tx *sqlx.Tx) {
 		}
 	}
 
+	if !o.conf.IsDevelopment() {
+		exePath, _ := filepath.Abs(filepath.Dir("."))
+		baseDirectory = filepath.Join(exePath, baseDirectory)
+	}
+
 	input := r.URL.Query().Get("type")
 	serveFile(w, r, input, baseDirectory, []string{".png", ".ico"})
 }
