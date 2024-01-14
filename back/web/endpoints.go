@@ -426,6 +426,8 @@ func (o *Endpoints) getUserPermissions(w http.ResponseWriter, r *http.Request, t
 func (o *Endpoints) getUserAccountDetails(w http.ResponseWriter, r *http.Request, tx *sqlx.Tx) {
 	userId := util.UserId(r)
 	user := db.GetUserAccountDetails(o.db, tx, userId)
+
+	db.RegisterEvent(o.db, tx, userId, db.UserAccountDetails)
 	o.Respond(w, user, http.StatusOK)
 }
 
@@ -442,12 +444,14 @@ func (o *Endpoints) getRoutineDetails(w http.ResponseWriter, r *http.Request, tx
 		result := db.GetRoutineDetailsTemplate(o.db, tx, routineId, userId)
 		res := o.calculateRoutineDetailsResponse(header, result, false)
 
+		db.RegisterEvent(o.db, tx, userId, db.RoutineTemplateDetails)
 		o.Respond(w, &res, http.StatusOK)
 	} else {
 		header := db.GetRoutineHeader(o.db, tx, routineId, userId, userId)
 		result := db.GetRoutineDetails(o.db, tx, routineId, userId)
 		res := o.calculateRoutineDetailsResponse(header, result, false)
 
+		db.RegisterEvent(o.db, tx, userId, db.RoutineDetails)
 		o.Respond(w, &res, http.StatusOK)
 	}
 }
@@ -475,6 +479,7 @@ func (o *Endpoints) getSharedRoutineDetails(w http.ResponseWriter, r *http.Reque
 			result := db.GetRoutineDetails(o.db, tx, t.RoutineId, t.CreatorId)
 			res := o.calculateRoutineDetailsResponse(header, result, *metaData.CanBeSaved)
 
+			db.RegisterEvent(o.db, tx, usr, db.RoutineSharedDetails)
 			o.Respond(w, &res, http.StatusOK)
 		}
 	} else {
@@ -599,6 +604,7 @@ func (o *Endpoints) listLatestEvents(w http.ResponseWriter, r *http.Request, tx 
 		}
 	}
 
+	db.RegisterEvent(o.db, tx, usr, db.ListEvents)
 	o.Respond(w, &ListLatestEventsResponse{Events: res}, http.StatusOK)
 }
 
@@ -662,6 +668,7 @@ func (o *Endpoints) saveSharedRoutine(w http.ResponseWriter, r *http.Request, tx
 
 		db.InsertEventUser(o.db, tx, db.SavedCopyOfRoutine, *original.CreatorId, usr, nil, original.Id)
 		db.InsertUserRoutineCopy(o.db, tx, usr, *original.Id)
+		db.RegisterEvent(o.db, tx, usr, db.SaveSharedRoutine)
 	} else {
 		panic(&BadRequestResponse{ErrorCode: util.PString("cannot_save_routine")})
 		//panic(errors.New("routine cannot be saved"))
@@ -691,6 +698,7 @@ func (o *Endpoints) actionateRoutine(w http.ResponseWriter, r *http.Request, tx 
 		} else if *t.ActionatedRoutineAction == "finished" {
 			db.InsertUserRoutineHistory(o.db, tx, true, *t.PlanificationId, *t.ActionatedRoutineId, usr)
 		}
+		db.RegisterEvent(o.db, tx, usr, db.ActionatedRoutine)
 	} else {
 		panic(&BadRequestResponse{ErrorCode: util.PString("no_access")})
 	}
@@ -704,6 +712,7 @@ func (o *Endpoints) listRoutineTemplates(w http.ResponseWriter, r *http.Request,
 	}
 	usr := util.UserId(r)
 	templates := db.ListRoutineTemplates(o.db, tx, usr)
+	db.RegisterEvent(o.db, tx, usr, db.ListRoutineTemplatess)
 	o.Respond(w, templates, http.StatusOK)
 }
 
@@ -715,6 +724,7 @@ func (o *Endpoints) listMyAthletes(w http.ResponseWriter, r *http.Request, tx *s
 	}
 	usr := util.UserId(r)
 	at := db.ListMyAthletes(o.db, tx, usr)
+	db.RegisterEvent(o.db, tx, usr, db.ListMyAthletess)
 	o.Respond(w, at, http.StatusOK)
 }
 
@@ -825,6 +835,7 @@ func (o *Endpoints) getPlanificationDetails(w http.ResponseWriter, r *http.Reque
 		routinesResponse = append(routinesResponse, routineResponse)
 	}
 
+	db.RegisterEvent(o.db, tx, usr, db.PlanificationDetails)
 	o.Respond(w, &GetPlanificationDetailsResponse{
 		IsEditable: &isEditable,
 		Week:       schedule.Days,
@@ -836,7 +847,9 @@ func (o *Endpoints) getPlanificationDetails(w http.ResponseWriter, r *http.Reque
 
 func (o *Endpoints) listPlanifications(w http.ResponseWriter, r *http.Request, tx *sqlx.Tx) {
 	userId := util.UserId(r)
-	o.Respond(w, db.ListMyPlanifications(o.db, tx, userId), http.StatusOK)
+	planifications := db.ListMyPlanifications(o.db, tx, userId)
+	db.RegisterEvent(o.db, tx, userId, db.ListPlanificationss)
+	o.Respond(w, planifications, http.StatusOK)
 }
 
 func (o *Endpoints) listExercises(w http.ResponseWriter, r *http.Request, tx *sqlx.Tx) {
@@ -854,6 +867,7 @@ func (o *Endpoints) listExercises(w http.ResponseWriter, r *http.Request, tx *sq
 	exercises := db.ListExercises(o.db, tx, userId)
 	//todo: use a Response struct to not expose db data.
 	plan := o.plan(r)
+	db.RegisterEvent(o.db, tx, userId, db.ListExercisess)
 	if *plan == db.Professor {
 		o.Respond(w, &ListExercisesResponse{
 			ShowVideoInfo: util.PBool(true),
@@ -875,6 +889,7 @@ func (o *Endpoints) listExercises(w http.ResponseWriter, r *http.Request, tx *sq
 }
 
 func (o *Endpoints) listEquipment(w http.ResponseWriter, r *http.Request, tx *sqlx.Tx) {
+	db.RegisterEvent(o.db, tx, util.UserId(r), db.ListEquipments)
 	o.Respond(w, db.ListEquipment(o.db, tx), http.StatusOK)
 }
 
@@ -903,6 +918,7 @@ func (o *Endpoints) listUserRms(w http.ResponseWriter, r *http.Request, tx *sqlx
 	rmsRes[len(rmsRes)-1].Sum = util.PBool(true)
 	rmsRes[len(rmsRes)-1].From = util.PInt(2)
 
+	db.RegisterEvent(o.db, tx, userId, db.ListUserRM)
 	o.Respond(w, &ListUserRmsResponse{
 		Rms: rmsRes,
 	}, http.StatusOK)
@@ -920,6 +936,7 @@ func (o *Endpoints) saveNewRm(w http.ResponseWriter, r *http.Request, tx *sqlx.T
 
 	db.UpdateUserRmSummary(o.db, tx, *t.Id, *t.Rm)
 	db.InsertNewUserRmHistory(o.db, tx, *t.Id, *t.Rm)
+	db.RegisterEvent(o.db, tx, usr, db.SaveNewRM)
 }
 
 func (o *Endpoints) listLastUserRmHistoryStats(w http.ResponseWriter, r *http.Request, tx *sqlx.Tx) {
@@ -1000,6 +1017,7 @@ func (o *Endpoints) listLastUserRmHistoryStats(w http.ResponseWriter, r *http.Re
 		labels = append(labels, time.Now().Format("02/01/2006"))
 	}
 
+	db.RegisterEvent(o.db, tx, usr, db.ListLastUserRmHistoryStats)
 	o.Respond(w, &ListLastUserRmHistoryStatsResponse{
 		Labels: labels,
 		Series: matrix,
@@ -1110,6 +1128,12 @@ func (o *Endpoints) saveRoutineEditions(w http.ResponseWriter, r *http.Request, 
 			}
 		}
 	}
+
+	if t.IsTemplate {
+		db.RegisterEvent(o.db, tx, userId, db.SaveRoutineTemplateEditions)
+	} else {
+		db.RegisterEvent(o.db, tx, userId, db.SaveRoutineEditions)
+	}
 }
 
 func (o *Endpoints) saveExerciseBlockValidations(
@@ -1141,6 +1165,7 @@ func (o *Endpoints) saveExerciseBlockValidations(
 	if routineId == nil && isTemplate {
 		n := db.CalculateRoutineNumber(o.db, tx, userId)
 		routineId = db.CreateRoutineTemplateDefault(o.db, tx, fmt.Sprintf("Rutina Nro %d", n+1), userId)
+		db.RegisterEvent(o.db, tx, userId, db.CreateRoutineTemplate)
 	} else if routineId != nil && isTemplate {
 		if !db.CalculateUserOwnsRoutineTemplate(o.db, tx, userId, *routineId) {
 			panic(&BadRequestResponse{ErrorCode: util.PString("no_access")})
@@ -1151,6 +1176,7 @@ func (o *Endpoints) saveExerciseBlockValidations(
 			panic(&BadRequestResponse{ErrorCode: util.PString("free_create_routine_limit")})
 		}
 		routineId = db.CreateRoutineDefault(o.db, tx, fmt.Sprintf("Dia %d", *last+1), *planificationId, userId)
+		db.RegisterEvent(o.db, tx, userId, db.CreateRoutinee)
 	} else if routineId != nil && !isTemplate {
 		if !db.CalculateUserOwnsRoutine(o.db, tx, userId, *planificationId, *routineId) {
 			panic(&BadRequestResponse{ErrorCode: util.PString("no_access")})
@@ -1279,6 +1305,7 @@ func (o *Endpoints) addToMyEquipment(w http.ResponseWriter, r *http.Request, tx 
 	util.Check(err)
 	userId := util.UserId(r)
 	db.InsertUserAccountEquipment(o.db, tx, userId, *t.Id, *t.Units, t.Weight, t.Height, t.Width)
+	db.RegisterEvent(o.db, tx, userId, db.AddToMyEquipment)
 }
 
 func (o *Endpoints) listUserAccountEquipment(w http.ResponseWriter, r *http.Request, tx *sqlx.Tx) {
@@ -1305,6 +1332,7 @@ func (o *Endpoints) createPlanification(w http.ResponseWriter, r *http.Request, 
 
 	userId := util.UserId(r)
 	id := db.CreatePlanification(o.db, tx, userId, *t.Name, false, 5)
+	db.RegisterEvent(o.db, tx, userId, db.CreatePlanificationn)
 	o.Respond(w, &CreatePlanificationResponse{Id: id}, http.StatusOK)
 }
 
@@ -1321,6 +1349,7 @@ func (o *Endpoints) deletePlanification(w http.ResponseWriter, r *http.Request, 
 
 	if db.CalculateUserOwnsPlanification(o.db, tx, userId, *t.Id) {
 		db.DeletePlanificationById(o.db, tx, userId, *t.Id)
+		db.RegisterEvent(o.db, tx, userId, db.DeletePlanification)
 	} else {
 		panic(&BadRequestResponse{ErrorCode: util.PString("no_access")})
 	}
@@ -1342,6 +1371,7 @@ func (o *Endpoints) savePlanificationDays(w http.ResponseWriter, r *http.Request
 	}
 
 	db.InsertPlanificationDays(o.db, tx, *t.PlanificationId, *t.Days)
+	db.RegisterEvent(o.db, tx, userId, db.SavePlanificationDays)
 	o.Respond(w, nil, http.StatusOK)
 }
 
@@ -1415,23 +1445,27 @@ func (o *Endpoints) manifest(w http.ResponseWriter, r *http.Request, tx *sqlx.Tx
 	shortName := "bOS"
 
 	ok, name, shortName := isValid(input, name, shortName)
+	registerManifestDefault := true
 	//fmt.Println("manifest metadata")
 	//fmt.Println(ok)
 	//fmt.Println(name)
 	//fmt.Println(shortName)
 	//fmt.Println(input)
+	userId := util.PInt64(0)
 	if !ok {
+		input = ""
 		//fmt.Println("retrieving session data")
-		id, _ := o.retrieveSessionData(r)
-		if id != nil {
+		userId, _ = o.retrieveSessionData(r)
+		if userId != nil {
 			//fmt.Println("getting user account details")
-			user := db.GetUserAccountDetails(o.db, tx, *id)
+			user := db.GetUserAccountDetails(o.db, tx, *userId)
 			if user.Trainer != nil {
 				//fmt.Println("getting trainer account details")
 				trainer := db.GetUserAccountDetails(o.db, tx, *user.Trainer)
 				if trainer.Code != nil {
 					_, name, shortName = isValid(*trainer.Code, name, shortName)
 					input = *trainer.Code
+					registerManifestDefault = false
 					//fmt.Println(name)
 					//fmt.Println(shortName)
 					//fmt.Println(input)
@@ -1485,16 +1519,23 @@ func (o *Endpoints) manifest(w http.ResponseWriter, r *http.Request, tx *sqlx.Tx
 
 	w.Header().Set("Content-Type", "application/json")
 	w.Write([]byte(manifest))
+
+	if registerManifestDefault {
+		db.RegisterEvent(o.db, tx, *userId, db.ManifestDefault)
+	} else {
+		db.RegisterEvent(o.db, tx, *userId, db.ManifestTrainer)
+	}
 }
 
 func (o *Endpoints) logo(w http.ResponseWriter, r *http.Request, tx *sqlx.Tx) {
 	token := r.URL.Query().Get("invite")
 
+	userId := util.PInt64(0)
 	baseDirectory := "img/default"
 	if token != "" && token != "null" {
 		baseDirectory = "img/" + token
-	} else if id, _ := o.retrieveSessionData(r); id != nil {
-		user := db.GetUserAccountDetails(o.db, tx, *id)
+	} else if userId, _ = o.retrieveSessionData(r); userId != nil {
+		user := db.GetUserAccountDetails(o.db, tx, *userId)
 
 		if user.Trainer != nil {
 			trainer := db.GetUserAccountDetails(o.db, tx, *user.Trainer)
@@ -1507,6 +1548,7 @@ func (o *Endpoints) logo(w http.ResponseWriter, r *http.Request, tx *sqlx.Tx) {
 
 	input := r.URL.Query().Get("type")
 	serveFile(w, r, input, baseDirectory, []string{".png", ".ico"})
+	db.RegisterEvent(o.db, tx, *userId, db.FetchLogo)
 }
 
 func (o *Endpoints) teacherSubscriptionApproved(w http.ResponseWriter, r *http.Request, tx *sqlx.Tx) {
@@ -1577,6 +1619,7 @@ func (o *Endpoints) googleSignIn(w http.ResponseWriter, r *http.Request, tx *sql
 	if userId != nil {
 		o.storeSessionData(w, tx, *userId)
 		plan := db.GetAccountPlanIdentifierByUserId(o.db, tx, *userId)
+		db.RegisterEvent(o.db, tx, *userId, db.SignIn)
 		if plan == nil {
 			http.Redirect(w, r, *o.conf.AddressUi+"/app"+"/plans", http.StatusFound)
 		} else if *plan == db.StudentFree {
@@ -1608,6 +1651,7 @@ func (o *Endpoints) googleSignIn(w http.ResponseWriter, r *http.Request, tx *sql
 		db.InsertPlanificationDays(o.db, tx, *planificationId, days)
 		db.GenerateUserExerciseRm(o.db, tx, *userId)
 		o.storeSessionData(w, tx, *userId)
+		db.RegisterEvent(o.db, tx, *userId, db.AccountCreated)
 		http.Redirect(w, r, *o.conf.AddressUi+"/app"+"/my-planifications", http.StatusFound)
 	}
 }
@@ -1628,6 +1672,7 @@ func (o *Endpoints) signout(w http.ResponseWriter, r *http.Request, tx *sqlx.Tx)
 			SameSite: http.SameSiteStrictMode,
 			Secure:   true,
 		})
+		db.RegisterEvent(o.db, tx, userId, db.SignOut)
 	}
 }
 
@@ -1651,6 +1696,7 @@ func (o *Endpoints) shareRoutine(w http.ResponseWriter, r *http.Request, tx *sql
 		util.Check(err)
 
 		db.SaveUserSharingToken(o.db, tx, *t.PlanificationId, userId, t.RoutineId, *t.CanBeSaved)
+		db.RegisterEvent(o.db, tx, userId, db.ShareRoutine)
 		o.Respond(w, fmt.Sprintf("/routine?share=%s", base64.RawURLEncoding.EncodeToString([]byte(encrypted))), http.StatusOK)
 	} else {
 		o.Respond(w, nil, http.StatusUnauthorized)
@@ -1678,6 +1724,7 @@ func (o *Endpoints) requestAccessToSharedPlanification(w http.ResponseWriter, r 
 	if !db.UserAlreadyRequestedAccessToSharedPlanification(o.db, tx, *metaData.PlanificationId, userId) {
 		if db.CalculateUserHasNoAccessToPlanification(o.db, tx, *metaData.PlanificationId, userId) {
 			db.QueueAccessRequestToSharedPlanification(o.db, tx, *metaData.PlanificationId, userId)
+			db.RegisterEvent(o.db, tx, userId, db.RequestAccessToSharedPlanification)
 		}
 	}
 }
@@ -1695,6 +1742,7 @@ func (o *Endpoints) acceptPlanificationAccessRequest(w http.ResponseWriter, r *h
 		db.CalculateUserHasNoAccessToPlanification(o.db, tx, *p.PlanificationId, *p.RequesterUserId) {
 		plan := db.GetAccountPlanIdentifierByUserId(o.db, tx, *p.RequesterUserId)
 		db.AcceptPlanificationAccessRequest(o.db, tx, *p.PlanificationId, *p.RequesterUserId, userId, plan)
+		db.RegisterEvent(o.db, tx, userId, db.AcceptPlanificationAccessRequestt)
 	}
 }
 
@@ -1705,6 +1753,7 @@ func (o *Endpoints) declinePlanificationAccessRequest(w http.ResponseWriter, r *
 	userId := util.UserId(r)
 	if db.CalculateUserOwnsPlanification(o.db, tx, userId, *p.PlanificationId) {
 		db.DeclinePlanificationAccessRequest(o.db, tx, *p.PlanificationId, *p.RequesterUserId, userId)
+		db.RegisterEvent(o.db, tx, userId, db.DeclinePlanificationAccessRequestt)
 	}
 }
 
@@ -1741,6 +1790,7 @@ func (o *Endpoints) savePlanificationEditions(w http.ResponseWriter, r *http.Req
 	for i := 0; i < len(p.RoutinesToDelete); i++ {
 		db.DeleteRoutine(o.db, tx, p.RoutinesToDelete[i])
 	}
+	db.RegisterEvent(o.db, tx, userId, db.SavePlanificationEditions)
 }
 
 func (o *Endpoints) createNewExercise(w http.ResponseWriter, r *http.Request, tx *sqlx.Tx) {
@@ -1774,6 +1824,7 @@ func (o *Endpoints) createNewExercise(w http.ResponseWriter, r *http.Request, tx
 		listExercisesQueryCache.Invalidate()
 
 		db.AssociateExerciseEquipment(o.db, tx, *exerciseId, p.Equipment)
+		db.RegisterEvent(o.db, tx, userId, db.CreateNewExercise)
 		o.Respond(w, &CreateNewExerciseResponse{Id: exerciseId}, http.StatusOK)
 	}
 }
@@ -1817,6 +1868,7 @@ func (o *Endpoints) copyTemplateRoutineToPlanification(w http.ResponseWriter, r 
 			}
 		}
 	}
+	db.RegisterEvent(o.db, tx, userId, db.CopyTemplateRoutineToPlanification)
 }
 
 func (o *Endpoints) uploadExerciseVideoLink(w http.ResponseWriter, r *http.Request, tx *sqlx.Tx) {
@@ -1847,8 +1899,8 @@ func (o *Endpoints) uploadExerciseVideoLink(w http.ResponseWriter, r *http.Reque
 
 	db.InsertInstructorVideoLink(o.db, tx, userId, *p.Id, *p.Link)
 	//todo: kind of a shame to invalidate it for all users when it changes only for a few.
-	listExercisesQueryCache.Invalidate()
-
+	//listExercisesQueryCache.Invalidate()
+	db.RegisterEvent(o.db, tx, userId, db.UploadExerciseVideoLink)
 	o.Respond(w, &UploadExerciseVideoLinkResponse{Link: p.Link}, http.StatusOK)
 }
 
@@ -1864,11 +1916,13 @@ func (o *Endpoints) repeatLastMesocycle(w http.ResponseWriter, r *http.Request, 
 
 	db.UpdatePlanificationMesocycleCopiedDate(o.db, tx, *p.PlanificationId)
 	db.EnqueuePlanificationOperation(o.db, tx, userId, *p.PlanificationId, db.PlanificationCopyMesocycle, nil, false)
+	db.RegisterEvent(o.db, tx, userId, db.RepeatLastMesocycle)
 }
 
 func (o *Endpoints) inviteAthletesToAssociateWithMe(w http.ResponseWriter, r *http.Request, tx *sqlx.Tx) {
 	userId := util.UserId(r)
 	usr := db.GetUserAccountDetails(o.db, tx, userId)
+	db.RegisterEvent(o.db, tx, userId, db.InviteAthletesToAssociateWithMe)
 	o.Respond(w, fmt.Sprintf("/my-planifications?invite=%s", *usr.Code), http.StatusOK)
 }
 
@@ -1884,6 +1938,7 @@ func (o *Endpoints) acceptInstructorInvite(w http.ResponseWriter, r *http.Reques
 	trainerId := db.GetUserIdByCode(o.db, tx, *p.InstructorInvite)
 
 	db.UpdateUserAccountInstructor(o.db, tx, userId, trainerId)
+	db.RegisterEvent(o.db, tx, userId, db.AcceptInstructorInvite)
 }
 
 func (o *Endpoints) sharePlanification(w http.ResponseWriter, r *http.Request, tx *sqlx.Tx) {
@@ -1904,6 +1959,7 @@ func (o *Endpoints) sharePlanification(w http.ResponseWriter, r *http.Request, t
 		util.Check(err)
 
 		db.SaveUserSharingToken(o.db, tx, *t.PlanificationId, userId, nil, false)
+		db.RegisterEvent(o.db, tx, userId, db.SharePlanification)
 		o.Respond(w, fmt.Sprintf("/my-planifications?pshare=%s", base64.RawURLEncoding.EncodeToString([]byte(encrypted))), http.StatusOK)
 	} else {
 		o.Respond(w, nil, http.StatusUnauthorized)
