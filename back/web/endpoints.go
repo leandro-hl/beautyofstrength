@@ -1388,10 +1388,11 @@ func (o *Endpoints) getUserLoadedTrainingToday(w http.ResponseWriter, r *http.Re
 
 // todo: merge with db or something
 var validManifests = map[string]string{
-	"juan.solanilla": "Juan Solanilla",
-	"guille.panak":   "Guillermo Panak",
-	"delparque.fit":  "Del Parque Fit",
-	"sergio.suares":  "Sergio Suares",
+	"juan.solanilla":      "Juan Solanilla",
+	"guille.panak":        "Guillermo Panak",
+	"delparque.fit":       "Del Parque Fit",
+	"sergio.suares":       "Sergio Suares",
+	"german.calisthenics": "German Calisthenics",
 }
 
 func isValid(input, name, shortName string) (bool, string, string) {
