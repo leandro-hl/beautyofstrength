@@ -1414,14 +1414,26 @@ func (o *Endpoints) manifest(w http.ResponseWriter, r *http.Request, tx *sqlx.Tx
 	shortName := "bOS"
 
 	ok, name, shortName := isValid(input, name, shortName)
+	//fmt.Println("manifest metadata")
+	//fmt.Println(ok)
+	//fmt.Println(name)
+	//fmt.Println(shortName)
+	//fmt.Println(input)
 	if !ok {
-		if id, _ := o.retrieveSessionData(r); id != nil {
+		//fmt.Println("retrieving session data")
+		id, _ := o.retrieveSessionData(r)
+		if id != nil {
+			//fmt.Println("getting user account details")
 			user := db.GetUserAccountDetails(o.db, tx, *id)
 			if user.Trainer != nil {
+				//fmt.Println("getting trainer account details")
 				trainer := db.GetUserAccountDetails(o.db, tx, *user.Trainer)
 				if trainer.Code != nil {
 					_, name, shortName = isValid(*trainer.Code, name, shortName)
 					input = *trainer.Code
+					//fmt.Println(name)
+					//fmt.Println(shortName)
+					//fmt.Println(input)
 				}
 			}
 		}
