@@ -1419,7 +1419,10 @@ func (o *Endpoints) manifest(w http.ResponseWriter, r *http.Request, tx *sqlx.Tx
 			user := db.GetUserAccountDetails(o.db, tx, *id)
 			if user.Trainer != nil {
 				trainer := db.GetUserAccountDetails(o.db, tx, *user.Trainer)
-				_, name, shortName = isValid(*trainer.Code, name, shortName)
+				if trainer.Code != nil {
+					_, name, shortName = isValid(*trainer.Code, name, shortName)
+					input = *trainer.Code
+				}
 			}
 		}
 	}
