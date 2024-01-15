@@ -876,6 +876,14 @@ func SaveExercisesBlock(db *DB, tx *sqlx.Tx,
 	return id
 }
 
+func RegisterAnonymousEvent(db *DB, tx *sqlx.Tx, event AppEvent) {
+	InsertSchema(tx, &Event{
+		UserAccountId:   nil,
+		LastUpdatedDate: time.Now(),
+		Event:           util.PString(string(event)),
+	}, "app")
+}
+
 func RegisterEvent(db *DB, tx *sqlx.Tx, userId int64, event AppEvent) {
 	InsertSchema(tx, &Event{
 		UserAccountId:   &userId,

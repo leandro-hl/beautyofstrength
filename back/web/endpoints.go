@@ -1471,8 +1471,6 @@ func (o *Endpoints) manifest(w http.ResponseWriter, r *http.Request, tx *sqlx.Tx
 					//fmt.Println(input)
 				}
 			}
-		} else {
-			userId = util.PInt64(0)
 		}
 	}
 
@@ -1519,14 +1517,14 @@ func (o *Endpoints) manifest(w http.ResponseWriter, r *http.Request, tx *sqlx.Tx
 		  "description": "El sistema operativo del entrenamiento"
 		}`
 
-	w.Header().Set("Content-Type", "application/json")
-	w.Write([]byte(manifest))
-
 	if registerManifestDefault {
-		db.RegisterEvent(o.db, tx, *userId, db.ManifestDefault)
+		db.RegisterAnonymousEvent(o.db, tx, db.ManifestDefault)
 	} else {
 		db.RegisterEvent(o.db, tx, *userId, db.ManifestTrainer)
 	}
+
+	w.Header().Set("Content-Type", "application/json")
+	w.Write([]byte(manifest))
 }
 
 func (o *Endpoints) logo(w http.ResponseWriter, r *http.Request, tx *sqlx.Tx) {
@@ -1549,12 +1547,13 @@ func (o *Endpoints) logo(w http.ResponseWriter, r *http.Request, tx *sqlx.Tx) {
 	}
 
 	if userId == nil {
-		userId = util.PInt64(0)
+		db.RegisterAnonymousEvent(o.db, tx, db.FetchLogo)
+	} else {
+		db.RegisterEvent(o.db, tx, *userId, db.FetchLogo)
 	}
 
 	input := r.URL.Query().Get("type")
 	serveFile(w, r, input, baseDirectory, []string{".png", ".ico"})
-	db.RegisterEvent(o.db, tx, *userId, db.FetchLogo)
 }
 
 func (o *Endpoints) teacherSubscriptionApproved(w http.ResponseWriter, r *http.Request, tx *sqlx.Tx) {
