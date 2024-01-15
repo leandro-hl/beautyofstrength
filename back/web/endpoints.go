@@ -1423,7 +1423,7 @@ var validManifests = map[string]string{
 	"delparque.fit":       "Del Parque Fit",
 	"sergio.suares":       "Sergio Suares",
 	"german.calisthenics": "German Calisthenics",
-	"uriel.oriana":        "Uriel Calistenia",
+	"uriel.oriana":        "Uriel Oriana",
 }
 
 func isValid(input, name, shortName string) (bool, string, string) {
