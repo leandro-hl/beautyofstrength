@@ -10,4 +10,5 @@ create table if not exists app.event
     lastupdateddate timestamp default now() not null
 );
 
-grant insert on app.event to db;
+grant insert,update,select on app.event to db;
+GRANT USAGE ON SCHEMA app TO db;
