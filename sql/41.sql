@@ -9,3 +9,5 @@ create table if not exists app.event
     useraccount_id  bigint                  not null references public.useraccount (id),
     lastupdateddate timestamp default now() not null
 );
+
+grant insert on app.event to db;
