@@ -1423,11 +1423,12 @@ var validManifests = map[string]string{
 	"delparque.fit":       "Del Parque Fit",
 	"sergio.suares":       "Sergio Suares",
 	"german.calisthenics": "German Calisthenics",
+	"uriel.oriana":        "Uriel Calistenia",
 }
 
 func isValid(input, name, shortName string) (bool, string, string) {
 	ok := false
-	if instructorName, ok := validManifests[input]; ok {
+	if instructorName, ok2 := validManifests[input]; ok2 {
 		name += " | " + instructorName
 
 		words := strings.Split(instructorName, " ")
@@ -1436,6 +1437,7 @@ func isValid(input, name, shortName string) (bool, string, string) {
 			initials += string(n[0])
 		}
 		shortName += " | " + initials
+		ok = ok2
 	}
 	return ok, name, shortName
 }
