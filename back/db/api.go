@@ -21,6 +21,54 @@ const (
 	TemplateRoutineToPlanification PlanificationOperation = "TRP"
 )
 
+type AppEvent string
+
+const (
+	RoutineTemplateDetails             AppEvent = "RoutineTemplateDetails"
+	RoutineDetails                     AppEvent = "RoutineDetails"
+	RoutineSharedDetails               AppEvent = "RoutineSharedDetails"
+	UserAccountDetails                 AppEvent = "UserAccount"
+	PlanificationDetails               AppEvent = "PlanificationDetails"
+	ListEvents                         AppEvent = "ListEvents"
+	ListRoutineTemplatess              AppEvent = "ListRoutineTemplates"
+	ListMyAthletess                    AppEvent = "ListMyAthletes"
+	ListPlanificationss                AppEvent = "ListPlanifications"
+	ListExercisess                     AppEvent = "ListExercises"
+	ListEquipments                     AppEvent = "ListEquipment"
+	ListUserRM                         AppEvent = "ListUserRM"
+	SaveNewRM                          AppEvent = "SaveNewRM"
+	SaveSharedRoutine                  AppEvent = "SaveSharedRoutine"
+	ListLastUserRmHistoryStats         AppEvent = "ListLastUserRmHistoryStats"
+	ActionatedRoutine                  AppEvent = "ActionatedRoutine"
+	SaveRoutineEditions                AppEvent = "SaveRoutineEditions"
+	SaveRoutineTemplateEditions        AppEvent = "SaveRoutineTemplateEditions"
+	CreateRoutineTemplate              AppEvent = "CreateRoutineTemplate"
+	CreateRoutinee                     AppEvent = "CreateRoutine"
+	SaveExercisesBlockk                AppEvent = "SaveExercisesBlockk"
+	AddToMyEquipment                   AppEvent = "AddToMyEquipment"
+	CreatePlanificationn               AppEvent = "CreatePlanification"
+	DeletePlanification                AppEvent = "DeletePlanification"
+	SavePlanificationDays              AppEvent = "SavePlanificationDays"
+	ManifestTrainer                    AppEvent = "ManifestTrainer"
+	ManifestDefault                    AppEvent = "ManifestDefault"
+	FetchLogo                          AppEvent = "FetchLogo"
+	AccountCreated                     AppEvent = "AccountCreated"
+	SignIn                             AppEvent = "SignIn"
+	SignOut                            AppEvent = "SignOut"
+	ShareRoutine                       AppEvent = "ShareRoutine"
+	RequestAccessToSharedPlanification AppEvent = "RequestAccessToSharedPlanification"
+	AcceptPlanificationAccessRequestt  AppEvent = "AcceptPlanificationAccessRequest"
+	DeclinePlanificationAccessRequestt AppEvent = "DeclinePlanificationAccessRequestt"
+	SavePlanificationEditions          AppEvent = "SavePlanificationEditions"
+	CreateNewExercise                  AppEvent = "CreateNewExercise"
+	CopyTemplateRoutineToPlanification AppEvent = "CopyTemplateRoutineToPlanification"
+	UploadExerciseVideoLink            AppEvent = "UploadExerciseVideoLink"
+	RepeatLastMesocycle                AppEvent = "RepeatLastMesocycle"
+	InviteAthletesToAssociateWithMe    AppEvent = "InviteAthletesToAssociateWithMe"
+	AcceptInstructorInvite             AppEvent = "AcceptInstructorInvite"
+	SharePlanification                 AppEvent = "SharePlanification"
+)
+
 func getTxPreparedStmt(db *DB, tx *sqlx.Tx, query string) (*sqlx.Stmt, error) {
 	stmtsMutex.RLock()
 	key := string(db.Serial) + query
@@ -823,7 +871,17 @@ func SaveExercisesBlock(db *DB, tx *sqlx.Tx,
 	for i, ex := range exercises {
 		CreateExerciseBlockGroup(db, tx, *id, *ex.ExerciseId, i, ex.Reps, ex.Secs, schema)
 	}
+
+	RegisterEvent(db, tx, userId, SaveExercisesBlockk)
 	return id
+}
+
+func RegisterEvent(db *DB, tx *sqlx.Tx, userId int64, event AppEvent) {
+	InsertSchema(tx, &Event{
+		UserAccountId:   &userId,
+		LastUpdatedDate: time.Now(),
+		Event:           util.PString(string(event)),
+	}, "app")
 }
 
 func SaveUserDevicePushNotificationSubscription(db *DB, tx *sqlx.Tx, userId int64, vapiddata string, deviceName string) {

@@ -263,3 +263,10 @@ type QueuePlanificationOperation struct {
 	CreatedDate     time.Time               `json:"createddate"`
 	LastUpdatedDate time.Time               `json:"lastupdateddate"`
 }
+
+type Event struct {
+	Id              *int64    `json:"id"`
+	UserAccountId   *int64    `json:"useraccount_id"`
+	LastUpdatedDate time.Time `json:"lastupdateddate"`
+	Event           *string   `json:"event"`
+}
