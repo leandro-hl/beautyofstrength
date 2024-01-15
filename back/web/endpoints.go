@@ -1451,7 +1451,7 @@ func (o *Endpoints) manifest(w http.ResponseWriter, r *http.Request, tx *sqlx.Tx
 	//fmt.Println(name)
 	//fmt.Println(shortName)
 	//fmt.Println(input)
-	userId := util.PInt64(0)
+	var userId *int64
 	if !ok {
 		input = ""
 		//fmt.Println("retrieving session data")
@@ -1471,6 +1471,8 @@ func (o *Endpoints) manifest(w http.ResponseWriter, r *http.Request, tx *sqlx.Tx
 					//fmt.Println(input)
 				}
 			}
+		} else {
+			userId = util.PInt64(0)
 		}
 	}
 
@@ -1530,7 +1532,7 @@ func (o *Endpoints) manifest(w http.ResponseWriter, r *http.Request, tx *sqlx.Tx
 func (o *Endpoints) logo(w http.ResponseWriter, r *http.Request, tx *sqlx.Tx) {
 	token := r.URL.Query().Get("invite")
 
-	userId := util.PInt64(0)
+	var userId *int64
 	baseDirectory := "img/default"
 	if token != "" && token != "null" {
 		baseDirectory = "img/" + token
@@ -1544,6 +1546,10 @@ func (o *Endpoints) logo(w http.ResponseWriter, r *http.Request, tx *sqlx.Tx) {
 				baseDirectory = "img/" + *trainer.Code
 			}
 		}
+	}
+
+	if userId == nil {
+		userId = util.PInt64(0)
 	}
 
 	input := r.URL.Query().Get("type")
