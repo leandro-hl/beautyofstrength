@@ -46,13 +46,19 @@ type GetUserAccountDetailsQuery struct {
 }
 
 type GetRoutineHeaderQuery struct {
-	Routineid     *int64  `json:"routineid"`
-	Routinename   *string `json:"routinename"`
-	Difficulty    *int    `json:"difficulty"`
-	Duration      *string `json:"duration"`
-	TimesMarked   *int    `json:"timesmarked"`
-	IsCopy        *bool   `json:"iscopy"`
-	AlreadyCopied *bool   `json:"alreadycopied"`
+	Routineid      *int64  `json:"routineid"`
+	Routinename    *string `json:"routinename"`
+	Difficulty     *int    `json:"difficulty"`
+	Duration       *string `json:"duration"`
+	TimesMarked    *int    `json:"timesmarked"`
+	TimesIMarkedIt *int    `json:"timesimarkedit"`
+	IsCopy         *bool   `json:"iscopy"`
+	AlreadyCopied  *bool   `json:"alreadycopied"`
+}
+
+type ListExercisesByRoutineIdQuery struct {
+	Reps       *int   `json:"reps"`
+	ExerciseId *int64 `json:"exercise_id"`
 }
 
 type GetRoutineDetailsQuery struct {
@@ -69,6 +75,7 @@ type GetRoutineDetailsQuery struct {
 	Reps            *int    `json:"reps"`
 	Secs            *int    `json:"secs"`
 	ExerciseBGID    *int64  `json:"exercisebgid"`
+	ExerciseId      *int64  `json:"exerciseid"`
 	Exercisename    *string `json:"exercisename"`
 	VideoCode       *string `json:"videocode"`
 	Link            *string `json:"link"`

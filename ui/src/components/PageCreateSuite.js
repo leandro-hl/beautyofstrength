@@ -82,7 +82,7 @@ const MenuHeaderRender = ({onMenuChange}) => {
 
 class PageCreateSuite extends Component {
     static contextType = AppContext
-    state = {loading: true, title: 'Mis Rutinas'}
+    state = {loading: true, title: 'Mis Rutinas', message: 'Crea rutinas que pueden ser usadas en cualquier planificacion'}
 
     async componentDidMount() {
         try {
@@ -104,7 +104,7 @@ class PageCreateSuite extends Component {
                 ],
                 menuButtonSelected: MENU.INSTRUCTOR_SUITE}))
             const res = await listRoutineTemplates()
-            this.setState({show: 1,title: 'Mis Rutinas', loading: false, routines: res.data})
+            this.setState({show: 1,title: 'Mis Rutinas',message: 'Crea rutinas que pueden ser usadas en cualquier planificacion', loading: false, routines: res.data})
         } catch (e) {
             console.error(e)
         }
@@ -153,7 +153,7 @@ class PageCreateSuite extends Component {
                             func: () => this.createNewRoutine(),
                             description: <span><Icon name={'plus'}/> Nueva Rutina</span>}
                     ]}))
-                this.setState({title: 'Mis Rutinas', show: 1})
+                this.setState({title: 'Mis Rutinas', message: 'Crea rutinas que pueden ser usadas en cualquier planificacion', show: 1})
                 break
             case 2:
                 if (!workouts) {
@@ -166,7 +166,7 @@ class PageCreateSuite extends Component {
                             func: () => this.createNewBlock(),
                             description: <span><Icon name={'plus'}/> Nuevo Bloque</span>}
                     ]}))
-                this.setState({title: 'Mis Bloques', show: 2})
+                this.setState({title: 'Mis Bloques', message: '', show: 2})
                 break
             case 3:
                 if (!videos) {
@@ -174,7 +174,7 @@ class PageCreateSuite extends Component {
                     this.setState({loading: false, videos: res.data.exercises})
                 }
                 this.context.dispatch(setData({secondaryActions: []}))
-                this.setState({title: 'Mis Videos', show: 3})
+                this.setState({title: 'Mis Videos', message: 'Asocia videos a ejercicios para que tus rutinas cobren vida', show: 3})
                 break
             case 4:
                 const res = await listMyAthletes()
@@ -184,7 +184,7 @@ class PageCreateSuite extends Component {
                             func: () => this.inviteAthletes(),
                             description: <span><Icon name={'share alternate'}/> Invitar Atletas</span>}
                     ]}))
-                this.setState({title: 'Mis Atletas', show: 4})
+                this.setState({title: 'Mis Atletas', message: 'Administra tus atletas. Invitalos para que descarguen la aplicacion con tu logo', show: 4})
                 break
         }
     }
@@ -253,7 +253,7 @@ class PageCreateSuite extends Component {
             title,
             show,
             showModalCopyLink,
-            inviteLink} = this.state;
+            inviteLink, message} = this.state;
 
         if (loading) {
             return <Loader active/>
@@ -261,6 +261,7 @@ class PageCreateSuite extends Component {
 
         return (
             <>
+                <Message content={message}/>
                 <Header as={'h5'}>{title}</Header>
                 {show === 1 && routines.map((p,i) => {
                     return (

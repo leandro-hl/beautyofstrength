@@ -6,11 +6,6 @@ import {SegRepsButtonGroup} from "./SegRepsButtonGroup";
 export class ExerciseListItemFree extends Component {
     inputRef = createRef()
 
-    constructor(props) {
-        super(props);
-        this.state = {value: null}
-    }
-
     componentDidMount() {
         if(this.props.focus) {
             this.inputRef.current.focus()
@@ -18,7 +13,6 @@ export class ExerciseListItemFree extends Component {
     }
 
     handleChange(value) {
-        this.setState({value: value})
         if (10 / value <= 1) {
             this.props.finished(value, true)
         } else {
@@ -28,9 +22,8 @@ export class ExerciseListItemFree extends Component {
 
     handleKeyDown(event) {
         const key = event.key.toLowerCase()
-        const {value} = this.state;
         if (key === 'enter' || key === 'tab') {
-            this.props.finished(value, true)
+            this.props.finished(this.props.item.reps, true)
         }
     };
 
@@ -57,7 +50,7 @@ export class ExerciseListItemFree extends Component {
                                    ref={this.inputRef} placeholder='10' type={'number'}
                                    min={1}
                                    max={99}
-                                   value={this.props.value}
+                                   value={this.props.item.reps}
                                    onKeyDown={(event) => this.handleKeyDown(event)}
                                    onChange={(e, {value}) => this.handleChange(value)}/>
                         </Grid.Column>

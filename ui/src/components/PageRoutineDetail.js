@@ -18,11 +18,11 @@ import {
     copyTemplateRoutineToPlanification,
     getRoutineDetails,
     getSharedRoutineDetails,
-    saveRoutineEditions,
+    saveRoutineEditions, saveRoutineExecution,
     saveSharedRoutine,
     shareRoutine
 } from "../service";
-import {AppContext, setData, showSuccess} from "../context";
+import {AppContext, setData, showSuccess, showWarning} from "../context";
 import BottomMenuBar from "./BottomMenuBar";
 import LayoutMobile from "./LayoutMobile";
 import {capitalize, isLocalhost, queryParam} from "../functions";
@@ -35,8 +35,12 @@ import {PopUpConfirmation} from "./PopUpConfirmation";
 import {ExerciseSearch} from "./ExerciseSearch";
 import {SegRepsButtonGroup} from "./SegRepsButtonGroup";
 import {ModalRoutineToPlanificationCopy} from "./ModalRoutineToPlanificationCopy";
+import {ModalExerciseExecuteTimer} from "./ModalExerciseExecuteTimer";
+import {ModalExerciseExecuteReps} from "./ModalExerciseExecuteReps";
+import {ModalBorgScale} from "./ModalBorgScale";
 
 const MenuHeaderRender = ({
+                              alreadyMarkedByMe,
                               name,
                               difficulty,
                               duration,
@@ -56,15 +60,19 @@ const MenuHeaderRender = ({
                               enableEditionRoutine,
                               saveRoutineEditions,
                               saveSharedRoutine,
-                              openCopyToPlanificationModal
+                              openCopyToPlanificationModal,
+                              startRoutine,
+                                finishRoutine,
+                              cancelRoutineExecution
                           }) => {
-    const {state: {permissions: {editRoutine, canSaveSharedRoutines}, isTemplate}} = useContext(AppContext)
+    const {state: {permissions: {editRoutine, canSaveSharedRoutines, canExecuteRoutine}, isTemplate}} = useContext(AppContext)
 
     const [canBeSavedConf, setCanBeSavedConf] = useState(false)
     const [routineName, setRoutineName] = useState(name)
     const [showPopUp, setShowPopUp] = useState(false)
     const [editionMode, setEditionMode] = useState(false)
     const [savingEditions, setSavingEditions] = useState(false)
+    const [routineStarted, setRoutineStarted] = useState(false)
 
     const savingMode = editionMode && canEdit && editRoutine
     const canRoutineBeSavedByThirdPeople = (e, { name, value }) => setCanBeSavedConf(name === 'yes' && value)
@@ -72,7 +80,7 @@ const MenuHeaderRender = ({
     return (
         <>
             {
-                !editionMode &&
+                !editionMode && !routineStarted &&
                 <Button className={'header-back-arrow'} icon onClick={() => isTemplate ? redirectToSuite() : isShared? redirectToPlanifications() : redirectToPlanification()}>
                     <Icon name={'arrow left'}/>
                 </Button>
@@ -82,6 +90,13 @@ const MenuHeaderRender = ({
                 <PopUpContinueEditing onDiscardChanges={() => {
                     discardRoutineChanges()
                     setEditionMode(false)
+                }}/>
+            }
+            {
+                routineStarted &&
+                <PopUpContinueEditing onDiscardChanges={() => {
+                    cancelRoutineExecution()
+                    setRoutineStarted(false)
                 }}/>
             }
             {
@@ -100,7 +115,25 @@ const MenuHeaderRender = ({
                 <Icon name={'copy outline'} className={'header-icon'}  onClick={() => openCopyToPlanificationModal()}/>
             }
             {
-                (!isTemplate && !editionMode && actionable && !isCopy) &&
+                canExecuteRoutine && !alreadyMarkedByMe && !isTemplate && !editionMode && !routineStarted &&
+                <Icon className={'header-icon'} name={'play circle outline'} onClick={() => {
+                    setRoutineStarted(true)
+                    startRoutine()
+                }}/>
+            }
+            {
+                !canExecuteRoutine &&
+                <PopUpDisabledAction trigger={<Icon name={'play circle outline'} className={'header-icon disabled-btn'}/>}/>
+            }
+            {
+                !isTemplate && !editionMode && routineStarted &&
+                <Icon className={'header-icon'} name={'flag checkered'} onClick={() => {
+                    setRoutineStarted(false)
+                    finishRoutine()
+                }}/>
+            }
+            {
+                (!isTemplate && !editionMode && !routineStarted && actionable && !isCopy) &&
                 <PopUpConfirmation
                     title={'Compartir Rutina'}
                     primary={'Compartir'}
@@ -138,7 +171,7 @@ const MenuHeaderRender = ({
                 </PopUpConfirmation>
             }
             {
-                (!editionMode && actionable) ?
+                (!editionMode && !routineStarted && actionable) ?
                     editRoutine ?
                         (canEdit ?
                             <Icon name={'edit outline'} className={'header-icon'} onClick={() => {
@@ -286,6 +319,7 @@ class PageRoutineDetail extends Component{
             alreadyMarkedByAthetles: res.data.alreadyMarkedByAthetles,
             blockGroupers: [...res.data.blockGroupers, ...draftBlockGroupers],
             name: res.data.name,
+            alreadyMarkedByMe: res.data.alreadyMarkedByMe,
             difficulty: res.data.difficulty,
             duration: res.data.duration,
             nextBlockNumber: res.data.blockGroupers.length+draftBlockGroupers.length+1})
@@ -299,6 +333,7 @@ class PageRoutineDetail extends Component{
     setTopBar() {
         this.context.dispatch(setData({
             MenuHeaderRender: <MenuHeaderRender
+                alreadyMarkedByMe={this.state.alreadyMarkedByMe}
                 name={this.state.name}
                 difficulty={this.state.difficulty}
                 duration={this.state.duration}
@@ -319,6 +354,9 @@ class PageRoutineDetail extends Component{
                 saveRoutineEditions={() => this.saveRoutineEditions()}
                 saveSharedRoutine={() => this.saveSharedRoutine()}
                 openCopyToPlanificationModal={() => this.openCopyToPlanificationModal()}
+                startRoutine={() => this.startRoutine()}
+                finishRoutine={() => this.finishRoutine()}
+                cancelRoutineExecution={() => this.cancelRoutineExecution()}
             />
         }))
     }
@@ -340,6 +378,8 @@ class PageRoutineDetail extends Component{
     }
 
     redirectToRoutineExecution() {
+        const {blockGroupers}=this.state
+        this.context.dispatch(setData({routineToExecute: {blockGroupers}}))
         this.props.history.push('/routine/execution')
     }
 
@@ -552,11 +592,16 @@ class PageRoutineDetail extends Component{
         }
     }
 
-    enableEditionRoutine() {
+    activateAllIndexes() {
         const {blockGroupers} = this.state
         const indexes = []
         blockGroupers.map((bg,j) => bg.blocks.map((b,i) => indexes.push(j+'-'+i)))
-        this.setState({editionMode: true, activeIndexes: indexes})
+        this.setState({activeIndexes: indexes})
+    }
+
+    enableEditionRoutine() {
+        this.activateAllIndexes()
+        this.setState({editionMode: true})
         this.context.dispatch(setData({secondaryActions: []}))
     }
 
@@ -644,6 +689,18 @@ class PageRoutineDetail extends Component{
         this.setState({updates: {...buff}, blockGroupers: [...rBuff],confirmBlockGroupDeletionIndex: null})
     }
 
+    startExercise(e,j,i,k) {
+        if (e.secs) {
+            this.setState({executeWithTimer: {...e, j,i,k}})
+        } else {
+            let previousKg = 'Sin peso de referencia'
+            if (e.rounds) {
+                previousKg = e.rounds[e.rounds.length-1].kgs
+            }
+            this.setState({executeWithReps: {...e, previousKg, j,i,k}})
+        }
+    }
+
     deleteWorkFromBlockGroup(bgId, workId, j,i) {
         const {updates, blockGroupers} = this.state
 
@@ -662,6 +719,7 @@ class PageRoutineDetail extends Component{
         }
 
         this.setState({updates: {...buff}, blockGroupers: [...blockGroupers],confirmWorkDeletionIndex: null})
+        showSuccess(this.context, '', 'Borrado!')
     }
 
     onWorkoutUpdate(bgId, workId, j, i, name, value) {
@@ -840,7 +898,9 @@ class PageRoutineDetail extends Component{
         )
     }
 
-    renderWorkoutGroup(bg, b, j, i, editionMode, activeIndexes, confirmWorkDeletionIndex, addExerciseInputIndex, activeDraftExercise, confirmWorkExerciseDeletionIndex) {
+    renderWorkoutGroup(bg, b, j, i,
+                       editionMode, activeIndexes, confirmWorkDeletionIndex,
+                       addExerciseInputIndex, activeDraftExercise, confirmWorkExerciseDeletionIndex, routineStarted) {
         //todo: fix separate type from workout name.
         const name = b.name.split(' - ')
         const lastExerciseIndex=b.exercises.length-1
@@ -951,7 +1011,7 @@ class PageRoutineDetail extends Component{
                             <Table.Row>
                                 <Table.HeaderCell>Ejercicio</Table.HeaderCell>
                                 {b.exercises.find(e => e.reps || e.secs) && <Table.HeaderCell>Trabajo</Table.HeaderCell>}
-                                {editionMode && <Table.HeaderCell/>}
+                                {(editionMode || routineStarted) && <Table.HeaderCell/>}
                             </Table.Row>
                         </Table.Header>
                         <Table.Body>
@@ -968,7 +1028,10 @@ class PageRoutineDetail extends Component{
                                 </>
                             }
                             {b.exercises.map((e, k) => (this.renderExercise(
-                                bg, b, e, j, i, k, editionMode, addExerciseInputIndex, activeDraftExercise, confirmWorkExerciseDeletionIndex, lastExerciseIndex
+                                bg, b, e, j, i, k,
+                                editionMode, addExerciseInputIndex, activeDraftExercise,
+                                confirmWorkExerciseDeletionIndex, lastExerciseIndex,
+                                routineStarted
                             )))}
                         </Table.Body>
                     </Table>
@@ -977,16 +1040,39 @@ class PageRoutineDetail extends Component{
         )
     }
 
-    renderExercise(bg, b, e, j, i, k, editionMode, addExerciseInputIndex, activeDraftExercise, confirmWorkExerciseDeletionIndex, lastExercise) {
+    renderExercise(bg, b, e, j, i, k,
+                   editionMode, addExerciseInputIndex, activeDraftExercise,
+                   confirmWorkExerciseDeletionIndex, lastExercise, routineStarted) {
         const hasValue = e.reps || e.secs
         return (
             <>
                 <Table.Row key={k} className={'table-row-item'}>
-                    <Table.Cell style={{position: 'relative'}} colSpan={editionMode ? '3' : null} className={k === lastExercise ? 'last-child-no-bottom' : ''}>
+                    <Table.Cell style={{position: 'relative'}}
+                                colSpan={editionMode ? '3' : null}
+                                className={k === lastExercise ? 'last-child-no-bottom' : ''}>
                         <Grid>
                             <Grid.Column width={editionMode ? !hasValue ? 13 : 8 : 16}>
                                 {e.isDraft && <div className={'label-new-item'}/>}
                                 {e.link ? <Link to={'#'} onClick={() => this.openExerciseVideo(e.link)}>{e.name}</Link> : e.name}
+                                {
+                                    e.rounds &&
+                                    <Table unstackable basic='very' textAlign={'center'} className={'margin-top-1'}>
+                                        <Table.Header>
+                                            <Table.Row>
+                                                <Table.HeaderCell className={'no-padding'}>efectivas</Table.HeaderCell>
+                                                <Table.HeaderCell className={'no-padding'}>kg</Table.HeaderCell>
+                                            </Table.Row>
+                                        </Table.Header>
+                                        <Table.Body>
+                                            {e.rounds.map((r,z) => (
+                                                <Table.Row key={z}>
+                                                    <Table.Cell>{r.effectiveReps}</Table.Cell>
+                                                    <Table.Cell>{r.kgs}</Table.Cell>
+                                                </Table.Row>
+                                            ))}
+                                        </Table.Body>
+                                    </Table>
+                                }
                             </Grid.Column>
                             {
                                 editionMode &&
@@ -1024,8 +1110,14 @@ class PageRoutineDetail extends Component{
                     </Table.Cell>
                     {
                         (e.reps || e.secs) && !editionMode &&
-                        <Table.Cell>
+                        <Table.Cell className={k === lastExercise ? 'last-child-no-bottom' : ''}>
                             {e.reps ? e.reps+' Reps' : e.secs+' Segs'}
+                        </Table.Cell>
+                    }
+                    {
+                        routineStarted &&
+                        <Table.Cell className={k === lastExercise ? 'last-child-no-bottom' : ''}>
+                            <Icon className={'table-play'} name={'play'} onClick={() => this.startExercise(e,j,i,k)}/>
                         </Table.Cell>
                     }
                 </Table.Row>
@@ -1040,6 +1132,83 @@ class PageRoutineDetail extends Component{
             await copyTemplateRoutineToPlanification({templateRoutineId: routineId, planificationId})
             this.setState({openCopyToPlanificationModal: false})
             showSuccess(this.context, '', 'Rutina copiada a la planificacion!')
+        } catch (e) {
+            console.error(e)
+        }
+    }
+
+    cancelRoutineExecution() {
+        const {blockGroupers} = this.state
+        for (let i = 0; i < blockGroupers.length; i++) {
+            const bg = blockGroupers[i]
+            for (let j = 0; j < bg.blocks.length; j++) {
+                const b = bg.blocks[j]
+                for (let k = 0; k < b.exercises.length; k++) {
+                    const e = b.exercises[k]
+                    if(e.rounds){
+                        e.rounds=null
+                    }
+                }
+            }
+        }
+        this.setState({blockGroupers, routineStarted: false})
+        this.setSecondaryActions()
+        showSuccess(this.context, '', 'Ejecucion cancelada!')
+    }
+
+    startRoutine() {
+        this.activateAllIndexes()
+        this.context.dispatch(setData({secondaryActions: []}))
+        this.setState({routineStarted: true})
+    }
+
+    finishRoutine() {
+        this.setState({showBorgScale: true})
+    }
+
+    async confirmBorgScale(s) {
+        try {
+            const {state: {permissions: {canSaveRoutineExecution}}} = this.context
+            const {blockGroupers, routineId, planificationId} = this.state
+            const exercises = []
+            for (let i = 0; i < blockGroupers.length; i++) {
+                const bg = blockGroupers[i]
+                for (let j = 0; j < bg.blocks.length; j++) {
+                    const b = bg.blocks[j]
+                    for (let k = 0; k < b.exercises.length; k++) {
+                        const e = b.exercises[k]
+                        if(e.rounds){
+                            for (let l = 0; l < e.rounds.length; l++) {
+                                const r = e.rounds[l]
+                                exercises.push({
+                                    id: e.exId,
+                                    reps: e.reps,
+                                    effectiveReps: r.effectiveReps,
+                                    kg: r.kgs
+                                })
+                            }
+                        } else if(e.reps) {
+                            exercises.push({
+                                id: e.exId,
+                                reps: e.reps,
+                                effectiveReps: e.reps,
+                                kg: 0
+                            })
+                        }
+                    }
+                }
+            }
+
+            if (canSaveRoutineExecution) {
+                await saveRoutineExecution({planificationId, routineId, exercises, rpe: s})
+                this.setState({showBorgScale:false, routineStarted: false})
+                this.setSecondaryActions()
+                showSuccess(this.context, '', 'Ejecucion de rutina guardada con exito!')
+            } else {
+                this.setState({showBorgScale:false, routineStarted: false})
+                this.setSecondaryActions()
+                showWarning(this.context, '', 'Solo disponible para atletas elite!')
+            }
         } catch (e) {
             console.error(e)
         }
@@ -1062,7 +1231,11 @@ class PageRoutineDetail extends Component{
             nextBlockNumber,
             showModalCopyLink,
             routineLink,
-            openCopyToPlanificationModal
+            openCopyToPlanificationModal,
+            routineStarted,
+            executeWithTimer,
+            executeWithReps,
+            showBorgScale
         } = this.state;
 
         return (
@@ -1128,12 +1301,15 @@ class PageRoutineDetail extends Component{
                                     <Message><Message.Content>Comienza agregando algunos trabajos al bloque</Message.Content></Message>
                                 }
                                 {bg.blocks.map((b,i) => (this.renderWorkoutGroup(
-                                    bg, b, j, i, editionMode, activeIndexes, confirmWorkDeletionIndex, addExerciseInputIndex, activeDraftExercise, confirmWorkExerciseDeletionIndex
+                                    bg, b, j, i,
+                                    editionMode, activeIndexes, confirmWorkDeletionIndex,
+                                    addExerciseInputIndex, activeDraftExercise, confirmWorkExerciseDeletionIndex,
+                                    routineStarted
                                 )))}
                             </div>
                             <Divider horizontal>
                                 {
-                                    (!editionMode && actionable) ?
+                                    (!editionMode && !routineStarted && actionable) ?
                                         !editRoutine ?
                                             <PopUpDisabledAction
                                                 trigger={<Icon name={'plus'} className={'disabled-btn'}/>}/>
@@ -1174,6 +1350,28 @@ class PageRoutineDetail extends Component{
                         </Modal.Actions>
                     </Modal>
                 }
+                {
+                    executeWithReps &&
+                    <ModalExerciseExecuteReps
+                        {...executeWithReps}
+                        onCancel={()=> this.setState({executeWithReps: null})}
+                        onFinished={({effectiveReps, kgs}) => {
+                            const ex = blockGroupers[executeWithReps.j].blocks[executeWithReps.i].exercises[executeWithReps.k]
+                            if (ex.rounds) {
+                                ex.rounds.push({effectiveReps:parseInt(effectiveReps,10),kgs:parseInt(kgs,10)})
+                            } else {
+                                ex.rounds=[{effectiveReps:parseInt(effectiveReps,10),kgs:parseInt(kgs,10)}]
+                            }
+                            this.setState({blockGroupers,executeWithReps: null})
+                        }}/>
+                }
+                {
+                    executeWithTimer &&
+                    <ModalExerciseExecuteTimer
+                        {...executeWithTimer}
+                        onFinished={() => this.setState({executeWithTimer: null})}/>
+                }
+                {showBorgScale && <ModalBorgScale onConfirm={s => this.confirmBorgScale(s)} onCancel={() => this.setState({showBorgScale: false})}/>}
             </>
         )
     }

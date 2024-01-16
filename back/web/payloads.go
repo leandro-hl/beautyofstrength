@@ -135,6 +135,7 @@ type GetRoutineDetailsResponse struct {
 	Name                    *string                         `json:"name"`
 	Difficulty              *int                            `json:"difficulty"`
 	Duration                *string                         `json:"duration"`
+	AlreadyMarkedByMe       *bool                           `json:"alreadyMarkedByMe"`
 	AlreadyMarkedByAthetles *bool                           `json:"alreadyMarkedByAthetles"`
 	BlockGroupers           []GetRoutineDetailsBlockGrouper `json:"blockGroupers"`
 }
@@ -158,6 +159,7 @@ type GetRoutineDetailsBlock struct {
 
 type GetRoutineDetailsBlockExercise struct {
 	Id        *int64  `json:"id"`
+	ExId      *int64  `json:"exId"`
 	Reps      *int    `json:"reps"`
 	Secs      *int    `json:"secs"`
 	Name      *string `json:"name"`
@@ -220,6 +222,7 @@ type ActionateRoutineRequest struct {
 	PlanificationId         *int64  `json:"planificationId"`
 	ActionatedRoutineId     *int64  `json:"actionatedRoutineId"`
 	ActionatedRoutineAction *string `json:"actionatedRoutineAction"`
+	Rpe                     *int    `json:"rpe"`
 }
 
 type SaveSharedRoutineRequest struct {
@@ -327,6 +330,20 @@ type UserRmResponse struct {
 type SaveNewRmRequest struct {
 	Id *int64 `json:"id"`
 	Rm *int   `json:"rm"`
+}
+
+type SaveRoutineExecutionRequest struct {
+	PlanificationId *int64                                `json:"planificationId"`
+	RoutineId       *int64                                `json:"routineId"`
+	Rpe             *int                                  `json:"rpe"`
+	Exercises       []SaveRoutineExecutionExerciseRequest `json:"exercises"`
+}
+
+type SaveRoutineExecutionExerciseRequest struct {
+	Id            *int64 `json:"id"`
+	Reps          *int   `json:"reps"`
+	EffectiveReps *int   `json:"effectiveReps"`
+	Kg            *int   `json:"kg"`
 }
 
 type ListLastUserRmHistoryStatsResponse struct {

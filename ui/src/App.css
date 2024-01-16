@@ -429,6 +429,10 @@ body > div#root {
   text-align: center !important;
 }
 
+.margin-top-1 {
+  margin-top: 1em !important;
+}
+
 .margin-bottom-1 {
   margin-bottom: 1em !important;
 }
@@ -583,6 +587,12 @@ div#g_id_onload, div.g_id_signin {
 
 .tab-menu-header.ui.secondary.pointing.menu .item {
   padding: 1.85714286em 2.14285714em !important;
+}
+
+.table-play{
+  padding: 0 0 0 0 !important;
+  font-size: 13px !important;
+  color: #c1bfbf !important;
 }
 
 @media only screen and (max-width: 767px) {

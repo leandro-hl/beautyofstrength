@@ -3,6 +3,7 @@ package db
 import (
 	"fmt"
 	"github.com/jmoiron/sqlx"
+	"github.com/leandro-hl/beautyofstrength/back/db/history"
 	"github.com/leandro-hl/beautyofstrength/back/util"
 	"sync"
 	"time"
@@ -37,6 +38,7 @@ const (
 	ListEquipments                     AppEvent = "ListEquipment"
 	ListUserRM                         AppEvent = "ListUserRM"
 	SaveNewRM                          AppEvent = "SaveNewRM"
+	SaveRoutineExecution               AppEvent = "SaveRoutineExecution"
 	SaveSharedRoutine                  AppEvent = "SaveSharedRoutine"
 	ListLastUserRmHistoryStats         AppEvent = "ListLastUserRmHistoryStats"
 	ActionatedRoutine                  AppEvent = "ActionatedRoutine"
@@ -168,6 +170,7 @@ func GetRoutineHeader(db *DB, tx *sqlx.Tx, routineId int64, userId int64, curren
 			r.difficulty,
 			r.duration,
 			count(uh.id) timesmarked,
+			SUM(CASE WHEN uh.useraccount_id = $3 THEN 1 ELSE 0 END) AS timesimarkedit,
 			r.creator_id != p.creator_id as iscopy,
 			u2.id is not null as alreadycopied
 			from routine r
@@ -193,6 +196,7 @@ func GetRoutineHeaderTemplate(db *DB, tx *sqlx.Tx, routineId int64, userId int64
 			r.difficulty,
 			r.duration,
 			0 timesmarked,
+			0 timesimarkedit,
 			false as iscopy,
 			false as alreadycopied
 			from template.routine r
@@ -214,6 +218,27 @@ func GetRoutineById(db *DB, tx *sqlx.Tx, routineId int64) *Routine {
 	return &dest
 }
 
+func ListExercisesByRoutineId(db *DB, tx *sqlx.Tx, routineId int64, userId int64) []ListExercisesByRoutineIdQuery {
+	query := `
+		select
+			eb.reps,
+			eb.exercise_id
+		from exerciseblockgroup eb
+		inner join blockgroup b on eb.blockgroup_id = b.id and b.active=true
+		inner join blockgroupgrouper bg on b.blockgroupgrouper_id = bg.id and bg.active=true
+		inner join routine r on bg.routine_id = r.id
+		inner join userplanification u on r.planification_id = u.planification_id
+		where eb.active=true and b.routine_id=$1 and u.useraccount_id=$2 and eb.reps is not null
+		order by bg."order", bg.id, b.id, eb."order", eb.id`
+	stmt, err := getTxPreparedStmt(db, tx, query)
+	util.Check(err)
+	dest := make([]ListExercisesByRoutineIdQuery, 0)
+	err = stmt.Select(&dest, routineId, userId)
+	util.Check(err)
+
+	return dest
+}
+
 func GetRoutineDetails(db *DB, tx *sqlx.Tx, routineId int64, userId int64) []GetRoutineDetailsQuery {
 	query := `
 		select
@@ -230,6 +255,7 @@ func GetRoutineDetails(db *DB, tx *sqlx.Tx, routineId int64, userId int64) []Get
 			eb.reps,
 			eb.secs,
 			eb.id exercisebgid,
+			e.id exerciseid,
 			e.name exercisename,
 			ie.video_code videocode,
 			ie.link
@@ -1318,6 +1344,28 @@ func InsertNewUserRmHistory(db *DB, tx *sqlx.Tx, rmId int64, rm int) {
 		Rm:          &rm,
 		CreatedDate: time.Now(),
 	})
+}
+
+func InsertNewRoutineHistory(db *DB, tx *sqlx.Tx, routineId, userId int64, rpe int) *int64 {
+	return InsertSchema(tx, &history.Routine{
+		UserAccountId: &userId,
+		RoutineId:     &routineId,
+		Date:          time.Now(),
+		Rpe:           &rpe,
+	}, "history")
+}
+
+func InsertNewExerciseHistory(db *DB, tx *sqlx.Tx, routineId, historyId, userId, exerciseId int64, reps, effectiveReps, kg int) {
+	InsertSchema(tx, &history.Exercise{
+		UserAccountId: &userId,
+		RoutineId:     &routineId,
+		HistoryId:     &historyId,
+		Date:          time.Now(),
+		ExerciseId:    &exerciseId,
+		Reps:          &reps,
+		EffectiveReps: &effectiveReps,
+		Kg:            &kg,
+	}, "history")
 }
 
 func InsertUserAccountEquipment(
