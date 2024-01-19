@@ -1187,13 +1187,15 @@ class PageRoutineDetail extends Component{
                                     kg: r.kgs
                                 })
                             }
-                        } else if(e.reps) {
-                            exercises.push({
-                                id: e.exId,
-                                reps: e.reps,
-                                effectiveReps: e.reps,
-                                kg: 0
-                            })
+                        } else if(e.reps && b.laps) {
+                            for (let l = 0; l < b.laps; l++) {
+                                exercises.push({
+                                    id: e.exId,
+                                    reps: e.reps,
+                                    effectiveReps: e.reps,
+                                    kg: 0
+                                })
+                            }
                         }
                     }
                 }

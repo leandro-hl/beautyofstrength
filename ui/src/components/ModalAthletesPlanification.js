@@ -2,7 +2,7 @@ import React, {Component} from "react";
 import {Button, Modal, Segment} from "semantic-ui-react";
 import {saveUserTrainedToday} from "../service";
 
-export class ModalTrainingBlockType extends Component {
+export class ModalAthletesPlanification extends Component {
     constructor(props) {
         super(props);
 

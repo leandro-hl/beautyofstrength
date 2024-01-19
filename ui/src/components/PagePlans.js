@@ -262,6 +262,11 @@ class PagePlans extends Component {
                 elite: true
             },
             {
+                feature: 'Ver Rutina Compartida',
+                initial: true,
+                elite: true
+            },
+            {
                 feature: 'Ver Videos De Ejercicios',
                 initial: true,
                 elite: true
@@ -294,6 +299,31 @@ class PagePlans extends Component {
             {
                 feature: 'Marcar Rutina Como Completada U Omitida En Planificacion',
                 initial: false,//'Una por dia',
+                elite: true
+            },
+            {
+                feature: 'Ejecutar Rutina',
+                initial: false,
+                elite: true
+            },
+            {
+                feature: 'Ingreso de Pesos en Rutina',
+                initial: false,
+                elite: true
+            },
+            {
+                feature: 'Timer Rutina',
+                initial: false,
+                elite: true
+            },
+            {
+                feature: 'Borg Escala Esfuerzo Percibido',
+                initial: false,
+                elite: true
+            },
+            {
+                feature: 'Historial de Ejercicios',
+                initial: false,
                 elite: true
             },
             {
