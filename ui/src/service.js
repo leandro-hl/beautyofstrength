@@ -96,6 +96,10 @@ export function saveNewRm(payload) {
     return axios.post("saveNewRm", payload)
 }
 
+export function saveRoutineExecution(payload) {
+    return axios.post("saveRoutineExecution", payload)
+}
+
 export function uploadExerciseVideoLink(payload) {
     return axios.post("uploadExerciseVideoLink", payload)
 }

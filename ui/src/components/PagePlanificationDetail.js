@@ -29,6 +29,7 @@ import {Chip} from "./Chip";
 import {PopUpDisabledAction} from "./PopUpDisabledAction";
 import {PopUpContinueEditing} from "./PopUpContinueEditing";
 import {PopUpConfirmation} from "./PopUpConfirmation";
+import {ModalBorgScale} from "./ModalBorgScale";
 
 const MenuHeaderRender = ({
                               isEditable,
@@ -205,6 +206,13 @@ class PagePlanificationDetail extends Component {
         }
     }
 
+    async confirmBorgScale(s) {
+        const {actionatedRoutineInfo}=this.state
+        const payload = {...actionatedRoutineInfo, rpe: s}
+        await this.actionateRoutine(payload)
+        this.setState({showBorgScale:false, actionatedRoutineInfo: null})
+    }
+
     async actionateRoutine(info) {
         try {
             const {routines, planificationId} = this.state;
@@ -346,7 +354,8 @@ class PagePlanificationDetail extends Component {
             planificationLink,
             actionatedRoutineId,
             actionatedRoutineAction,
-            actionatedRoutineIndex} = this.state;
+            actionatedRoutineIndex,
+            showBorgScale} = this.state;
 
         if (loading) {
             return <Loader active/>
@@ -386,6 +395,10 @@ class PagePlanificationDetail extends Component {
                             onPrimaryAction={() => this.repeatLastMesocycle()}
                             onSecondaryAction={() => this.setState({showPopUpCopyMesocycle: false})}
                         />
+                    }
+                    {
+                        !editionMode &&
+                        <Icon name={'chart bar'} className={'header-icon'}/>
                     }
                 </Header>
                 <Segment>
@@ -494,7 +507,7 @@ class PagePlanificationDetail extends Component {
                     showModalRoutineActionated &&
                     <ModalRoutineActionatedConfirmation
                         info={{actionatedRoutineId, actionatedRoutineAction, actionatedRoutineIndex}}
-                        onConfirm={(info) => this.actionateRoutine(info)}
+                        onConfirm={(info) => info.actionatedRoutineAction === "finished"? this.setState({showBorgScale:true, actionatedRoutineInfo: info}) : this.actionateRoutine(info)}
                         onClose={() => this.setState({showModalRoutineActionated: false})}
                     />
                 }
@@ -510,6 +523,7 @@ class PagePlanificationDetail extends Component {
                         </Modal.Actions>
                     </Modal>
                 }
+                {showBorgScale && <ModalBorgScale onConfirm={s => this.confirmBorgScale(s)}/>}
             </>
         )
     }

@@ -82,6 +82,14 @@ export function showSuccess(ctx, title, description) {
     }, 1500)
 }
 
+export function showWarning(ctx, title, description) {
+    ctx.dispatch(setData({popupMessage: {show:true, title, description, warning:true}}))
+    const timeId = setTimeout(() => {
+        clearTimeout(timeId)
+        ctx.dispatch(setData({popupMessage: {show: false}}))
+    }, 1500)
+}
+
 export function showError(title, description) {
     return {
         type: ACTIONS.DATA,

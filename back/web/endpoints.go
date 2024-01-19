@@ -303,6 +303,7 @@ func (o *Endpoints) Handle() http.Handler {
 	api.Path("/savePlanificationEditions").HandlerFunc(o.HandleAuthenticatedTransactional(o.HandleAuthorization(o.savePlanificationEditions, db.StudentPremium, db.Professor)))
 	api.Path("/saveRoutineEditions").HandlerFunc(o.HandleAuthenticatedTransactional(o.HandleAuthorization(o.saveRoutineEditions, db.StudentPremium, db.Professor)))
 	api.Path("/saveNewRm").HandlerFunc(o.HandleAuthenticatedTransactional(o.HandleAuthorization(o.saveNewRm, db.StudentPremium)))
+	api.Path("/saveRoutineExecution").HandlerFunc(o.HandleAuthenticatedTransactional(o.HandleAuthorization(o.saveRoutineExecution, db.StudentPremium)))
 
 	//Student services
 	api.Path("/listUserRms").HandlerFunc(o.HandleAuthenticatedTransactional(o.HandleAuthorization(o.listUserRms, db.StudentFree, db.StudentPremium)))
@@ -401,11 +402,13 @@ func (o *Endpoints) getUserPermissions(w http.ResponseWriter, r *http.Request, t
 		permissions["editPlanification"] = true
 		permissions["editRoutine"] = true
 		permissions["canSaveSharedRoutines"] = true
+		permissions["canExecuteRoutine"] = true
 	}
 
 	if *plan == db.StudentPremium {
 		permissions["statistics"] = true
 		permissions["canMarkRoutine"] = true
+		permissions["canSaveRoutineExecution"] = true
 	}
 
 	if *plan == db.Professor {
@@ -496,6 +499,7 @@ func (o *Endpoints) calculateRoutineDetailsResponse(header *db.GetRoutineHeaderQ
 		IsCopy:                  header.IsCopy,
 		AlreadyCopied:           header.AlreadyCopied,
 		CanBeSaved:              &canBeSaved,
+		AlreadyMarkedByMe:       util.PBool(*header.TimesIMarkedIt > 0),
 		AlreadyMarkedByAthetles: util.PBool(*header.TimesMarked > 0),
 		BlockGroupers:           make([]GetRoutineDetailsBlockGrouper, 0),
 	}
@@ -536,6 +540,7 @@ func (o *Endpoints) calculateRoutineDetailsResponse(header *db.GetRoutineHeaderQ
 				if re.ExerciseBGID != nil {
 					block.Exercises = append(block.Exercises, GetRoutineDetailsBlockExercise{
 						Id:        re.ExerciseBGID,
+						ExId:      re.ExerciseId,
 						Name:      re.Exercisename,
 						Secs:      re.Secs,
 						Reps:      re.Reps,
@@ -561,6 +566,7 @@ func (o *Endpoints) calculateRoutineDetailsResponse(header *db.GetRoutineHeaderQ
 				if re.ExerciseBGID != nil {
 					block.Exercises = append(block.Exercises, GetRoutineDetailsBlockExercise{
 						Id:        re.ExerciseBGID,
+						ExId:      re.ExerciseId,
 						Name:      re.Exercisename,
 						Secs:      re.Secs,
 						Reps:      re.Reps,
@@ -571,6 +577,7 @@ func (o *Endpoints) calculateRoutineDetailsResponse(header *db.GetRoutineHeaderQ
 			} else if re.ExerciseBGID != nil {
 				grouper.Blocks[lastBlockIndex].Exercises = append(grouper.Blocks[lastBlockIndex].Exercises, GetRoutineDetailsBlockExercise{
 					Id:        re.ExerciseBGID,
+					ExId:      re.ExerciseId,
 					Name:      re.Exercisename,
 					Secs:      re.Secs,
 					Reps:      re.Reps,
@@ -675,6 +682,23 @@ func (o *Endpoints) saveSharedRoutine(w http.ResponseWriter, r *http.Request, tx
 	}
 }
 
+func (o *Endpoints) saveRoutineExecution(w http.ResponseWriter, r *http.Request, tx *sqlx.Tx) {
+	t := SaveRoutineExecutionRequest{}
+	err := o.Decode(r, &t)
+	util.Check(err)
+
+	usr := util.UserId(r)
+
+	//todo: refactor to use only one historical table
+	db.InsertUserRoutineHistory(o.db, tx, true, *t.PlanificationId, *t.RoutineId, usr)
+	historyId := db.InsertNewRoutineHistory(o.db, tx, *t.RoutineId, usr, *t.Rpe)
+	for _, e := range t.Exercises {
+		db.InsertNewExerciseHistory(o.db, tx, *t.RoutineId, *historyId, usr, *e.Id, *e.Reps, *e.EffectiveReps, *e.Kg)
+	}
+
+	db.RegisterEvent(o.db, tx, usr, db.SaveRoutineExecution)
+}
+
 func (o *Endpoints) actionateRoutine(w http.ResponseWriter, r *http.Request, tx *sqlx.Tx) {
 	t := ActionateRoutineRequest{}
 	err := o.Decode(r, &t)
@@ -683,21 +707,27 @@ func (o *Endpoints) actionateRoutine(w http.ResponseWriter, r *http.Request, tx 
 	usr := util.UserId(r)
 	if !db.CalculateUserHasNoAccessToPlanification(o.db, tx, *t.PlanificationId, usr) {
 		plan := db.GetAccountPlanIdentifierByUserId(o.db, tx, usr)
-		iAmPremium := *plan == db.StudentPremium || *plan == db.Professor
+		iAmPremium := *plan == db.StudentPremium
 		if !iAmPremium {
 			if db.CalculateUserAlreadyActionatedARoutineToday(o.db, tx, *t.PlanificationId, usr) {
 				panic(&BadRequestResponse{ErrorCode: util.PString("free_actionate_routine_limit")})
-				//panic(errors.New("you already actionate a routine today"))
 			}
 			schedule := db.GetPlanificationScheduleByUser(o.db, tx, *t.PlanificationId, usr)
 			db.UpdateUserPlanificationRoutineAccess(o.db, tx, *t.PlanificationId, usr, *schedule.AccessUpToRoutine+1)
 		}
 
+		//todo: refactor to use only one historical table
 		if *t.ActionatedRoutineAction == "skip" {
 			db.InsertUserRoutineHistory(o.db, tx, false, *t.PlanificationId, *t.ActionatedRoutineId, usr)
 		} else if *t.ActionatedRoutineAction == "finished" {
 			db.InsertUserRoutineHistory(o.db, tx, true, *t.PlanificationId, *t.ActionatedRoutineId, usr)
+			historyId := db.InsertNewRoutineHistory(o.db, tx, *t.ActionatedRoutineId, usr, *t.Rpe)
+			exercises := db.ListExercisesByRoutineId(o.db, tx, *t.ActionatedRoutineId, usr)
+			for _, e := range exercises {
+				db.InsertNewExerciseHistory(o.db, tx, *t.ActionatedRoutineId, *historyId, usr, *e.ExerciseId, *e.Reps, *e.Reps, 0)
+			}
 		}
+
 		db.RegisterEvent(o.db, tx, usr, db.ActionatedRoutine)
 	} else {
 		panic(&BadRequestResponse{ErrorCode: util.PString("no_access")})
@@ -1218,7 +1248,7 @@ func (o *Endpoints) saveExercisesBlockFree(w http.ResponseWriter, r *http.Reques
 			})
 		}
 	}
-	db.SaveExercisesBlock(o.db, tx, *routineId, "cpt",
+	db.SaveExercisesBlock(o.db, tx, *routineId, "spr",
 		*t.BlockName, nil, t.Laps, t.RestingInteval,
 		t.ExeRestingInteval, exercises, *t.NewBlockGroupName, t.NewBlockGroupId, *t.NewBlockGroupOrder, t.IsTemplate, util.UserId(r))
 	o.Respond(w, &SaveExercisesBlockCptResponse{RoutineId: routineId}, http.StatusOK)

@@ -132,9 +132,8 @@ class PageBlockCreate extends Component {
         }))
     }
 
-    saveExercise(i, reps, goNext) {
+    saveExercise(index, reps, goNext) {
         const {exercises} = this.state
-        const index = exercises.indexOf(i)
         exercises[index].reps = reps
 
         if (goNext) {
@@ -144,9 +143,8 @@ class PageBlockCreate extends Component {
         }
     }
 
-    onIntervalSelected(i, val) {
+    onIntervalSelected(index, val) {
         const {exercises} = this.state
-        const index = exercises.indexOf(i)
         exercises[index].type = val
         this.setState({exercises})
     }
@@ -372,17 +370,21 @@ class PageBlockCreate extends Component {
         this.setTopBar(null, newBlockName, id)
     }
 
-    repeatExercise(item, atTop) {
+    repeatExercise(item, atTop, index) {
         const {
             exercises,
             defaultIncrementPerSerie
         } = this.state;
+        const buffer = {...item}
         if (atTop) {
-            const buffer = {...item}
             buffer.reps += defaultIncrementPerSerie
             this.setState({exercises: [buffer, ...exercises]})
-        } else {
-            this.setState({exercises: [...exercises, item]})
+        } else if(index !== undefined) {
+            exercises.splice(index, 0, buffer)
+            this.setState({exercises: [...exercises]})
+        }
+        else {
+            this.setState({exercises: [...exercises, buffer]})
         }
     }
 
@@ -417,17 +419,17 @@ class PageBlockCreate extends Component {
             <>
                 <List>
                     {
-                        exercises.map((i, index) => {
+                        exercises.map((e, index) => {
                             return (<ExerciseListItemFree
                                 key={index}
-                                item={i}
+                                item={e}
                                 focus={index===next}
                                 selected={currentSelectedIndex === index}
-                                finished={(reps, goNext) => this.saveExercise(i, reps, goNext)}
-                                onRepeat={(item) => this.repeatExercise(item)}
+                                finished={(reps, goNext) => this.saveExercise(index, reps, goNext)}
+                                onRepeat={(item) => this.repeatExercise(item, false, index)}
                                 moveUp={() => this.moveUp(index)}
                                 moveDown={() => this.moveDown(index)}
-                                onIntervalSelected={(val) => this.onIntervalSelected(i,val)}
+                                onIntervalSelected={(val) => this.onIntervalSelected(index,val)}
                             />)
                         })
                     }
@@ -491,8 +493,8 @@ class PageBlockCreate extends Component {
                     <>
                         <List>
                             {
-                                exercises.map((i, index) => {
-                                    return (<ExerciseListItem focus={index===next} key={index} item={i} finished={(reps, goNext) => this.saveExercise(i, reps, goNext)}/>)
+                                exercises.map((e, index) => {
+                                    return (<ExerciseListItem focus={index===next} key={index} item={e} finished={(reps, goNext) => this.saveExercise(index, reps, goNext)}/>)
                                 })
                             }
                         </List>
@@ -531,14 +533,14 @@ class PageBlockCreate extends Component {
                     <>
                         <List>
                             {
-                                exercises.map((i, index) => {
+                                exercises.map((e, index) => {
                                     return (<ExerciseListItem
                                         focus={index===next}
                                         key={index}
-                                        item={i}
-                                        value={i.reps}
+                                        item={e}
+                                        value={e.reps}
                                         onRepeat={index===0 ? (item) => this.repeatExercise(item, true) : null}
-                                        finished={(reps) => this.saveExercise(i, reps)}/>)
+                                        finished={(reps) => this.saveExercise(index, reps)}/>)
                                 })
                             }
                         </List>
@@ -554,8 +556,8 @@ class PageBlockCreate extends Component {
                     <>
                         <List>
                             {
-                                exercises.map((i, index) => {
-                                    return (<ExerciseListItem key={index} item={i} finished={(reps) => this.saveExercise(i, reps)}/>)
+                                exercises.map((e, index) => {
+                                    return (<ExerciseListItem key={index} item={e} finished={(reps) => this.saveExercise(index, reps)}/>)
                                 })
                             }
                         </List>

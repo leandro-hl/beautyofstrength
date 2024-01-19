@@ -1,8 +1,18 @@
-import {Component} from "react";
+import React, {Component} from "react";
 import {Link, withRouter} from "react-router-dom";
-import {Button, Card, Grid, Header, Icon, List} from "semantic-ui-react";
+import {Button, Card, Grid, Header, Icon, List, Segment, Table} from "semantic-ui-react";
 import {AppContext, setData} from "../context";
 import {contactByWhatsapp} from "../functions";
+
+const MenuHeaderRender = ({onBackArrow}) => {
+    return (
+        <>
+            <Button className={'header-back-arrow'} icon onClick={() => onBackArrow()}>
+                <Icon name={'arrow left'}/>
+            </Button>
+            Planes Para Atletas
+        </>)
+}
 
 class PagePlans extends Component {
     static contextType = AppContext
@@ -11,7 +21,8 @@ class PagePlans extends Component {
         try {
             this.context.dispatch(setData({
                 noBottomBar: true,
-                secondaryActions: []
+                secondaryActions: [],
+                MenuHeaderRender: <MenuHeaderRender onBackArrow={() => this.props.history.goBack()}/>,
             }))
 
             if (this.state.mlEnabled) {
@@ -50,7 +61,7 @@ class PagePlans extends Component {
         this.props.history.push('/my-planifications')
     }
 
-    render() {
+    plansV1() {
         const {mlEnabled} = this.state
         return (
             <>
@@ -241,6 +252,146 @@ class PagePlans extends Component {
                 </Grid>
             </>
         )
+    }
+
+    plansData() {
+        return [
+            {
+                feature: 'Solicitar Acceso A Planificacion Compartida',
+                initial: true,
+                elite: true
+            },
+            {
+                feature: 'Ver Rutina Compartida',
+                initial: true,
+                elite: true
+            },
+            {
+                feature: 'Ver Videos De Ejercicios',
+                initial: true,
+                elite: true
+            },
+            {
+                feature: 'Compartir Rutina',
+                initial: true,
+                elite: true
+            },
+            {
+                feature: 'Dark Mode',
+                initial: true,
+                elite: true
+            },
+            {
+                feature: 'Cargar Mi Equipamiento',
+                initial: true,
+                elite: true
+            },
+            {
+                feature: 'Crear Sus Propias Rutinas',
+                initial: 'Una Rutina',
+                elite: 'Todas Las Que Quiera'
+            },
+            {
+                feature: 'Ver Rutinas De Planificacion Compartida',
+                initial: 'Una Rutina',
+                elite: 'Semana Completa'
+            },
+            {
+                feature: 'Marcar Rutina Como Completada U Omitida En Planificacion',
+                initial: false,//'Una por dia',
+                elite: true
+            },
+            {
+                feature: 'Ejecutar Rutina',
+                initial: false,
+                elite: true
+            },
+            {
+                feature: 'Ingreso de Pesos en Rutina',
+                initial: false,
+                elite: true
+            },
+            {
+                feature: 'Timer Rutina',
+                initial: false,
+                elite: true
+            },
+            {
+                feature: 'Borg Escala Esfuerzo Percibido',
+                initial: false,
+                elite: true
+            },
+            {
+                feature: 'Historial de Ejercicios',
+                initial: false,
+                elite: true
+            },
+            {
+                feature: 'Guardar Rutinas Compartidas',
+                initial: false,
+                elite: true
+            },
+            {
+                feature: 'Editar Planificacion Personal (Mi Planificacion)',
+                initial: false,
+                elite: true
+            },
+            {
+                feature: 'Editar Rutina',
+                initial: false,
+                elite: true
+            },
+            {
+                feature: 'Agregar Bloques O Trabajos A Rutina',
+                initial: false,
+                elite: true
+            },
+            {
+                feature: 'Track de RMs',
+                initial: false,
+                elite: true
+            }
+        ]
+    }
+
+    plansV2() {
+        const data = this.plansData()
+        return (
+            <>
+                <Segment style={{width: '100%'}} className={'no-left-padding no-right-padding'}>
+                    <Table basic textAlign={'center'} unstackable style={{border: 'unset'}}>
+                        <Table.Header>
+                            <Table.Row>
+                                <Table.HeaderCell>Feature</Table.HeaderCell>
+                                <Table.HeaderCell>Inicial</Table.HeaderCell>
+                                <Table.HeaderCell>Elite</Table.HeaderCell>
+                            </Table.Row>
+                        </Table.Header>
+                        <Table.Body>
+                            {data.map((u, j) => {
+                                return (
+                                    <Table.Row key={j} className={'table-row-item'}>
+                                        <Table.Cell style={{textAlign: 'left'}}>
+                                            {u.feature}
+                                        </Table.Cell>
+                                        <Table.Cell>
+                                            {typeof(u.initial) === 'string' ? u.initial : u.initial ? 'SI' : 'NO'}
+                                        </Table.Cell>
+                                        <Table.Cell>
+                                            {typeof(u.elite) === 'string' ? u.elite : u.elite ? 'SI' : 'NO'}
+                                        </Table.Cell>
+                                    </Table.Row>
+                                )
+                            })}
+                        </Table.Body>
+                    </Table>
+                </Segment>
+            </>
+        )
+    }
+
+    render() {
+        return this.plansV2()
     }
 }
 

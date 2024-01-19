@@ -11,33 +11,48 @@ import {RestInput} from "./RestInput";
 import BottomMenuBar from "./BottomMenuBar";
 import LayoutMobile from "./LayoutMobile";
 
+
+const MenuHeaderRender = ({blockName, onBackArrow}) => {
+    return (
+        <>
+            <Button className={'header-back-arrow'} icon onClick={() => onBackArrow()}>
+                <Icon name={'arrow left'}/>
+            </Button>
+            {blockName}
+        </>
+    )
+}
+
 class PageRoutineExecution extends Component {
     static contextType = AppContext
     constructor(props) {
         super(props);
-        this.state={loading: true, routineDetails:{}, routineFinished: false}
+        this.state={loading: true, routineToExecute:{}, routineFinished: false}
     }
 
     componentDidMount() {
-        const {state: {routineDetails}} = this.context
-        this.context.dispatch(setData({
-            noBottomBar: true,
-            secondaryActions: []
-        }))
+        const {state: {routineToExecute}} = this.context
+        const currentBlockGrouperIndex = 0
         const currentBlockIndex = 0
-        const block = routineDetails.blocks[currentBlockIndex];
+        const block = routineToExecute.blockGroupers[currentBlockGrouperIndex].blocks[currentBlockIndex];
         if (block.type === 'cpt') {
             this.loadTimer(block)
         } else if (block.type === 'amrap') {
             this.startAmrapTimer(block)
         }
         this.setState({
-            ...routineDetails,
+            ...routineToExecute,
+            currentBlockGrouperIndex,
             currentBlockIndex,
             currentBlock: block,
             currentExercise: 0,
             loading: false
         })
+        this.context.dispatch(setData({
+            noBottomBar: true,
+            secondaryActions: [],
+            MenuHeaderRender: <MenuHeaderRender blockName={block.name} onBackArrow={() => this.props.history.push('/routine')}/>,
+        }))
     }
 
     loadTimer(block) {
@@ -107,8 +122,8 @@ class PageRoutineExecution extends Component {
     }
 
     renderExecuteCpt() {
-        const {blocks, currentBlockIndex, currentLaps, currentExercise, currentWorkingInterval, currentDescription, currentNextDescription} = this.state
-        const block = blocks[currentBlockIndex];
+        const {blocks, currentBlockIndex, currentBlock, currentLaps, currentExercise, currentWorkingInterval, currentDescription, currentNextDescription} = this.state
+        const block = currentBlock;
         return (
             <>
                 <Header className={'segment-basic-header'} as={'h3'}>Rondas: {currentLaps} / {block.laps}</Header>
@@ -162,8 +177,8 @@ class PageRoutineExecution extends Component {
     }
 
     renderExecuteAmrap() {
-        const {blocks, currentBlockIndex, currentMinute, currentSecond} = this.state
-        const block = blocks[currentBlockIndex];
+        const {currentBlock, currentBlockIndex, currentMinute, currentSecond} = this.state
+        const block = currentBlock;
         return (
             <>
                 <Segment basic>
@@ -190,8 +205,8 @@ class PageRoutineExecution extends Component {
     }
 
     renderExecuteCombo() {
-        const {blocks, currentBlockIndex} = this.state
-        const block = blocks[currentBlockIndex];
+        const {currentBlock, currentBlockIndex} = this.state
+        const block = currentBlock;
         return (
             <>
                 <Segment basic>
@@ -218,8 +233,36 @@ class PageRoutineExecution extends Component {
     }
 
     renderExecutePir() {
-        const {blocks, currentBlockIndex} = this.state
-        const block = blocks[currentBlockIndex];
+        const {currentBlock, currentBlockIndex} = this.state
+        const block = currentBlock;
+        return (
+            <>
+                <Segment basic>
+                    <Header className={'segment-basic-header'} as={'h3'}>Rondas: {block.laps}</Header>
+                    <Table basic unstackable style={{border: 'unset'}}>
+                        <Table.Header>
+                            <Table.Row>
+                                <Table.HeaderCell>Ejercicio</Table.HeaderCell>
+                                <Table.HeaderCell>Trabajo</Table.HeaderCell>
+                            </Table.Row>
+                        </Table.Header>
+                        <Table.Body>
+                            {block.exercises.map((e, i) => (
+                                <Table.Row key={i}>
+                                    <Table.Cell>{e.name}</Table.Cell>
+                                    <Table.Cell>{e.reps+' Reps'}</Table.Cell>
+                                </Table.Row>
+                            ))}
+                        </Table.Body>
+                    </Table>
+                </Segment>
+            </>
+        )
+    }
+
+    renderExecuteSpr() {
+        const {currentBlock, currentBlockIndex} = this.state
+        const block = currentBlock;
         return (
             <>
                 <Segment basic>
@@ -256,6 +299,8 @@ class PageRoutineExecution extends Component {
                 return this.renderExecuteCombo()
             case 'pir':
                 return this.renderExecutePir()
+            case 'spr':
+                return this.renderExecuteSpr()
             default:
                 return (
                     <></>
@@ -339,12 +384,6 @@ class PageRoutineExecution extends Component {
         }
         return (
             <>
-                <Header as={'h3'}>
-                    <Button className={'header-back-arrow'} icon onClick={() => this.props.history.push('/routine')}>
-                        <Icon name={'arrow left'}/>
-                    </Button>
-                    {name} - {currentBlock.name}
-                </Header>
                 <Button style={{marginBottom: '1em'}} primary fluid onClick={() => this.nextBlock()}>Continuar Proximo Bloque</Button>
                 <Segment style={{height: '85%'}}>
                     {this.renderExecution()}
