@@ -23,4 +23,5 @@ create table if not exists history.exercise
 );
 
 GRANT USAGE ON SCHEMA history TO db;
+grant insert, select on history.routine to db;
 grant insert, select on history.exercise to db;
