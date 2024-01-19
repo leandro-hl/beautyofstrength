@@ -11,7 +11,7 @@ import {
     Loader, Menu,
     Message,
     Modal,
-    Popup,
+    Popup, Radio,
     Segment
 } from "semantic-ui-react";
 import {
@@ -311,9 +311,9 @@ class PagePlanificationDetail extends Component {
 
     async repeatLastMesocycle() {
         try {
-            const {planificationId} = this.state;
-            await repeatLastMesocycle({planificationId})
-            showSuccess(this.context, '', 'Generando nuevo mesociclo. Revisa tu home para saber si ya esta generado!')
+            const {planificationId, repeatWeekOnly} = this.state;
+            await repeatLastMesocycle({planificationId, onlyWeek: !!repeatWeekOnly})
+            showSuccess(this.context, '', 'Generando nuevas rutinas, puede tardar unos minutos!')
         } catch (e) {
             console.error(e)
         } finally {
@@ -355,12 +355,14 @@ class PagePlanificationDetail extends Component {
             actionatedRoutineId,
             actionatedRoutineAction,
             actionatedRoutineIndex,
-            showBorgScale} = this.state;
+            showBorgScale,
+            repeatWeekOnly} = this.state;
 
         if (loading) {
             return <Loader active/>
         }
 
+        const repeatWeekOnlyFunc = (e, { name, value }) => this.setState({repeatWeekOnly: name === 'yes' && value})
         let mesocycleNumber=1
         const menuItems = []
         for (let i = 0; i < routines.length; i++) {
@@ -384,8 +386,8 @@ class PagePlanificationDetail extends Component {
                     {
                         !editionMode && isOwner && repeatLastMesocycle &&
                         <PopUpConfirmation
-                            title={'Repetir Ultimo Mesociclo? Se generaran hasta ' + mesocycle + ' rutinas nuevas'}
-                            primary={'Repetir'}
+                            title={'Repetir Rutinas? Repeti las rutinas de ultima/o:'}
+                            primary={'Confirmar'}
                             secondary={'Cancelar'}
                             isManaged
                             open={showPopUpCopyMesocycle}
@@ -393,8 +395,29 @@ class PagePlanificationDetail extends Component {
                                            name={'refresh'} className={'header-icon'}
                                            onClick={() => this.setState({showPopUpCopyMesocycle: true})}/>}
                             onPrimaryAction={() => this.repeatLastMesocycle()}
-                            onSecondaryAction={() => this.setState({showPopUpCopyMesocycle: false})}
-                        />
+                            onSecondaryAction={() => this.setState({showPopUpCopyMesocycle: false})}>
+                            <div className={'margin-bottom-1'}>
+                                Puedes repetir rutinas una vez por dia en esta planificacion
+                            </div>
+                            <div className={'margin-bottom-half'}>
+                                <Radio
+                                    label='Semana'
+                                    name='yes'
+                                    value={true}
+                                    checked={repeatWeekOnly}
+                                    onChange={repeatWeekOnlyFunc}
+                                />
+                            </div>
+                            <div>
+                                <Radio
+                                    label='Mesociclo'
+                                    name='no'
+                                    value={false}
+                                    checked={!repeatWeekOnly}
+                                    onChange={repeatWeekOnlyFunc}
+                                />
+                            </div>
+                        </PopUpConfirmation>
                     }
                     {
                         !editionMode &&

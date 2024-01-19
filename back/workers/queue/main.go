@@ -81,7 +81,10 @@ func (o *Worker) execute() {
 	for _, op := range pending {
 		switch *op.Operation {
 		case db.PlanificationCopyMesocycle:
-			o.planificationCopyMesocycle(op)
+			o.planificationCopyMesocycle(op, false)
+			break
+		case db.PlanificationCopyWeek:
+			o.planificationCopyMesocycle(op, true)
 			break
 		case db.TemplateRoutineToPlanification:
 			o.copyRoutineTemplateToPlanification(op)
@@ -135,7 +138,7 @@ func (o *Worker) copyRoutineTemplateToPlanification(op db.QueuePlanificationOper
 	util.Check(err)
 }
 
-func (o *Worker) planificationCopyMesocycle(op db.QueuePlanificationOperation) {
+func (o *Worker) planificationCopyMesocycle(op db.QueuePlanificationOperation, onlyWeek bool) {
 	defer func() {
 		if e := recover(); e != nil {
 			util.CheckNoPanic(e.(error))
@@ -148,7 +151,13 @@ func (o *Worker) planificationCopyMesocycle(op db.QueuePlanificationOperation) {
 	fmt.Println(fmt.Sprintf("worker: processing mesocyle copy for p %d u %d finished at %s", *op.PlanificationId, *op.UserAccountId, time.Now().String()))
 
 	details := db.GetPlanificationById(o.db, tx, *op.PlanificationId)
-	originals := db.ListLastRoutinesByPlanificationIdUpTo(o.db, tx, *op.PlanificationId, *op.UserAccountId, *details.Mesocycle)
+
+	upTo := *details.Mesocycle
+	if onlyWeek {
+		sche := db.GetPlanificationSchedule(o.db, tx, *op.PlanificationId)
+		upTo = len(*sche.Days)
+	}
+	originals := db.ListLastRoutinesByPlanificationIdUpTo(o.db, tx, *op.PlanificationId, *op.UserAccountId, upTo)
 
 	//from oldest to newest
 	for i := len(originals) - 1; i >= 0; i-- {

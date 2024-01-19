@@ -337,6 +337,16 @@ class PagePlans extends Component {
                 elite: true
             },
             {
+                feature: 'Clonar Mesociclo',
+                initial: false,
+                elite: true
+            },
+            {
+                feature: 'Clonar Semana',
+                initial: false,
+                elite: true
+            },
+            {
                 feature: 'Editar Rutina',
                 initial: false,
                 elite: true

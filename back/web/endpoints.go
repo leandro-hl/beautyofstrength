@@ -290,7 +290,6 @@ func (o *Endpoints) Handle() http.Handler {
 	api.Path("/listQueuedPlanificationAccessRequests").HandlerFunc(o.HandleAuthenticatedTransactional(o.HandleAuthorization(o.listQueuedPlanificationAccessRequests, db.Professor)))
 	api.Path("/acceptPlanificationAccessRequest").HandlerFunc(o.HandleAuthenticatedTransactional(o.HandleAuthorization(o.acceptPlanificationAccessRequest, db.Professor)))
 	api.Path("/declinePlanificationAccessRequest").HandlerFunc(o.HandleAuthenticatedTransactional(o.HandleAuthorization(o.declinePlanificationAccessRequest, db.Professor)))
-	api.Path("/repeatLastMesocycle").HandlerFunc(o.HandleAuthenticatedTransactional(o.HandleAuthorization(o.repeatLastMesocycle, db.Professor)))
 	api.Path("/createNewExercise").HandlerFunc(o.HandleAuthenticatedTransactional(o.HandleAuthorization(o.createNewExercise, db.Professor)))
 	api.Path("/listRoutineTemplates").HandlerFunc(o.HandleAuthenticatedTransactional(o.HandleAuthorization(o.listRoutineTemplates, db.Professor)))
 	api.Path("/listMyAthletes").HandlerFunc(o.HandleAuthenticatedTransactional(o.HandleAuthorization(o.listMyAthletes, db.Professor)))
@@ -302,6 +301,8 @@ func (o *Endpoints) Handle() http.Handler {
 	//Premium services
 	api.Path("/savePlanificationEditions").HandlerFunc(o.HandleAuthenticatedTransactional(o.HandleAuthorization(o.savePlanificationEditions, db.StudentPremium, db.Professor)))
 	api.Path("/saveRoutineEditions").HandlerFunc(o.HandleAuthenticatedTransactional(o.HandleAuthorization(o.saveRoutineEditions, db.StudentPremium, db.Professor)))
+	api.Path("/repeatLastMesocycle").HandlerFunc(o.HandleAuthenticatedTransactional(o.HandleAuthorization(o.repeatLastMesocycle, db.StudentPremium, db.Professor)))
+
 	api.Path("/saveNewRm").HandlerFunc(o.HandleAuthenticatedTransactional(o.HandleAuthorization(o.saveNewRm, db.StudentPremium)))
 	api.Path("/saveRoutineExecution").HandlerFunc(o.HandleAuthenticatedTransactional(o.HandleAuthorization(o.saveRoutineExecution, db.StudentPremium)))
 
@@ -403,6 +404,7 @@ func (o *Endpoints) getUserPermissions(w http.ResponseWriter, r *http.Request, t
 		permissions["editRoutine"] = true
 		permissions["canSaveSharedRoutines"] = true
 		permissions["canExecuteRoutine"] = true
+		permissions["repeatLastMesocycle"] = true
 	}
 
 	if *plan == db.StudentPremium {
@@ -420,7 +422,6 @@ func (o *Endpoints) getUserPermissions(w http.ResponseWriter, r *http.Request, t
 		permissions["createNewMuscles"] = true
 		permissions["createNewEquipment"] = true
 		permissions["sharePlanification"] = true
-		permissions["repeatLastMesocycle"] = true
 	}
 
 	o.Respond(w, permissions, http.StatusOK)
@@ -1952,8 +1953,14 @@ func (o *Endpoints) repeatLastMesocycle(w http.ResponseWriter, r *http.Request, 
 	}
 
 	db.UpdatePlanificationMesocycleCopiedDate(o.db, tx, *p.PlanificationId)
-	db.EnqueuePlanificationOperation(o.db, tx, userId, *p.PlanificationId, db.PlanificationCopyMesocycle, nil, false)
-	db.RegisterEvent(o.db, tx, userId, db.RepeatLastMesocycle)
+
+	if *p.OnlyWeek {
+		db.EnqueuePlanificationOperation(o.db, tx, userId, *p.PlanificationId, db.PlanificationCopyWeek, nil, false)
+		db.RegisterEvent(o.db, tx, userId, db.RepeatLastWeek)
+	} else {
+		db.EnqueuePlanificationOperation(o.db, tx, userId, *p.PlanificationId, db.PlanificationCopyMesocycle, nil, false)
+		db.RegisterEvent(o.db, tx, userId, db.RepeatLastMesocycle)
+	}
 }
 
 func (o *Endpoints) inviteAthletesToAssociateWithMe(w http.ResponseWriter, r *http.Request, tx *sqlx.Tx) {

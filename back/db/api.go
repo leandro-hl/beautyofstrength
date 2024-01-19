@@ -19,6 +19,7 @@ type PlanificationOperation string
 
 const (
 	PlanificationCopyMesocycle     PlanificationOperation = "PCM"
+	PlanificationCopyWeek          PlanificationOperation = "PCW"
 	TemplateRoutineToPlanification PlanificationOperation = "TRP"
 )
 
@@ -66,6 +67,7 @@ const (
 	CopyTemplateRoutineToPlanification AppEvent = "CopyTemplateRoutineToPlanification"
 	UploadExerciseVideoLink            AppEvent = "UploadExerciseVideoLink"
 	RepeatLastMesocycle                AppEvent = "RepeatLastMesocycle"
+	RepeatLastWeek                     AppEvent = "RepeatLastWeek"
 	InviteAthletesToAssociateWithMe    AppEvent = "InviteAthletesToAssociateWithMe"
 	AcceptInstructorInvite             AppEvent = "AcceptInstructorInvite"
 	SharePlanification                 AppEvent = "SharePlanification"

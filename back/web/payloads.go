@@ -357,6 +357,7 @@ type DeletePlanificationRequest struct {
 
 type CopyMesocycleRequest struct {
 	PlanificationId *int64 `json:"planificationId"`
+	OnlyWeek        *bool  `json:"onlyWeek"`
 }
 
 type CreateNewExerciseRequest struct {
