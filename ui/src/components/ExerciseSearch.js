@@ -1,5 +1,5 @@
 import React, {Component} from "react";
-import {Dropdown, Grid} from "semantic-ui-react";
+import {Dropdown, Grid, Loader} from "semantic-ui-react";
 import {capitalize} from "../functions";
 import {createNewExercise, listExercises} from "../service";
 import {Chip} from "./Chip";
@@ -16,7 +16,8 @@ export class ExerciseSearch extends Component {
             basic: props.basic,
             allowAdditions: props.allowAdditions,
             exercisesBuffer: props.defaultSelected ?? [],
-            exerciseOptions: []
+            exerciseOptions: [],
+            loading: true
         }
     }
 
@@ -32,7 +33,6 @@ export class ExerciseSearch extends Component {
             let res = {}
             if (prepareExercises.data.exercises.length === 0) {
                 res = await listExercises()
-                this.context.dispatch(setData({prepareExercises: {data: res.data}}))
             } else {
                 res = prepareExercises
             }
@@ -75,8 +75,11 @@ export class ExerciseSearch extends Component {
             this.setState({
                 biggerId,
                 showVideoInfo: res.data.showVideoInfo,
-                exerciseOptions: options
+                exerciseOptions: options,
+                loading: false
             })
+
+            this.context.dispatch(setData({prepareExercises: {data: res.data}}))
         } catch (e) {
             console.error(e)
         }
@@ -160,7 +163,12 @@ export class ExerciseSearch extends Component {
     }
 
     render() {
-        const {allowAdditions, exerciseOptions, exercisesBuffer, basic, openNewExerciseModal, newExerciseName} = this.state
+        const {loading, allowAdditions, exerciseOptions, exercisesBuffer, basic, openNewExerciseModal, newExerciseName} = this.state
+
+        if(loading) {
+            return <Loader active/>
+        }
+
         return (
             <>
                 <Dropdown
@@ -171,15 +179,14 @@ export class ExerciseSearch extends Component {
                     selection
                     allowAdditions={allowAdditions}
                     additionLabel='Agregar '
-                    onAddItem={(e, { value }) => this.onAddItem(value)}
                     options={exerciseOptions}
+                    onAddItem={(e, { value }) => this.onAddItem(value)}
                     value={basic ? exercisesBuffer.map(e => e.value)[0] : exercisesBuffer.map(e => e.value)}
                     onChange={this.handleExerciseSelection}
                     openOnFocus={true}
                     tabIndex={0}
                     noResultsMessage={'No se encontro el ejercicio'}
-                    selectOnBlur={false}
-                />
+                    selectOnBlur={false}/>
                 {openNewExerciseModal && <ModalExerciseCreate
                     handleConfirm={(name, selectedEquipment) => this.createNewExercise(name, selectedEquipment)}
                     handleClose={() => this.setState({openNewExerciseModal: false, newExerciseName: null})}

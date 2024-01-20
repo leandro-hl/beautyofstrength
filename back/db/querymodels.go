@@ -46,14 +46,19 @@ type GetUserAccountDetailsQuery struct {
 }
 
 type GetRoutineHeaderQuery struct {
-	Routineid      *int64  `json:"routineid"`
-	Routinename    *string `json:"routinename"`
-	Difficulty     *int    `json:"difficulty"`
-	Duration       *string `json:"duration"`
-	TimesMarked    *int    `json:"timesmarked"`
-	TimesIMarkedIt *int    `json:"timesimarkedit"`
-	IsCopy         *bool   `json:"iscopy"`
-	AlreadyCopied  *bool   `json:"alreadycopied"`
+	Routineid              *int64     `json:"routineid"`
+	Routinename            *string    `json:"routinename"`
+	Difficulty             *int       `json:"difficulty"`
+	Duration               *string    `json:"duration"`
+	TimesMarked            *int       `json:"timesmarked"`
+	TimesIMarkedIt         *int       `json:"timesimarkedit"`
+	IsCopy                 *bool      `json:"iscopy"`
+	AlreadyCopied          *bool      `json:"alreadycopied"`
+	Cover                  bool       `json:"cover"`
+	CoverImageUrl          *string    `json:"coverimageurl"`
+	CoverImagePath         *string    `json:"coverimagepath"`
+	CoverUrlExpirationDate *time.Time `json:"coverurlexpirationdate"`
+	Owner                  *string    `json:"owner"`
 }
 
 type ListExercisesByRoutineIdQuery struct {
@@ -101,14 +106,19 @@ type ListWorkoutTemplatesQuery struct {
 }
 
 type ListRoutinesQuery struct {
-	Id              *int    `json:"id"`
-	Name            *string `json:"name"`
-	PlanificationId *int64  `json:"planification_id"`
-	Difficulty      *int    `json:"difficulty"`
-	Duration        *string `json:"duration"`
-	BlockCount      *int    `json:"blockcount"`
-	WorkCount       *int    `json:"workcount"`
-	Completed       *bool   `json:"completed"`
+	Id                     *int64     `json:"id"`
+	Name                   *string    `json:"name"`
+	PlanificationId        *int64     `json:"planification_id"`
+	Difficulty             *int       `json:"difficulty"`
+	Duration               *string    `json:"duration"`
+	BlockCount             *int       `json:"blockcount"`
+	WorkCount              *int       `json:"workcount"`
+	Completed              *bool      `json:"completed"`
+	Cover                  bool       `json:"cover"`
+	CoverImageUrl          *string    `json:"coverimageurl"`
+	CoverImagePath         *string    `json:"coverimagepath"`
+	CoverUrlExpirationDate *time.Time `json:"coverurlexpirationdate"`
+	Owner                  *string    `json:"owner"`
 }
 
 type GetPlanificationScheduleQuery struct {

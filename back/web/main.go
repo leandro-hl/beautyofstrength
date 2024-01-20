@@ -10,6 +10,7 @@ import (
 	"github.com/leandro-hl/beautyofstrength/back/db"
 	"github.com/leandro-hl/beautyofstrength/back/util"
 	"github.com/leandro-hl/beautyofstrength/back/workers/queue"
+	ls3 "github.com/leandro-hl/beautyofstrength/lib/s3"
 	"log"
 	"net/http"
 	"os"
@@ -32,6 +33,7 @@ type Config struct {
 	GooglePEMCertsURL                    *string         `json:"googlePEMCertsUrl"`
 	GoogleTokenValidIssuers              map[string]bool `json:"googleTokenValidIssuers"`
 	GooglePEMPublicKeys                  map[string]*rsa.PublicKey
+	S3Config                             ls3.S3Config `json:"s3Config"`
 }
 
 func (o *Config) IsDevelopment() bool {

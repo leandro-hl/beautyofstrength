@@ -43,6 +43,9 @@ type Planification struct {
 	Objective               *string    `json:"objective"`
 	CreatorId               *int64     `json:"creator_id"`
 	Active                  *bool      `json:"active"`
+	Cover                   bool       `json:"cover"`
+	CoverImageUrl           *string    `json:"coverimageurl"`
+	CoverUrlExpirationDate  *time.Time `json:"coverurlexpirationdate"`
 	LastMesocycleCopiedDate *time.Time `json:"lastmesocyclecopieddate"`
 	LastUpdatedDate         time.Time  `json:"lastupdateddate"`
 }
@@ -92,14 +95,18 @@ type InstructorExercise struct {
 }
 
 type Routine struct {
-	Id              *int64    `json:"id"`
-	Name            *string   `json:"name"`
-	PlanificationId *int64    `json:"planification_id"`
-	Difficulty      *int      `json:"difficulty"`
-	Duration        *string   `json:"duration"`
-	Active          *bool     `json:"active"`
-	CreatorId       *int64    `json:"creator_id"`
-	LastUpdatedDate time.Time `json:"lastupdateddate"`
+	Id                     *int64     `json:"id"`
+	Name                   *string    `json:"name"`
+	PlanificationId        *int64     `json:"planification_id"`
+	Difficulty             *int       `json:"difficulty"`
+	Duration               *string    `json:"duration"`
+	Active                 *bool      `json:"active"`
+	Cover                  *bool      `json:"cover"`
+	CoverImageUrl          *string    `json:"coverimageurl"`
+	CoverUrlExpirationDate *time.Time `json:"coverurlexpirationdate"`
+	CoverImagePath         *string    `json:"coverimagepath"`
+	CreatorId              *int64     `json:"creator_id"`
+	LastUpdatedDate        time.Time  `json:"lastupdateddate"`
 }
 
 type Exercise struct {

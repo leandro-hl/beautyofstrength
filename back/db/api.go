@@ -171,6 +171,11 @@ func GetRoutineHeader(db *DB, tx *sqlx.Tx, routineId int64, userId int64, curren
 			r.name routinename,
 			r.difficulty,
 			r.duration,
+			r.cover,
+			r.coverimageurl,
+			r.coverimagepath,
+			r.coverurlexpirationdate,
+			ua.code as owner,
 			count(uh.id) timesmarked,
 			SUM(CASE WHEN uh.useraccount_id = $3 THEN 1 ELSE 0 END) AS timesimarkedit,
 			r.creator_id != p.creator_id as iscopy,
@@ -178,10 +183,11 @@ func GetRoutineHeader(db *DB, tx *sqlx.Tx, routineId int64, userId int64, curren
 			from routine r
 		inner join planification p on p.id = r.planification_id
 		inner join userplanification u on r.planification_id = u.planification_id
+		inner join useraccount ua on r.creator_id=ua.id
 		left join userroutinehistory uh on r.id = uh.routine_id
 		left join userroutinecopy u2 on r.id = u2.routine_id and u2.useraccount_id=$3
 		where p.active=true and r.active=true and r.id=$1 and u.useraccount_id=$2
-		group by r.id, r.name, p.creator_id, u2.id`
+		group by r.id, r.name, p.creator_id, u2.id, ua.code`
 	stmt, err := getTxPreparedStmt(db, tx, query)
 	util.Check(err)
 	var dest GetRoutineHeaderQuery
@@ -197,11 +203,17 @@ func GetRoutineHeaderTemplate(db *DB, tx *sqlx.Tx, routineId int64, userId int64
 			r.name routinename,
 			r.difficulty,
 			r.duration,
+			r.cover,
+			r.coverimageurl,
+			r.coverimagepath,
+			r.coverurlexpirationdate,
+			u.code as owner,
 			0 timesmarked,
 			0 timesimarkedit,
 			false as iscopy,
 			false as alreadycopied
 			from template.routine r
+			inner join useraccount u on r.creator_id = u.id
 		where r.active=true and r.id=$1 and r.creator_id=$2`
 	stmt, err := getTxPreparedStmt(db, tx, query)
 	util.Check(err)
@@ -398,15 +410,22 @@ func ListActiveRoutinesICreated(db *DB, tx *sqlx.Tx, planificationId int64, user
 		    r.planification_id, 
 		    r.difficulty,
 		    r.duration,
+		    r.cover,
+			r.coverimageurl,
+			r.coverimagepath,
+			r.coverurlexpirationdate,
+			ua.code as owner,
 		    count(distinct bg.id) as blockcount,
 		    count(b.id) as workcount, 
 		    u2.completed from routine r 
 		inner join planification p on r.planification_id = p.id
+		inner join userplanification u on r.planification_id = u.planification_id
+		inner join useraccount ua on r.creator_id=ua.id
 	    left join blockgroupgrouper bg on r.id = bg.routine_id and bg.active=true
 		left join blockgroup b on r.id = b.routine_id and bg.id = b.blockgroupgrouper_id and b.active=true
 		left outer join userroutinehistory u2 on r.id = u2.routine_id and u2.useraccount_id = p.creator_id                                                                 
 		where p.active=true and r.active=true and p.id = $1 and p.creator_id=$2
-		group by r.id, u2.completed  order by r.id`
+		group by r.id, u2.completed, ua.code  order by r.id`
 	stmt, err := getTxPreparedStmt(db, tx, query)
 	util.Check(err)
 	dest := make([]ListRoutinesQuery, 0)
@@ -425,16 +444,22 @@ func ListActiveRoutines(db *DB, tx *sqlx.Tx, planificationId, userId int64) []Li
 		    r.planification_id, 
 		    r.difficulty,
 		    r.duration,
+		    r.cover,
+			r.coverimageurl,
+			r.coverimagepath,
+			r.coverurlexpirationdate,
+			ua.code as owner,
 		    count(distinct bg.id) as blockcount,
 		    count(b.id) as workcount, 
 		    u2.completed from routine r 
 		inner join planification p on r.planification_id = p.id
 		inner join userplanification u on p.id = u.planification_id
+		inner join useraccount ua on r.creator_id=ua.id
 		left join blockgroupgrouper bg on r.id = bg.routine_id and bg.active=true
 		left join blockgroup b on r.id = b.routine_id and bg.id = b.blockgroupgrouper_id and b.active=true  
 		left outer join userroutinehistory u2 on r.id = u2.routine_id and u.useraccount_id = u2.useraccount_id                                                                
 		where p.active=true and r.active=true and p.id = $1 and u.useraccount_id = $2
-		group by r.id, u2.completed order by r.id`
+		group by r.id, u2.completed, ua.code order by r.id`
 	stmt, err := getTxPreparedStmt(db, tx, query)
 	util.Check(err)
 
@@ -614,22 +639,33 @@ func CreateRoutineTemplateDefault(db *DB, tx *sqlx.Tx, name string, creatorId in
 			Duration:        util.PString("01:00"),
 			Active:          util.PBool(true),
 			CreatorId:       &creatorId,
+			Cover:           util.PBool(false),
 			LastUpdatedDate: time.Now(),
 		}, "template")
 	return id
 }
 
-func CreateRoutine(db *DB, tx *sqlx.Tx, name string, planificationId, creatorId int64, difficulty int, duration string) *int64 {
+func CreateRoutine(db *DB, tx *sqlx.Tx, name string,
+	planificationId, creatorId int64,
+	difficulty int, duration string,
+	cover bool,
+	coverPath *string,
+	coverUrl *string,
+	coverUrlExpDate *time.Time) *int64 {
 	id := Insert(
 		tx,
 		&Routine{
-			Name:            &name,
-			PlanificationId: &planificationId,
-			Difficulty:      &difficulty,
-			Duration:        &duration,
-			Active:          util.PBool(true),
-			CreatorId:       &creatorId,
-			LastUpdatedDate: time.Now(),
+			Name:                   &name,
+			PlanificationId:        &planificationId,
+			Difficulty:             &difficulty,
+			Duration:               &duration,
+			Active:                 util.PBool(true),
+			Cover:                  &cover,
+			CoverImagePath:         coverPath,
+			CoverImageUrl:          coverUrl,
+			CoverUrlExpirationDate: coverUrlExpDate,
+			CreatorId:              &creatorId,
+			LastUpdatedDate:        time.Now(),
 		})
 	return id
 }
@@ -1320,11 +1356,11 @@ func ListUserAccountEquipment(db *DB, tx *sqlx.Tx, userId int64) []ListUserAccou
 	return des
 }
 
-func InsertUserRoutineHistory(db *DB, tx *sqlx.Tx, completed bool, planificationId, routineId, userId int64) {
+func InsertUserRoutineHistory(db *DB, tx *sqlx.Tx, completed bool, planificationId *int64, routineId, userId int64) {
 	Insert(
 		tx,
 		&UserRoutineHistory{
-			PlanificationId: &planificationId,
+			PlanificationId: planificationId,
 			RoutineId:       &routineId,
 			UserAccountId:   &userId,
 			Completed:       &completed,
@@ -1456,6 +1492,15 @@ func DeclinePlanificationAccessRequest(db *DB, tx *sqlx.Tx, planificationId, req
 	stmt, err := getTxPreparedStmt(db, tx, query)
 	util.Check(err)
 	stmt.Exec(requesterUserId, planificationId)
+}
+
+func UpdateRoutineCoverUrl(db *DB, tx *sqlx.Tx, schema string, routineId int64, path, preSigUrl string, expiration time.Time) {
+	query := fmt.Sprintf(`update %sroutine 
+	set cover=true, coverimageurl=$3, coverimagepath=$4, 
+    coverurlexpirationdate=$2, lastupdateddate=now() where id=$1`, schema)
+	stmt, err := getTxPreparedStmt(db, tx, query)
+	util.Check(err)
+	stmt.Exec(routineId, expiration, preSigUrl, path)
 }
 
 func DeleteRoutine(db *DB, tx *sqlx.Tx, routineId int64) {

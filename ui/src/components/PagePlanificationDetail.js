@@ -172,9 +172,9 @@ class PagePlanificationDetail extends Component {
         this.context.dispatch(setData({secondaryActions: secondaryActions, noBottomBar: false}))
     }
 
-    redirectToRoutine(id) {
+    redirectToRoutine(id, coverImageUrl) {
         if (id) {
-            this.context.dispatch(setData({routineId: id, isTemplate: false}, true))
+            this.context.dispatch(setData({routineId: id, isTemplate: false, coverImageUrl}, true))
             this.props.history.push('/routine')
         }
     }
@@ -477,6 +477,7 @@ class PagePlanificationDetail extends Component {
                     const completed = p.completed === true;
                     const disableActions = !p.isActionable;
                     const disableLookup = !p.id;
+                    const coverStyle = {backgroundImage: `url(${p.coverImageUrl})`}
                     return (
                         <>
                             {
@@ -484,9 +485,9 @@ class PagePlanificationDetail extends Component {
                                 <Divider horizontal id={'M'+p.mesocycleNumber}>Mesociclo {p.mesocycleNumber}</Divider>
                             }
                             {p.isStartOfWeek && <Header as={'h5'} className={p.initMesocycle? 'no-top-margin': null}>Semana {weekNumber++}</Header>}
-                            <Segment style={{width: '100%'}} key={i} disabled={disableLookup}>
+                            <Segment style={p.coverImageUrl ? coverStyle : {width: '100%'}} className={p.coverImageUrl ? 'cover-background' : null} key={i} disabled={disableLookup}>
                                 <Grid>
-                                    <Grid.Column width={!disableLookup? 11 : 16} onClick={() => !editionMode ? this.redirectToRoutine(p.id) : null}>
+                                    <Grid.Column width={!disableLookup? 11 : 16} onClick={() => !editionMode ? this.redirectToRoutine(p.id, p.coverImageUrl) : null}>
                                         <Header sub>{p.name}{skipped? <Chip omit content={'Omitida'}/> : ''}{completed? <Chip success content={'Completada'}/> : ''}</Header>
                                         <span>
                                             {p.blockCount > 1 ? p.blockCount+' Bloques, ' : p.blockCount+' Bloque, '}

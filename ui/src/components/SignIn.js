@@ -55,7 +55,7 @@ class SignIn extends Component {
                     </Grid.Row>
                     <Grid.Row>
                         <Grid.Column>
-                            <Header textAlign={'center'} as={'h5'}>El Sistema Operativo del Entrenamiento<br/>(Version Beta)</Header>
+                            <Header textAlign={'center'} as={'h5'}>El Sistema Operativo del Entrenamiento</Header>
                         </Grid.Column>
                     </Grid.Row>
                     <Grid.Row>
