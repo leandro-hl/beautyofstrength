@@ -35,7 +35,7 @@ export class ModalBorgScale extends Component {
                 open={true}
                 closeIcon
                 dimmer={'blurring'}
-                onClose={() => this.handleConfirm()}
+                onClose={() => this.props.onCancel()}
             >
                 <Modal.Header>
                     Finalizar Rutina

@@ -27,7 +27,7 @@ const initialState = {
     routineId: null,
     noMenu: true,
     secondaryActions: [],
-    darkTheme: false,
+    darkTheme: true,
     prepareExercises: {
         data: {
             exercises: []
@@ -368,7 +368,7 @@ export function ContextProvider({children}) {
     }
 
     const darkTheme = localStorage.getItem('darkTheme')
-    currentState.darkTheme = darkTheme === "true" ? true : false
+    currentState.darkTheme = darkTheme === "true"
 
     const [state, dispatch] = useReducer(reducer, currentState);
 

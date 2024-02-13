@@ -116,7 +116,11 @@ func (o *Worker) copyRoutineTemplateToPlanification(op db.QueuePlanificationOper
 		*op.PlanificationId,
 		*op.UserAccountId,
 		*original.Difficulty,
-		*original.Duration)
+		*original.Duration,
+		original.Cover,
+		original.CoverImagePath,
+		original.CoverImageUrl,
+		original.CoverUrlExpirationDate)
 
 	for _, bg := range originalGroupers {
 		newBgId := db.CreateBlockGrouper(o.db, tx, *bg.Name, *newRoutineId, *bg.Order)
@@ -170,7 +174,11 @@ func (o *Worker) planificationCopyMesocycle(op db.QueuePlanificationOperation, o
 			*op.PlanificationId,
 			*original.CreatorId,
 			*original.Difficulty,
-			*original.Duration)
+			*original.Duration,
+			original.Cover != nil && *original.Cover,
+			original.CoverImagePath,
+			original.CoverImageUrl,
+			original.CoverUrlExpirationDate)
 
 		for _, bg := range originalGroupers {
 			newBgId := db.CreateBlockGrouper(o.db, tx, *bg.Name, *newRoutineId, *bg.Order)

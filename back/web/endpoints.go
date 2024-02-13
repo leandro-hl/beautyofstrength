@@ -1,18 +1,25 @@
 package main
 
 import (
+	"bytes"
 	"context"
 	"crypto/rand"
 	"encoding/base64"
 	"encoding/json"
 	"errors"
 	"fmt"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/s3"
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/gorilla/mux"
 	"github.com/jmoiron/sqlx"
 	"github.com/leandro-hl/beautyofstrength/back/db"
 	"github.com/leandro-hl/beautyofstrength/back/util"
 	"github.com/leandro-hl/beautyofstrength/back/webpush"
+	ls3 "github.com/leandro-hl/beautyofstrength/lib/s3"
+	"image"
+	_ "image/jpeg"
+	_ "image/png"
 	"io"
 	"log"
 	"math/big"
@@ -31,6 +38,10 @@ import (
 const (
 	MyPlanificationReservedName             = "Mi Planificacion"
 	SharedRoutinesPlanificationReservedName = "Rutinas Compartidas"
+	S3RoutinesFolder                        = "routines"
+	S3TemplatesFolder                       = "templates"
+	S3PlanificationsFolder                  = "planifications"
+	DefaultCoverImageType                   = ".jpg"
 )
 
 type Endpoints struct {
@@ -297,6 +308,7 @@ func (o *Endpoints) Handle() http.Handler {
 	api.Path("/copyTemplateRoutineToPlanification").HandlerFunc(o.HandleAuthenticatedTransactional(o.HandleAuthorization(o.copyTemplateRoutineToPlanification, db.Professor)))
 	api.Path("/uploadExerciseVideoLink").HandlerFunc(o.HandleAuthenticatedTransactional(o.HandleAuthorization(o.uploadExerciseVideoLink, db.Professor)))
 	api.Path("/inviteAthletesToAssociateWithMe").HandlerFunc(o.HandleAuthenticatedTransactional(o.HandleAuthorization(o.inviteAthletesToAssociateWithMe, db.Professor)))
+	api.Path("/uploadRoutineImage").HandlerFunc(o.HandleAuthenticatedTransactional(o.HandleAuthorization(o.uploadRoutineImage, db.Professor)))
 
 	//Premium services
 	api.Path("/savePlanificationEditions").HandlerFunc(o.HandleAuthenticatedTransactional(o.HandleAuthorization(o.savePlanificationEditions, db.StudentPremium, db.Professor)))
@@ -422,6 +434,7 @@ func (o *Endpoints) getUserPermissions(w http.ResponseWriter, r *http.Request, t
 		permissions["createNewMuscles"] = true
 		permissions["createNewEquipment"] = true
 		permissions["sharePlanification"] = true
+		permissions["canUploadRoutineCover"] = true
 	}
 
 	o.Respond(w, permissions, http.StatusOK)
@@ -436,16 +449,27 @@ func (o *Endpoints) getUserAccountDetails(w http.ResponseWriter, r *http.Request
 }
 
 func (o *Endpoints) getRoutineDetails(w http.ResponseWriter, r *http.Request, tx *sqlx.Tx) {
+	//tengo lenguaje tecnico que no necesariamente un atleta conoce lol
+	// diego me pregunto que era un mesociclo.
+	//la explicacion puede ser default o que el profe la configure como quiere.
 	routineId, err := strconv.ParseInt(r.URL.Query().Get("routineId"), 10, 64)
 	util.Check(err)
 
-	isTemplate := r.URL.Query().Get("template") != ""
+	isTemplate := r.URL.Query().Get("template") == "true"
 	userId := util.UserId(r)
 
 	//todo: if owner??
 	if isTemplate {
 		header := db.GetRoutineHeaderTemplate(o.db, tx, routineId, userId)
 		result := db.GetRoutineDetailsTemplate(o.db, tx, routineId, userId)
+
+		if header.Cover && header.CoverImageUrl == nil ||
+			(header.CoverUrlExpirationDate != nil && header.CoverUrlExpirationDate.Before(time.Now())) {
+			url := generatePreSignedURL(o.conf.S3Config, *header.CoverImagePath)
+			db.UpdateRoutineCoverUrl(o.db, tx, "template", routineId, *header.CoverImagePath, url, time.Now().Add(7*23*time.Hour))
+			header.CoverImageUrl = &url
+		}
+
 		res := o.calculateRoutineDetailsResponse(header, result, false)
 
 		db.RegisterEvent(o.db, tx, userId, db.RoutineTemplateDetails)
@@ -453,6 +477,14 @@ func (o *Endpoints) getRoutineDetails(w http.ResponseWriter, r *http.Request, tx
 	} else {
 		header := db.GetRoutineHeader(o.db, tx, routineId, userId, userId)
 		result := db.GetRoutineDetails(o.db, tx, routineId, userId)
+
+		if header.Cover && header.CoverImageUrl == nil ||
+			(header.CoverUrlExpirationDate != nil && header.CoverUrlExpirationDate.Before(time.Now())) {
+			url := generatePreSignedURL(o.conf.S3Config, *header.CoverImagePath)
+			db.UpdateRoutineCoverUrl(o.db, tx, "", routineId, *header.CoverImagePath, url, time.Now().Add(7*23*time.Hour))
+			header.CoverImageUrl = &url
+		}
+
 		res := o.calculateRoutineDetailsResponse(header, result, false)
 
 		db.RegisterEvent(o.db, tx, userId, db.RoutineDetails)
@@ -495,6 +527,7 @@ func (o *Endpoints) calculateRoutineDetailsResponse(header *db.GetRoutineHeaderQ
 	res := &GetRoutineDetailsResponse{
 		Id:                      header.Routineid,
 		Name:                    header.Routinename,
+		CoverImageUrl:           header.CoverImageUrl,
 		Difficulty:              header.Difficulty,
 		Duration:                header.Duration,
 		IsCopy:                  header.IsCopy,
@@ -658,7 +691,11 @@ func (o *Endpoints) saveSharedRoutine(w http.ResponseWriter, r *http.Request, tx
 			*planificationId,
 			*original.CreatorId,
 			*original.Difficulty,
-			*original.Duration)
+			*original.Duration,
+			original.Cover != nil && *original.Cover,
+			original.CoverImagePath,
+			original.CoverImageUrl,
+			original.CoverUrlExpirationDate)
 
 		for _, bg := range originalGroupers {
 			newBgId := db.CreateBlockGrouper(o.db, tx, *bg.Name, *newRoutineId, *bg.Order)
@@ -691,7 +728,7 @@ func (o *Endpoints) saveRoutineExecution(w http.ResponseWriter, r *http.Request,
 	usr := util.UserId(r)
 
 	//todo: refactor to use only one historical table
-	db.InsertUserRoutineHistory(o.db, tx, true, *t.PlanificationId, *t.RoutineId, usr)
+	db.InsertUserRoutineHistory(o.db, tx, true, t.PlanificationId, *t.RoutineId, usr)
 	historyId := db.InsertNewRoutineHistory(o.db, tx, *t.RoutineId, usr, *t.Rpe)
 	for _, e := range t.Exercises {
 		db.InsertNewExerciseHistory(o.db, tx, *t.RoutineId, *historyId, usr, *e.Id, *e.Reps, *e.EffectiveReps, *e.Kg)
@@ -719,9 +756,9 @@ func (o *Endpoints) actionateRoutine(w http.ResponseWriter, r *http.Request, tx 
 
 		//todo: refactor to use only one historical table
 		if *t.ActionatedRoutineAction == "skip" {
-			db.InsertUserRoutineHistory(o.db, tx, false, *t.PlanificationId, *t.ActionatedRoutineId, usr)
+			db.InsertUserRoutineHistory(o.db, tx, false, t.PlanificationId, *t.ActionatedRoutineId, usr)
 		} else if *t.ActionatedRoutineAction == "finished" {
-			db.InsertUserRoutineHistory(o.db, tx, true, *t.PlanificationId, *t.ActionatedRoutineId, usr)
+			db.InsertUserRoutineHistory(o.db, tx, true, t.PlanificationId, *t.ActionatedRoutineId, usr)
 			historyId := db.InsertNewRoutineHistory(o.db, tx, *t.ActionatedRoutineId, usr, *t.Rpe)
 			exercises := db.ListExercisesByRoutineId(o.db, tx, *t.ActionatedRoutineId, usr)
 			for _, e := range exercises {
@@ -825,6 +862,13 @@ func (o *Endpoints) getPlanificationDetails(w http.ResponseWriter, r *http.Reque
 
 	routinesResponse := make([]ListRoutinesRoutineResponse, 0)
 	for i := 0; i < len(routines); i++ {
+		if routines[i].Cover && routines[i].CoverImageUrl == nil ||
+			(routines[i].CoverUrlExpirationDate != nil && routines[i].CoverUrlExpirationDate.Before(time.Now())) {
+			url := generatePreSignedURL(o.conf.S3Config, *routines[i].CoverImagePath)
+			db.UpdateRoutineCoverUrl(o.db, tx, "", *routines[i].Id, *routines[i].CoverImagePath, url, time.Now().Add(7*23*time.Hour))
+			routines[i].CoverImageUrl = &url
+		}
+
 		routineResponse := ListRoutinesRoutineResponse{
 			Id:              routines[i].Id,
 			Name:            routines[i].Name,
@@ -833,6 +877,7 @@ func (o *Endpoints) getPlanificationDetails(w http.ResponseWriter, r *http.Reque
 			WorkCount:       routines[i].WorkCount,
 			Completed:       routines[i].Completed,
 			Duration:        routines[i].Duration,
+			CoverImageUrl:   routines[i].CoverImageUrl,
 		}
 
 		if routines[i].Completed != nil {
@@ -1891,7 +1936,11 @@ func (o *Endpoints) copyTemplateRoutineToPlanification(w http.ResponseWriter, r 
 		*p.PlanificationId,
 		userId,
 		*original.Difficulty,
-		*original.Duration)
+		*original.Duration,
+		original.Cover,
+		original.CoverImagePath,
+		original.CoverImageUrl,
+		original.CoverUrlExpirationDate)
 
 	for _, bg := range originalGroupers {
 		newBgId := db.CreateBlockGrouper(o.db, tx, *bg.Name, *newRoutineId, *bg.Order)
@@ -1940,6 +1989,107 @@ func (o *Endpoints) uploadExerciseVideoLink(w http.ResponseWriter, r *http.Reque
 	//listExercisesQueryCache.Invalidate()
 	db.RegisterEvent(o.db, tx, userId, db.UploadExerciseVideoLink)
 	o.Respond(w, &UploadExerciseVideoLinkResponse{Link: p.Link}, http.StatusOK)
+}
+
+func validateImage(file multipart.File, header *multipart.FileHeader) (*bytes.Buffer, error) {
+	imgType := header.Header.Get("Content-Type")
+	if imgType != "image/jpeg" && imgType != "image/jpg" {
+		return nil, fmt.Errorf("file type is not supported")
+	}
+
+	file.Seek(0, 0)
+
+	// Decode the image
+	img, _, err := image.Decode(file)
+	if err != nil {
+		return nil, err
+	}
+
+	//Check the file size (using the header's Size field)
+	if header.Size > 600*1024 { // 100 KB
+		return nil, fmt.Errorf("file size exceeds 600KB which is the maximum size to not loose quality")
+	}
+
+	//2:1 - 16:9
+	ratio := 1 / 1
+	bounds := img.Bounds()
+	width := bounds.Dx()
+	height := bounds.Dy()
+	if float64(width)/float64(height) != float64(ratio) {
+		return nil, fmt.Errorf("image does not meet the required aspect ratio")
+	}
+
+	return util.CompressImage(img), nil
+}
+
+func generatePreSignedURL(cf ls3.S3Config, path string) string {
+	presignClient := ls3.NewPresignClient(cf)
+	req, err := presignClient.PresignGetObject(context.TODO(), &s3.GetObjectInput{
+		Bucket: aws.String(ls3.MainBucketName),
+		Key:    aws.String(path),
+	}, func(opts *s3.PresignOptions) {
+		opts.Expires = 24 * time.Hour * 7
+	})
+	util.Check(err)
+	return req.URL
+}
+
+func uploadToR2(cf ls3.S3Config, file multipart.File, header *multipart.FileHeader, fileName string) error {
+	// Validate the image
+	compressedImage, err := validateImage(file, header)
+	if err != nil {
+		return err
+	}
+	if compressedImage == nil {
+		return fmt.Errorf("image validation failed")
+	}
+	file.Seek(0, 0)
+
+	c := ls3.NewClient(cf)
+	_, err = c.PutObject(context.TODO(), &s3.PutObjectInput{
+		Bucket: util.PString(ls3.MainBucketName),
+		Key:    util.PString(fileName),
+		Body:   compressedImage,
+	})
+	return err
+}
+
+func (o *Endpoints) uploadRoutineImage(w http.ResponseWriter, r *http.Request, tx *sqlx.Tx) {
+	input, header, _ := o.getImage("routine", r) //fileType
+	defer input.Close()
+
+	planificationId, _ := strconv.ParseInt(r.URL.Query().Get("planificationId"), 10, 64)
+	routineId, _ := strconv.ParseInt(r.URL.Query().Get("routineId"), 10, 64)
+	isTemplate := r.URL.Query().Get("template") == "true"
+	userId := util.UserId(r)
+
+	folder := S3RoutinesFolder
+	schema := ""
+	if isTemplate {
+		if !db.CalculateUserOwnsRoutineTemplate(o.db, tx, userId, routineId) {
+			panic(&BadRequestResponse{ErrorCode: util.PString("no_access")})
+		}
+		folder = S3TemplatesFolder
+		schema = "template."
+	} else {
+		if !db.CalculateUserOwnsRoutine(o.db, tx, userId, planificationId, routineId) {
+			panic(&BadRequestResponse{ErrorCode: util.PString("no_access")})
+		}
+	}
+
+	usr := db.GetUserAccountDetails(o.db, tx, userId)
+
+	folderPath := fmt.Sprintf("instructor/%s/%s", *usr.Code, folder)
+	fileName := strconv.FormatInt(routineId, 10) + DefaultCoverImageType //fileType
+	path := folderPath + "/" + fileName
+
+	err := uploadToR2(o.conf.S3Config, input, header, path)
+	util.Check(err)
+
+	url := generatePreSignedURL(o.conf.S3Config, path)
+
+	db.UpdateRoutineCoverUrl(o.db, tx, schema, routineId, path, url, time.Now().Add(7*23*time.Hour))
+	o.Respond(w, url, http.StatusOK)
 }
 
 func (o *Endpoints) repeatLastMesocycle(w http.ResponseWriter, r *http.Request, tx *sqlx.Tx) {
@@ -2063,7 +2213,7 @@ func (o *Endpoints) getImage(key string, r *http.Request) (multipart.File, *mult
 	i := sort.SearchStrings(allowed, mimetype)
 
 	if i == len(allowed) {
-		panic(errors.New("not_allowed_image_type"))
+		panic(&BadRequestResponse{ErrorCode: util.PString("not_allowed_image_type")})
 	}
 
 	return input, header, strings.Split(mimetype, "/")[1]

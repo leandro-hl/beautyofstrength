@@ -20,9 +20,9 @@ import {
     getSharedRoutineDetails,
     saveRoutineEditions, saveRoutineExecution,
     saveSharedRoutine,
-    shareRoutine
+    shareRoutine, uploadRoutineImage
 } from "../service";
-import {AppContext, setData, showSuccess, showWarning} from "../context";
+import {AppContext, setData, showError, showSuccess, showWarning} from "../context";
 import BottomMenuBar from "./BottomMenuBar";
 import LayoutMobile from "./LayoutMobile";
 import {capitalize, isLocalhost, queryParam} from "../functions";
@@ -38,6 +38,7 @@ import {ModalRoutineToPlanificationCopy} from "./ModalRoutineToPlanificationCopy
 import {ModalExerciseExecuteTimer} from "./ModalExerciseExecuteTimer";
 import {ModalExerciseExecuteReps} from "./ModalExerciseExecuteReps";
 import {ModalBorgScale} from "./ModalBorgScale";
+import {ImageUpload} from "./ImageUpload";
 
 const MenuHeaderRender = ({
                               alreadyMarkedByMe,
@@ -203,8 +204,8 @@ const MenuHeaderRender = ({
                     <Icon disabled={savingSharedRoutine} name={'save outline'} className={'header-icon'} onClick={() => saveSharedRoutine()}/>
             }
             <div>
-                <Chip style={{fontSize: 14}} success={difficulty===1} progress={difficulty===2} content={difficulty===1? 'Facil' : 'Intermedia'}/>
-                <Chip style={{fontSize: 14}}  omit content={duration}/>
+                <Chip style={{fontSize: 14, color: "#252525"}} success={difficulty===1} progress={difficulty===2} content={difficulty===1? 'Facil' : 'Intermedia'}/>
+                <Chip style={{fontSize: 14, color: "#252525"}}  omit content={duration}/>
             </div>
         </>
     )
@@ -230,6 +231,10 @@ class PageRoutineDetail extends Component{
         }
     }
 
+    componentWillUnmount() {
+        this.context.dispatch(setData({coverImageUrl: null, loadCoverImage:null}, true))
+    }
+
     async componentDidMount() {
         try {
             let share = localStorage.getItem('routine-shared')
@@ -250,7 +255,7 @@ class PageRoutineDetail extends Component{
                     noBottomBar: false,
                     menuButtonSelected: MENU.PLANIFICATIONS,
                     nextBlockNumber: res.data.blockGroupers.length+1}))
-                this.context.dispatch(setData({routineId: res.data.id, isTemplate: false, shared: true}, true))
+                this.context.dispatch(setData({routineId: res.data.id, isTemplate: false, shared: true, coverImageUrl:  res.data.coverImageUrl, loadCoverImage: !!res.data.coverImageUrl}, true))
                 this.setState({
                     loading: false,
                     isShared: !isShared,
@@ -273,9 +278,17 @@ class PageRoutineDetail extends Component{
     }
 
     async refresh() {
-        const {state: {routineId, planificationId, isOwner, draftBlockGroupers, isTemplate}} = this.context
+        const {state: {routineId, planificationId, isOwner, draftBlockGroupers, isTemplate, coverImageUrl}} = this.context
+        const {state: {permissions: {canUploadRoutineCover}}} = this.context
         const res = await getRoutineDetails(routineId, isTemplate);
-
+        let cover = coverImageUrl
+        let loadCoverImage = false
+        if (!cover) {
+            cover = res.data.coverImageUrl
+        }
+        if(cover) {
+            loadCoverImage=true
+        }
         const actionable = isOwner
         let canEdit = false
         let backup = {}
@@ -301,8 +314,12 @@ class PageRoutineDetail extends Component{
             menuButtonSelected: isTemplate? MENU.INSTRUCTOR_SUITE : MENU.PLANIFICATIONS,
         }))
         this.context.dispatch(setData({
-            nextBlockNumber: res.data.blockGroupers.length+draftBlockGroupers.length+1
+            nextBlockNumber: res.data.blockGroupers.length+draftBlockGroupers.length+1,
+            coverImageUrl: cover
         }, true))
+        this.context.dispatch(setData({
+            loadCoverImage
+        }), true)
 
         this.setState({
             loading: false,
@@ -310,6 +327,7 @@ class PageRoutineDetail extends Component{
             updates: {},
             planificationId,
             isOwner,
+            showUploadRoutineImage: canUploadRoutineCover && isOwner && !cover,
             routineId,
             canEdit,
             isCopy: res.data.isCopy,
@@ -1216,6 +1234,18 @@ class PageRoutineDetail extends Component{
         }
     }
 
+    async uploadRoutineImage(file) {
+        try {
+            const {state: {isTemplate}} = this.context
+            const {routineId, planificationId} = this.state
+            const res = await uploadRoutineImage(routineId, planificationId, file, isTemplate)
+            this.context.dispatch(setData({coverImageUrl: res.data, loadCoverImage: true}))
+            this.setState({showUploadRoutineImage: false})
+        } catch (e) {
+            this.context.dispatch(showError('Error al subir imagen', 'No se pudo subir la imagen de la rutina'))
+        }
+    }
+
     renderRoutineDetails() {
         const {state: {permissions: {editRoutine}}} = this.context
         const {
@@ -1237,7 +1267,8 @@ class PageRoutineDetail extends Component{
             routineStarted,
             executeWithTimer,
             executeWithReps,
-            showBorgScale
+            showBorgScale,
+            showUploadRoutineImage,
         } = this.state;
 
         return (
@@ -1257,6 +1288,7 @@ class PageRoutineDetail extends Component{
                 {/*        Ejecutar Rutina*/}
                 {/*    </Button>}/>*/}
                 {/*}*/}
+                {showUploadRoutineImage && <ImageUpload onFileSelected={async (file) => await this.uploadRoutineImage(file)}/>}
                 {
                     blockGroupers.length === 0 &&
                     <Message>

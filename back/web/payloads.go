@@ -129,6 +129,7 @@ type SaveUserTrainedTodayRequest struct {
 
 type GetRoutineDetailsResponse struct {
 	Id                      *int64                          `json:"id"`
+	CoverImageUrl           *string                         `json:"coverImageUrl"`
 	CanBeSaved              *bool                           `json:"canBeSaved"`
 	IsCopy                  *bool                           `json:"isCopy"`
 	AlreadyCopied           *bool                           `json:"alreadyCopied"`
@@ -250,7 +251,7 @@ type GetPlanificationDetailsResponse struct {
 }
 
 type ListRoutinesRoutineResponse struct {
-	Id              *int    `json:"id"`
+	Id              *int64  `json:"id"`
 	Name            *string `json:"name"`
 	PlanificationId *int64  `json:"planificationId"`
 	BlockCount      *int    `json:"blockCount"`
@@ -259,6 +260,7 @@ type ListRoutinesRoutineResponse struct {
 	Duration        *string `json:"duration"`
 	IsActionable    bool    `json:"isActionable"`
 	IsStartOfWeek   bool    `json:"isStartOfWeek"`
+	CoverImageUrl   *string `json:"coverImageUrl"`
 }
 
 type EditRoutineRequest struct {
@@ -358,6 +360,11 @@ type DeletePlanificationRequest struct {
 type CopyMesocycleRequest struct {
 	PlanificationId *int64 `json:"planificationId"`
 	OnlyWeek        *bool  `json:"onlyWeek"`
+}
+
+type UploadRoutineImage struct {
+	RoutineId *int64 `json:"routineId"`
+	Image     []byte `json:"image"`
 }
 
 type CreateNewExerciseRequest struct {

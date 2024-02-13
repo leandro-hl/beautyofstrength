@@ -2,11 +2,40 @@ package util
 
 import (
 	"bufio"
+	"bytes"
 	"fmt"
+	"image"
+	"image/jpeg"
 	"io"
 	"os"
 	"path/filepath"
 )
+
+func CompressImage(img image.Image) *bytes.Buffer {
+	// Compress the image by adjusting the quality to reduce the file size
+	// Note: Finding the right quality to achieve exactly 30KB might require experimentation
+	var quality int = 75 // Start with a quality setting, which may need adjustment
+	buf := new(bytes.Buffer)
+	for {
+		buf.Reset() // Reset buffer for the next try
+		err := jpeg.Encode(buf, img, &jpeg.Options{Quality: quality})
+		Check(err)
+
+		// Check if the size is close to 30KB
+		// This is a simplistic approach; you may need a more sophisticated method to adjust the quality
+		if buf.Len() <= 30*1024 { // Check if the file size is less or equal to 30KB
+			break // If it's 30KB or less, stop adjusting
+		} else {
+			quality -= 5 // Decrease quality to reduce file size
+			if quality <= 0 {
+				panic(fmt.Errorf("could not compress image to the desired size"))
+			}
+		}
+	}
+
+	// Return the buffer containing the compressed image
+	return buf
+}
 
 func SaveImage(relPath string, fileName string, input io.Reader) {
 	path, err := filepath.Abs(relPath)

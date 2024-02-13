@@ -65,7 +65,7 @@ export function getPlanificationDetails(planificationId) {
 }
 
 export function getRoutineDetails(routineId, isTemplate) {
-    return axios.get("getRoutineDetails?routineId=" + routineId + (isTemplate? "&template=true":""))
+    return axios.get(`getRoutineDetails?routineId=${routineId}&template=${isTemplate}`)
 }
 
 export function getSharedRoutineDetails(share) {
@@ -94,6 +94,25 @@ export function listLastUserRmHistoryStats() {
 
 export function saveNewRm(payload) {
     return axios.post("saveNewRm", payload)
+}
+
+export function uploadRoutineImage(id, planificationId, file, isTemplate) {
+    const formData = new FormData();
+
+    formData.append(
+        "routine",
+        file,
+        file.name
+    );
+
+    return axios.post(
+        `uploadRoutineImage?routineId=${id}&planificationId=${planificationId}&template=${isTemplate}`,
+        formData,
+        {
+            headers: {
+                'Content-Type': 'multipart/form-data'
+            }
+        })
 }
 
 export function saveRoutineExecution(payload) {

@@ -5,21 +5,17 @@ import {AppContext} from "../context";
 export class TopMenuBar extends Component {
     static contextType = AppContext
 
-    constructor(props) {
-        super(props);
-
-        this.state = {
-
-        }
-    }
-
     render() {
-        const {state: {MenuHeaderRender, removeMenuHeaderPadding}} = this.context
+        const {state: {MenuHeaderRender, removeMenuHeaderPadding, coverImageUrl}} = this.context
         return (
             <>
                 {
                     MenuHeaderRender &&
-                    <Segment className={'no-margin top-menu-bar'+ (removeMenuHeaderPadding ? ' no-padding' : '')}>
+                    <Segment
+                        style={{width: '100%', zIndex: 100}}
+                        className={'no-margin'
+                            + (removeMenuHeaderPadding ? ' no-padding' : '')
+                            + (coverImageUrl ? ' transparent top-bar-absolute': ' top-menu-bar')}>
                         <Header as={'h3'} className={'top-bar'}>
                             {MenuHeaderRender}
                         </Header>
