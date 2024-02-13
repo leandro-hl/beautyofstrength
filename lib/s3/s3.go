@@ -6,15 +6,12 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/s3"
 )
 
-const (
-	MainBucketName = "bostest"
-)
-
 type S3Config struct {
-	AccessKey *string `json:"accessKey"`
-	SecretKey *string `json:"secretKey"`
-	Region    *string `json:"region"`
-	Endpoint  *string `json:"endpoint"`
+	AccessKey      *string `json:"accessKey"`
+	SecretKey      *string `json:"secretKey"`
+	Region         *string `json:"region"`
+	Endpoint       *string `json:"endpoint"`
+	MainBucketName *string `json:"mainBucketName"`
 }
 
 func NewClient(c S3Config) *s3.Client {

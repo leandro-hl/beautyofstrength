@@ -2025,7 +2025,7 @@ func validateImage(file multipart.File, header *multipart.FileHeader) (*bytes.Bu
 func generatePreSignedURL(cf ls3.S3Config, path string) string {
 	presignClient := ls3.NewPresignClient(cf)
 	req, err := presignClient.PresignGetObject(context.TODO(), &s3.GetObjectInput{
-		Bucket: aws.String(ls3.MainBucketName),
+		Bucket: cf.MainBucketName,
 		Key:    aws.String(path),
 	}, func(opts *s3.PresignOptions) {
 		opts.Expires = 24 * time.Hour * 7
@@ -2047,7 +2047,7 @@ func uploadToR2(cf ls3.S3Config, file multipart.File, header *multipart.FileHead
 
 	c := ls3.NewClient(cf)
 	_, err = c.PutObject(context.TODO(), &s3.PutObjectInput{
-		Bucket: util.PString(ls3.MainBucketName),
+		Bucket: cf.MainBucketName,
 		Key:    util.PString(fileName),
 		Body:   compressedImage,
 	})
