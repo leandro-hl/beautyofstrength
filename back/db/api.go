@@ -624,6 +624,7 @@ func CreateRoutineDefault(db *DB, tx *sqlx.Tx, name string, planificationId, cre
 			Difficulty:      util.PInt(1),
 			Duration:        util.PString("01:00"),
 			Active:          util.PBool(true),
+			Cover:           util.PBool(false),
 			CreatorId:       &creatorId,
 			LastUpdatedDate: time.Now(),
 		})

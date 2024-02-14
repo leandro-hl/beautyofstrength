@@ -90,11 +90,12 @@ export function showWarning(ctx, title, description) {
     }, 1500)
 }
 
-export function showError(title, description) {
-    return {
-        type: ACTIONS.DATA,
-        payload: {popupMessage: {show:true, title, description, negative:true}},
-    }
+export function showError(ctx, title, description) {
+    ctx.dispatch(setData({popupMessage: {show:true, title, description, negative:true}}))
+    const timeId = setTimeout(() => {
+        clearTimeout(timeId)
+        ctx.dispatch(setData({popupMessage: {show: false}}))
+    }, 1500)
 }
 
 export function calculareError(code) {
@@ -313,7 +314,7 @@ function RegisterServiceWorkers({children}) {
 }
 
 function ResponseInterceptor({children}) {
-    const {state: {auth_token}, dispatch} = useContext(AppContext)
+    const ctx = useContext(AppContext)
     const history = useHistory();
 
     useEffect(() => {
@@ -325,11 +326,11 @@ function ResponseInterceptor({children}) {
                     const {title, description} = calculareError(code)
                     const timeId = setTimeout(() => {
                         clearTimeout(timeId)
-                        dispatch(setData({popupMessage: {show: false}}))
+                        ctx.dispatch(setData({popupMessage: {show: false}}))
                     }, 2500)
-                    dispatch(showError(title, description))
+                    showError(ctx, title, description)
                 } else if (err.response.status === 401) {
-                    dispatch(setData({auth_token: null, noMenu: true, secondaryActions:[]}))
+                    ctx.dispatch(setData({auth_token: null, noMenu: true, secondaryActions:[]}))
                     // history?.push('/signin');
                     localStorage.removeItem("state")
                 }

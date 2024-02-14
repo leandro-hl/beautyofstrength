@@ -2021,9 +2021,9 @@ func validateImage(file multipart.File, header *multipart.FileHeader) (*bytes.Bu
 		return nil, fmt.Errorf("image does not meet the required aspect ratio")
 	}
 
-	resizedImg := imaging.Resize(img, 100, 0, imaging.Lanczos)
+	resizedImg := imaging.Resize(img, 500, 0, imaging.Lanczos)
 	buf := new(bytes.Buffer)
-	err = jpeg.Encode(buf, resizedImg, &jpeg.Options{Quality: 50})
+	err = jpeg.Encode(buf, resizedImg, &jpeg.Options{Quality: 80})
 	util.Check(err)
 
 	return buf, nil

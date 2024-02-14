@@ -1240,7 +1240,7 @@ class PageRoutineDetail extends Component{
             this.context.dispatch(setData({coverImageUrl: res.data, loadCoverImage: true}))
             this.setState({showUploadRoutineImage: false})
         } catch (e) {
-            this.context.dispatch(showError('Error al subir imagen', 'No se pudo subir la imagen de la rutina'))
+            showError(this.context, 'Error al subir imagen', 'No se pudo subir la imagen de la rutina')
         }
     }
 
