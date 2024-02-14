@@ -1995,7 +1995,7 @@ func (o *Endpoints) uploadExerciseVideoLink(w http.ResponseWriter, r *http.Reque
 
 func validateImage(file multipart.File, header *multipart.FileHeader) (*bytes.Buffer, error) {
 	imgType := header.Header.Get("Content-Type")
-	if imgType != "image/jpeg" && imgType != "image/jpg" {
+	if imgType != "image/jpeg" && imgType != "image/png" {
 		return nil, fmt.Errorf("file type is not supported")
 	}
 
