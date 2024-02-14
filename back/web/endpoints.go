@@ -417,12 +417,12 @@ func (o *Endpoints) getUserPermissions(w http.ResponseWriter, r *http.Request, t
 		permissions["canSaveSharedRoutines"] = true
 		permissions["canExecuteRoutine"] = true
 		permissions["repeatLastMesocycle"] = true
+		permissions["canSaveRoutineExecution"] = true
 	}
 
 	if *plan == db.StudentPremium {
 		permissions["statistics"] = true
 		permissions["canMarkRoutine"] = true
-		permissions["canSaveRoutineExecution"] = true
 	}
 
 	if *plan == db.Professor {

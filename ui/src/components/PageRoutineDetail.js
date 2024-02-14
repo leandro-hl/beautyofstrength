@@ -1187,6 +1187,10 @@ class PageRoutineDetail extends Component{
     async confirmBorgScale(s) {
         try {
             const {state: {permissions: {canSaveRoutineExecution}}} = this.context
+            if (!canSaveRoutineExecution) {
+                return
+            }
+
             const {blockGroupers, routineId, planificationId} = this.state
             const exercises = []
             for (let i = 0; i < blockGroupers.length; i++) {
@@ -1219,16 +1223,10 @@ class PageRoutineDetail extends Component{
                 }
             }
 
-            if (canSaveRoutineExecution) {
-                await saveRoutineExecution({planificationId, routineId, exercises, rpe: s})
-                this.setState({showBorgScale:false, routineStarted: false})
-                this.setSecondaryActions()
-                showSuccess(this.context, '', 'Ejecucion de rutina guardada con exito!')
-            } else {
-                this.setState({showBorgScale:false, routineStarted: false})
-                this.setSecondaryActions()
-                showWarning(this.context, '', 'Solo disponible para atletas elite!')
-            }
+            await saveRoutineExecution({planificationId, routineId, exercises, rpe: s})
+            this.setState({showBorgScale:false, routineStarted: false})
+            this.setSecondaryActions()
+            showSuccess(this.context, '', 'Ejecucion de rutina guardada con exito!')
         } catch (e) {
             console.error(e)
         }
