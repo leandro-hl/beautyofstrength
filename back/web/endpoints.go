@@ -10,6 +10,7 @@ import (
 	"fmt"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/s3"
+	"github.com/disintegration/imaging"
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/gorilla/mux"
 	"github.com/jmoiron/sqlx"
@@ -18,6 +19,7 @@ import (
 	"github.com/leandro-hl/beautyofstrength/back/webpush"
 	ls3 "github.com/leandro-hl/beautyofstrength/lib/s3"
 	"image"
+	"image/jpeg"
 	_ "image/jpeg"
 	_ "image/png"
 	"io"
@@ -2019,7 +2021,12 @@ func validateImage(file multipart.File, header *multipart.FileHeader) (*bytes.Bu
 		return nil, fmt.Errorf("image does not meet the required aspect ratio")
 	}
 
-	return util.CompressImage(img), nil
+	resizedImg := imaging.Resize(img, 100, 0, imaging.Lanczos)
+	buf := new(bytes.Buffer)
+	err = jpeg.Encode(buf, resizedImg, &jpeg.Options{Quality: 50})
+	util.Check(err)
+
+	return buf, nil
 }
 
 func generatePreSignedURL(cf ls3.S3Config, path string) string {

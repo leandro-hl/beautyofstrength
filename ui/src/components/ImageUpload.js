@@ -24,7 +24,7 @@ export function ImageUpload({onFileSelected}) {
                     Subir Portada de Rutina
                 </Header>
                 <br/>
-                jpg o jpeg - maximo 600kb - ratio 1:1
+                jpg o jpeg - ratio 1:1 (cuadrada)
             </Segment>
             <input ref={inputRef} type="file" onChange={onFileChange} hidden accept="image/jpeg" />
         </>)
