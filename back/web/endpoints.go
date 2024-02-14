@@ -2006,9 +2006,9 @@ func validateImage(file multipart.File, header *multipart.FileHeader) (*bytes.Bu
 	}
 
 	//Check the file size (using the header's Size field)
-	if header.Size > 600*1024 { // 100 KB
-		return nil, fmt.Errorf("file size exceeds 600KB which is the maximum size to not loose quality")
-	}
+	//if header.Size > 600*1024 { // 100 KB
+	//	return nil, fmt.Errorf("file size exceeds 600KB which is the maximum size to not loose quality")
+	//}
 
 	//2:1 - 16:9
 	ratio := 1 / 1

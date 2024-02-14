@@ -26,6 +26,6 @@ export function ImageUpload({onFileSelected}) {
                 <br/>
                 jpg o jpeg - maximo 600kb - ratio 1:1
             </Segment>
-            <input ref={inputRef} type="file" onChange={onFileChange} hidden/>
+            <input ref={inputRef} type="file" onChange={onFileChange} hidden accept="image/jpeg" />
         </>)
 }
