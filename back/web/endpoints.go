@@ -2017,13 +2017,15 @@ func validateImage(file multipart.File, header *multipart.FileHeader) (*bytes.Bu
 	bounds := img.Bounds()
 	width := bounds.Dx()
 	height := bounds.Dy()
+
+	var resultImage *image.NRGBA
 	if float64(width)/float64(height) != float64(ratio) {
-		return nil, fmt.Errorf("image does not meet the required aspect ratio")
+		resultImage = imaging.CropCenter(img, 500, 500)
 	}
 
-	resizedImg := imaging.Resize(img, 500, 0, imaging.Lanczos)
+	resultImage = imaging.Resize(resultImage, 500, 0, imaging.Lanczos)
 	buf := new(bytes.Buffer)
-	err = jpeg.Encode(buf, resizedImg, &jpeg.Options{Quality: 80})
+	err = jpeg.Encode(buf, resultImage, &jpeg.Options{Quality: 80})
 	util.Check(err)
 
 	return buf, nil
