@@ -39,6 +39,7 @@ import {ModalExerciseExecuteTimer} from "./ModalExerciseExecuteTimer";
 import {ModalExerciseExecuteReps} from "./ModalExerciseExecuteReps";
 import {ModalBorgScale} from "./ModalBorgScale";
 import {ImageUpload} from "./ImageUpload";
+import {ImageCropper} from "./ImageCropper";
 
 const MenuHeaderRender = ({
                               alreadyMarkedByMe,
@@ -1255,7 +1256,15 @@ class PageRoutineDetail extends Component{
             const {routineId, planificationId} = this.state
             const res = await uploadRoutineImage(routineId, planificationId, file, isTemplate)
             this.context.dispatch(setData({coverImageUrl: res.data, loadCoverImage: true}))
-            this.setState({showUploadRoutineImage: false})
+            this.setState({showCropper: false, toCrop: null})
+        } catch (e) {
+            showError(this.context, 'Error al subir imagen', 'No se pudo subir la imagen de la rutina')
+        }
+    }
+
+    async routineImageCropper(file) {
+        try {
+            this.setState({showCropper: true, showUploadRoutineImage:false, toCrop:file})
         } catch (e) {
             showError(this.context, 'Error al subir imagen', 'No se pudo subir la imagen de la rutina')
         }
@@ -1285,6 +1294,7 @@ class PageRoutineDetail extends Component{
             executeWithReps,
             showBorgScale,
             showUploadRoutineImage,
+            showCropper
         } = this.state;
 
         return (
@@ -1304,7 +1314,9 @@ class PageRoutineDetail extends Component{
                 {/*        Ejecutar Rutina*/}
                 {/*    </Button>}/>*/}
                 {/*}*/}
-                {showUploadRoutineImage && <ImageUpload onFileSelected={async (file) => await this.uploadRoutineImage(file)}/>}
+                {/*{showUploadRoutineImage && <ImageUpload onFileSelected={async (file) => await this.uploadRoutineImage(file)}/>}*/}
+                {showUploadRoutineImage && <ImageUpload onFileSelected={(file) => this.routineImageCropper(file)}/>}
+                {showCropper && <ImageCropper toCrop={this.state.toCrop} onConfirm={(img) => this.uploadRoutineImage(img)}/>}
                 {
                     blockGroupers.length === 0 &&
                     <Message>
