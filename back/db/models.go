@@ -43,7 +43,7 @@ type Planification struct {
 	Objective               *string    `json:"objective"`
 	CreatorId               *int64     `json:"creator_id"`
 	Active                  *bool      `json:"active"`
-	Cover                   bool       `json:"cover"`
+	Cover                   *bool      `json:"cover"`
 	CoverImageUrl           *string    `json:"coverimageurl"`
 	CoverUrlExpirationDate  *time.Time `json:"coverurlexpirationdate"`
 	LastMesocycleCopiedDate *time.Time `json:"lastmesocyclecopieddate"`
