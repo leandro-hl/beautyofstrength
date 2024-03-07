@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"crypto/rand"
+	"crypto/rsa"
 	"encoding/base64"
 	"encoding/json"
 	"errors"
@@ -316,9 +317,9 @@ func (o *Endpoints) Handle() http.Handler {
 	api.Path("/savePlanificationEditions").HandlerFunc(o.HandleAuthenticatedTransactional(o.HandleAuthorization(o.savePlanificationEditions, db.StudentPremium, db.Professor)))
 	api.Path("/saveRoutineEditions").HandlerFunc(o.HandleAuthenticatedTransactional(o.HandleAuthorization(o.saveRoutineEditions, db.StudentPremium, db.Professor)))
 	api.Path("/repeatLastMesocycle").HandlerFunc(o.HandleAuthenticatedTransactional(o.HandleAuthorization(o.repeatLastMesocycle, db.StudentPremium, db.Professor)))
+	api.Path("/saveRoutineExecution").HandlerFunc(o.HandleAuthenticatedTransactional(o.HandleAuthorization(o.saveRoutineExecution, db.StudentPremium, db.Professor)))
 
 	api.Path("/saveNewRm").HandlerFunc(o.HandleAuthenticatedTransactional(o.HandleAuthorization(o.saveNewRm, db.StudentPremium)))
-	api.Path("/saveRoutineExecution").HandlerFunc(o.HandleAuthenticatedTransactional(o.HandleAuthorization(o.saveRoutineExecution, db.StudentPremium)))
 
 	//Student services
 	api.Path("/listUserRms").HandlerFunc(o.HandleAuthenticatedTransactional(o.HandleAuthorization(o.listUserRms, db.StudentFree, db.StudentPremium)))
@@ -465,11 +466,13 @@ func (o *Endpoints) getRoutineDetails(w http.ResponseWriter, r *http.Request, tx
 		header := db.GetRoutineHeaderTemplate(o.db, tx, routineId, userId)
 		result := db.GetRoutineDetailsTemplate(o.db, tx, routineId, userId)
 
-		if header.Cover && header.CoverImageUrl == nil ||
-			(header.CoverUrlExpirationDate != nil && header.CoverUrlExpirationDate.Before(time.Now())) {
-			url := generatePreSignedURL(o.conf.S3Config, *header.CoverImagePath)
-			db.UpdateRoutineCoverUrl(o.db, tx, "template", routineId, *header.CoverImagePath, url, time.Now().Add(7*23*time.Hour))
-			header.CoverImageUrl = &url
+		if header.Cover && header.CoverImagePath != nil {
+			if header.CoverImageUrl == nil ||
+				(header.CoverUrlExpirationDate != nil && header.CoverUrlExpirationDate.Before(time.Now())) {
+				url := generatePreSignedURL(o.conf.S3Config, *header.CoverImagePath)
+				db.UpdateRoutineCoverUrl(o.db, tx, "template", routineId, *header.CoverImagePath, url, time.Now().Add(7*23*time.Hour))
+				header.CoverImageUrl = &url
+			}
 		}
 
 		res := o.calculateRoutineDetailsResponse(header, result, false)
@@ -480,11 +483,13 @@ func (o *Endpoints) getRoutineDetails(w http.ResponseWriter, r *http.Request, tx
 		header := db.GetRoutineHeader(o.db, tx, routineId, userId, userId)
 		result := db.GetRoutineDetails(o.db, tx, routineId, userId)
 
-		if header.Cover && header.CoverImageUrl == nil ||
-			(header.CoverUrlExpirationDate != nil && header.CoverUrlExpirationDate.Before(time.Now())) {
-			url := generatePreSignedURL(o.conf.S3Config, *header.CoverImagePath)
-			db.UpdateRoutineCoverUrl(o.db, tx, "", routineId, *header.CoverImagePath, url, time.Now().Add(7*23*time.Hour))
-			header.CoverImageUrl = &url
+		if header.Cover && header.CoverImagePath != nil {
+			if header.CoverImageUrl == nil ||
+				(header.CoverUrlExpirationDate != nil && header.CoverUrlExpirationDate.Before(time.Now())) {
+				url := generatePreSignedURL(o.conf.S3Config, *header.CoverImagePath)
+				db.UpdateRoutineCoverUrl(o.db, tx, "", routineId, *header.CoverImagePath, url, time.Now().Add(7*23*time.Hour))
+				header.CoverImageUrl = &url
+			}
 		}
 
 		res := o.calculateRoutineDetailsResponse(header, result, false)
@@ -864,11 +869,13 @@ func (o *Endpoints) getPlanificationDetails(w http.ResponseWriter, r *http.Reque
 
 	routinesResponse := make([]ListRoutinesRoutineResponse, 0)
 	for i := 0; i < len(routines); i++ {
-		if routines[i].Cover && routines[i].CoverImageUrl == nil ||
-			(routines[i].CoverUrlExpirationDate != nil && routines[i].CoverUrlExpirationDate.Before(time.Now())) {
-			url := generatePreSignedURL(o.conf.S3Config, *routines[i].CoverImagePath)
-			db.UpdateRoutineCoverUrl(o.db, tx, "", *routines[i].Id, *routines[i].CoverImagePath, url, time.Now().Add(7*23*time.Hour))
-			routines[i].CoverImageUrl = &url
+		if routines[i].Cover && routines[i].CoverImagePath != nil {
+			if routines[i].CoverImageUrl == nil ||
+				(routines[i].CoverUrlExpirationDate != nil && routines[i].CoverUrlExpirationDate.Before(time.Now())) {
+				url := generatePreSignedURL(o.conf.S3Config, *routines[i].CoverImagePath)
+				db.UpdateRoutineCoverUrl(o.db, tx, "", *routines[i].Id, *routines[i].CoverImagePath, url, time.Now().Add(7*23*time.Hour))
+				routines[i].CoverImageUrl = &url
+			}
 		}
 
 		routineResponse := ListRoutinesRoutineResponse{
@@ -1677,7 +1684,27 @@ func (o *Endpoints) googleSignIn(w http.ResponseWriter, r *http.Request, tx *sql
 	jwtToken := dataMap["credential"]
 	token, err := jwt.ParseWithClaims(jwtToken, &util.GoogleAuthClaims{}, func(token *jwt.Token) (interface{}, error) {
 		keyId := token.Header["kid"].(string)
-		return o.conf.GooglePEMPublicKeys[keyId], nil
+
+		pk, ok := o.conf.GooglePEMPublicKeys[keyId]
+		if !ok {
+			req, err := http.NewRequest("GET", "https://www.googleapis.com/oauth2/v1/certs", nil)
+			util.Check(err)
+			resp, err := http.DefaultClient.Do(req)
+			util.Check(err)
+			defer resp.Body.Close()
+			var v map[string]string
+			json.NewDecoder(resp.Body).Decode(&v)
+
+			o.conf.GooglePEMPublicKeys = make(map[string]*rsa.PublicKey)
+			for id, k := range v {
+				key, err := jwt.ParseRSAPublicKeyFromPEM([]byte(k))
+				util.Check(err)
+				o.conf.GooglePEMPublicKeys[id] = key
+			}
+			pk, _ = o.conf.GooglePEMPublicKeys[keyId]
+		}
+
+		return pk, nil
 	}, jwt.WithAudience(*o.cryptoConf.GoogleClientId))
 	util.Check(err)
 
@@ -1737,7 +1764,7 @@ func (o *Endpoints) googleSignIn(w http.ResponseWriter, r *http.Request, tx *sql
 		db.GenerateUserExerciseRm(o.db, tx, *userId)
 		o.storeSessionData(w, tx, *userId)
 		db.RegisterEvent(o.db, tx, *userId, db.AccountCreated)
-		http.Redirect(w, r, *o.conf.AddressUi+"/app"+"/my-planifications", http.StatusFound)
+		http.Redirect(w, r, *o.conf.AddressUi+"/app/onboarding", http.StatusFound)
 	}
 }
 
@@ -2310,10 +2337,10 @@ func (o *Endpoints) createTestUser(w http.ResponseWriter, r *http.Request, tx *s
 	o.storeSessionData(w, tx, *userId)
 
 	if source == "btn" {
-		w.Write([]byte("/my-planifications"))
+		w.Write([]byte("/onboarding"))
 		return
 	}
-	http.Redirect(w, r, *o.conf.AddressUi+"/app"+"/plans", http.StatusFound)
+	http.Redirect(w, r, *o.conf.AddressUi+"/app/onboarding", http.StatusFound)
 }
 
 func (o *Endpoints) storeSessionData(w http.ResponseWriter, tx *sqlx.Tx, userId int64) {

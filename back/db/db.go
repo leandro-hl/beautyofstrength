@@ -7,7 +7,6 @@ import (
 	"github.com/leandro-hl/beautyofstrength/back/util"
 	_ "github.com/lib/pq"
 	"io/ioutil"
-	"log"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -22,11 +21,7 @@ type DB struct {
 
 func InitDB(datasourceName string, serial int) *DB {
 	db, err := sqlx.Connect("postgres", datasourceName)
-
-	if err != nil {
-		log.Fatalln(err)
-		return nil
-	}
+	util.Check(err)
 
 	db.Mapper = reflectx.NewMapperFunc("json", strings.ToLower)
 	//todo: this will be initialized twice cause reused function but we're ok for now

@@ -670,3 +670,37 @@ div#g_id_onload, div.g_id_signin {
     padding: 0px !important;
   }
 }
+
+/* --- ONBOARDING AS ON FIGMA --- */
+.onboarding-container {
+  background-image: url("../public/static/media/onboarding-background-dark.png") !important;
+  height: 100vh;
+  background-repeat: no-repeat !important;
+  background-size: cover !important;
+}
+
+.onboarding-header {
+  font-family: Rubik One;
+  font-size: 47px;
+  font-weight: 400;
+  line-height: 20px;
+  letter-spacing: 0.35px;
+  text-align: center;
+  color: #F8D018;
+}
+
+.onboarding-subheader {
+  font-family: Roboto;
+  font-size: 24px;
+  font-weight: 600;
+  line-height: 20px;
+  letter-spacing: 0.35px;
+  text-align: center;
+}
+
+.onboarding-select-instructor {
+  background: linear-gradient(rgba(0, 0, 0, 0.6), rgba(0, 0, 0, 0.6)) ,url("../public/static/media/onboarding-instructor-select-button.png") !important;
+  background-size: cover !important;
+  background-position: center !important;
+  background-repeat: no-repeat !important;
+}

@@ -29,6 +29,7 @@ import ModalExerciseVideo from "./components/ModalExerciseVideo";
 import PagePublicHome from "./components/PagePublicHome";
 import {PopUpMessage} from "./components/PopUpMessage";
 import PageCreateSuite from "./components/PageCreateSuite";
+import PageOnboarding from "./components/PageOnboarding";
 
 class App extends Component {
     render() {
@@ -44,6 +45,7 @@ class App extends Component {
                                 <Route exact path={"/terms"} component={PageTermsAndConditions}/>
                                 <Route exact path={"/privacy-policies"} component={PagePrivacyPolicies}/>
                                 {/*<Route exact path={"/signup"} component={SignUp}/>*/}
+                                <PrivateRoute exact path={"/onboarding"} component={PageOnboarding}/>
                                 <PrivateRoute exact path={"/suite"} component={PageCreateSuite}/>
                                 <PrivateRoute exact path={"/plans"} component={PagePlans}/>
                                 <PrivateRoute exact path={"/subscription-approved"} component={PageSubscriptionApproved}/>

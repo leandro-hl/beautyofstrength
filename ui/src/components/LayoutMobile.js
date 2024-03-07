@@ -10,19 +10,24 @@ import {CoverImageEventHandler} from "./CoverImageEventHandler";
 class LayoutMobile extends Component {
     static contextType = AppContext
     render() {
-        const {state: {loading, withTopBar, coverImageUrl, noBottomBar, noMenu, secondaryActions, menuButtonSelected, loadCoverImage}} = this.context
+        const {state: {loading, withTopBar, coverImageUrl, noBottomBar, fullScreen, noMenu, secondaryActions, menuButtonSelected, loadCoverImage}} = this.context
         const {children} = this.props;
 
-        const noCoverSegmentStyle = {
+        let segmentStyle = {
             height: noBottomBar? '100%' : '90%',
             overflowY: 'scroll',
-            // overflowX: 'hidden',
-            paddingTop: 20,
-            // paddingBottom: 80,
-            // marginTop: 0
+            paddingTop: 20
         }
 
-        const coverContainerStyle = {
+        if (loadCoverImage) {
+            segmentStyle = {
+                ...segmentStyle,
+                paddingTop: 20,
+                marginTop: 0
+            }
+        }
+
+        let containerStyle = {
             height: '100%',
             overflowY: 'scroll',
             overflowX: 'hidden',
@@ -30,23 +35,36 @@ class LayoutMobile extends Component {
             marginTop: 0
         }
 
-        const coverSegmentStyle = {
-            paddingTop: 20,
-            marginTop: 0
+        if (fullScreen) {
+            segmentStyle = {
+                height: '100%',
+                overflowY: 'hidden',
+                paddingTop: 0,
+                marginTop: 0
+            }
+
+            containerStyle = {
+                ...containerStyle,
+                height: 'unset',
+                overflowY: 'hidden',
+                overflowX: 'hidden',
+            }
         }
 
         return (
             <>
                 <TopMenuBar/>
                 <div className={ loadCoverImage ? 'body-app' : ''}
-                     style={coverContainerStyle}>
-                    {loadCoverImage &&
+                     style={containerStyle}>
+                    {
+                        loadCoverImage &&
                         <div className="square-wrapper">
                             <img src={coverImageUrl} alt="cover"/>
-                        </div>}
+                        </div>
+                    }
                     <Segment
                         className={loadCoverImage ? '' : 'body-app'}
-                         basic style={loadCoverImage ? coverSegmentStyle : noCoverSegmentStyle}>
+                         basic style={segmentStyle}>
                         {children}
                         <div style={{marginBottom: 100}}></div>
                     </Segment>
