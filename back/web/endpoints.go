@@ -1764,7 +1764,7 @@ func (o *Endpoints) googleSignIn(w http.ResponseWriter, r *http.Request, tx *sql
 		db.GenerateUserExerciseRm(o.db, tx, *userId)
 		o.storeSessionData(w, tx, *userId)
 		db.RegisterEvent(o.db, tx, *userId, db.AccountCreated)
-		http.Redirect(w, r, *o.conf.AddressUi+"/app/onboarding", http.StatusFound)
+		http.Redirect(w, r, *o.conf.AddressUi+"/app/plans", http.StatusFound)
 	}
 }
 
