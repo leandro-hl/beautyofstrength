@@ -38,10 +38,6 @@ export function setTheme(darkTheme) {
     }
 }
 
-export function parseSearch(location) {
-    return new URLSearchParams(location.search)
-}
-
 export function contactByWhatsapp(type) {
     const domain = 'https://api.whatsapp.com/send/?type=phone_number&app_absent=0'
     const phone = '&phone=5492494284369'
@@ -64,6 +60,10 @@ export function contactByWhatsapp(type) {
 
 export function queryParam({location}, param) {
     return parseSearch(location).get(param)
+}
+
+export function parseSearch(location) {
+    return new URLSearchParams(location.search)
 }
 
 export function queryEncodedData(loc, data) {
