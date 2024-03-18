@@ -3,13 +3,19 @@ import {Button, Header, Icon, Input, Modal, Segment} from "semantic-ui-react";
 import {Timer} from "./Timer";
 
 export class ModalExerciseExecuteTimer extends Component {
-    state = {currentDescription: 'Preparense...'}
+    state = {currentDescription: 'Preparense...', executed:1}
 
     componentDidMount() {
     }
 
     onNextInterval() {
-        this.setState({currentDescription: 'Tiempo'})
+        const {queue} = this.props
+        if (queue) {
+            const {executed}=this.state
+            this.setState({currentDescription: queue[queue.length-executed].e.name, executed: executed+1})
+        } else {
+            this.setState({currentDescription: 'Tiempo'})
+        }
     }
 
     onFinished() {
@@ -17,8 +23,15 @@ export class ModalExerciseExecuteTimer extends Component {
     }
 
     timerMounted(timer) {
-        const {secs} = this.props
-        timer.start([secs, 5])
+        const {queue, secs} = this.props
+
+        if (queue) {
+            const arr = queue.map(i => i.e.secs)
+            timer.start([...arr, 5])
+        } else {
+            timer.start([secs, 5])
+        }
+
         this.setState({timerRef: timer})
     }
 

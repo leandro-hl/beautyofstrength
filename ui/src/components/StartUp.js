@@ -1,5 +1,4 @@
 import {Component} from "react";
-import {getLocalInfo, getUserPermissions, listEquipment} from "../service";
 import {AppContext, setData} from "../context";
 import {Loader} from "semantic-ui-react";
 import {withRouter} from "react-router-dom";

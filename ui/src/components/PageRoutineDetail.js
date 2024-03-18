@@ -923,17 +923,22 @@ class PageRoutineDetail extends Component{
         const name = b.name.split(' - ')
         const lastExerciseIndex=b.exercises.length-1
         return (
-            <Segment style={{width: '100%'}} className={'no-left-padding no-right-padding white-border'} key={b.id}>
+            <Segment style={{width: '100%'}} className={'no-left-padding no-right-padding'} key={b.id}>
                 <Accordion.Title
                     className={'no-top-padding no-bottom-padding padding-left-1 padding-right-1'}
                     active={activeIndexes.indexOf(j+'-'+i) !== -1}
                     index={j+'-'+i}
-                    onClick={!editionMode? this.handleActiveBlocks : () => {}}>
+                    onClick={(!editionMode && !routineStarted)? this.handleActiveBlocks : () => {}}>
 
                     <span className={'title'}>
                         Trabajo {i+1}
                     </span>
                     {name[1] ? <Chip feel content={capitalize(name[1])}/> : null}
+
+                    {routineStarted &&
+                        <Icon className={'table-play'} name={'play'}
+                              style={{position: 'relative', float: 'right', padding: 0, fontSize: 13}}
+                              onClick={() => this.executeWorkGroup(b, j, i)}/>}
 
                     {
                         editionMode &&
@@ -1174,6 +1179,18 @@ class PageRoutineDetail extends Component{
         showSuccess(this.context, '', 'Ejecucion cancelada!')
     }
 
+    executeWorkGroup(b, j, i) {
+        const queue = []
+        for (let k = b.exercises.length-1; k >= 0; k--) {
+            const e = b.exercises[k]
+            queue.push({e,j,i,k})
+            if (b.exerestinterval && k > 0) {
+                queue.push({e:{name: 'Descanso', secs: b.exerestinterval}})
+            }
+        }
+        this.setState({nextQueuedIntervals: queue})
+    }
+
     startRoutine() {
         this.activateAllIndexes()
         this.context.dispatch(setData({secondaryActions: []}))
@@ -1264,6 +1281,7 @@ class PageRoutineDetail extends Component{
             openCopyToPlanificationModal,
             routineStarted,
             executeWithTimer,
+            nextQueuedIntervals,
             executeWithReps,
             showBorgScale,
             showUploadRoutineImage,
@@ -1398,10 +1416,11 @@ class PageRoutineDetail extends Component{
                         }}/>
                 }
                 {
-                    executeWithTimer &&
+                    (executeWithTimer || nextQueuedIntervals) &&
                     <ModalExerciseExecuteTimer
                         {...executeWithTimer}
-                        onFinished={() => this.setState({executeWithTimer: null})}/>
+                        queue={nextQueuedIntervals}
+                        onFinished={() => this.setState({executeWithTimer: null, nextQueuedIntervals: null})}/>
                 }
                 {showBorgScale && <ModalBorgScale onConfirm={s => this.confirmBorgScale(s)} onCancel={() => this.setState({showBorgScale: false})}/>}
             </>

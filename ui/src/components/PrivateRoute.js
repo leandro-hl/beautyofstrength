@@ -56,7 +56,7 @@ class PrivateRoute extends Component {
 
             if (!equipment) {
                 const res = await listEquipment()
-                this.context.dispatch(setData({equipment: res.data}))
+                this.context.dispatch(setData({equipment: res.data}, true))
             }
         } catch (e) {
             console.error(e)

@@ -73,6 +73,38 @@ body {
   color: #ffffff !important;
 }
 
+.body-dark .ui.input > input {
+  border-left: transparent !important;
+  border-right: transparent !important;
+  border-top: transparent !important;
+  border-bottom: 1px solid #ffffff !important;
+  border-radius: unset;
+  background-color: transparent !important;
+  color: #ffffff !important;
+}
+
+.body-dark .ui.search
+/*.body-dark .ui.search > .menu */
+{
+  border-left: transparent !important;
+  border-right: transparent !important;
+  border-top: transparent !important;
+  border-bottom: 1px solid #ffffff !important;
+  border-radius: unset;
+  background-color: transparent !important;
+  color: #ffffff !important;
+}
+
+.ui.input > input {
+  border-left: transparent !important;
+  border-right: transparent !important;
+  border-top: transparent !important;
+  border-bottom: 1px solid #252525 !important;
+  border-radius: unset;
+  background-color: transparent !important;
+  color: #252525 !important;
+}
+
 .top-bar-absolute {
   position: absolute !important;
   -webkit-transition: background .5s;
@@ -663,6 +695,16 @@ div#g_id_onload, div.g_id_signin {
   padding: 0 0 0 0 !important;
   font-size: 13px !important;
   color: #c1bfbf !important;
+}
+
+input[type="number"]::-webkit-inner-spin-button,
+input[type="number"]::-webkit-outer-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+input[type="number"] {
+  -moz-appearance: textfield;
 }
 
 @media only screen and (max-width: 767px) {
