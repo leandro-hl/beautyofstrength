@@ -1495,6 +1495,15 @@ func DeclinePlanificationAccessRequest(db *DB, tx *sqlx.Tx, planificationId, req
 	stmt.Exec(requesterUserId, planificationId)
 }
 
+func CanUploadCoverToRoutine(db *DB, tx *sqlx.Tx, schema string, userId int64, limit int) bool {
+	query := fmt.Sprintf(`select count(1) from %sroutine where cover=true and creator_id=$1`, schema)
+	stmt, err := getTxPreparedStmt(db, tx, query)
+	util.Check(err)
+	des := 0
+	stmt.Get(&des, userId)
+	return des < limit
+}
+
 func UpdateRoutineCoverUrl(db *DB, tx *sqlx.Tx, schema string, routineId int64, path, preSigUrl string, expiration time.Time) {
 	query := fmt.Sprintf(`update %sroutine 
 	set cover=true, coverimageurl=$3, coverimagepath=$4, 

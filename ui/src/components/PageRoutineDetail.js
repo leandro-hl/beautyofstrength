@@ -1299,24 +1299,10 @@ class PageRoutineDetail extends Component{
 
         return (
             <>
-                {/*{*/}
-                {/*    (isOwner || executeRoutine || isShared) &&*/}
-                {/*    <Button*/}
-                {/*        style={{marginBottom: '1em'}}*/}
-                {/*        primary fluid*/}
-                {/*        onClick={() => this.redirectToRoutineExecution()}>*/}
-                {/*        Ejecutar Rutina*/}
-                {/*    </Button>*/}
-                {/*}*/}
-                {/*{*/}
-                {/*    (!isOwner && !executeRoutine && !isShared) &&*/}
-                {/*    <PopUpDisabledAction trigger={<Button className={'disabled-btn'} style={{marginBottom: '1em'}} primary fluid>*/}
-                {/*        Ejecutar Rutina*/}
-                {/*    </Button>}/>*/}
-                {/*}*/}
-                {/*{showUploadRoutineImage && <ImageUpload onFileSelected={async (file) => await this.uploadRoutineImage(file)}/>}*/}
-                {showUploadRoutineImage && <ImageUpload onFileSelected={(file) => this.routineImageCropper(file)}/>}
-                {showCropper && <ImageCropper toCrop={this.state.toCrop} onConfirm={(img) => this.uploadRoutineImage(img)}/>}
+                {actionable && showUploadRoutineImage && <ImageUpload onFileSelected={(file) => this.routineImageCropper(file)}/>}
+                {actionable && showCropper && <ImageCropper toCrop={this.state.toCrop}
+                                              onCancel={() => this.setState({showCropper: false, toCrop: null, showUploadRoutineImage:true})}
+                                              onConfirm={(img) => this.uploadRoutineImage(img)}/>}
                 {
                     blockGroupers.length === 0 &&
                     <Message>

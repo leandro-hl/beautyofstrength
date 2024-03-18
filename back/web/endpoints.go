@@ -2103,14 +2103,23 @@ func (o *Endpoints) uploadRoutineImage(w http.ResponseWriter, r *http.Request, t
 
 	folder := S3RoutinesFolder
 	schema := ""
+	limit := 100
 	if isTemplate {
 		if !db.CalculateUserOwnsRoutineTemplate(o.db, tx, userId, routineId) {
 			panic(&BadRequestResponse{ErrorCode: util.PString("no_access")})
 		}
 		folder = S3TemplatesFolder
 		schema = "template."
+
+		if !db.CanUploadCoverToRoutine(o.db, tx, schema, userId, limit) {
+			panic(&BadRequestResponse{ErrorCode: util.PString("no_access")})
+		}
 	} else {
 		if !db.CalculateUserOwnsRoutine(o.db, tx, userId, planificationId, routineId) {
+			panic(&BadRequestResponse{ErrorCode: util.PString("no_access")})
+		}
+
+		if !db.CanUploadCoverToRoutine(o.db, tx, schema, userId, limit) {
 			panic(&BadRequestResponse{ErrorCode: util.PString("no_access")})
 		}
 	}
