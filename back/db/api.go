@@ -71,6 +71,7 @@ const (
 	InviteAthletesToAssociateWithMe    AppEvent = "InviteAthletesToAssociateWithMe"
 	AcceptInstructorInvite             AppEvent = "AcceptInstructorInvite"
 	SharePlanification                 AppEvent = "SharePlanification"
+	StartJourney                       AppEvent = "StartJourney"
 )
 
 func getTxPreparedStmt(db *DB, tx *sqlx.Tx, query string) (*sqlx.Stmt, error) {
@@ -1691,4 +1692,18 @@ func UpdateAccountToAthleteBasic(db *DB) {
 	stmt, err := getTxPreparedStmt(db, nil, query)
 	util.Check(err)
 	stmt.Exec()
+}
+
+func UpdateAccountToAthletePremium(db *DB, tx *sqlx.Tx, usrId int64) {
+	query := `update useraccount set accountplan_id=2, usertype='z' where id=$1`
+	stmt, err := getTxPreparedStmt(db, tx, query)
+	util.Check(err)
+	stmt.Exec(usrId)
+}
+
+func UpdateAccountToInstructor(db *DB, tx *sqlx.Tx, usrId int64) {
+	query := `update useraccount set accountplan_id=3, usertype='p' where id=$1`
+	stmt, err := getTxPreparedStmt(db, tx, query)
+	util.Check(err)
+	stmt.Exec(usrId)
 }

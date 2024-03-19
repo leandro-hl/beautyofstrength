@@ -39,8 +39,8 @@ class LayoutMobile extends Component {
             segmentStyle = {
                 height: '100%',
                 overflowY: 'hidden',
-                paddingTop: 0,
-                marginTop: 0
+                padding: 0,
+                margin: 0
             }
 
             containerStyle = {

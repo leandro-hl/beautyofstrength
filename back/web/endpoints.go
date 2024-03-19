@@ -322,6 +322,8 @@ func (o *Endpoints) Handle() http.Handler {
 	api.Path("/saveNewRm").HandlerFunc(o.HandleAuthenticatedTransactional(o.HandleAuthorization(o.saveNewRm, db.StudentPremium)))
 
 	//Student services
+	api.Path("/startJourney").HandlerFunc(o.HandleAuthenticatedTransactional(o.HandleAuthorization(o.startJourney, db.StudentFree)))
+
 	api.Path("/listUserRms").HandlerFunc(o.HandleAuthenticatedTransactional(o.HandleAuthorization(o.listUserRms, db.StudentFree, db.StudentPremium)))
 	api.Path("/listLastUserRmHistoryStats").HandlerFunc(o.HandleAuthenticatedTransactional(o.HandleAuthorization(o.listLastUserRmHistoryStats, db.StudentFree, db.StudentPremium)))
 	api.Path("/listLastUserRmHistoryStats").HandlerFunc(o.HandleAuthenticatedTransactional(o.HandleAuthorization(o.listLastUserRmHistoryStats, db.StudentFree, db.StudentPremium)))
@@ -1022,6 +1024,22 @@ func (o *Endpoints) saveNewRm(w http.ResponseWriter, r *http.Request, tx *sqlx.T
 	db.UpdateUserRmSummary(o.db, tx, *t.Id, *t.Rm)
 	db.InsertNewUserRmHistory(o.db, tx, *t.Id, *t.Rm)
 	db.RegisterEvent(o.db, tx, usr, db.SaveNewRM)
+}
+
+func (o *Endpoints) startJourney(w http.ResponseWriter, r *http.Request, tx *sqlx.Tx) {
+	t := StartJourneyRequest{}
+	err := o.Decode(r, &t)
+	util.Check(err)
+	usr := util.UserId(r)
+	switch *t.As {
+	case "instructor":
+		db.UpdateAccountToInstructor(o.db, tx, usr)
+		break
+	case "athlete":
+		db.UpdateAccountToAthletePremium(o.db, tx, usr)
+		break
+	}
+	db.RegisterEvent(o.db, tx, usr, db.StartJourney)
 }
 
 func (o *Endpoints) listLastUserRmHistoryStats(w http.ResponseWriter, r *http.Request, tx *sqlx.Tx) {
@@ -1733,7 +1751,7 @@ func (o *Endpoints) googleSignIn(w http.ResponseWriter, r *http.Request, tx *sql
 		plan := db.GetAccountPlanIdentifierByUserId(o.db, tx, *userId)
 		db.RegisterEvent(o.db, tx, *userId, db.SignIn)
 		if plan == nil {
-			http.Redirect(w, r, *o.conf.AddressUi+"/app"+"/plans", http.StatusFound)
+			http.Redirect(w, r, *o.conf.AddressUi+"/app"+"/onboarding", http.StatusFound)
 		} else if *plan == db.StudentFree {
 			http.Redirect(w, r, *o.conf.AddressUi+"/app"+"/my-planifications", http.StatusFound)
 		} else if *plan == db.StudentPremium {
@@ -1741,7 +1759,7 @@ func (o *Endpoints) googleSignIn(w http.ResponseWriter, r *http.Request, tx *sql
 		} else if *plan == db.Professor {
 			http.Redirect(w, r, *o.conf.AddressUi+"/app"+"/my-planifications", http.StatusFound)
 		} else {
-			http.Redirect(w, r, *o.conf.AddressUi+"/app"+"/plans", http.StatusFound)
+			http.Redirect(w, r, *o.conf.AddressUi+"/app"+"/onboarding", http.StatusFound)
 		}
 	} else {
 		//todo: auto generate a password and send it over email
@@ -1764,7 +1782,7 @@ func (o *Endpoints) googleSignIn(w http.ResponseWriter, r *http.Request, tx *sql
 		db.GenerateUserExerciseRm(o.db, tx, *userId)
 		o.storeSessionData(w, tx, *userId)
 		db.RegisterEvent(o.db, tx, *userId, db.AccountCreated)
-		http.Redirect(w, r, *o.conf.AddressUi+"/app/plans", http.StatusFound)
+		http.Redirect(w, r, *o.conf.AddressUi+"/app/onboarding", http.StatusFound)
 	}
 }
 
@@ -1785,6 +1803,8 @@ func (o *Endpoints) signout(w http.ResponseWriter, r *http.Request, tx *sqlx.Tx)
 			Secure:   true,
 		})
 		db.RegisterEvent(o.db, tx, userId, db.SignOut)
+	} else {
+		developmentLastCreatedSessionTokenStack = make([]string, 0)
 	}
 }
 
@@ -2303,7 +2323,7 @@ func (o *Endpoints) getLocalInfo(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	last := developmentLastCreatedSessionTokenStack[len(developmentLastCreatedSessionTokenStack)-1]
-	developmentLastCreatedSessionTokenStack = developmentLastCreatedSessionTokenStack[:len(developmentLastCreatedSessionTokenStack)-1]
+	//developmentLastCreatedSessionTokenStack = developmentLastCreatedSessionTokenStack[:len(developmentLastCreatedSessionTokenStack)-1]
 	w.Write([]byte(last))
 }
 

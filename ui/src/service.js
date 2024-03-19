@@ -96,6 +96,10 @@ export function saveNewRm(payload) {
     return axios.post("saveNewRm", payload)
 }
 
+export function startJourney(payload) {
+    return axios.post("startJourney", payload)
+}
+
 export function uploadRoutineImage(id, planificationId, file, isTemplate) {
     const formData = new FormData();
 

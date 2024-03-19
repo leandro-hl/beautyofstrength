@@ -14,6 +14,10 @@ type SignInRequest struct {
 	Password *string `json:"password"`
 }
 
+type StartJourneyRequest struct {
+	As *string `json:"as"`
+}
+
 type CopyTemplateRoutineToPlanificationRequest struct {
 	RoutineId       *int64 `json:"templateRoutineId"`
 	PlanificationId *int64 `json:"planificationId"`

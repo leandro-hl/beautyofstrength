@@ -220,6 +220,14 @@ body {
   color: black;
 }
 
+.margin-center {
+  margin: 0 auto!important;
+}
+
+.margin-center-vertical {
+  margin: auto 0!important;
+}
+
 @media (min-width: 600px) {
   body {
     display: flex;
@@ -240,6 +248,17 @@ body > div#root {
 
 .center-content {
   display: flex !important;
+  justify-content: center !important;
+}
+
+.center-content-vertically {
+  display: flex !important;
+  align-items: center !important;
+}
+
+.center-content-vh {
+  display: flex !important;
+  align-items: center !important;
   justify-content: center !important;
 }
 
@@ -743,7 +762,26 @@ input[type="number"] {
 
 .onboarding-select-instructor {
   background: linear-gradient(rgba(0, 0, 0, 0.6), rgba(0, 0, 0, 0.6)) ,url("../public/static/media/onboarding-instructor-select-button.png") !important;
+}
+
+.onboarding-select-athlete {
+  background: linear-gradient(rgba(0, 0, 0, 0.6), rgba(0, 0, 0, 0.6)) ,url("../public/static/media/onboarding-athlete-select-button.png") !important;
+}
+
+.onboarding-select-instructor, .onboarding-select-athlete {
   background-size: cover !important;
   background-position: center !important;
   background-repeat: no-repeat !important;
+  aspect-ratio: 1/1;
+  font-family: Roboto;
+  font-size: 14px;
+  font-weight: 500;
+  line-height: 14px;
+  text-align: center;
+}
+
+.onboarding-selected, .onboarding-selected p {
+  background: unset !important;
+  background-color: #F8D018 !important;
+  color: #212121 !important;
 }
