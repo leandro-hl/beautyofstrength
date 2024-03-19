@@ -7,6 +7,7 @@ export function ImageUpload({onFileSelected}) {
 
     const onFileChange = async event => {
         setLoading(true)
+
         await onFileSelected(event.target.files[0])
         if (inputRef.current) {
             inputRef.current.value = '';

@@ -2048,9 +2048,11 @@ func validateImage(file multipart.File, header *multipart.FileHeader) (*bytes.Bu
 	var resultImage *image.NRGBA
 	if float64(width)/float64(height) != float64(ratio) {
 		resultImage = imaging.CropCenter(img, 500, 500)
+		resultImage = imaging.Resize(resultImage, 500, 0, imaging.Lanczos)
+	} else {
+		resultImage = imaging.Resize(img, 500, 0, imaging.Lanczos)
 	}
 
-	resultImage = imaging.Resize(resultImage, 500, 0, imaging.Lanczos)
 	buf := new(bytes.Buffer)
 	err = jpeg.Encode(buf, resultImage, &jpeg.Options{Quality: 80})
 	util.Check(err)
@@ -2101,14 +2103,23 @@ func (o *Endpoints) uploadRoutineImage(w http.ResponseWriter, r *http.Request, t
 
 	folder := S3RoutinesFolder
 	schema := ""
+	limit := 100
 	if isTemplate {
 		if !db.CalculateUserOwnsRoutineTemplate(o.db, tx, userId, routineId) {
 			panic(&BadRequestResponse{ErrorCode: util.PString("no_access")})
 		}
 		folder = S3TemplatesFolder
 		schema = "template."
+
+		if !db.CanUploadCoverToRoutine(o.db, tx, schema, userId, limit) {
+			panic(&BadRequestResponse{ErrorCode: util.PString("no_access")})
+		}
 	} else {
 		if !db.CalculateUserOwnsRoutine(o.db, tx, userId, planificationId, routineId) {
+			panic(&BadRequestResponse{ErrorCode: util.PString("no_access")})
+		}
+
+		if !db.CanUploadCoverToRoutine(o.db, tx, schema, userId, limit) {
 			panic(&BadRequestResponse{ErrorCode: util.PString("no_access")})
 		}
 	}

@@ -198,7 +198,8 @@ body {
   background-size: cover !important;
   background-repeat: no-repeat !important;
   background-color: transparent !important;
-  height: 150px;
+  /*height: 150px;*/
+  padding-top: 50% !important;
   background-position: top !important;
 }
 
