@@ -169,9 +169,18 @@ body {
 .body-dark p,
 .body-dark .ui.header,
 .body-dark .privacy-policy,
-.body-dark .add-exercise-row .chip.secondary.button
+.body-dark .add-exercise-row .chip.secondary.button,
+.body-dark .ui.slider label, .body-dark .ui.slider.checkbox input:checked ~ label
 {
   color: #ffffff !important;
+}
+
+.body-dark .ui.slider.checkbox input:checked ~ label::before {
+  background-color: #f9d118 !important;
+}
+
+.body-dark .ui.checkbox label::before {
+  background-color: #8a8a8a!important;
 }
 
 .ui.header{

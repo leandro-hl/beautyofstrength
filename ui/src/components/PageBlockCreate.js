@@ -1,5 +1,18 @@
 import React, {Component, createRef, useContext, useState} from "react";
-import {Button, Divider, Dropdown, Grid, Header, Icon, Input, Label, List, Message, Segment} from "semantic-ui-react";
+import {
+    Button,
+    Checkbox,
+    Divider,
+    Dropdown,
+    Grid,
+    Header,
+    Icon,
+    Input,
+    Label,
+    List,
+    Message,
+    Segment
+} from "semantic-ui-react";
 import {ExerciseListItem} from "./ExerciseListItem";
 import {RestInput} from "./RestInput";
 import {
@@ -26,28 +39,40 @@ import {PopUpDisabledAction} from "./PopUpDisabledAction";
 
 const MenuHeaderRender = ({
                               blockType,
-                              newBlockGroupName,
-                              blockName,
                               redirectBackToRoutine,
-                              editBlock
+                              editBlock,
+                              onExerciseSelected
                           }) => {
-    const name = newBlockGroupName+': '+blockName
     return (
+        // <Grid>
+        //     <Grid.Row>
+        //         <Grid.Column width={1} className={'no-padding'}>
+        //             <Button className={'header-back-arrow'} icon onClick={() => redirectBackToRoutine()}>
+        //                 <Icon name={'arrow left'}/>
+        //             </Button>
+        //         </Grid.Column>
+        //         <Grid.Column width={14} className={'no-padding'}>
+        //             <ExerciseSearch alwaysClear={true} onSelected={(selected) => onExerciseSelected(selected)}/>
+        //         </Grid.Column>
+        //         {/*<Grid.Column>*/}
+        //         {/*    /!*todo: Hot fix just for the icon to not break the UI. Real fix: block type is chip and not part of the block name. *!/*/}
+        //         {/*    {blockType && <Icon*/}
+        //         {/*        name={'edit outline'}*/}
+        //         {/*        className={'header-icon'}*/}
+        //         {/*        style={{*/}
+        //         {/*            position: 'absolute',*/}
+        //         {/*            top: '5px',*/}
+        //         {/*            right: '10px'*/}
+        //         {/*        }}*/}
+        //         {/*        onClick={() => editBlock()}/>}*/}
+        //         {/*</Grid.Column>*/}
+        //     </Grid.Row>
+        // </Grid>
         <>
             <Button className={'header-back-arrow'} icon onClick={() => redirectBackToRoutine()}>
-                <Icon name={'arrow left'}/>
-            </Button>
-            <span>
-                {name.length > 20 ? <span>{newBlockGroupName+': '}<br/>{blockName}</span> : name}
-            </span>
-            {/*todo: Hot fix just for the icon to not break the UI. Real fix: block type is chip and not part of the block name. */}
-            {blockType && <Icon
-                name={'edit outline'}
-                className={'header-icon'}
-                style={{position: 'absolute',
-                    top: '5px',
-                    right: '10px'}}
-                onClick={() => editBlock()}/>}
+                 <Icon name={'arrow left'}/>
+             </Button>
+            <ExerciseSearch alwaysClear={true} onSelected={(selected) => onExerciseSelected(selected)}/>
         </>
     )
 }
@@ -67,6 +92,7 @@ class PageBlockCreate extends Component {
             defaultPiramidTop,
             defaultIncrementPerSerie,
             defaultPiramidSeries,
+            blockType: 'free',
             //todo: lapRestDefault: 'sec', exeRestDefault: 'sec' seems to not be in use.
             next: 0,
             defaultBlockName: '',
@@ -75,7 +101,7 @@ class PageBlockCreate extends Component {
             lapRestDefault: 'sec',
             exeRestDefault: 'sec'}
     }
-    
+
     redirectBackToRoutine() {
         const {state: {routineId, isTemplate}} = this.context
         if (routineId) {
@@ -106,11 +132,11 @@ class PageBlockCreate extends Component {
                 routineId,
                 defaultBlockName,
                 nextBlockNumber,
-                newBlockGroupName: newBlockGroupName,
+                newBlockGroupName,
                 newBlockGroupId: newBlockGroupId,
                 blockName: defaultBlockName,
             })
-            this.setTopBar(newBlockGroupName, defaultBlockName)
+            this.setTopBar()
         } catch (e) {
             console.error(e)
         }
@@ -120,21 +146,26 @@ class PageBlockCreate extends Component {
         this.context.dispatch(setData({secondaryActions: []}))
     }
 
-    setTopBar(newBlockGroupName, blockName, blockType) {
+    onExerciseSelected(selected) {
+        const {exercises} = this.state
+        exercises.push(selected[0])
+        this.setState({exercises})
+    }
+
+    setTopBar(blockType) {
         this.context.dispatch(setData({
             MenuHeaderRender: <MenuHeaderRender
                 blockType={blockType ?? this.state.blockType}
-                newBlockGroupName={newBlockGroupName ?? this.state.newBlockGroupName}
-                blockName={blockName ?? this.state.blockName}
                 redirectBackToRoutine={() => this.redirectBackToRoutine()}
                 editBlock={() => this.editBlock()}
-            />
+                onExerciseSelected={(selected) => this.onExerciseSelected(selected)}/>
         }))
     }
 
-    saveExercise(index, reps, goNext) {
+    saveExercise(index, series, reps, goNext) {
         const {exercises} = this.state
         exercises[index].reps = reps
+        exercises[index].series = series
 
         if (goNext) {
             this.setState({exercises, next: index+1})
@@ -367,7 +398,7 @@ class PageBlockCreate extends Component {
         this.context.dispatch(setData({secondaryActions: secondaryActions}))
         const newBlockName = blockName+' - '+name
         this.setState({showModal: false, blockType: id, exercises: [...exercisesBuffer], exercisesBuffer: [], blockName: newBlockName})
-        this.setTopBar(null, newBlockName, id)
+        this.setTopBar(id)
     }
 
     repeatExercise(item, atTop, index) {
@@ -417,15 +448,26 @@ class PageBlockCreate extends Component {
     renderFree(blockType, lapRestDefault, exercises, next, currentSelectedIndex) {
         return (
             <>
-                <List>
+                <Segment>
+                    <Checkbox
+                        slider={true}
+                        label={'1 serie'}
+                        onChange={(e,{checked}) => {
+                            const {exercises} = this.state;
+                            for (let i = 0; i < exercises.length; i++) {
+                                exercises[i].series = 1
+                            }
+                            this.setState({exercises, defaultSeries: checked})
+                        }} checked={this.state.defaultSeries}/>
                     {
                         exercises.map((e, index) => {
                             return (<ExerciseListItemFree
+                                disableSeries={this.state.defaultSeries}
                                 key={index}
                                 item={e}
                                 focus={index===next}
                                 selected={currentSelectedIndex === index}
-                                finished={(reps, goNext) => this.saveExercise(index, reps, goNext)}
+                                finished={(series, reps, goNext) => this.saveExercise(index, series, reps, goNext)}
                                 onRepeat={(item) => this.repeatExercise(item, false, index)}
                                 moveUp={() => this.moveUp(index)}
                                 moveDown={() => this.moveDown(index)}
@@ -433,7 +475,7 @@ class PageBlockCreate extends Component {
                             />)
                         })
                     }
-                </List>
+                </Segment>
                 <Divider hidden/>
                 <Segment textAlign='center'>
                     <Divider horizontal>Descanso Entre Ejercicios<br/>(Segundos)</Divider>
@@ -570,13 +612,15 @@ class PageBlockCreate extends Component {
         const {defaultBlockName, exercises} = this.state
         this.context.dispatch(setData({secondaryActions: []}))
         this.setState({blockType: null, blockName: defaultBlockName, exercises: [], exercisesBuffer: [...exercises]})
-        this.setTopBar(null, defaultBlockName, null)
+        this.setTopBar()
     }
 
     render() {
         const {state: {permissions: {createNewExercises}}} = this.context
         const {blockType, exercisesBuffer, showModal} = this.state;
-
+        const newBlockGroupName=this.state.newBlockGroupName
+        const blockName=this.state.blockName ?? this.state.defaultBlockName
+        const name = newBlockGroupName + ': ' + blockName
         return (
             <>
                 {
@@ -595,7 +639,14 @@ class PageBlockCreate extends Component {
                         </div>
                     </>
                 }
-                {blockType && this.renderBlockTypeUI()}
+                {
+                    blockType &&
+                    <>
+                        <Header as={'h3'}>{name.length > 20 ? <span>{newBlockGroupName + ': '}<br/>{blockName}</span> : name}</Header>
+                        {this.renderBlockTypeUI()}
+                    </>
+
+                }
                 <ModalTrainingBlockType showModal={showModal} onClose={() => this.setState({showModal: false})} onTypeSelected={(id, name) => this.generateBlockTypeUI(id, name)}/>
             </>
         )
