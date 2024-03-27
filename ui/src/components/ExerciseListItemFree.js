@@ -2,6 +2,7 @@ import React, {Component, createRef} from "react";
 import {Dropdown, Grid, Icon, Input, Label, List, Segment} from "semantic-ui-react";
 import {SegMinButtonGroup} from "./SegMinButtonGroup";
 import {SegRepsButtonGroup} from "./SegRepsButtonGroup";
+import {ExerciseSearch} from "./ExerciseSearch";
 
 export class ExerciseListItemFree extends Component {
     inputRef = createRef()
@@ -10,16 +11,6 @@ export class ExerciseListItemFree extends Component {
     constructor(props) {
         super(props);
         this.state = {focusSeries:true, series: props.item.series}
-    }
-
-    componentDidMount() {
-        if(this.props.focus) {
-            if (this.props.disableSeries) {
-                this.inputRef.current.focus()
-            } else {
-                this.inputRefSeries.current.focus()
-            }
-        }
     }
 
     handleChangeSerie(value) {
@@ -60,17 +51,25 @@ export class ExerciseListItemFree extends Component {
             options.push({ key: 3, text: <Icon name={'sync'} onClick={() => this.props.onRepeat(this.props.item)}/>, value: 3 })
         }
         return (
-            <Segment className={`no-margin no-padding ${this.props.selected ? 'mine-selected' : ''}`}>
+            <Segment className={`no-padding ${this.props.selected ? 'mine-selected' : ''}`}>
                 <Grid>
-                    <Grid.Row>
-                        <Grid.Column width={7} stretched className={'no-padding'}>
+                    <Grid.Row className={!this.props.hideAddNext ? 'padding-bottom-1-5' : ''}>
+                        <Grid.Column width={1} stretched className={'no-padding'}>
                             <div className={'center-content-vertically'}>
                                 <div>
                                     <Dropdown icon='ellipsis vertical' text={''} options={options} simple item
                                               value={null}/>
-                                    {this.props.item.text}
                                 </div>
                             </div>
+                        </Grid.Column>
+                        <Grid.Column width={6} stretched className={'no-padding'}>
+                            <ExerciseSearch
+                                basic
+                                allowAdditions
+                                defaultSelected={[this.props.item]}
+                                onSelected={(selected) => {
+                                    this.props.onExerciseSelected(selected)
+                                }}/>
                         </Grid.Column>
                         <Grid.Column width={2} stretched className={'no-padding'}>
                             <Input fluid
@@ -97,10 +96,16 @@ export class ExerciseListItemFree extends Component {
                                    onChange={(e, {value}) => this.handleChange(value)}/>
                         </Grid.Column>
                         <Grid.Column width={3} stretched style={{paddingLeft: 0}}>
-                            <SegRepsButtonGroup default={'reps'} onIntervalSelected={(i) => this.props.onIntervalSelected(i)}/>
+                            <SegRepsButtonGroup default={'reps'}
+                                                onIntervalSelected={(i) => this.props.onIntervalSelected(i)}/>
                         </Grid.Column>
                     </Grid.Row>
                 </Grid>
+                {!this.props.hideAddNext && <div className={'table-plus-item table-plus-item-15-negative'}>
+                    <Icon
+                        name={'plus circle'}
+                        onClick={() => this.props.onAddExercise()}/>
+                </div>}
             </Segment>
         )
     }

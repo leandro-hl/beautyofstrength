@@ -72,7 +72,7 @@ const MenuHeaderRender = ({
             <Button className={'header-back-arrow'} icon onClick={() => redirectBackToRoutine()}>
                  <Icon name={'arrow left'}/>
              </Button>
-            <ExerciseSearch alwaysClear={true} onSelected={(selected) => onExerciseSelected(selected)}/>
+            {/*<ExerciseSearch alwaysClear={true} onSelected={(selected) => onExerciseSelected(selected)}/>*/}
         </>
     )
 }
@@ -97,7 +97,8 @@ class PageBlockCreate extends Component {
             next: 0,
             defaultBlockName: '',
             blockName: '',
-            exercises: [],
+            exercisesBuffer:[],
+            exercises: [{}],
             lapRestDefault: 'sec',
             exeRestDefault: 'sec'}
     }
@@ -126,6 +127,20 @@ class PageBlockCreate extends Component {
             this.setState({loading: true})
 
             const defaultBlockName = 'Trabajo '+(nextWorkNumber??1)
+
+            const rawOptions = [
+                {id: 'free', name: 'LIBRE'},
+                {id: 'spr', name: 'SERIE POR REPETICIONES'},
+                {id: 'cpt', name: 'CIRCUITO POR INTERVALOS'},
+                {id: 'amrap', name: 'AMRAP'},
+                {id: 'cbo', name: 'COMBO'},
+                {id: 'pir', name: 'PIRAMIDE REPETICIONES'},
+                {id: 'emom', name: 'EMOM'},
+                {id: 'hiit', name: 'HIIT'},
+                {id: 'drop', name: 'DROP SET'},
+            ]
+            const selectedBlockTypeOption = rawOptions[0]
+
             this.setState({
                 loading: false,
                 planificationId,
@@ -134,9 +149,11 @@ class PageBlockCreate extends Component {
                 nextBlockNumber,
                 newBlockGroupName,
                 newBlockGroupId: newBlockGroupId,
+                blockTypeOptions: rawOptions.map(e => ({key: e.id, value: e.id, text: e.name})),
                 blockName: defaultBlockName,
+                blockType: selectedBlockTypeOption.id,
             })
-            this.setTopBar()
+            this.generateBlockTypeUI(selectedBlockTypeOption.id)
         } catch (e) {
             console.error(e)
         }
@@ -146,18 +163,25 @@ class PageBlockCreate extends Component {
         this.context.dispatch(setData({secondaryActions: []}))
     }
 
-    onExerciseSelected(selected) {
+    onExerciseSelected(index, selected) {
         const {exercises} = this.state
-        exercises.push(selected[0])
+        exercises[index] = {...exercises[index], ...selected[0]}
+        console.log(exercises)
         this.setState({exercises})
     }
 
-    setTopBar(blockType) {
+    onAddExcercise(index) {
+        const {exercises} = this.state
+        exercises[index].hideAddNext=true
+        exercises.push({})
+        this.setState({exercises})
+    }
+
+    setTopBar() {
         this.context.dispatch(setData({
             MenuHeaderRender: <MenuHeaderRender
-                blockType={blockType ?? this.state.blockType}
                 redirectBackToRoutine={() => this.redirectBackToRoutine()}
-                editBlock={() => this.editBlock()}
+                // editBlock={() => this.editBlock()}
                 onExerciseSelected={(selected) => this.onExerciseSelected(selected)}/>
         }))
     }
@@ -211,17 +235,13 @@ class PageBlockCreate extends Component {
 
     async saveExercisesBlockCpt(isTemplate) {
         try {
-            const {exercises, laps, workingInterval, restingInteval, blockName, planificationId, routineId, newBlockGroupName,newBlockGroupId,nextBlockNumber} = this.state
+            const {exercises, laps, blockType, workingInterval, restingInteval, blockName, planificationId, routineId, newBlockGroupName,newBlockGroupId,nextBlockNumber} = this.state
             this.setState({saving: true})
-
-            if(!workingInterval || !restingInteval || !laps) {
-                //todo required validation.
-            }
 
             const request = {
                 planificationId: parseInt(planificationId,10),
                 routineId: !!routineId ? parseInt(routineId,10) : null,
-                blockName: blockName,
+                blockName: blockName+' - '+blockType,
                 newBlockGroupName,
                 newBlockGroupId,
                 newBlockGroupOrder: nextBlockNumber,
@@ -241,21 +261,19 @@ class PageBlockCreate extends Component {
 
     async saveExercisesBlockFree(isTemplate) {
         try {
-            const {exercises, laps, exeRestingInteval, restingInteval, blockName, planificationId, routineId, newBlockGroupName,newBlockGroupId,nextBlockNumber} = this.state
+            const {exercises, laps, exeRestingInteval, restingInteval, blockName, blockType, planificationId, routineId, newBlockGroupName,newBlockGroupId,nextBlockNumber} = this.state
             this.setState({saving: true})
 
-            if(!exeRestingInteval || !restingInteval || !laps) {
-                //todo required validation.
-            }
-
             const request = {
+                blockType: blockType,
                 planificationId: parseInt(planificationId,10),
                 routineId: !!routineId ? parseInt(routineId,10) : null,
-                blockName: blockName,
+                //todo: refactor to have block type outside name
+                blockName: blockName+' - '+blockType,
                 newBlockGroupName,
                 newBlockGroupId,
                 newBlockGroupOrder: nextBlockNumber,
-                exercises: exercises.map(e => ({id:e.key, name:e.text, reps: parseInt(e.reps, 10), type: e.type})),
+                exercises: exercises.map(e => ({id:e.key, name:e.text, series: parseInt(e.series, 10), reps: parseInt(e.reps, 10), type: e.type})),
                 laps: parseInt(laps, 10),
                 restingInteval: parseInt(restingInteval, 10),
                 exeRestingInteval: parseInt(exeRestingInteval, 10),
@@ -275,7 +293,7 @@ class PageBlockCreate extends Component {
 
     async saveExercisesBlockAmrap(isTemplate) {
         try {
-            const {exercises, blockName, blockDuration, planificationId, routineId,newBlockGroupName, newBlockGroupId,nextBlockNumber} = this.state
+            const {exercises, blockName,blockType, blockDuration, planificationId, routineId,newBlockGroupName, newBlockGroupId,nextBlockNumber} = this.state
             this.setState({saving: true})
 
             if(!blockDuration) {
@@ -285,7 +303,7 @@ class PageBlockCreate extends Component {
             const request = {
                 planificationId: parseInt(planificationId,10),
                 routineId: !!routineId ? parseInt(routineId,10) : null,
-                blockName: blockName,
+                blockName: blockName+' - '+blockType,
                 newBlockGroupName,
                 newBlockGroupId,
                 newBlockGroupOrder: nextBlockNumber,
@@ -306,13 +324,13 @@ class PageBlockCreate extends Component {
 
     async saveExercisesBlockCombo(isTemplate) {
         try {
-            const {exercises, laps, blockName, planificationId, routineId,newBlockGroupName,newBlockGroupId,nextBlockNumber} = this.state
+            const {exercises, laps, blockType, blockName, planificationId, routineId,newBlockGroupName,newBlockGroupId,nextBlockNumber} = this.state
             this.setState({saving: true})
 
             const request = {
                 planificationId: parseInt(planificationId,10),
                 routineId: !!routineId ? parseInt(routineId,10) : null,
-                blockName: blockName,
+                blockName: blockName+' - '+blockType,
                 newBlockGroupName,
                 newBlockGroupId,
                 newBlockGroupOrder: nextBlockNumber,
@@ -330,13 +348,13 @@ class PageBlockCreate extends Component {
 
     async saveExerciseBlockPir(isTemplate) {
         try {
-            const {exercises, laps, blockName, planificationId, routineId,newBlockGroupName,newBlockGroupId,nextBlockNumber} = this.state
+            const {exercises, laps, blockType, blockName, planificationId, routineId,newBlockGroupName,newBlockGroupId,nextBlockNumber} = this.state
             this.setState({saving: true})
 
             const request = {
                 planificationId: parseInt(planificationId,10),
                 routineId: !!routineId ? parseInt(routineId,10) : null,
-                blockName: blockName,
+                blockName: blockName+' - '+blockType,
                 newBlockGroupName,
                 newBlockGroupId,
                 newBlockGroupOrder: nextBlockNumber,
@@ -352,21 +370,14 @@ class PageBlockCreate extends Component {
         }
     }
 
-    generateBlockTypeUI(id, name) {
+    generateBlockTypeUI(blockType) {
         const {state: {isTemplate}} = this.context
-        const {
-            exercisesBuffer,
-            blockName,
-            defaultPiramidTop,
-            defaultIncrementPerSerie,
-            defaultPiramidSeries
-        } = this.state;
 
         const secondaryActions = [
             {func: () => {}, description: 'Guardar'},
         ]
 
-        switch (id) {
+        switch (blockType) {
             case 'free':
                 secondaryActions[0].func = () => this.saveExercisesBlockFree(isTemplate)
                 break
@@ -384,21 +395,14 @@ class PageBlockCreate extends Component {
                 break
             case 'pir':
                 secondaryActions[0].func = () => this.saveExerciseBlockPir(isTemplate)
-                //if there were multiple exercises selected only the first one is considered valid
-                exercisesBuffer.splice(1)
-                exercisesBuffer[0].reps = defaultPiramidTop
-                for (let i = 1; i < defaultPiramidSeries; i++) {
-                    exercisesBuffer.push({...exercisesBuffer[0], reps: exercisesBuffer[i-1].reps-defaultIncrementPerSerie})
-                }
                 break
             default:
-                console.error('invalid or unsupported block type')
+                secondaryActions[0].func = () => this.saveExercisesBlockFree(isTemplate)
+                break
         }
 
+        this.setTopBar()
         this.context.dispatch(setData({secondaryActions: secondaryActions}))
-        const newBlockName = blockName+' - '+name
-        this.setState({showModal: false, blockType: id, exercises: [...exercisesBuffer], exercisesBuffer: [], blockName: newBlockName})
-        this.setTopBar(id)
     }
 
     repeatExercise(item, atTop, index) {
@@ -445,37 +449,9 @@ class PageBlockCreate extends Component {
         this.setState({exercises: [...buffer], currentSelectedIndex: currentIndex+1})
     }
 
-    renderFree(blockType, lapRestDefault, exercises, next, currentSelectedIndex) {
+    renderFree() {
         return (
             <>
-                <Segment>
-                    <Checkbox
-                        slider={true}
-                        label={'1 serie'}
-                        onChange={(e,{checked}) => {
-                            const {exercises} = this.state;
-                            for (let i = 0; i < exercises.length; i++) {
-                                exercises[i].series = 1
-                            }
-                            this.setState({exercises, defaultSeries: checked})
-                        }} checked={this.state.defaultSeries}/>
-                    {
-                        exercises.map((e, index) => {
-                            return (<ExerciseListItemFree
-                                disableSeries={this.state.defaultSeries}
-                                key={index}
-                                item={e}
-                                focus={index===next}
-                                selected={currentSelectedIndex === index}
-                                finished={(series, reps, goNext) => this.saveExercise(index, series, reps, goNext)}
-                                onRepeat={(item) => this.repeatExercise(item, false, index)}
-                                moveUp={() => this.moveUp(index)}
-                                moveDown={() => this.moveDown(index)}
-                                onIntervalSelected={(val) => this.onIntervalSelected(index,val)}
-                            />)
-                        })
-                    }
-                </Segment>
                 <Divider hidden/>
                 <Segment textAlign='center'>
                     <Divider horizontal>Descanso Entre Ejercicios<br/>(Segundos)</Divider>
@@ -490,23 +466,16 @@ class PageBlockCreate extends Component {
     }
 
     renderBlockTypeUI() {
-        const {blockType, lapRestDefault, exercises, next, currentSelectedIndex} = this.state;
+        const {blockType} = this.state;
 
         switch (blockType) {
             case 'free':
-                return this.renderFree(blockType, lapRestDefault, exercises, next, currentSelectedIndex)
+                return this.renderFree()
             case 'spr':
-                return this.renderFree(blockType, lapRestDefault, exercises, next, currentSelectedIndex)
+                return this.renderFree()
             case 'cpt':
                 return (
                     <>
-                        <List>
-                            {
-                                exercises.map((i, index) => {
-                                    return (<ExerciseListItemCircuitInterval key={index} item={i}/>)
-                                })
-                            }
-                        </List>
                         <Divider hidden/>
                         <Segment textAlign='center'>
                             <Segment basic style={{
@@ -533,13 +502,6 @@ class PageBlockCreate extends Component {
             case 'amrap':
                 return (
                     <>
-                        <List>
-                            {
-                                exercises.map((e, index) => {
-                                    return (<ExerciseListItem focus={index===next} key={index} item={e} finished={(reps, goNext) => this.saveExercise(index, reps, goNext)}/>)
-                                })
-                            }
-                        </List>
                         <Divider hidden/>
                         <Segment textAlign='center'>
                             <InputNumber label={'Duracion (Minutos)'} minutes large onChange={({amount}) => this.setState({blockDuration: amount, next: null})}/>
@@ -549,20 +511,6 @@ class PageBlockCreate extends Component {
             case 'cbo':
                 return (
                     <>
-                        <List>
-                            {
-                                exercises.map((i, index) => {
-                                    return (<ExerciseListItemCombo
-                                        key={index}
-                                        item={i}
-                                        selected={currentSelectedIndex === index}
-                                        onRepeat={(item) => this.repeatExercise(item)}
-                                        moveUp={() => this.moveUp(index)}
-                                        moveDown={() => this.moveDown(index)}
-                                    />)
-                                })
-                            }
-                        </List>
                         <Divider hidden/>
                         <Segment textAlign='center'>
                             <Divider horizontal>Rondas</Divider>
@@ -573,19 +521,6 @@ class PageBlockCreate extends Component {
             case 'pir':
                 return (
                     <>
-                        <List>
-                            {
-                                exercises.map((e, index) => {
-                                    return (<ExerciseListItem
-                                        focus={index===next}
-                                        key={index}
-                                        item={e}
-                                        value={e.reps}
-                                        onRepeat={index===0 ? (item) => this.repeatExercise(item, true) : null}
-                                        finished={(reps) => this.saveExercise(index, reps)}/>)
-                                })
-                            }
-                        </List>
                         <Divider hidden/>
                         <Segment textAlign='center'>
                             <Divider horizontal>Rondas</Divider>
@@ -594,17 +529,7 @@ class PageBlockCreate extends Component {
                     </>
                 )
             default:
-                return (
-                    <>
-                        <List>
-                            {
-                                exercises.map((e, index) => {
-                                    return (<ExerciseListItem key={index} item={e} finished={(reps) => this.saveExercise(index, reps)}/>)
-                                })
-                            }
-                        </List>
-                    </>
-                )
+                return this.renderFree()
         }
     }
 
@@ -617,7 +542,13 @@ class PageBlockCreate extends Component {
 
     render() {
         const {state: {permissions: {createNewExercises}}} = this.context
-        const {blockType, exercisesBuffer, showModal} = this.state;
+        const {blockType,
+            exercisesBuffer,
+            showModal,
+            lapRestDefault,
+            blockTypeOptions,
+            exercises, next, currentSelectedIndex
+        } = this.state;
         const newBlockGroupName=this.state.newBlockGroupName
         const blockName=this.state.blockName ?? this.state.defaultBlockName
         const name = newBlockGroupName + ': ' + blockName
@@ -642,12 +573,56 @@ class PageBlockCreate extends Component {
                 {
                     blockType &&
                     <>
-                        <Header as={'h3'}>{name.length > 20 ? <span>{newBlockGroupName + ': '}<br/>{blockName}</span> : name}</Header>
+                        <Header as={'h3'}>
+                            {name}
+                            <Dropdown
+                                options={blockTypeOptions}
+                                value={blockType}
+                                fluid
+                                onChange={(e, input) => {
+                                    this.setState({blockType: input.value})
+                                    this.generateBlockTypeUI(input.value)
+                                }}
+                                openOnFocus={true}
+                                tabIndex={0}
+                                selectOnBlur={false}/>
+                        </Header>
+                        <Segment>
+                            <Checkbox
+                                slider={true}
+                                label={'1 serie'}
+                                onChange={(e,{checked}) => {
+                                    const {exercises} = this.state;
+                                    for (let i = 0; i < exercises.length; i++) {
+                                        exercises[i].series = 1
+                                    }
+                                    this.setState({exercises, defaultSeries: checked})
+                                }} checked={this.state.defaultSeries}/>
+                            {
+                                exercises.map((e, index) => {
+                                    return (<ExerciseListItemFree
+                                        onExerciseSelected={(selected)=> this.onExerciseSelected(index, selected)}
+                                        onAddExercise={() => this.onAddExcercise(index)}
+                                        hideAddNext={e.hideAddNext}
+                                        disableSeries={this.state.defaultSeries}
+                                        key={index}
+                                        item={e}
+                                        focus={index===next}
+                                        selected={currentSelectedIndex === index}
+                                        finished={(series, reps, goNext) => this.saveExercise(index, series, reps, goNext)}
+                                        onRepeat={(item) => this.repeatExercise(item, false, index)}
+                                        moveUp={() => this.moveUp(index)}
+                                        moveDown={() => this.moveDown(index)}
+                                        onIntervalSelected={(val) => this.onIntervalSelected(index,val)}
+                                    />)
+                                })
+                            }
+                        </Segment>
                         {this.renderBlockTypeUI()}
                     </>
 
                 }
-                <ModalTrainingBlockType showModal={showModal} onClose={() => this.setState({showModal: false})} onTypeSelected={(id, name) => this.generateBlockTypeUI(id, name)}/>
+                <ModalTrainingBlockType showModal={showModal} onClose={() => this.setState({showModal: false})} onTypeSelected={(id, name) => this.generateBlockTypeUI('broken',id, name)}/>
             </>
         )
     }

@@ -95,6 +95,10 @@ body {
   color: #ffffff !important;
 }
 
+.body-dark .ui.search input {
+  color: #ffffff !important;
+}
+
 .ui.input > input {
   border-left: transparent !important;
   border-right: transparent !important;
@@ -464,6 +468,10 @@ body > div#root {
   padding-bottom: 1em !important;
 }
 
+.padding-bottom-1-5 {
+  padding-bottom: 1.5em !important;
+}
+
 .padding-left-1 {
   padding-left: 1em !important;
 }
@@ -702,6 +710,10 @@ div#g_id_onload, div.g_id_signin {
   bottom: -11px;
   /*margin-top: 32px !important;*/
   color: #b5b5b5;
+}
+
+.table-plus-item-15-negative {
+  bottom: -15px;
 }
 
 .table-remove-item {
