@@ -1321,7 +1321,12 @@ func (o *Endpoints) saveExercisesBlockFree(w http.ResponseWriter, r *http.Reques
 			})
 		}
 	}
-	db.SaveExercisesBlock(o.db, tx, *routineId, "spr",
+
+	blockType := "spr"
+	if t.BlockType != nil {
+		blockType = *t.BlockType
+	}
+	db.SaveExercisesBlock(o.db, tx, *routineId, blockType,
 		*t.BlockName, nil, t.Laps, t.RestingInteval,
 		t.ExeRestingInteval, exercises, *t.NewBlockGroupName, t.NewBlockGroupId, *t.NewBlockGroupOrder, t.IsTemplate, util.UserId(r))
 	o.Respond(w, &SaveExercisesBlockCptResponse{RoutineId: routineId}, http.StatusOK)

@@ -13,6 +13,7 @@ export class ExerciseSearch extends Component {
         super(props);
 
         this.state = {
+            alwaysClear: props.alwaysClear,
             basic: props.basic,
             allowAdditions: props.allowAdditions,
             exercisesBuffer: props.defaultSelected ?? [],
@@ -139,10 +140,12 @@ export class ExerciseSearch extends Component {
         if (typeof(input.value[input.value.length-1]) === 'string') {
             return
         }
-        const {basic} = this.state
+        const {basic, alwaysClear} = this.state
         const value = basic ?  [input.value] : input.value
         const exercises = value.map(v => (input.options.find(x => x.value === v)))
-        this.setState({exercisesBuffer: [...exercises]})
+        if (!alwaysClear) {
+            this.setState({exercisesBuffer: [...exercises]})
+        }
         this.props.onSelected(exercises.map(e => ({...e})))
     }
 

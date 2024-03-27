@@ -28,7 +28,7 @@ func (o *Worker) Finished() {
 
 func (o *Worker) Start() {
 	go o.StartWorker1()
-	go o.StartWorker2()
+	//go o.StartWorker2()
 }
 
 func (o *Worker) StartWorker1() {

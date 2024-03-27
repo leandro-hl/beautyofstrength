@@ -3,18 +3,33 @@ import {Button, Header, Icon, Input, Modal, Segment} from "semantic-ui-react";
 import {Timer} from "./Timer";
 
 export class ModalExerciseExecuteTimer extends Component {
-    state = {currentDescription: 'Preparense...', executed:1}
+    state = {
+        currentDescription: 'Preparense...',
+        nextDescription: '',
+        executed:1
+    }
 
     componentDidMount() {
+        const {queue} = this.props
+        if (queue) {
+            const {executed}=this.state
+            this.setState({
+                nextDescription: queue[queue.length-executed].e.name
+            })
+        }
     }
 
     onNextInterval() {
         const {queue} = this.props
         if (queue) {
             const {executed}=this.state
-            this.setState({currentDescription: queue[queue.length-executed].e.name, executed: executed+1})
+            this.setState({
+                currentDescription: queue[queue.length-executed].e.name,
+                nextDescription: queue[queue.length-executed-1].e.name,
+                executed: executed+1})
         } else {
-            this.setState({currentDescription: 'Tiempo'})
+            this.setState({
+                currentDescription: 'Tiempo'})
         }
     }
 
@@ -36,7 +51,7 @@ export class ModalExerciseExecuteTimer extends Component {
     }
 
     render() {
-        const{currentDescription, finished}=this.state
+        const{currentDescription, nextDescription, finished}=this.state
         const {name} = this.props
         return (
             <Modal
@@ -61,6 +76,7 @@ export class ModalExerciseExecuteTimer extends Component {
                             />
                         </Header>
                     </Segment>
+                    <Header className={'no-margin'} as={'h2'}>{nextDescription}</Header>
                 </Modal.Content>
             </Modal>
         )

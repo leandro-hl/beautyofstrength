@@ -95,6 +95,10 @@ body {
   color: #ffffff !important;
 }
 
+.body-dark .ui.search input {
+  color: #ffffff !important;
+}
+
 .ui.input > input {
   border-left: transparent !important;
   border-right: transparent !important;
@@ -169,9 +173,18 @@ body {
 .body-dark p,
 .body-dark .ui.header,
 .body-dark .privacy-policy,
-.body-dark .add-exercise-row .chip.secondary.button
+.body-dark .add-exercise-row .chip.secondary.button,
+.body-dark .ui.slider label, .body-dark .ui.slider.checkbox input:checked ~ label
 {
   color: #ffffff !important;
+}
+
+.body-dark .ui.slider.checkbox input:checked ~ label::before {
+  background-color: #f9d118 !important;
+}
+
+.body-dark .ui.checkbox label::before {
+  background-color: #8a8a8a!important;
 }
 
 .ui.header{
@@ -455,6 +468,10 @@ body > div#root {
   padding-bottom: 1em !important;
 }
 
+.padding-bottom-1-5 {
+  padding-bottom: 1.5em !important;
+}
+
 .padding-left-1 {
   padding-left: 1em !important;
 }
@@ -693,6 +710,10 @@ div#g_id_onload, div.g_id_signin {
   bottom: -11px;
   /*margin-top: 32px !important;*/
   color: #b5b5b5;
+}
+
+.table-plus-item-15-negative {
+  bottom: -15px;
 }
 
 .table-remove-item {
