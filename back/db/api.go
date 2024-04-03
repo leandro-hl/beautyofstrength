@@ -1705,7 +1705,7 @@ func UpdateAccountToAthletePremium(db *DB, tx *sqlx.Tx, usrId int64) {
 }
 
 func UpdateAccountToInstructor(db *DB, tx *sqlx.Tx, usrId int64) {
-	query := `update useraccount set accountplan_id=3, usertype='p' where id=$1`
+	query := `update useraccount set accountplan_id=3, usertype='p', code=LOWER(REPLACE(name, ' ', '.'))  where id=$1`
 	stmt, err := getTxPreparedStmt(db, tx, query)
 	util.Check(err)
 	stmt.Exec(usrId)
