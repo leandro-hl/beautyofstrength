@@ -147,6 +147,7 @@ type ExerciseBlockGroup struct {
 	ExerciseId      *int      `json:"exercise_id"`
 	Reps            *int      `json:"reps"`
 	Secs            *int      `json:"secs"`
+	Series          *int      `json:"series"`
 	LastUpdatedDate time.Time `json:"lastupdateddate"`
 	Active          *bool     `json:"active"`
 	Order           *int      `json:"order"`

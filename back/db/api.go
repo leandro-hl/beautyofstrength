@@ -269,6 +269,7 @@ func GetRoutineDetails(db *DB, tx *sqlx.Tx, routineId int64, userId int64) []Get
 			b.laprestinterval,
 			eb.reps,
 			eb.secs,
+			eb.series,
 			eb.id exercisebgid,
 			e.id exerciseid,
 			e.name exercisename,
@@ -312,6 +313,7 @@ func GetRoutineDetailsTemplate(db *DB, tx *sqlx.Tx, routineId int64, userId int6
 			b.laprestinterval,
 			eb.reps,
 			eb.secs,
+			eb.series,
 			eb.id exercisebgid,
 			e.name exercisename,
 			ie.video_code videocode,
@@ -709,7 +711,7 @@ func CreateBlockGroup(
 	return id
 }
 
-func CreateExerciseBlockGroup(db *DB, tx *sqlx.Tx, blockId int64, exerciseId, order int, reps, secs *int, schema string) *int64 {
+func CreateExerciseBlockGroup(db *DB, tx *sqlx.Tx, blockId int64, exerciseId, order int, reps, secs, series *int, schema string) *int64 {
 	id := InsertSchema(
 		tx,
 		&ExerciseBlockGroup{
@@ -717,6 +719,7 @@ func CreateExerciseBlockGroup(db *DB, tx *sqlx.Tx, blockId int64, exerciseId, or
 			ExerciseId:      &exerciseId,
 			Reps:            reps,
 			Secs:            secs,
+			Series:          series,
 			Order:           &order,
 			Active:          util.PBool(true),
 			LastUpdatedDate: time.Now(),
@@ -935,7 +938,7 @@ func SaveExercisesBlock(db *DB, tx *sqlx.Tx,
 		}, schema)
 
 	for i, ex := range exercises {
-		CreateExerciseBlockGroup(db, tx, *id, *ex.ExerciseId, i, ex.Reps, ex.Secs, schema)
+		CreateExerciseBlockGroup(db, tx, *id, *ex.ExerciseId, i, ex.Reps, ex.Secs, ex.Series, schema)
 	}
 
 	RegisterEvent(db, tx, userId, SaveExercisesBlockk)

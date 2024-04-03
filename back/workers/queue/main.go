@@ -131,7 +131,7 @@ func (o *Worker) copyRoutineTemplateToPlanification(op db.QueuePlanificationOper
 			originalExercises := db.ListBlockGroupExerciseByBlockId(o.db, tx, *b.Id, schema)
 
 			for _, ex := range originalExercises {
-				db.CreateExerciseBlockGroup(o.db, tx, *newBlockGroupId, *ex.ExerciseId, *ex.Order, ex.Reps, ex.Secs, "")
+				db.CreateExerciseBlockGroup(o.db, tx, *newBlockGroupId, *ex.ExerciseId, *ex.Order, ex.Reps, ex.Secs, ex.Series, "")
 			}
 		}
 	}
@@ -189,7 +189,7 @@ func (o *Worker) planificationCopyMesocycle(op db.QueuePlanificationOperation, o
 				originalExercises := db.ListBlockGroupExerciseByBlockId(o.db, tx, *b.Id, "")
 
 				for _, ex := range originalExercises {
-					db.CreateExerciseBlockGroup(o.db, tx, *newBlockGroupId, *ex.ExerciseId, *ex.Order, ex.Reps, ex.Secs, "")
+					db.CreateExerciseBlockGroup(o.db, tx, *newBlockGroupId, *ex.ExerciseId, *ex.Order, ex.Reps, ex.Secs, ex.Series, "")
 				}
 			}
 		}

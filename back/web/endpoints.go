@@ -336,11 +336,11 @@ func (o *Endpoints) Handle() http.Handler {
 	api.Path("/acceptInstructorInvite").HandlerFunc(o.HandleAuthenticatedTransactional(o.HandleAuthorization(o.acceptInstructorInvite, db.StudentFree, db.StudentPremium, db.Professor)))
 	api.Path("/teacherSubscriptionApproved").HandlerFunc(o.HandleAuthenticatedTransactional(o.HandleAuthorization(o.teacherSubscriptionApproved, db.StudentFree, db.StudentPremium, db.Professor)))
 	api.Path("/eliteSubscriptionApproved").HandlerFunc(o.HandleAuthenticatedTransactional(o.HandleAuthorization(o.eliteSubscriptionApproved, db.StudentFree, db.StudentPremium, db.Professor)))
-	api.Path("/saveExercisesBlockFree").HandlerFunc(o.HandleAuthenticatedTransactional(o.HandleAuthorization(o.saveExercisesBlockFree, db.StudentFree, db.StudentPremium, db.Professor)))
-	api.Path("/saveExercisesBlockCpt").HandlerFunc(o.HandleAuthenticatedTransactional(o.HandleAuthorization(o.saveExercisesBlockCpt, db.StudentFree, db.StudentPremium, db.Professor)))
-	api.Path("/saveExercisesBlockAmrap").HandlerFunc(o.HandleAuthenticatedTransactional(o.HandleAuthorization(o.saveExercisesBlockAmrap, db.StudentFree, db.StudentPremium, db.Professor)))
-	api.Path("/saveExercisesBlockCombo").HandlerFunc(o.HandleAuthenticatedTransactional(o.HandleAuthorization(o.saveExercisesBlockCombo, db.StudentFree, db.StudentPremium, db.Professor)))
-	api.Path("/saveExerciseBlockPir").HandlerFunc(o.HandleAuthenticatedTransactional(o.HandleAuthorization(o.saveExerciseBlockPir, db.StudentFree, db.StudentPremium, db.Professor)))
+	api.Path("/saveExercisesBlockFree").HandlerFunc(o.HandleAuthenticatedTransactional(o.HandleAuthorization(o.saveExercisesBlock, db.StudentFree, db.StudentPremium, db.Professor)))
+	api.Path("/saveExercisesBlockCpt").HandlerFunc(o.HandleAuthenticatedTransactional(o.HandleAuthorization(o.saveExercisesBlock, db.StudentFree, db.StudentPremium, db.Professor)))
+	api.Path("/saveExercisesBlockAmrap").HandlerFunc(o.HandleAuthenticatedTransactional(o.HandleAuthorization(o.saveExercisesBlock, db.StudentFree, db.StudentPremium, db.Professor)))
+	api.Path("/saveExercisesBlockCombo").HandlerFunc(o.HandleAuthenticatedTransactional(o.HandleAuthorization(o.saveExercisesBlock, db.StudentFree, db.StudentPremium, db.Professor)))
+	api.Path("/saveExerciseBlockPir").HandlerFunc(o.HandleAuthenticatedTransactional(o.HandleAuthorization(o.saveExercisesBlock, db.StudentFree, db.StudentPremium, db.Professor)))
 	api.Path("/addToMyEquipment").HandlerFunc(o.HandleAuthenticatedTransactional(o.HandleAuthorization(o.addToMyEquipment, db.StudentFree, db.StudentPremium, db.Professor)))
 	api.Path("/listUserAccountEquipment").HandlerFunc(o.HandleAuthenticatedTransactional(o.HandleAuthorization(o.listUserAccountEquipment, db.StudentFree, db.StudentPremium, db.Professor)))
 	api.Path("/listPlanifications").HandlerFunc(o.HandleAuthenticatedTransactional(o.HandleAuthorization(o.listPlanifications, db.StudentFree, db.StudentPremium, db.Professor)))
@@ -587,6 +587,7 @@ func (o *Endpoints) calculateRoutineDetailsResponse(header *db.GetRoutineHeaderQ
 						Name:      re.Exercisename,
 						Secs:      re.Secs,
 						Reps:      re.Reps,
+						Series:    re.Series,
 						Link:      re.Link,
 						VideoCode: re.VideoCode})
 				}
@@ -613,6 +614,7 @@ func (o *Endpoints) calculateRoutineDetailsResponse(header *db.GetRoutineHeaderQ
 						Name:      re.Exercisename,
 						Secs:      re.Secs,
 						Reps:      re.Reps,
+						Series:    re.Series,
 						Link:      re.Link,
 						VideoCode: re.VideoCode})
 				}
@@ -624,6 +626,7 @@ func (o *Endpoints) calculateRoutineDetailsResponse(header *db.GetRoutineHeaderQ
 					Name:      re.Exercisename,
 					Secs:      re.Secs,
 					Reps:      re.Reps,
+					Series:    re.Series,
 					Link:      re.Link,
 					VideoCode: re.VideoCode,
 				})
@@ -715,7 +718,7 @@ func (o *Endpoints) saveSharedRoutine(w http.ResponseWriter, r *http.Request, tx
 				originalExercises := db.ListBlockGroupExerciseByBlockId(o.db, tx, *b.Id, "")
 
 				for _, ex := range originalExercises {
-					db.CreateExerciseBlockGroup(o.db, tx, *newBlockGroupId, *ex.ExerciseId, *ex.Order, ex.Reps, ex.Secs, "")
+					db.CreateExerciseBlockGroup(o.db, tx, *newBlockGroupId, *ex.ExerciseId, *ex.Order, ex.Reps, ex.Secs, ex.Series, "")
 				}
 			}
 		}
@@ -1222,11 +1225,11 @@ func (o *Endpoints) saveRoutineEditions(w http.ResponseWriter, r *http.Request, 
 		for i := 0; i < len(currentValid)+len(wk.Exercises); i++ {
 			if iNew < len(wk.Exercises) && i == *wk.Exercises[iNew].Order {
 				e := wk.Exercises[iNew]
-				db.CreateExerciseBlockGroup(o.db, tx, *e.WorkoutId, *e.ExerciseId, i, e.Reps, e.Secs, schema)
+				db.CreateExerciseBlockGroup(o.db, tx, *e.WorkoutId, *e.ExerciseId, i, e.Reps, e.Secs, e.Series, schema)
 				iNew++
 			} else {
 				e := currentValid[iCurrent]
-				db.CreateExerciseBlockGroup(o.db, tx, *e.BlockGroupId, *e.ExerciseId, i, e.Reps, e.Secs, schema)
+				db.CreateExerciseBlockGroup(o.db, tx, *e.BlockGroupId, *e.ExerciseId, i, e.Reps, e.Secs, e.Series, schema)
 				iCurrent++
 			}
 		}
@@ -1301,8 +1304,8 @@ func (o *Endpoints) saveExerciseBlockValidations(
 	return existingExercises, routineId
 }
 
-func (o *Endpoints) saveExercisesBlockFree(w http.ResponseWriter, r *http.Request, tx *sqlx.Tx) {
-	t := SaveExercisesBlockFreeRequest{}
+func (o *Endpoints) saveExercisesBlock(w http.ResponseWriter, r *http.Request, tx *sqlx.Tx) {
+	t := SaveExercisesBlockRequest{}
 	err := o.Decode(r, &t)
 	util.Check(err)
 
@@ -1313,11 +1316,13 @@ func (o *Endpoints) saveExercisesBlockFree(w http.ResponseWriter, r *http.Reques
 			exercises = append(exercises, db.ExerciseBlockGroup{
 				ExerciseId: e.Id,
 				Secs:       e.Reps,
+				Series:     e.Series,
 			})
 		} else {
 			exercises = append(exercises, db.ExerciseBlockGroup{
 				ExerciseId: e.Id,
 				Reps:       e.Reps,
+				Series:     e.Series,
 			})
 		}
 	}
@@ -1329,82 +1334,7 @@ func (o *Endpoints) saveExercisesBlockFree(w http.ResponseWriter, r *http.Reques
 	db.SaveExercisesBlock(o.db, tx, *routineId, blockType,
 		*t.BlockName, nil, t.Laps, t.RestingInteval,
 		t.ExeRestingInteval, exercises, *t.NewBlockGroupName, t.NewBlockGroupId, *t.NewBlockGroupOrder, t.IsTemplate, util.UserId(r))
-	o.Respond(w, &SaveExercisesBlockCptResponse{RoutineId: routineId}, http.StatusOK)
-}
-
-func (o *Endpoints) saveExercisesBlockCpt(w http.ResponseWriter, r *http.Request, tx *sqlx.Tx) {
-	t := SaveExercisesBlockCptRequest{}
-	err := o.Decode(r, &t)
-	util.Check(err)
-
-	validExercises, routineId := o.saveExerciseBlockValidations(r, tx, t.RoutineId, t.PlanificationId, t.Exercises, t.NewBlockGroupName, t.IsTemplate)
-	exercises := make([]db.ExerciseBlockGroup, 0)
-	for _, e := range validExercises {
-		exercises = append(exercises, db.ExerciseBlockGroup{
-			ExerciseId: e.Id,
-			Secs:       t.WorkingInterval,
-		})
-	}
-	db.SaveExercisesBlock(o.db, tx, *routineId, "cpt", *t.BlockName,
-		nil, t.Laps, t.RestingInteval, t.RestingInteval, exercises,
-		*t.NewBlockGroupName, t.NewBlockGroupId, *t.NewBlockGroupOrder, t.IsTemplate, util.UserId(r))
-	o.Respond(w, &SaveExercisesBlockCptResponse{RoutineId: routineId}, http.StatusOK)
-}
-
-func (o *Endpoints) saveExercisesBlockAmrap(w http.ResponseWriter, r *http.Request, tx *sqlx.Tx) {
-	t := SaveExercisesBlockAmrapRequest{}
-	err := o.Decode(r, &t)
-	util.Check(err)
-
-	validExercises, routineId := o.saveExerciseBlockValidations(r, tx, t.RoutineId, t.PlanificationId, t.Exercises, t.NewBlockGroupName, t.IsTemplate)
-	exercises := make([]db.ExerciseBlockGroup, 0)
-	for _, e := range validExercises {
-		exercises = append(exercises, db.ExerciseBlockGroup{
-			ExerciseId: e.Id,
-			Reps:       e.Reps,
-		})
-	}
-	db.SaveExercisesBlock(o.db, tx, *routineId, "amrap", *t.BlockName,
-		t.BlockDuration, nil, nil, nil, exercises,
-		*t.NewBlockGroupName, t.NewBlockGroupId, *t.NewBlockGroupOrder, t.IsTemplate, util.UserId(r))
-	o.Respond(w, &SaveExercisesBlockAmrapResponse{RoutineId: routineId}, http.StatusOK)
-}
-
-func (o *Endpoints) saveExercisesBlockCombo(w http.ResponseWriter, r *http.Request, tx *sqlx.Tx) {
-	t := SaveExercisesBlockComboRequest{}
-	err := o.Decode(r, &t)
-	util.Check(err)
-
-	validExercises, routineId := o.saveExerciseBlockValidations(r, tx, t.RoutineId, t.PlanificationId, t.Exercises, t.NewBlockGroupName, t.IsTemplate)
-	exercises := make([]db.ExerciseBlockGroup, 0)
-	for _, e := range validExercises {
-		exercises = append(exercises, db.ExerciseBlockGroup{
-			ExerciseId: e.Id,
-		})
-	}
-	db.SaveExercisesBlock(o.db, tx, *routineId, "cbo", *t.BlockName, nil,
-		t.Laps, nil, nil, exercises, *t.NewBlockGroupName,
-		t.NewBlockGroupId, *t.NewBlockGroupOrder, t.IsTemplate, util.UserId(r))
-	o.Respond(w, &SaveExercisesBlockComboResponse{RoutineId: routineId}, http.StatusOK)
-}
-
-func (o *Endpoints) saveExerciseBlockPir(w http.ResponseWriter, r *http.Request, tx *sqlx.Tx) {
-	t := SaveExercisesBlockPirRequest{}
-	err := o.Decode(r, &t)
-	util.Check(err)
-
-	validExercises, routineId := o.saveExerciseBlockValidations(r, tx, t.RoutineId, t.PlanificationId, t.Exercises, t.NewBlockGroupName, t.IsTemplate)
-	exercises := make([]db.ExerciseBlockGroup, 0)
-	for _, e := range validExercises {
-		exercises = append(exercises, db.ExerciseBlockGroup{
-			ExerciseId: e.Id,
-			Reps:       e.Reps,
-		})
-	}
-	db.SaveExercisesBlock(o.db, tx, *routineId, "pir", *t.BlockName, nil,
-		t.Laps, nil, nil, exercises,
-		*t.NewBlockGroupName, t.NewBlockGroupId, *t.NewBlockGroupOrder, t.IsTemplate, util.UserId(r))
-	o.Respond(w, &SaveExercisesBlockPirResponse{RoutineId: routineId}, http.StatusOK)
+	o.Respond(w, &SaveExercisesBlockResponse{RoutineId: routineId}, http.StatusOK)
 }
 
 func (o *Endpoints) addToMyEquipment(w http.ResponseWriter, r *http.Request, tx *sqlx.Tx) {
@@ -2005,7 +1935,7 @@ func (o *Endpoints) copyTemplateRoutineToPlanification(w http.ResponseWriter, r 
 			originalExercises := db.ListBlockGroupExerciseByBlockId(o.db, tx, *b.Id, schema)
 
 			for _, ex := range originalExercises {
-				db.CreateExerciseBlockGroup(o.db, tx, *newBlockGroupId, *ex.ExerciseId, *ex.Order, ex.Reps, ex.Secs, "")
+				db.CreateExerciseBlockGroup(o.db, tx, *newBlockGroupId, *ex.ExerciseId, *ex.Order, ex.Reps, ex.Secs, ex.Series, "")
 			}
 		}
 	}

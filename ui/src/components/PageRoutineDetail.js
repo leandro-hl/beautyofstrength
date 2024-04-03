@@ -1088,6 +1088,7 @@ class PageRoutineDetail extends Component{
                                             </Table.Row>
                                         </Table.Header>
                                         <Table.Body>
+                                            {/*TODO: migrate from rounds to Series (OR use both?)*/}
                                             {e.rounds.map((r,z) => (
                                                 <Table.Row key={z}>
                                                     <Table.Cell>{r.effectiveReps}</Table.Cell>
@@ -1112,7 +1113,10 @@ class PageRoutineDetail extends Component{
                                     {
                                         !e.toDelete &&
                                         <>
-                                            {hasValue && (e.reps ? e.reps+' Reps' : e.secs+' Segs')}
+                                            {hasValue && <span>
+                                                {e.series ? e.series +'x' : ''}
+                                                {(e.reps ? e.reps+' Reps' : e.secs+' Segs')}
+                                            </span>}
                                             <PopUpConfirmation
                                                 title={'Borrar '+e.name+'?'}
                                                 primary={'Borrar'}
@@ -1135,7 +1139,7 @@ class PageRoutineDetail extends Component{
                     {
                         (e.reps || e.secs) && !editionMode &&
                         <Table.Cell className={k === lastExercise ? 'last-child-no-bottom' : ''}>
-                            {e.reps ? e.reps+' Reps' : e.secs+' Segs'}
+                            {e.series ? e.series +'x' : ''}{e.reps ? e.reps+' Reps' : e.secs+' Segs'}
                         </Table.Cell>
                     }
                     {

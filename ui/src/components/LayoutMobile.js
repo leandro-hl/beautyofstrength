@@ -24,7 +24,7 @@ class LayoutMobile extends Component {
                 ...segmentStyle,
                 paddingTop: 20,
                 marginTop: 0,
-                overflowY: 'hidden'
+                overflowY: 'unset'
             }
         }
 

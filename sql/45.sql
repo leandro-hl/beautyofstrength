@@ -1,0 +1,1 @@
+alter table exerciseblockgroup add column series integer;

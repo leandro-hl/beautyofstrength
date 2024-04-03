@@ -165,9 +165,8 @@ class PageBlockCreate extends Component {
 
     onExerciseSelected(index, selected) {
         const {exercises} = this.state
-        exercises[index] = {...exercises[index], ...selected[0]}
-        console.log(exercises)
-        this.setState({exercises})
+        exercises[index] = {...selected[selected.length - 1], hideAddNext: exercises[index].hideAddNext}
+        this.setState({exercises});
     }
 
     onAddExcercise(index) {
@@ -242,10 +241,11 @@ class PageBlockCreate extends Component {
                 planificationId: parseInt(planificationId,10),
                 routineId: !!routineId ? parseInt(routineId,10) : null,
                 blockName: blockName+' - '+blockType,
+                blockType: blockType,
                 newBlockGroupName,
                 newBlockGroupId,
                 newBlockGroupOrder: nextBlockNumber,
-                exercises: exercises.map(e => ({id:e.key, name:e.text})),
+                exercises: exercises.filter(e=>e.key).map(e => ({id:e.key, name:e.text, series: parseInt(e.series, 10), reps: parseInt(e.reps, 10), type: e.type})),
                 laps: parseInt(laps, 10),
                 workingInterval: parseInt(workingInterval, 10),
                 restingInteval: parseInt(restingInteval, 10),
@@ -273,7 +273,7 @@ class PageBlockCreate extends Component {
                 newBlockGroupName,
                 newBlockGroupId,
                 newBlockGroupOrder: nextBlockNumber,
-                exercises: exercises.map(e => ({id:e.key, name:e.text, series: parseInt(e.series, 10), reps: parseInt(e.reps, 10), type: e.type})),
+                exercises: exercises.filter(e=>e.key).map(e => ({id:e.key, name:e.text, series: parseInt(e.series, 10), reps: parseInt(e.reps, 10), type: e.type})),
                 laps: parseInt(laps, 10),
                 restingInteval: parseInt(restingInteval, 10),
                 exeRestingInteval: parseInt(exeRestingInteval, 10),
@@ -304,10 +304,11 @@ class PageBlockCreate extends Component {
                 planificationId: parseInt(planificationId,10),
                 routineId: !!routineId ? parseInt(routineId,10) : null,
                 blockName: blockName+' - '+blockType,
+                blockType: blockType,
                 newBlockGroupName,
                 newBlockGroupId,
                 newBlockGroupOrder: nextBlockNumber,
-                exercises: exercises.map(e => ({id:e.key, name:e.text, reps: parseInt(e.reps, 10)})),
+                exercises: exercises.filter(e=>e.key).map(e => ({id:e.key, name:e.text, series: parseInt(e.series, 10), reps: parseInt(e.reps, 10), type: e.type})),
                 blockDuration: parseInt(blockDuration,10),
                 laps: null,
                 workingInterval: null,
@@ -331,10 +332,11 @@ class PageBlockCreate extends Component {
                 planificationId: parseInt(planificationId,10),
                 routineId: !!routineId ? parseInt(routineId,10) : null,
                 blockName: blockName+' - '+blockType,
+                blockType: blockType,
                 newBlockGroupName,
                 newBlockGroupId,
                 newBlockGroupOrder: nextBlockNumber,
-                exercises: exercises.map(e => ({id:e.key, name:e.text})),
+                exercises: exercises.filter(e=>e.key).map(e => ({id:e.key, name:e.text, series: parseInt(e.series, 10), reps: parseInt(e.reps, 10), type: e.type})),
                 laps: parseInt(laps, 10),
                 isTemplate
             }
@@ -358,7 +360,7 @@ class PageBlockCreate extends Component {
                 newBlockGroupName,
                 newBlockGroupId,
                 newBlockGroupOrder: nextBlockNumber,
-                exercises: exercises.map(e => ({id:e.key, name:e.text, reps: parseInt(e.reps, 10)})),
+                exercises: exercises.filter(e=>e.key).map(e => ({id:e.key, name:e.text, reps: parseInt(e.reps, 10)})),
                 laps: parseInt(laps, 10),
                 isTemplate
             }
