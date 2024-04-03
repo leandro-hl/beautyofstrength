@@ -95,8 +95,8 @@ class PageBlockCreate extends Component {
             blockType: 'free',
             //todo: lapRestDefault: 'sec', exeRestDefault: 'sec' seems to not be in use.
             next: 0,
-            defaultBlockName: '',
-            blockName: '',
+            defaultWorkName: '',
+            blockName: null,
             exercisesBuffer:[],
             exercises: [{}],
             lapRestDefault: 'sec',
@@ -126,7 +126,7 @@ class PageBlockCreate extends Component {
             this.context.dispatch(setData({secondaryActions: []}))
             this.setState({loading: true})
 
-            const defaultBlockName = 'Trabajo '+(nextWorkNumber??1)
+            const defaultWorkName = 'Trabajo '+(nextWorkNumber??1)
 
             const rawOptions = [
                 {id: 'free', name: 'LIBRE'},
@@ -145,12 +145,11 @@ class PageBlockCreate extends Component {
                 loading: false,
                 planificationId,
                 routineId,
-                defaultBlockName,
+                defaultWorkName,
                 nextBlockNumber,
                 newBlockGroupName,
                 newBlockGroupId: newBlockGroupId,
                 blockTypeOptions: rawOptions.map(e => ({key: e.id, value: e.id, text: e.name})),
-                blockName: defaultBlockName,
                 blockType: selectedBlockTypeOption.id,
             })
             this.generateBlockTypeUI(selectedBlockTypeOption.id)
@@ -240,7 +239,7 @@ class PageBlockCreate extends Component {
             const request = {
                 planificationId: parseInt(planificationId,10),
                 routineId: !!routineId ? parseInt(routineId,10) : null,
-                blockName: blockName+' - '+blockType,
+                blockName: (blockName??this.state.defaultWorkName)+' - '+blockType,
                 blockType: blockType,
                 newBlockGroupName,
                 newBlockGroupId,
@@ -269,7 +268,7 @@ class PageBlockCreate extends Component {
                 planificationId: parseInt(planificationId,10),
                 routineId: !!routineId ? parseInt(routineId,10) : null,
                 //todo: refactor to have block type outside name
-                blockName: blockName+' - '+blockType,
+                blockName: (blockName??this.state.defaultWorkName)+' - '+blockType,
                 newBlockGroupName,
                 newBlockGroupId,
                 newBlockGroupOrder: nextBlockNumber,
@@ -303,7 +302,7 @@ class PageBlockCreate extends Component {
             const request = {
                 planificationId: parseInt(planificationId,10),
                 routineId: !!routineId ? parseInt(routineId,10) : null,
-                blockName: blockName+' - '+blockType,
+                blockName: (blockName??this.state.defaultWorkName)+' - '+blockType,
                 blockType: blockType,
                 newBlockGroupName,
                 newBlockGroupId,
@@ -331,7 +330,7 @@ class PageBlockCreate extends Component {
             const request = {
                 planificationId: parseInt(planificationId,10),
                 routineId: !!routineId ? parseInt(routineId,10) : null,
-                blockName: blockName+' - '+blockType,
+                blockName: (blockName??this.state.defaultWorkName)+' - '+blockType,
                 blockType: blockType,
                 newBlockGroupName,
                 newBlockGroupId,
@@ -356,7 +355,8 @@ class PageBlockCreate extends Component {
             const request = {
                 planificationId: parseInt(planificationId,10),
                 routineId: !!routineId ? parseInt(routineId,10) : null,
-                blockName: blockName+' - '+blockType,
+                blockName: (blockName??this.state.defaultWorkName)+' - '+blockType,
+                blockType: blockType,
                 newBlockGroupName,
                 newBlockGroupId,
                 newBlockGroupOrder: nextBlockNumber,
@@ -536,9 +536,9 @@ class PageBlockCreate extends Component {
     }
 
     editBlock() {
-        const {defaultBlockName, exercises} = this.state
+        const {defaultWorkName, exercises} = this.state
         this.context.dispatch(setData({secondaryActions: []}))
-        this.setState({blockType: null, blockName: defaultBlockName, exercises: [], exercisesBuffer: [...exercises]})
+        this.setState({blockType: null, blockName: defaultWorkName, exercises: [], exercisesBuffer: [...exercises]})
         this.setTopBar()
     }
 
@@ -549,11 +549,12 @@ class PageBlockCreate extends Component {
             showModal,
             lapRestDefault,
             blockTypeOptions,
+            defaultWorkName,
             exercises, next, currentSelectedIndex
         } = this.state;
         const newBlockGroupName=this.state.newBlockGroupName
-        const blockName=this.state.blockName ?? this.state.defaultBlockName
-        const name = newBlockGroupName + ': ' + blockName
+        const workName=this.state.blockName ?? ''
+        const name = newBlockGroupName + ': '
         return (
             <>
                 {
@@ -577,6 +578,12 @@ class PageBlockCreate extends Component {
                     <>
                         <Header as={'h3'}>
                             {name}
+                            <Input
+                                onFocus={() => this.setState({next:null})}
+                                placeholder={defaultWorkName}
+                                value={workName}
+                                name={'blockName'}
+                                onChange={(e, {value,name}) => this.setState({[name]:value})}/>
                             <Dropdown
                                 options={blockTypeOptions}
                                 value={blockType}

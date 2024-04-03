@@ -932,7 +932,7 @@ class PageRoutineDetail extends Component{
                     onClick={(!editionMode && !routineStarted)? this.handleActiveBlocks : () => {}}>
 
                     <span className={'title'}>
-                        Trabajo {i+1}
+                        {name[0]}
                     </span>
                     {name[1] ? <Chip feel content={capitalize(name[1])}/> : null}
 
