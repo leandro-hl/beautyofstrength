@@ -1,4 +1,6 @@
 import './App.css';
+import './auto-vars.css';
+import './auto.css';
 import {ContextProvider} from "./context";
 import {BrowserRouter, Route, Switch} from "react-router-dom";
 import PrivateRoute from "./components/PrivateRoute";
@@ -30,6 +32,7 @@ import PagePublicHome from "./components/PagePublicHome";
 import {PopUpMessage} from "./components/PopUpMessage";
 import PageCreateSuite from "./components/PageCreateSuite";
 import PageOnboarding from "./components/PageOnboarding";
+import PagePublicHomeV2 from "./components/PagePublicHomeV2";
 
 class App extends Component {
     render() {
@@ -40,7 +43,7 @@ class App extends Component {
                         <LayoutMobile>
                             <Switch>
                                 <Route exact path={"/"} component={PageRoot}/>
-                                <Route exact path={"/home"} component={PagePublicHome}/>
+                                <Route exact path={"/home"} component={PagePublicHomeV2}/>
                                 <Route exact path={"/signin"} component={SignIn}/>
                                 <Route exact path={"/terms"} component={PageTermsAndConditions}/>
                                 <Route exact path={"/privacy-policies"} component={PagePrivacyPolicies}/>

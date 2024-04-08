@@ -1610,6 +1610,15 @@ func (o *Endpoints) eliteSubscriptionApproved(w http.ResponseWriter, r *http.Req
 	//todo: eliteSubscriptionApproved
 }
 
+/*
+General instruction:
+generate an endpoint to
+upload the profile image of a user. if it already exists it will be overwritten.
+
+Configuration:
+Response and Request should structs which will be defined on paylods.go
+*/
+
 func (o *Endpoints) googleSignIn(w http.ResponseWriter, r *http.Request, tx *sqlx.Tx) {
 	bodyBytes, err := io.ReadAll(r.Body)
 	util.Check(err)

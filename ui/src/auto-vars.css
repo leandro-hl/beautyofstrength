@@ -1,0 +1,103 @@
+:root {
+    --amarillosprimario: rgba(248, 208, 24, 1);
+    --elevation-2: 0px 3px 1px -2px rgba(0, 0, 0, 0.2), 0px 2px 2px 0px rgba(0, 0, 0, 0.14),
+    0px 1px 5px 0px rgba(0, 0, 0, 0.12);
+    --input-helper-font-family: "Roboto", Helvetica;
+    --input-helper-font-size: 12px;
+    --input-helper-font-style: normal;
+    --input-helper-font-weight: 400;
+    --input-helper-letter-spacing: 0.4000000059604645px;
+    --input-helper-line-height: 165.9999966621399%;
+    --input-value-font-family: "Roboto", Helvetica;
+    --input-value-font-size: 16px;
+    --input-value-font-style: normal;
+    --input-value-font-weight: 400;
+    --input-value-letter-spacing: 0.15000000596046448px;
+    --input-value-line-height: 24px;
+    --palette-action-active: rgba(0, 0, 0, 0.56);
+    --palette-action-disabled: rgba(0, 0, 0, 0.38);
+    --palette-action-focus: rgba(0, 0, 0, 0.12);
+    --palette-action-hover: rgba(0, 0, 0, 0.04);
+    --palette-common-white-states-focus: rgba(255, 255, 255, 0.12);
+    --palette-common-white-states-hover: rgba(255, 255, 255, 0.04);
+    --palette-common-white-states-main: rgba(255, 255, 255, 1);
+    --palette-error-states-focusvisible: rgba(211, 47, 47, 0.3);
+    --palette-error-states-hover: rgba(211, 47, 47, 0.04);
+    --palette-info-states-focusvisible: rgba(2, 136, 209, 0.3);
+    --palette-info-states-hover: rgba(2, 136, 209, 0.04);
+    --palette-primary-states-focusvisible: rgba(33, 150, 243, 0.3);
+    --palette-primary-states-hover: rgba(33, 150, 243, 0.04);
+    --palette-secondary-states-focusvisible: rgba(156, 39, 176, 0.3);
+    --palette-secondary-states-hover: rgba(156, 39, 176, 0.04);
+    --palette-success-states-focusvisible: rgba(46, 125, 50, 0.3);
+    --palette-success-states-hover: rgba(46, 125, 50, 0.04);
+    --palette-text-disabled: rgba(0, 0, 0, 0.38);
+    --palette-text-primary: rgba(0, 0, 0, 0.87);
+    --palette-text-secondary: rgba(0, 0, 0, 0.6);
+    --palette-text-secondary-duplicate: rgba(0, 0, 0, 0.6);
+    --palette-warning-states-focusvisible: rgba(239, 108, 0, 0.3);
+    --palette-warning-states-hover: rgba(239, 108, 0, 0.04);
+    --shape-borderradius: 4px;
+    --shape-borderradius-duplicate: 4px;
+    --shape-none: 0px;
+}
+
+/*
+
+To enable a theme in your HTML, simply add one of the following data attributes to an HTML element, like so:
+
+<body data-palette-mode="light">
+    <!-- the rest of your content -->
+</body>
+
+You can apply the theme on any DOM node, not just the `body`
+
+*/
+
+[data-palette-mode="light"] {
+    --palette-action-active: rgba(0, 0, 0, 0.56);
+    --palette-action-disabled: rgba(0, 0, 0, 0.38);
+    --palette-action-focus: rgba(0, 0, 0, 0.12);
+    --palette-action-hover: rgba(0, 0, 0, 0.04);
+    --palette-common-white-states-hover: rgba(255, 255, 255, 0.04);
+    --palette-error-states-focusvisible: rgba(211, 47, 47, 0.3);
+    --palette-error-states-hover: rgba(211, 47, 47, 0.04);
+    --palette-info-states-focusvisible: rgba(2, 136, 209, 0.3);
+    --palette-info-states-hover: rgba(2, 136, 209, 0.04);
+    --palette-primary-states-focusvisible: rgba(33, 150, 243, 0.3);
+    --palette-primary-states-hover: rgba(33, 150, 243, 0.04);
+    --palette-secondary-states-focusvisible: rgba(156, 39, 176, 0.3);
+    --palette-secondary-states-hover: rgba(156, 39, 176, 0.04);
+    --palette-success-states-focusvisible: rgba(46, 125, 50, 0.3);
+    --palette-success-states-hover: rgba(46, 125, 50, 0.04);
+    --palette-text-disabled: rgba(0, 0, 0, 0.38);
+    --palette-text-primary: rgba(0, 0, 0, 0.87);
+    --palette-text-secondary: rgba(0, 0, 0, 0.6);
+    --palette-text-secondary-duplicate: rgba(0, 0, 0, 0.6);
+    --palette-warning-states-focusvisible: rgba(239, 108, 0, 0.3);
+    --palette-warning-states-hover: rgba(239, 108, 0, 0.04);
+}
+
+[data-palette-mode="dark"] {
+    --palette-action-active: rgba(255, 255, 255, 0.56);
+    --palette-action-disabled: rgba(255, 255, 255, 0.38);
+    --palette-action-focus: rgba(255, 255, 255, 0.12);
+    --palette-action-hover: rgba(255, 255, 255, 0.08);
+    --palette-common-white-states-hover: rgba(255, 255, 255, 0.08);
+    --palette-error-states-focusvisible: rgba(244, 67, 54, 0.3);
+    --palette-error-states-hover: rgba(244, 67, 54, 0.08);
+    --palette-info-states-focusvisible: rgba(41, 182, 246, 0.3);
+    --palette-info-states-hover: rgba(41, 182, 246, 0.08);
+    --palette-primary-states-focusvisible: rgba(144, 202, 249, 0.3);
+    --palette-primary-states-hover: rgba(144, 202, 249, 0.08);
+    --palette-secondary-states-focusvisible: rgba(206, 147, 216, 0.3);
+    --palette-secondary-states-hover: rgba(206, 147, 216, 0.08);
+    --palette-success-states-focusvisible: rgba(102, 187, 106, 0.3);
+    --palette-success-states-hover: rgba(102, 187, 106, 0.08);
+    --palette-text-disabled: rgba(255, 255, 255, 0.38);
+    --palette-text-primary: rgba(255, 255, 255, 1);
+    --palette-text-secondary: rgba(255, 255, 255, 0.7);
+    --palette-text-secondary-duplicate: rgba(255, 255, 255, 0.7);
+    --palette-warning-states-focusvisible: rgba(255, 167, 38, 0.3);
+    --palette-warning-states-hover: rgba(255, 167, 38, 0.08);
+}
