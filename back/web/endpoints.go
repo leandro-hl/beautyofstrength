@@ -318,6 +318,7 @@ func (o *Endpoints) Handle() http.Handler {
 	api.Path("/saveRoutineEditions").HandlerFunc(o.HandleAuthenticatedTransactional(o.HandleAuthorization(o.saveRoutineEditions, db.StudentPremium, db.Professor)))
 	api.Path("/repeatLastMesocycle").HandlerFunc(o.HandleAuthenticatedTransactional(o.HandleAuthorization(o.repeatLastMesocycle, db.StudentPremium, db.Professor)))
 	api.Path("/saveRoutineExecution").HandlerFunc(o.HandleAuthenticatedTransactional(o.HandleAuthorization(o.saveRoutineExecution, db.StudentPremium, db.Professor)))
+	api.Path("/saveProfileConfiguration").HandlerFunc(o.HandleAuthenticatedTransactional(o.HandleAuthorization(o.saveProfileConfiguration, db.StudentPremium, db.Professor)))
 
 	api.Path("/saveNewRm").HandlerFunc(o.HandleAuthenticatedTransactional(o.HandleAuthorization(o.saveNewRm, db.StudentPremium)))
 
@@ -334,8 +335,6 @@ func (o *Endpoints) Handle() http.Handler {
 	//o.r.Path("/serveFile").HandlerFunc(o.HandleAuthenticatedTransactional(o.serveFile))
 	//redirect directly to the api. check the domain is mercado pago. implement some shit like google auth sec
 	api.Path("/acceptInstructorInvite").HandlerFunc(o.HandleAuthenticatedTransactional(o.HandleAuthorization(o.acceptInstructorInvite, db.StudentFree, db.StudentPremium, db.Professor)))
-	api.Path("/teacherSubscriptionApproved").HandlerFunc(o.HandleAuthenticatedTransactional(o.HandleAuthorization(o.teacherSubscriptionApproved, db.StudentFree, db.StudentPremium, db.Professor)))
-	api.Path("/eliteSubscriptionApproved").HandlerFunc(o.HandleAuthenticatedTransactional(o.HandleAuthorization(o.eliteSubscriptionApproved, db.StudentFree, db.StudentPremium, db.Professor)))
 	api.Path("/saveExercisesBlockFree").HandlerFunc(o.HandleAuthenticatedTransactional(o.HandleAuthorization(o.saveExercisesBlock, db.StudentFree, db.StudentPremium, db.Professor)))
 	api.Path("/saveExercisesBlockCpt").HandlerFunc(o.HandleAuthenticatedTransactional(o.HandleAuthorization(o.saveExercisesBlock, db.StudentFree, db.StudentPremium, db.Professor)))
 	api.Path("/saveExercisesBlockAmrap").HandlerFunc(o.HandleAuthenticatedTransactional(o.HandleAuthorization(o.saveExercisesBlock, db.StudentFree, db.StudentPremium, db.Professor)))
@@ -477,11 +476,12 @@ func (o *Endpoints) getRoutineDetails(w http.ResponseWriter, r *http.Request, tx
 			}
 		}
 
-		res := o.calculateRoutineDetailsResponse(header, result, false)
+		res := o.calculateRoutineDetailsResponse(header, result, false, nil)
 
 		db.RegisterEvent(o.db, tx, userId, db.RoutineTemplateDetails)
 		o.Respond(w, &res, http.StatusOK)
 	} else {
+		config := db.GetProfileConfiguration(o.db, tx, userId)
 		header := db.GetRoutineHeader(o.db, tx, routineId, userId, userId)
 		result := db.GetRoutineDetails(o.db, tx, routineId, userId)
 
@@ -494,7 +494,7 @@ func (o *Endpoints) getRoutineDetails(w http.ResponseWriter, r *http.Request, tx
 			}
 		}
 
-		res := o.calculateRoutineDetailsResponse(header, result, false)
+		res := o.calculateRoutineDetailsResponse(header, result, false, config)
 
 		db.RegisterEvent(o.db, tx, userId, db.RoutineDetails)
 		o.Respond(w, &res, http.StatusOK)
@@ -520,9 +520,10 @@ func (o *Endpoints) getSharedRoutineDetails(w http.ResponseWriter, r *http.Reque
 			panic(&BadRequestResponse{ErrorCode: util.PString("shared_routine_expired")})
 		} else {
 			usr := util.UserId(r)
+			config := db.GetProfileConfiguration(o.db, tx, usr)
 			header := db.GetRoutineHeader(o.db, tx, t.RoutineId, t.CreatorId, usr)
 			result := db.GetRoutineDetails(o.db, tx, t.RoutineId, t.CreatorId)
-			res := o.calculateRoutineDetailsResponse(header, result, *metaData.CanBeSaved)
+			res := o.calculateRoutineDetailsResponse(header, result, *metaData.CanBeSaved, config)
 
 			db.RegisterEvent(o.db, tx, usr, db.RoutineSharedDetails)
 			o.Respond(w, &res, http.StatusOK)
@@ -532,7 +533,59 @@ func (o *Endpoints) getSharedRoutineDetails(w http.ResponseWriter, r *http.Reque
 	}
 }
 
-func (o *Endpoints) calculateRoutineDetailsResponse(header *db.GetRoutineHeaderQuery, result []db.GetRoutineDetailsQuery, canBeSaved bool) *GetRoutineDetailsResponse {
+func calculateWorkRanges(config *db.ProfileConfiguration) (*int, *int, *int, *int, *int, *int) {
+	forceMin := 1
+	forceMax := 6
+	hypertrophyMin := 7
+	hypertrophyMax := 12
+	resistenceMin := 13
+	resistenceMax := 500
+	if config != nil {
+		if config.ForceMin != nil {
+			forceMin = *config.ForceMin
+		}
+		if config.ForceMax != nil {
+			forceMax = *config.ForceMax
+		}
+		if config.HypertrophyMin != nil {
+			hypertrophyMin = *config.HypertrophyMin
+		}
+		if config.HypertrophyMax != nil {
+			hypertrophyMax = *config.HypertrophyMax
+		}
+		if config.ResistenceMin != nil {
+			resistenceMin = *config.ResistenceMin
+		}
+		if config.ResistenceMax != nil {
+			resistenceMax = *config.ResistenceMax
+		}
+	}
+	return &forceMin, &forceMax, &hypertrophyMin, &hypertrophyMax, &resistenceMin, &resistenceMax
+}
+
+func calculateCurrentWorkRange(config *db.ProfileConfiguration, expectedReps *int) *string {
+	if expectedReps == nil {
+		return nil
+	}
+
+	forceMin, forceMax, hypertrophyMin, hypertrophyMax, resistenceMin, resistenceMax := calculateWorkRanges(config)
+	if *expectedReps >= *forceMin && *expectedReps <= *forceMax {
+		return util.PString("force")
+	}
+	if *expectedReps >= *hypertrophyMin && *expectedReps <= *hypertrophyMax {
+		return util.PString("hypertrophy")
+	}
+	if *expectedReps >= *resistenceMin && *expectedReps <= *resistenceMax {
+		return util.PString("resistence")
+	}
+	return nil
+}
+
+func (o *Endpoints) calculateRoutineDetailsResponse(
+	header *db.GetRoutineHeaderQuery,
+	result []db.GetRoutineDetailsQuery,
+	canBeSaved bool,
+	config *db.ProfileConfiguration) *GetRoutineDetailsResponse {
 	res := &GetRoutineDetailsResponse{
 		Id:                      header.Routineid,
 		Name:                    header.Routinename,
@@ -582,14 +635,23 @@ func (o *Endpoints) calculateRoutineDetailsResponse(header *db.GetRoutineHeaderQ
 				}
 				if re.ExerciseBGID != nil {
 					block.Exercises = append(block.Exercises, GetRoutineDetailsBlockExercise{
-						Id:        re.ExerciseBGID,
-						ExId:      re.ExerciseId,
-						Name:      re.Exercisename,
-						Secs:      re.Secs,
-						Reps:      re.Reps,
-						Series:    re.Series,
-						Link:      re.Link,
-						VideoCode: re.VideoCode})
+						Id:                           re.ExerciseBGID,
+						ExId:                         re.ExerciseId,
+						Name:                         re.Exercisename,
+						Secs:                         re.Secs,
+						Reps:                         re.Reps,
+						Series:                       re.Series,
+						Link:                         re.Link,
+						VideoCode:                    re.VideoCode,
+						ForceLastEffectiveReps:       re.ForceLastEffectiveReps,
+						ForceLastWeight:              re.ForceLastWeight,
+						HypertrophyLastEffectiveReps: re.HypertrophyLastEffectiveReps,
+						HypertrophyLastWeight:        re.HypertrophyLastWeight,
+						ResistenceLastEffectiveReps:  re.ResistenceLastEffectiveReps,
+						ResistenceLastWeight:         re.ResistenceLastWeight,
+						CurrentWorkRange:             calculateCurrentWorkRange(config, re.Reps),
+						EffectiveSeries:              make([]interface{}, 0),
+					})
 				}
 				grouper.Blocks = append(grouper.Blocks, *block)
 			}
@@ -609,26 +671,43 @@ func (o *Endpoints) calculateRoutineDetailsResponse(header *db.GetRoutineHeaderQ
 				}
 				if re.ExerciseBGID != nil {
 					block.Exercises = append(block.Exercises, GetRoutineDetailsBlockExercise{
-						Id:        re.ExerciseBGID,
-						ExId:      re.ExerciseId,
-						Name:      re.Exercisename,
-						Secs:      re.Secs,
-						Reps:      re.Reps,
-						Series:    re.Series,
-						Link:      re.Link,
-						VideoCode: re.VideoCode})
+						Id:                           re.ExerciseBGID,
+						ExId:                         re.ExerciseId,
+						Reps:                         re.Reps,
+						Secs:                         re.Secs,
+						Series:                       re.Series,
+						Name:                         re.Exercisename,
+						Link:                         re.Link,
+						VideoCode:                    re.VideoCode,
+						ForceLastEffectiveReps:       re.ForceLastEffectiveReps,
+						ForceLastWeight:              re.ForceLastWeight,
+						HypertrophyLastEffectiveReps: re.HypertrophyLastEffectiveReps,
+						HypertrophyLastWeight:        re.HypertrophyLastWeight,
+						ResistenceLastEffectiveReps:  re.ResistenceLastEffectiveReps,
+						ResistenceLastWeight:         re.ResistenceLastWeight,
+						CurrentWorkRange:             calculateCurrentWorkRange(config, re.Reps),
+						EffectiveSeries:              make([]interface{}, 0),
+					})
 				}
 				grouper.Blocks = append(grouper.Blocks, *block)
 			} else if re.ExerciseBGID != nil {
 				grouper.Blocks[lastBlockIndex].Exercises = append(grouper.Blocks[lastBlockIndex].Exercises, GetRoutineDetailsBlockExercise{
-					Id:        re.ExerciseBGID,
-					ExId:      re.ExerciseId,
-					Name:      re.Exercisename,
-					Secs:      re.Secs,
-					Reps:      re.Reps,
-					Series:    re.Series,
-					Link:      re.Link,
-					VideoCode: re.VideoCode,
+					Id:                           re.ExerciseBGID,
+					ExId:                         re.ExerciseId,
+					Name:                         re.Exercisename,
+					Secs:                         re.Secs,
+					Reps:                         re.Reps,
+					Series:                       re.Series,
+					Link:                         re.Link,
+					VideoCode:                    re.VideoCode,
+					ForceLastEffectiveReps:       re.ForceLastEffectiveReps,
+					ForceLastWeight:              re.ForceLastWeight,
+					HypertrophyLastEffectiveReps: re.HypertrophyLastEffectiveReps,
+					HypertrophyLastWeight:        re.HypertrophyLastWeight,
+					ResistenceLastEffectiveReps:  re.ResistenceLastEffectiveReps,
+					ResistenceLastWeight:         re.ResistenceLastWeight,
+					CurrentWorkRange:             calculateCurrentWorkRange(config, re.Reps),
+					EffectiveSeries:              make([]interface{}, 0),
 				})
 			}
 		}
@@ -733,20 +812,99 @@ func (o *Endpoints) saveSharedRoutine(w http.ResponseWriter, r *http.Request, tx
 }
 
 func (o *Endpoints) saveRoutineExecution(w http.ResponseWriter, r *http.Request, tx *sqlx.Tx) {
+	//todo: shared routines
 	t := SaveRoutineExecutionRequest{}
 	err := o.Decode(r, &t)
 	util.Check(err)
 
 	usr := util.UserId(r)
+	config := db.GetProfileConfiguration(o.db, tx, usr)
+	forceMin, forceMax, hypertrophyMin, hypertrophyMax, resistenceMin, resistenceMax := calculateWorkRanges(config)
+	userExerciseRelationship := db.GetUserExerciseByUserId(o.db, tx, usr)
+	exById := make(map[int64]*db.UserExercise)
+	for _, exercise := range userExerciseRelationship {
+		exById[*exercise.ExerciseId] = &exercise
+	}
 
-	//todo: refactor to use only one historical table
+	//only used for permissions and checks if the routine was already executed or not.
 	db.InsertUserRoutineHistory(o.db, tx, true, t.PlanificationId, *t.RoutineId, usr)
+
+	//historical data accumulated for making stats
+	//historical data routine header
 	historyId := db.InsertNewRoutineHistory(o.db, tx, *t.RoutineId, usr, *t.Rpe)
-	for _, e := range t.Exercises {
+	for i, e := range t.Exercises {
+		fmt.Println("iteration: " + strconv.Itoa(i))
+		//historical data details
 		db.InsertNewExerciseHistory(o.db, tx, *t.RoutineId, *historyId, usr, *e.Id, *e.Reps, *e.EffectiveReps, *e.Kg)
+
+		exercise, ok := exById[*e.Id]
+		if !ok {
+			exercise = &db.UserExercise{
+				UserAccountId:   &usr,
+				ExerciseId:      e.Id,
+				LastUpdatedDate: time.Now(),
+			}
+			exById[*e.Id] = exercise
+		}
+
+		if *e.Reps >= *forceMin && *e.Reps <= *forceMax {
+			exercise.ForceLastWeight = e.Kg
+			exercise.ForceLastEffectiveReps = e.EffectiveReps
+		} else if *e.Reps >= *hypertrophyMin && *e.Reps <= *hypertrophyMax {
+			exercise.HypertrophyLastWeight = e.Kg
+			exercise.HypertrophyLastEffectiveReps = e.EffectiveReps
+		} else if *e.Reps >= *resistenceMin && *e.Reps <= *resistenceMax {
+			exercise.ResistanceLastWeight = e.Kg
+			exercise.ResistanceLastEffectiveReps = e.EffectiveReps
+		}
+
+		if !ok {
+			db.InsertUserExercise(o.db, tx, exercise)
+		} else {
+			db.UpdateUserExercise(o.db, tx, exercise)
+		}
 	}
 
 	db.RegisterEvent(o.db, tx, usr, db.SaveRoutineExecution)
+}
+
+func (o *Endpoints) saveProfileConfiguration(w http.ResponseWriter, r *http.Request, tx *sqlx.Tx) {
+	t := SaveProfileConfigurationRequest{}
+	err := o.Decode(r, &t)
+	util.Check(err)
+
+	usr := util.UserId(r)
+	current := db.GetProfileConfiguration(o.db, tx, usr)
+	if nil == current {
+		db.InsertProfileConfiguration(o.db, tx, &db.ProfileConfiguration{
+			ForceMin:        t.ForceMin,
+			ForceMax:        t.ForceMax,
+			HypertrophyMin:  t.HypertrophyMin,
+			HypertrophyMax:  t.HypertrophyMax,
+			ResistenceMin:   t.ResistenceMin,
+			ResistenceMax:   t.ResistenceMax,
+			UserAccountId:   &usr,
+			LastUpdatedDate: time.Now(),
+		})
+		db.RegisterEvent(o.db, tx, usr, db.SaveProfileConfiguration)
+		return
+	}
+
+	if t.ForceMin != nil && *t.ForceMin != *current.ForceMin {
+		current.ForceMin = t.ForceMin
+	}
+	if t.ForceMax != nil && *t.ForceMax != *current.ForceMax {
+		current.ForceMax = t.ForceMax
+	}
+	if t.HypertrophyMin != nil && *t.HypertrophyMin != *current.HypertrophyMin {
+		current.HypertrophyMin = t.HypertrophyMin
+	}
+	if t.HypertrophyMax != nil && *t.HypertrophyMax != *current.HypertrophyMax {
+		current.HypertrophyMax = t.HypertrophyMax
+	}
+
+	db.UpdateProfileConfiguration(o.db, tx, current)
+	db.RegisterEvent(o.db, tx, usr, db.SaveProfileConfiguration)
 }
 
 func (o *Endpoints) actionateRoutine(w http.ResponseWriter, r *http.Request, tx *sqlx.Tx) {
@@ -1595,29 +1753,6 @@ func (o *Endpoints) logo(w http.ResponseWriter, r *http.Request, tx *sqlx.Tx) {
 	input := r.URL.Query().Get("type")
 	serveFile(w, r, input, baseDirectory, []string{".png", ".ico"})
 }
-
-func (o *Endpoints) teacherSubscriptionApproved(w http.ResponseWriter, r *http.Request, tx *sqlx.Tx) {
-	//todo: teacherSubscriptionApproved make sure they did paid
-	//make sure domain is meli
-	//set plan to user
-	//ver si viene la cookie en este caso...
-	//userId := util.UserId(r)
-	//can only be called once per user. if they want another subscription they should first communicate to
-	//cancel the previous one.
-}
-
-func (o *Endpoints) eliteSubscriptionApproved(w http.ResponseWriter, r *http.Request, tx *sqlx.Tx) {
-	//todo: eliteSubscriptionApproved
-}
-
-/*
-General instruction:
-generate an endpoint to
-upload the profile image of a user. if it already exists it will be overwritten.
-
-Configuration:
-Response and Request should structs which will be defined on paylods.go
-*/
 
 func (o *Endpoints) googleSignIn(w http.ResponseWriter, r *http.Request, tx *sqlx.Tx) {
 	bodyBytes, err := io.ReadAll(r.Body)

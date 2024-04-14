@@ -36,6 +36,7 @@ import {Chip} from "./Chip";
 import {ExerciseSearch} from "./ExerciseSearch";
 import {PopUpContinueEditing} from "./PopUpContinueEditing";
 import {PopUpDisabledAction} from "./PopUpDisabledAction";
+import {TooltipInfoButton} from "./mui/TooltipInfoButton";
 
 const MenuHeaderRender = ({
                               blockType,
@@ -164,7 +165,12 @@ class PageBlockCreate extends Component {
 
     onExerciseSelected(index, selected) {
         const {exercises} = this.state
-        exercises[index] = {...selected[selected.length - 1], hideAddNext: exercises[index].hideAddNext}
+        exercises[index] = {
+            ...selected[selected.length - 1],
+            hideAddNext: exercises[index].hideAddNext,
+            reps: exercises[index].reps,
+            series: exercises[index].series
+        }
         this.setState({exercises});
     }
 
@@ -458,7 +464,7 @@ class PageBlockCreate extends Component {
                 <Segment textAlign='center'>
                     <Divider horizontal>Descanso Entre Ejercicios<br/>(Segundos)</Divider>
                     <InputNumber seconds large onChange={({amount}) => this.setState({exeRestingInteval: amount, next: null})}/>
-                    <Divider horizontal>Rondas</Divider>
+                    <Divider horizontal>Rondas<TooltipInfoButton title={"Tambien llamadas Sets"}/></Divider>
                     <InputNumber large onChange={({amount}) => this.setState({laps: amount, next: null})}/>
                     <Divider horizontal>Descanso Entre Rondas<br/>(Segundos)</Divider>
                     <InputNumber seconds large onChange={({amount}) => this.setState({restingInteval: amount, next: null})}/>
@@ -496,7 +502,7 @@ class PageBlockCreate extends Component {
                                 </Grid>
                                 <Divider vertical>X</Divider>
                             </Segment>
-                            <Divider horizontal>Rondas</Divider>
+                            <Divider horizontal>Rondas<TooltipInfoButton title={"Tambien llamadas Sets"}/></Divider>
                             <InputNumber large onChange={({amount}) => this.setState({laps: amount, next: null})}/>
                         </Segment>
                     </>
@@ -515,7 +521,7 @@ class PageBlockCreate extends Component {
                     <>
                         <Divider hidden/>
                         <Segment textAlign='center'>
-                            <Divider horizontal>Rondas</Divider>
+                            <Divider horizontal>Rondas<TooltipInfoButton title={"Tambien llamadas Sets"}/></Divider>
                             <InputNumber large onChange={({amount}) => this.setState({laps: amount, next: null})}/>
                         </Segment>
                     </>
@@ -525,7 +531,7 @@ class PageBlockCreate extends Component {
                     <>
                         <Divider hidden/>
                         <Segment textAlign='center'>
-                            <Divider horizontal>Rondas</Divider>
+                            <Divider horizontal>Rondas<TooltipInfoButton title={"Tambien llamadas Sets"}/></Divider>
                             <InputNumber large onChange={({amount}) => this.setState({laps: amount, next: null})}/>
                         </Segment>
                     </>

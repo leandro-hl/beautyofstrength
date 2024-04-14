@@ -4,6 +4,24 @@ import {Loader} from "semantic-ui-react";
 import {withRouter} from "react-router-dom";
 import axios from "axios";
 import {isLocalhost, queryParam, setTheme} from "../functions";
+import {createTheme, CssBaseline, ThemeProvider} from "@mui/material";
+
+const darkThemeMui = createTheme({
+    palette: {
+        mode: 'dark',
+        primary: {
+            main: '#F8D018',
+        },
+    },
+});
+
+const themeMui = createTheme({
+    palette: {
+        primary: {
+            main: '#F8D018',
+        },
+    },
+});
 
 class StartUp extends Component {
     static contextType = AppContext
@@ -37,8 +55,14 @@ class StartUp extends Component {
         if (loading) {
             return <Loader active/>
         }
+        const {state: {darkTheme}} = this.context
         const {children} = this.props
-        return <>{children}</>
+        return (
+            <ThemeProvider theme={darkTheme ? darkThemeMui : themeMui}>
+                <CssBaseline />
+                {children}
+            </ThemeProvider>
+        )
     }
 }
 

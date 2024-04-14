@@ -2,7 +2,7 @@ import {Component} from "react";
 
 export class Chip extends Component {
     render() {
-        const {success, omit, progress, feel, content, style, className, onClick} = this.props
+        const {success, omit, progress, feel, feelGrey, content, style, className, onClick} = this.props
         let classes = 'chip'
         if (success) {
             classes += ' success'
@@ -12,6 +12,8 @@ export class Chip extends Component {
             classes += ' progress'
         } else if (feel) {
             classes += ' feel'
+        } else if (feelGrey) {
+            classes += ' feel-grey'
         }
 
         if (className) {

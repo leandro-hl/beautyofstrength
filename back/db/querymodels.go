@@ -43,6 +43,7 @@ type GetUserAccountDetailsQuery struct {
 	AccountType *string `json:"accounttype"`
 	Trainer     *int64  `json:"trainer"`
 	Code        *string `json:"code"`
+	ProfileConfiguration
 }
 
 type GetRoutineHeaderQuery struct {
@@ -67,24 +68,30 @@ type ListExercisesByRoutineIdQuery struct {
 }
 
 type GetRoutineDetailsQuery struct {
-	GrouperId       *int64  `json:"grouperid"`
-	GrouperName     *string `json:"groupername"`
-	GrouperOrder    *int    `json:"grouperorder"`
-	Blockgroupid    *int64  `json:"blockgroupid"`
-	Blockgroupname  *string `json:"blockgroupname"`
-	BlockDuration   *int    `json:"blockgroupduration"`
-	Laps            *int    `json:"laps"`
-	Type            *string `json:"type"`
-	Exerestinterval *int    `json:"exerestinterval"`
-	Laprestinterval *int    `json:"laprestinterval"`
-	Reps            *int    `json:"reps"`
-	Secs            *int    `json:"secs"`
-	Series          *int    `json:"series"`
-	ExerciseBGID    *int64  `json:"exercisebgid"`
-	ExerciseId      *int64  `json:"exerciseid"`
-	Exercisename    *string `json:"exercisename"`
-	VideoCode       *string `json:"videocode"`
-	Link            *string `json:"link"`
+	GrouperId                    *int64  `json:"grouperid"`
+	GrouperName                  *string `json:"groupername"`
+	GrouperOrder                 *int    `json:"grouperorder"`
+	Blockgroupid                 *int64  `json:"blockgroupid"`
+	Blockgroupname               *string `json:"blockgroupname"`
+	BlockDuration                *int    `json:"blockgroupduration"`
+	Laps                         *int    `json:"laps"`
+	Type                         *string `json:"type"`
+	Exerestinterval              *int    `json:"exerestinterval"`
+	Laprestinterval              *int    `json:"laprestinterval"`
+	Reps                         *int    `json:"reps"`
+	Secs                         *int    `json:"secs"`
+	Series                       *int    `json:"series"`
+	ExerciseBGID                 *int64  `json:"exercisebgid"`
+	ExerciseId                   *int64  `json:"exerciseid"`
+	Exercisename                 *string `json:"exercisename"`
+	VideoCode                    *string `json:"videocode"`
+	Link                         *string `json:"link"`
+	ForceLastEffectiveReps       *int    `json:"force_last_effective_reps"`
+	ForceLastWeight              *int    `json:"force_last_weight"`
+	HypertrophyLastEffectiveReps *int    `json:"hypertrophy_last_effective_reps"`
+	HypertrophyLastWeight        *int    `json:"hypertrophy_last_weight"`
+	ResistenceLastEffectiveReps  *int    `json:"resistence_last_effective_reps"`
+	ResistenceLastWeight         *int    `json:"resistence_last_weight"`
 }
 
 type ListRoutineTemplatesQuery struct {

@@ -33,44 +33,53 @@ import {PopUpMessage} from "./components/PopUpMessage";
 import PageCreateSuite from "./components/PageCreateSuite";
 import PageOnboarding from "./components/PageOnboarding";
 import PagePublicHomeV2 from "./components/PagePublicHomeV2";
+import PageBundlesInstructor from "./components/mui/PageBundlesInstructor";
+import {createTheme, CssBaseline, ThemeProvider} from "@mui/material";
+import {yellow} from "@mui/material/colors";
+import PageAccountV2 from "./components/mui/PageAccountV2";
+
 
 class App extends Component {
     render() {
         return (
             <BrowserRouter basename={`${process.env.PUBLIC_URL}`}>
-                <ContextProvider>
-                    <StartUp>
-                        <LayoutMobile>
-                            <Switch>
-                                <Route exact path={"/"} component={PageRoot}/>
-                                <Route exact path={"/home"} component={PagePublicHomeV2}/>
-                                <Route exact path={"/signin"} component={SignIn}/>
-                                <Route exact path={"/terms"} component={PageTermsAndConditions}/>
-                                <Route exact path={"/privacy-policies"} component={PagePrivacyPolicies}/>
-                                {/*<Route exact path={"/signup"} component={SignUp}/>*/}
-                                <PrivateRoute exact path={"/onboarding"} component={PageOnboarding}/>
-                                <PrivateRoute exact path={"/suite"} component={PageCreateSuite}/>
-                                <PrivateRoute exact path={"/plans"} component={PagePlans}/>
-                                <PrivateRoute exact path={"/subscription-approved"} component={PageSubscriptionApproved}/>
-                                <PrivateRoute exact path={"/my-planifications"} component={PagePlanificationList}/>
-                                <PrivateRoute exact path={"/my-contributions"} component={PageProfessorContributions}/>
-                                <PrivateRoute exact path={"/my-stats"} component={PageStats}/>
-                                <PrivateRoute exact path={"/planification"} component={PagePlanificationDetail}/>
-                                <PrivateRoute exact path={"/planification-days"} component={PagePlanificationSelectDays}/>
-                                <PrivateRoute exact path={"/routine/execution"} component={PageRoutineExecution}/>
-                                <PrivateRoute exact path={"/routine/create"} component={PageRoutineCreate}/>
-                                <PrivateRoute exact path={"/routine"} component={PageRoutineDetail}/>
-                                <PrivateRoute exact path={"/block/create"} component={PageBlockCreate}/>
-                                <PrivateRoute exact path={"/professor"} component={HomeProfessor}/>
-                                <PrivateRoute exact path={"/student"} component={HomeStudent}/>
-                                <PrivateRoute exact path={"/account"} component={PageAccount}/>
-                                <ElseRoute/>
-                            </Switch>
-                        </LayoutMobile>
-                        <ModalExerciseVideo/>
-                        <PopUpMessage/>
-                    </StartUp>
-                </ContextProvider>
+                {/*<ThemeProvider theme={darkTheme}>*/}
+                {/*    <CssBaseline />*/}
+                    <ContextProvider>
+                        <StartUp>
+                            <LayoutMobile>
+                                <Switch>
+                                    <Route exact path={"/"} component={PageRoot}/>
+                                    <Route exact path={"/home"} component={PagePublicHomeV2}/>
+                                    <Route exact path={"/signin"} component={SignIn}/>
+                                    <Route exact path={"/terms"} component={PageTermsAndConditions}/>
+                                    <Route exact path={"/privacy-policies"} component={PagePrivacyPolicies}/>
+                                    <Route exact path={"/bundles"} component={PageBundlesInstructor}/>
+                                    {/*<Route exact path={"/signup"} component={SignUp}/>*/}
+                                    <PrivateRoute exact path={"/onboarding"} component={PageOnboarding}/>
+                                    <PrivateRoute exact path={"/suite"} component={PageCreateSuite}/>
+                                    <PrivateRoute exact path={"/plans"} component={PagePlans}/>
+                                    <PrivateRoute exact path={"/subscription-approved"} component={PageSubscriptionApproved}/>
+                                    <PrivateRoute exact path={"/my-planifications"} component={PagePlanificationList}/>
+                                    <PrivateRoute exact path={"/my-contributions"} component={PageProfessorContributions}/>
+                                    <PrivateRoute exact path={"/my-stats"} component={PageStats}/>
+                                    <PrivateRoute exact path={"/planification"} component={PagePlanificationDetail}/>
+                                    <PrivateRoute exact path={"/planification-days"} component={PagePlanificationSelectDays}/>
+                                    <PrivateRoute exact path={"/routine/execution"} component={PageRoutineExecution}/>
+                                    <PrivateRoute exact path={"/routine/create"} component={PageRoutineCreate}/>
+                                    <PrivateRoute exact path={"/routine"} component={PageRoutineDetail}/>
+                                    <PrivateRoute exact path={"/block/create"} component={PageBlockCreate}/>
+                                    <PrivateRoute exact path={"/professor"} component={HomeProfessor}/>
+                                    <PrivateRoute exact path={"/student"} component={HomeStudent}/>
+                                    <PrivateRoute exact path={"/account"} component={PageAccountV2}/>
+                                    <ElseRoute/>
+                                </Switch>
+                            </LayoutMobile>
+                            <ModalExerciseVideo/>
+                            <PopUpMessage/>
+                        </StartUp>
+                    </ContextProvider>
+                {/*</ThemeProvider>*/}
             </BrowserRouter>
         );
     }

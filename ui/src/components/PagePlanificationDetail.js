@@ -183,6 +183,7 @@ class PagePlanificationDetail extends Component {
         const {routines} = this.state;
         this.context.dispatch(setData({
             routineId: null,
+            isTemplate: false,
             routineNumber: routines.length+1,
             routineName: 'Dia '+ (routines.length+1)}))
         this.props.history.push('/routine/create')

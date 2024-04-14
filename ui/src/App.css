@@ -783,6 +783,11 @@ div#g_id_onload, div.g_id_signin {
   background-color: #e8e8e8 !important;
 }
 
+.body-dark .feel {
+  color: #e8e8e8 !important;
+  background-color: rgba(255, 255, 255, 0.15) !important;
+}
+
 .progress {
   background-color: #F9D946 !important;
 }
@@ -910,4 +915,9 @@ input[type="number"] {
   background: unset !important;
   background-color: #F8D018 !important;
   color: #212121 !important;
+}
+
+.justify-content {
+  display: flex;
+  justify-content: space-between;
 }

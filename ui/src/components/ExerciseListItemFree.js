@@ -3,6 +3,7 @@ import {Dropdown, Grid, Icon, Input, Label, List, Segment} from "semantic-ui-rea
 import {SegMinButtonGroup} from "./SegMinButtonGroup";
 import {SegRepsButtonGroup} from "./SegRepsButtonGroup";
 import {ExerciseSearch} from "./ExerciseSearch";
+import {TextFieldCentered} from "./mui/customizations";
 
 export class ExerciseListItemFree extends Component {
     inputRef = createRef()
@@ -10,28 +11,31 @@ export class ExerciseListItemFree extends Component {
 
     constructor(props) {
         super(props);
-        this.state = {focusSeries:true, series: props.item.series}
+        this.state = {focusSeries:true}
     }
 
     handleChangeSerie(value) {
-        this.setState({series: value, focusSeries: false})
-        this.inputRef.current.focus()
+        this.props.finished(value, null)
+        if (value !== "") {
+            this.setState({focusSeries: false})
+            this.inputRef.current.focus()
+        } else {
+            this.setState({focusSeries: true})
+        }
     }
 
     handleChange(value) {
-        const {series} = this.state
         if (10 / value <= 1) {
-            this.props.finished(series, value, true)
+            this.props.finished(this.props.item.series, value, true)
         } else {
-            this.props.finished(series, value)
+            this.props.finished(this.props.item.series, value)
         }
     }
 
     handleKeyDown(event) {
-        const {series} = this.state
         const key = event.key.toLowerCase()
         if (key === 'enter' || key === 'tab') {
-            this.props.finished(series, this.props.item.reps, true)
+            this.props.finished(this.props.item.series, this.props.item.reps, true)
         }
     };
 
@@ -72,28 +76,30 @@ export class ExerciseListItemFree extends Component {
                                 }}/>
                         </Grid.Column>
                         <Grid.Column width={2} stretched className={'no-padding'}>
-                            <Input fluid
-                                   disabled={this.props.disableSeries}
-                                   ref={this.inputRefSeries} placeholder='1' type={'number'}
-                                   min={1}
-                                   max={99}
-                                   value={this.props.item.series}
-                                   onKeyDown={(event) => this.handleKeyDown(event)}
-                                   onChange={(e, {value}) => this.handleChangeSerie(value)}/>
+                            <TextFieldCentered
+                                disabled={this.props.disableSeries}
+                                className={'size-two-digits padding-top-1'}
+                                inputRef={this.inputRefSeries}
+                                placeholder='1'
+                                value={this.props.item.series}
+                                onKeyDown={(event) => this.handleKeyDown(event)}
+                                onChange={(e) => this.handleChangeSerie(e.target.value)}
+                                variant="standard" />
                         </Grid.Column>
                         <Grid.Column width={1} stretched className={'no-padding'}>
-                            <div className={'center-content-vh'}>
+                            <div className={'center-content-vh padding-top-1'}>
                                 <span>X</span>
                             </div>
                         </Grid.Column>
                         <Grid.Column width={3} stretched className={'no-padding'}>
-                            <Input fluid
-                                   ref={this.inputRef} placeholder='8' type={'number'}
-                                   min={1}
-                                   max={99}
-                                   value={this.props.item.reps}
-                                   onKeyDown={(event) => this.handleKeyDown(event)}
-                                   onChange={(e, {value}) => this.handleChange(value)}/>
+                            <TextFieldCentered
+                                className={'size-two-digits padding-top-1'}
+                                inputRef={this.inputRef}
+                                placeholder='8'
+                                value={this.props.item.reps}
+                                onKeyDown={(event) => this.handleKeyDown(event)}
+                                onChange={(e) => this.handleChange(e.target.value)}
+                                variant="standard" />
                         </Grid.Column>
                         <Grid.Column width={3} stretched style={{paddingLeft: 0}}>
                             <SegRepsButtonGroup default={'reps'}

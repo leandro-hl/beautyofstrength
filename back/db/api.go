@@ -72,6 +72,7 @@ const (
 	AcceptInstructorInvite             AppEvent = "AcceptInstructorInvite"
 	SharePlanification                 AppEvent = "SharePlanification"
 	StartJourney                       AppEvent = "StartJourney"
+	SaveProfileConfiguration           AppEvent = "SaveProfileConfiguration"
 )
 
 func getTxPreparedStmt(db *DB, tx *sqlx.Tx, query string) (*sqlx.Stmt, error) {
@@ -139,6 +140,44 @@ func GetPlanificationIdByName(db *DB, tx *sqlx.Tx, userId int64, name string) *i
 		return nil
 	}
 	return &des
+}
+
+func GetProfileConfiguration(db *DB, tx *sqlx.Tx, userId int64) *ProfileConfiguration {
+	query := `select * from profileconfiguration where user_account_id=$1`
+	stmt, err := getTxPreparedStmt(db, tx, query)
+	util.Check(err)
+	var des ProfileConfiguration
+	err = stmt.Get(&des, userId)
+
+	if err.Error() == "sql: no rows in result set" {
+		return nil
+	} else {
+		util.Check(err)
+	}
+	return &des
+}
+
+func InsertProfileConfiguration(db *DB, tx *sqlx.Tx, profileConfiguration *ProfileConfiguration) *int64 {
+	id := Insert(
+		tx,
+		profileConfiguration)
+	return id
+}
+
+func UpdateProfileConfiguration(db *DB, tx *sqlx.Tx, p *ProfileConfiguration) {
+	query := `update profileconfiguration 
+		set force_min=$1,
+		    force_max=$2,
+            hypertrophy_min=$3,
+			hypertrophy_max=$4,
+			resistence_min=$5,
+			resistence_max=$6,
+			lastupdateddate=now()
+		where user_account_id=$7`
+	stmt, err := getTxPreparedStmt(db, tx, query)
+	util.Check(err)
+
+	stmt.Exec(p.ForceMin, p.ForceMax, p.HypertrophyMin, p.HypertrophyMax, p.ResistenceMin, p.ResistenceMax, p.UserAccountId)
 }
 
 func ListMyPlanifications(db *DB, tx *sqlx.Tx, userId int64) []ListPlanificationsQuery {
@@ -274,7 +313,13 @@ func GetRoutineDetails(db *DB, tx *sqlx.Tx, routineId int64, userId int64) []Get
 			e.id exerciseid,
 			e.name exercisename,
 			ie.video_code videocode,
-			ie.link
+			ie.link,
+			ue.force_last_effective_reps,
+			ue.force_last_weight,
+			ue.hypertrophy_last_effective_reps,
+			ue.hypertrophy_last_weight,
+			ue.resistence_last_effective_reps,
+			ue.resistence_last_weight
 			from routine r
 		inner join planification p on p.id = r.planification_id
 		inner join userplanification u on r.planification_id = u.planification_id
@@ -282,6 +327,7 @@ func GetRoutineDetails(db *DB, tx *sqlx.Tx, routineId int64, userId int64) []Get
 		left join blockgroup b on r.id = b.routine_id and bg.id=b.blockgroupgrouper_id and b.active=true
 		left join exerciseblockgroup eb on b.id = eb.blockgroup_id and eb.active=true
 		left join exercise e on e.id = eb.exercise_id
+		left join userexercise ue on e.id = ue.exercise_id and ue.useraccount_id = ue.useraccount_id
 		left join instructorexercise ie on e.id = ie.exercise_id and r.creator_id = ie.useraccount_id
 		where 
 		    p.active=true 
@@ -296,6 +342,38 @@ func GetRoutineDetails(db *DB, tx *sqlx.Tx, routineId int64, userId int64) []Get
 	util.Check(err)
 
 	return dest
+}
+
+func GetUserExerciseByUserId(db *DB, tx *sqlx.Tx, userId int64) []UserExercise {
+	query := `select * from userexercise where useraccount_id=$1`
+	stmt, err := getTxPreparedStmt(db, tx, query)
+	util.Check(err)
+	dest := make([]UserExercise, 0)
+	err = stmt.Select(&dest, userId)
+	util.Check(err)
+
+	return dest
+}
+
+func InsertUserExercise(db *DB, tx *sqlx.Tx, userExercise *UserExercise) {
+	Insert(tx, userExercise)
+}
+
+func UpdateUserExercise(db *DB, tx *sqlx.Tx, ue *UserExercise) {
+	query := `update userexercise 
+		set 
+		    force_last_effective_reps=$1,
+			force_last_weight=$2,
+			hypertrophy_last_effective_reps=$3,
+			hypertrophy_last_weight=$4,
+			resistence_last_effective_reps=$5,
+			resistence_last_weight=$6,
+			lastupdateddate=now()
+		where exercise_id=$7 and useraccount_id=$8`
+	stmt, err := getTxPreparedStmt(db, tx, query)
+	util.Check(err)
+	stmt.Exec(ue.ForceLastEffectiveReps, ue.ForceLastWeight, ue.HypertrophyLastEffectiveReps, ue.HypertrophyLastWeight,
+		ue.ResistanceLastEffectiveReps, ue.ResistanceLastWeight, ue.ExerciseId, ue.UserAccountId)
 }
 
 func GetRoutineDetailsTemplate(db *DB, tx *sqlx.Tx, routineId int64, userId int64) []GetRoutineDetailsQuery {
@@ -1049,8 +1127,12 @@ func GetAccountPlanIdentifierByUserId(db *DB, tx *sqlx.Tx, userId int64) *Accoun
 
 func GetUserAccountDetails(db *DB, tx *sqlx.Tx, userId int64) *GetUserAccountDetailsQuery {
 	query := `
-	   select u.name, u.email, u.pictureurl, a.name as accounttype, u.trainer, u.code from useraccount u
+	   select 
+	       u.name, u.email, u.pictureurl, a.name as accounttype, u.trainer, u.code, 
+	       pc.*
+	   from useraccount u
 	   inner join accountplan a on u.accountplan_id = a.id
+	   left join profileconfiguration pc on u.id = pc.user_account_id
 	   where u.id=$1`
 	stmt, err := getTxPreparedStmt(db, tx, query)
 	util.Check(err)
@@ -1461,6 +1543,22 @@ func GenerateUserExerciseRm(db *DB, tx *sqlx.Tx, userId int64) {
 		_, err = stmt.Exec(userId, d.Name, d.Grouper, d.Order)
 		util.Check(err)
 	}
+}
+
+func upsertUserExerciseRelationship(db *DB, tx *sqlx.Tx, userId, exerciseId int64, reps, effectiveReps, kg int) {
+	query := `
+		INSERT INTO userexercise(useraccount_id, exercise_id, last_reps, last_effective_reps, last_weight, lastupdateddate)
+		VALUES ($1, $2, $3, $4, $5, now())
+		ON CONFLICT (useraccount_id, exercise_id) 
+		DO UPDATE SET 
+			last_reps = $3, 
+			last_effective_reps = $4, 
+			last_weight = $5, 
+			lastupdateddate = now()
+	`
+	stmt, err := getTxPreparedStmt(db, tx, query)
+	util.Check(err)
+	stmt.Exec(userId, exerciseId, reps, effectiveReps, kg)
 }
 
 func UpdateUserRmSummary(db *DB, tx *sqlx.Tx, rmId int64, rm int) {

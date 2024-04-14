@@ -55,7 +55,7 @@ class LayoutMobile extends Component {
         return (
             <>
                 <TopMenuBar/>
-                <div className={ loadCoverImage ? 'body-app' : ''}
+                <div className={ loadCoverImage ? 'body-app' : 'scrolling-no-scrollbar'}
                      style={containerStyle}>
                     {
                         loadCoverImage &&
@@ -64,7 +64,7 @@ class LayoutMobile extends Component {
                         </div>
                     }
                     <Segment
-                        className={loadCoverImage ? '' : 'body-app'}
+                        className={loadCoverImage ? '' : 'body-app scrolling-no-scrollbar'}
                          basic style={segmentStyle}>
                         {children}
                         <div style={{marginBottom: 100}}></div>

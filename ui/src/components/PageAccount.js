@@ -22,6 +22,7 @@ import {Chip} from "./Chip";
 import {PopUpConfirmation} from "./PopUpConfirmation";
 import {PopUpDisabledAction} from "./PopUpDisabledAction";
 import {ModalMyEquipmentCreate} from "./ModalMyEquipmentCreate";
+import {AccountConfigs} from "./mui/AccountConfigs";
 
 const MenuHeaderRender = () => {
     return <>Perfil</>
@@ -217,10 +218,6 @@ class PageAccount extends Component {
                                         <Table.Cell>{userAccount.email}</Table.Cell>
                                     </Table.Row>
                                     <Table.Row>
-                                        <Table.Cell>Tema oscuro</Table.Cell>
-                                        <Table.Cell><Checkbox toggle checked={darkTheme} onChange={() => this.changeTheme()} /></Table.Cell>
-                                    </Table.Row>
-                                    <Table.Row>
                                         <Table.Cell>Plan</Table.Cell>
                                         <Table.Cell>{userAccount.accounttype}</Table.Cell>
                                     </Table.Row>
@@ -233,6 +230,9 @@ class PageAccount extends Component {
                                 </Table.Body>
                             </Table>
                         </Segment>
+                    </Grid.Row>
+                    <Grid.Row>
+                        <AccountConfigs/>
                     </Grid.Row>
                     <Grid.Row>
                         <Divider hidden/>

@@ -25,6 +25,31 @@ const (
 	TemplateRoutineCopiedToPlanification               = "trc"
 )
 
+type ProfileConfiguration struct {
+	Id              *int64    `json:"id"`
+	ForceMin        *int      `json:"force_min"`
+	ForceMax        *int      `json:"force_max"`
+	HypertrophyMin  *int      `json:"hypertrophy_min"`
+	HypertrophyMax  *int      `json:"hypertrophy_max"`
+	ResistenceMin   *int      `json:"resistence_min"`
+	ResistenceMax   *int      `json:"resistence_max"`
+	UserAccountId   *int64    `json:"user_account_id"`
+	LastUpdatedDate time.Time `json:"lastupdateddate"`
+}
+
+type UserExercise struct {
+	Id                           *int64    `json:"id"`
+	UserAccountId                *int64    `json:"useraccount_id"`
+	ExerciseId                   *int64    `json:"exercise_id"`
+	ForceLastEffectiveReps       *int      `json:"force_last_effective_reps"`
+	ForceLastWeight              *int      `json:"force_last_weight"`
+	HypertrophyLastEffectiveReps *int      `json:"hypertrophy_last_effective_reps"`
+	HypertrophyLastWeight        *int      `json:"hypertrophy_last_weight"`
+	ResistanceLastEffectiveReps  *int      `json:"resistence_last_effective_reps"`
+	ResistanceLastWeight         *int      `json:"resistence_last_weight"`
+	LastUpdatedDate              time.Time `json:"lastupdateddate"`
+}
+
 type EventUser struct {
 	Id              *int64         `json:"id"`
 	Type            *EventUserType `json:"type"`

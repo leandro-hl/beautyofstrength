@@ -4,7 +4,7 @@ import {
     Button,
     Divider, Grid,
     Header,
-    Icon,
+    Icon, Image,
     Input, Label,
     List,
     Loader, Message, Modal,
@@ -36,10 +36,13 @@ import {ExerciseSearch} from "./ExerciseSearch";
 import {SegRepsButtonGroup} from "./SegRepsButtonGroup";
 import {ModalRoutineToPlanificationCopy} from "./ModalRoutineToPlanificationCopy";
 import {ModalExerciseExecuteTimer} from "./ModalExerciseExecuteTimer";
-import {ModalExerciseExecuteReps} from "./ModalExerciseExecuteReps";
 import {ModalBorgScale} from "./ModalBorgScale";
 import {ImageUpload} from "./ImageUpload";
 import {ImageCropper} from "./ImageCropper";
+import {ReactComponent as ExerciseIcon} from '../icons/exercise.svg'
+import {ReactComponent as RefreshIcon} from '../icons/refresh.svg'
+import {ReactComponent as BlockTypeIcon} from '../icons/manufacturing.svg'
+import {TooltipInfoButton} from "./mui/TooltipInfoButton";
 
 const MenuHeaderRender = ({
                               alreadyMarkedByMe,
@@ -618,6 +621,10 @@ class PageRoutineDetail extends Component{
         this.setState({activeIndexes: indexes})
     }
 
+    generateAllExerciseGrids() {
+
+    }
+
     enableEditionRoutine() {
         this.activateAllIndexes()
         this.setState({editionMode: true})
@@ -711,12 +718,6 @@ class PageRoutineDetail extends Component{
     startExercise(e,j,i,k) {
         if (e.secs) {
             this.setState({executeWithTimer: {...e, j,i,k}})
-        } else {
-            let previousKg = 'Sin peso de referencia'
-            if (e.rounds) {
-                previousKg = e.rounds[e.rounds.length-1].kgs
-            }
-            this.setState({executeWithReps: {...e, previousKg, j,i,k}})
         }
     }
 
@@ -931,10 +932,16 @@ class PageRoutineDetail extends Component{
                     index={j+'-'+i}
                     onClick={(!editionMode && !routineStarted)? this.handleActiveBlocks : () => {}}>
 
-                    <span className={'title'}>
+                    <b className={'title'}>
                         {name[0]}
-                    </span>
-                    {name[1] ? <Chip feel content={capitalize(name[1])}/> : null}
+                    </b>
+                    {name[1] && <Chip feel>
+                        <BlockTypeIcon/> {capitalize(name[1])}
+                    </Chip>}
+                    {b.laps && <Chip feel>
+                        {b.laps} Rondas
+                        <TooltipInfoButton title={"Tambien llamadas Sets"}/>
+                    </Chip>}
 
                     {routineStarted &&
                         <Icon className={'table-play'} name={'play'}
@@ -960,13 +967,13 @@ class PageRoutineDetail extends Component{
                     }
                 </Accordion.Title>
                 <Accordion.Content active={activeIndexes.indexOf(j+'-'+i) !== -1}>
-                    <Segment basic className={'no-top-padding no-bottom-padding no-margin'}>
+                    <Segment basic className={'no-bottom-padding no-margin'}>
                         {
                             editionMode &&
                             <Table basic={'very'} compact unstackable>
                                 <Table.Row>
                                     <Table.Cell>
-                                        Rondas
+                                        Rondas<TooltipInfoButton title={"Tambien llamadas Sets"}/>
                                     </Table.Cell>
                                     <Table.Cell>
                                         <Input
@@ -1012,19 +1019,14 @@ class PageRoutineDetail extends Component{
                             !editionMode &&
                             <>
                                 {b.duration && <div><b>{b.duration} minutos</b> de duracion</div>}
-                                {b.laps && <div className={'margin-bottom-1'}><b>{b.laps}</b> rondas</div>}
                                 {
                                     (b.laprestinterval || b.exerestinterval) &&
                                     <>
                                         Descanso
                                         {b.exerestinterval &&
-                                            <div>
-                                                <b>{b.exerestinterval} segs</b> por ejercicio
-                                            </div>}
+                                            <Chip style={{fontSize: 14, color: "#252525"}} feel>{b.exerestinterval}s por <ExerciseIcon/></Chip>}
                                         {b.laprestinterval &&
-                                            <div>
-                                                <b>{b.laprestinterval} segs</b> por ronda
-                                            </div>}
+                                            <Chip style={{fontSize: 14, color: "#252525"}} feel>{b.laprestinterval}s por <RefreshIcon/></Chip>}
                                     </>
                                 }
                             </>
@@ -1033,7 +1035,7 @@ class PageRoutineDetail extends Component{
                     <Table basic unstackable style={{border: 'unset'}}>
                         <Table.Header>
                             <Table.Row>
-                                <Table.HeaderCell>Ejercicio</Table.HeaderCell>
+                                <Table.HeaderCell colSpan={editionMode? null : 3}>Ejercicio</Table.HeaderCell>
                                 {b.exercises.find(e => e.reps || e.secs) && <Table.HeaderCell>Trabajo</Table.HeaderCell>}
                                 {(editionMode || routineStarted) && <Table.HeaderCell/>}
                             </Table.Row>
@@ -1064,6 +1066,78 @@ class PageRoutineDetail extends Component{
         )
     }
 
+    storeSeriesData(j, i, k,z, name, value, reps) {
+        const {blockGroupers} = this.state
+        blockGroupers[j].blocks[i].exercises[k].effectiveSeries[z]={
+            ...blockGroupers[j].blocks[i].exercises[k].effectiveSeries[z],
+            [name]: value
+        }
+        if (reps) {
+            blockGroupers[j].blocks[i].exercises[k].effectiveSeries[z].reps = reps
+        }
+        this.setState({blockGroupers: [...blockGroupers]})
+    }
+
+    renderExerciseTableSeries(j, i, k, e, routineStarted) {
+        // let previousKg = 'Sin peso de referencia'
+        // if (e.rounds) {
+        //     previousKg = e.rounds[e.rounds.length-1].kgs
+        // }
+        // this.setState({executeWithReps: {...e, previousKg, j,i,k}})
+        //
+        // /*
+        // const ex = blockGroupers[executeWithReps.j].blocks[executeWithReps.i].exercises[executeWithReps.k]
+        //                 if (ex.rounds) {
+        //                     ex.rounds.push({effectiveReps:parseInt(effectiveReps,10),kgs:parseInt(kgs,10)})
+        //                 } else {
+        //                     ex.rounds=[{effectiveReps:parseInt(effectiveReps,10),kgs:parseInt(kgs,10)}]
+        //                 }
+        //                 this.setState({blockGroupers,executeWithReps: null})
+        //  */
+
+        const rows = []
+        for (let z = 0; z < e.series; z++) {
+            rows.push(<>
+                <Table.Row key={z}>
+                    <Table.Cell>
+                        <Input
+                            disabled={!routineStarted}
+                            className={'size-two-digits align-center'}
+                            placeholder={e.reps}
+                            value={e.effectiveSeries[z]?.reps}
+                            name={'reps'}
+                            onChange={(e, {value,name}) => this.storeSeriesData(j,i,k,z,name,value)}
+                        />
+                    </Table.Cell>
+                    <Table.Cell>
+                        <Input
+                            disabled={!routineStarted}
+                            className={'size-two-digits align-center'}
+                            placeholder={e[e.currentWorkRange+'LastWeight'] ?? 's/n'}
+                            value={e.effectiveSeries[z]?.kgs}
+                            name={'kgs'}
+                            onChange={(_, {value,name}) => this.storeSeriesData(j,i,k,z,name,value, e.reps)}
+                        />
+                    </Table.Cell>
+                </Table.Row>
+            </>)
+        }
+        return (
+            <Table unstackable basic='very' textAlign={'center'} className={'margin-top-1'}>
+                <Table.Header>
+                    <Table.Row>
+                        <Table.HeaderCell className={'no-padding'}>efectivas</Table.HeaderCell>
+                        <Table.HeaderCell className={'no-padding'}>kg</Table.HeaderCell>
+                    </Table.Row>
+                </Table.Header>
+                <Table.Body>
+                    {/*TODO: migrate from rounds to Series (OR use both?)*/}
+                    {rows}
+                </Table.Body>
+            </Table>
+        )
+    }
+
     renderExercise(bg, b, e, j, i, k,
                    editionMode, addExerciseInputIndex, activeDraftExercise,
                    confirmWorkExerciseDeletionIndex, lastExercise, routineStarted) {
@@ -1072,31 +1146,22 @@ class PageRoutineDetail extends Component{
             <>
                 <Table.Row key={k} className={'table-row-item'}>
                     <Table.Cell style={{position: 'relative'}}
-                                colSpan={editionMode ? '3' : null}
+                                colSpan={editionMode ? 4 : 3}
                                 className={k === lastExercise ? 'last-child-no-bottom' : ''}>
                         <Grid>
                             <Grid.Column width={editionMode ? !hasValue ? 13 : 8 : 16}>
                                 {e.isDraft && <div className={'label-new-item'}/>}
                                 {e.link ? <Link to={'#'} onClick={() => this.openExerciseVideo(e.link)}>{e.name}</Link> : e.name}
+                                <TooltipInfoButton title={
+                                    <div>
+                                        <p><b>Rango de fuerza: {e.forceLastWeight ?? 'sin datos'}</b></p>
+                                        <p><b>Rango de hipertrofia: {e.hypertrophyLastWeight ?? 'sin datos'}</b></p>
+                                        <p><b>Rango de resistencia: {e.resistenceLastWeight ?? 'sin datos'}</b></p>
+                                    </div>
+                                }/>
                                 {
-                                    e.rounds &&
-                                    <Table unstackable basic='very' textAlign={'center'} className={'margin-top-1'}>
-                                        <Table.Header>
-                                            <Table.Row>
-                                                <Table.HeaderCell className={'no-padding'}>efectivas</Table.HeaderCell>
-                                                <Table.HeaderCell className={'no-padding'}>kg</Table.HeaderCell>
-                                            </Table.Row>
-                                        </Table.Header>
-                                        <Table.Body>
-                                            {/*TODO: migrate from rounds to Series (OR use both?)*/}
-                                            {e.rounds.map((r,z) => (
-                                                <Table.Row key={z}>
-                                                    <Table.Cell>{r.effectiveReps}</Table.Cell>
-                                                    <Table.Cell>{r.kgs}</Table.Cell>
-                                                </Table.Row>
-                                            ))}
-                                        </Table.Body>
-                                    </Table>
+                                    e.series && e.reps && !editionMode &&
+                                    this.renderExerciseTableSeries(j, i, k, e, routineStarted)
                                 }
                             </Grid.Column>
                             {
@@ -1143,7 +1208,7 @@ class PageRoutineDetail extends Component{
                         </Table.Cell>
                     }
                     {
-                        routineStarted &&
+                        routineStarted && e.secs &&
                         <Table.Cell className={k === lastExercise ? 'last-child-no-bottom' : ''}>
                             <Icon className={'table-play'} name={'play'} onClick={() => this.startExercise(e,j,i,k)}/>
                         </Table.Cell>
@@ -1166,20 +1231,7 @@ class PageRoutineDetail extends Component{
     }
 
     cancelRoutineExecution() {
-        const {blockGroupers} = this.state
-        for (let i = 0; i < blockGroupers.length; i++) {
-            const bg = blockGroupers[i]
-            for (let j = 0; j < bg.blocks.length; j++) {
-                const b = bg.blocks[j]
-                for (let k = 0; k < b.exercises.length; k++) {
-                    const e = b.exercises[k]
-                    if(e.rounds){
-                        e.rounds=null
-                    }
-                }
-            }
-        }
-        this.setState({blockGroupers, routineStarted: false})
+        this.setState({routineStarted: false})
         this.setSecondaryActions()
         showSuccess(this.context, '', 'Ejecucion cancelada!')
     }
@@ -1198,6 +1250,7 @@ class PageRoutineDetail extends Component{
 
     startRoutine() {
         this.activateAllIndexes()
+        this.generateAllExerciseGrids()
         this.context.dispatch(setData({secondaryActions: []}))
         this.setState({routineStarted: true})
     }
@@ -1227,8 +1280,18 @@ class PageRoutineDetail extends Component{
                                 exercises.push({
                                     id: e.exId,
                                     reps: e.reps,
-                                    effectiveReps: r.effectiveReps,
-                                    kg: r.kgs
+                                    effectiveReps: parseInt(r.reps,10),
+                                    kg: parseInt(r.kgs,10)
+                                })
+                            }
+                        } else if(e.series) {
+                            for (let l = 0; l < e.effectiveSeries.length; l++) {
+                                const r = e.effectiveSeries[l]
+                                exercises.push({
+                                    id: e.exId,
+                                    reps: e.reps,
+                                    effectiveReps: parseInt(r.reps,10),
+                                    kg: parseInt(r.kgs,10)
                                 })
                             }
                         } else if(e.reps && b.laps) {
@@ -1295,7 +1358,6 @@ class PageRoutineDetail extends Component{
             routineStarted,
             executeWithTimer,
             nextQueuedIntervals,
-            executeWithReps,
             showBorgScale,
             showUploadRoutineImage,
             showCropper
@@ -1401,21 +1463,6 @@ class PageRoutineDetail extends Component{
                             <Button secondary onClick={() => this.setState({showModalCopyLink: false, routineLink:null})}>Cerrar</Button>
                         </Modal.Actions>
                     </Modal>
-                }
-                {
-                    executeWithReps &&
-                    <ModalExerciseExecuteReps
-                        {...executeWithReps}
-                        onCancel={()=> this.setState({executeWithReps: null})}
-                        onFinished={({effectiveReps, kgs}) => {
-                            const ex = blockGroupers[executeWithReps.j].blocks[executeWithReps.i].exercises[executeWithReps.k]
-                            if (ex.rounds) {
-                                ex.rounds.push({effectiveReps:parseInt(effectiveReps,10),kgs:parseInt(kgs,10)})
-                            } else {
-                                ex.rounds=[{effectiveReps:parseInt(effectiveReps,10),kgs:parseInt(kgs,10)}]
-                            }
-                            this.setState({blockGroupers,executeWithReps: null})
-                        }}/>
                 }
                 {
                     (executeWithTimer || nextQueuedIntervals) &&

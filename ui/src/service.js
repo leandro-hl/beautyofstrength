@@ -219,6 +219,14 @@ export function actionateRoutine(payload) {
     return axios.post("actionateRoutine", payload)
 }
 
+export function saveProfileConfiguration(payload) {
+    return axios.post("saveProfileConfiguration", payload)
+}
+
+export function getProfileConfiguration() {
+    return axios.post("getProfileConfiguration")
+}
+
 export function createPlanification(payload) {
     return axios.post("createPlanification", payload)
 }

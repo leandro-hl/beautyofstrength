@@ -4,6 +4,15 @@ import (
 	"github.com/leandro-hl/beautyofstrength/back/db"
 )
 
+type SaveProfileConfigurationRequest struct {
+	ForceMin       *int `json:"forceMin"`
+	ForceMax       *int `json:"forceMax"`
+	HypertrophyMin *int `json:"hypertrophyMin"`
+	HypertrophyMax *int `json:"hypertrophyMax"`
+	ResistenceMin  *int `json:"resistenceMin"`
+	ResistenceMax  *int `json:"resistenceMax"`
+}
+
 type SignUpRequest struct {
 	Username *string `json:"username"`
 	Password *string `json:"password"`
@@ -118,14 +127,22 @@ type GetRoutineDetailsBlock struct {
 }
 
 type GetRoutineDetailsBlockExercise struct {
-	Id        *int64  `json:"id"`
-	ExId      *int64  `json:"exId"`
-	Reps      *int    `json:"reps"`
-	Secs      *int    `json:"secs"`
-	Series    *int    `json:"series"`
-	Name      *string `json:"name"`
-	Link      *string `json:"link"`
-	VideoCode *string `json:"videoCode"`
+	Id                           *int64        `json:"id"`
+	ExId                         *int64        `json:"exId"`
+	Reps                         *int          `json:"reps"`
+	Secs                         *int          `json:"secs"`
+	Series                       *int          `json:"series"`
+	Name                         *string       `json:"name"`
+	Link                         *string       `json:"link"`
+	VideoCode                    *string       `json:"videoCode"`
+	ForceLastEffectiveReps       *int          `json:"forceLastEffectiveReps"`
+	ForceLastWeight              *int          `json:"forceLastWeight"`
+	HypertrophyLastEffectiveReps *int          `json:"hypertrophyLastEffectiveReps"`
+	HypertrophyLastWeight        *int          `json:"hypertrophyLastWeight"`
+	ResistenceLastEffectiveReps  *int          `json:"resistenceLastEffectiveReps"`
+	ResistenceLastWeight         *int          `json:"resistenceLastWeight"`
+	CurrentWorkRange             *string       `json:"currentWorkRange"`
+	EffectiveSeries              []interface{} `json:"effectiveSeries"`
 }
 
 type ShareRoutineRequest struct {
