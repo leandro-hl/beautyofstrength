@@ -1299,7 +1299,7 @@ func CalculateUserOwnsRoutine(db *DB, tx *sqlx.Tx, userId, planificationId, rout
 	query := `
 		select count(1) from planification p 
 		inner join routine r on p.id = r.planification_id 
-		where p.active=true and r.active=true and p.creator_id=$1 and r.planification_id=$2 and r.id=$3 and r.creator_id=$1`
+		where p.active=true and r.active=true and p.creator_id=$1 and r.planification_id=$2 and r.id=$3`
 	stmt, err := getTxPreparedStmt(db, tx, query)
 	util.Check(err)
 
