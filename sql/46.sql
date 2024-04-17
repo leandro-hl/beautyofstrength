@@ -13,7 +13,7 @@ create table if not exists userexercise
     PRIMARY KEY (useraccount_id, exercise_id)
 );
 
-GRANT SELECT ON TABLE userexercise TO db;
+GRANT INSERT, UPDATE, SELECT ON TABLE userexercise TO db;
 
 create table if not exists profileconfiguration
 (
@@ -28,7 +28,7 @@ create table if not exists profileconfiguration
     lastupdateddate timestamp default now() not null
 );
 
-GRANT SELECT ON TABLE profileconfiguration TO db;
+GRANT INSERT, UPDATE, SELECT ON TABLE profileconfiguration TO db;
 
 alter table template.exerciseblockgroup
     add column series integer;
