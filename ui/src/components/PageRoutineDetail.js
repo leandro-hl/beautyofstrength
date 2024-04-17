@@ -1021,7 +1021,7 @@ class PageRoutineDetail extends Component{
                             <>
                                 {b.duration && <div><b>{b.duration} minutos</b> de duracion</div>}
                                 {
-                                    (b.laprestinterval || b.exerestinterval) &&
+                                    (!!b.laprestinterval || !!b.exerestinterval) &&
                                     <>
                                         Descanso
                                         {b.exerestinterval &&
