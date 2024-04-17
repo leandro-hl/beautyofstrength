@@ -33,7 +33,7 @@ import {PopUpMessage} from "./components/PopUpMessage";
 import PageCreateSuite from "./components/PageCreateSuite";
 import PageOnboarding from "./components/PageOnboarding";
 import PagePublicHomeV2 from "./components/PagePublicHomeV2";
-import PageBundlesInstructor from "./components/mui/PageBundlesInstructor";
+import PageBundles from "./components/mui/PageBundles";
 import {createTheme, CssBaseline, ThemeProvider} from "@mui/material";
 import {yellow} from "@mui/material/colors";
 import PageAccountV2 from "./components/mui/PageAccountV2";
@@ -54,7 +54,7 @@ class App extends Component {
                                     <Route exact path={"/signin"} component={SignIn}/>
                                     <Route exact path={"/terms"} component={PageTermsAndConditions}/>
                                     <Route exact path={"/privacy-policies"} component={PagePrivacyPolicies}/>
-                                    <Route exact path={"/bundles"} component={PageBundlesInstructor}/>
+                                    <Route exact path={"/bundles"} component={PageBundles}/>
                                     {/*<Route exact path={"/signup"} component={SignUp}/>*/}
                                     <PrivateRoute exact path={"/onboarding"} component={PageOnboarding}/>
                                     <PrivateRoute exact path={"/suite"} component={PageCreateSuite}/>

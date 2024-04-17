@@ -1433,17 +1433,18 @@ class PageRoutineDetail extends Component{
                             {
                                 (!editionMode && !routineStarted && actionable) ?
                                     <Divider horizontal>
-                                        !editRoutine ?
-                                        <PopUpDisabledAction
-                                            trigger={<Icon name={'plus'} className={'disabled-btn'}/>}/>
-                                        :
-                                        canEdit ?
-                                        <Icon name={'plus'} onClick={() => this.addWorkToGrouper(bg, j)}/> :
-                                        <Icon name={'plus'} onClick={() => this.addWorkToGrouper(bg, j)}/>
-                                        {/*// <PopUpDisabledAction*/}
-                                        {/*//     disableHeader={'No es posible agregar'}*/}
-                                        {/*//     disableDescription={'Tu o un atleta ya marcaron esta rutina como completada u omitida'}*/}
-                                        {/*//     trigger={<Icon name={'plus'} className={'disabled-btn'}/>}/>*/}
+                                        {
+                                            !editRoutine ?
+                                            <PopUpDisabledAction
+                                                trigger={<Icon name={'plus'} className={'disabled-btn'}/>}/>
+                                            :
+                                                canEdit ?
+                                                    <Icon name={'plus'} onClick={() => this.addWorkToGrouper(bg, j)}/> :
+                                                    <Icon name={'plus'} onClick={() => this.addWorkToGrouper(bg, j)}/>}
+                                            {/*// <PopUpDisabledAction*/}
+                                            {/*//     disableHeader={'No es posible agregar'}*/}
+                                            {/*//     disableDescription={'Tu o un atleta ya marcaron esta rutina como completada u omitida'}*/}
+                                            {/*//     trigger={<Icon name={'plus'} className={'disabled-btn'}/>}/>*/}
                                     </Divider>
                                     : null
                             }
