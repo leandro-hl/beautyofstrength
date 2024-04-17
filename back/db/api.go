@@ -149,7 +149,7 @@ func GetProfileConfiguration(db *DB, tx *sqlx.Tx, userId int64) *ProfileConfigur
 	var des ProfileConfiguration
 	err = stmt.Get(&des, userId)
 
-	if err.Error() == "sql: no rows in result set" {
+	if err != nil && err.Error() == "sql: no rows in result set" {
 		return nil
 	} else {
 		util.Check(err)

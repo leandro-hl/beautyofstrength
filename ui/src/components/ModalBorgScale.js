@@ -6,17 +6,17 @@ export class ModalBorgScale extends Component {
         super(props);
 
         this.state = {scale:[
-                {color: '#00ffb5', name: 'Reposo'},
-                {color: '#00ffb5', name: 'Muy, Muy Ligero'},
-                {color: '#00ffb5', name: 'Muy Ligero'},
-                {color: '#36ff00', name: 'Ligero'},
-                {color: '#36ff00', name: 'Algo pesado'},
-                {color: '#fff000', name: 'Pesado'},
-                {color: '#fff000', name: 'Mas Pesado'},
-                {color: '#ff7000', name: 'Muy Pesado'},
-                {color: '#ff7000', name: 'Muy, Muy Pesado'},
-                {color: '#ff1800', name: 'Maximo'},
-                {color: '#ff1800', name: 'Extremo'},
+                {raisedColor: 'rgb(1,138,100)' ,color: '#00ffb5', name: 'Reposo'},
+                {raisedColor: '#007a56' ,color: '#00ffb5', name: 'Muy, Muy Ligero'},
+                {raisedColor: '#007050' ,color: '#00ffb5', name: 'Muy Ligero'},
+                {raisedColor: '#1c8100' ,color: '#36ff00', name: 'Ligero'},
+                {raisedColor: '#196e00' ,color: '#36ff00', name: 'Algo pesado'},
+                {raisedColor: '#726b00' ,color: '#fff000', name: 'Pesado'},
+                {raisedColor: '#817b00' ,color: '#fff000', name: 'Mas Pesado'},
+                {raisedColor: '#773400' ,color: '#ff7000', name: 'Muy Pesado'},
+                {raisedColor: '#863c00' ,color: '#ff7000', name: 'Muy, Muy Pesado'},
+                {raisedColor: '#750b00' ,color: '#ff1800', name: 'Maximo'},
+                {raisedColor: '#960e00' ,color: '#ff1800', name: 'Extremo'},
             ]}
     }
 
@@ -47,7 +47,7 @@ export class ModalBorgScale extends Component {
                     {this.state.scale.map((s,i) => (
                         <Segment
                             raised={this.state.selected===i}
-                            style={{backgroundColor: s.color}}
+                            style={{backgroundColor: this.state.selected===i ? s.raisedColor : s.color, color: '#000000'}}
                             onClick={() => this.setState({selected: i, showError:false})}>
                             {s.name}
                         </Segment>

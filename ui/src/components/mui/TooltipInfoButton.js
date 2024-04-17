@@ -10,7 +10,12 @@ export class TooltipInfoButton extends Component {
         const {showTooltip} = this.state;
         return (
             <>
-                <Tooltip placement="top" open={showTooltip} onClose={() => this.setState({showTooltip: false})} arrow title={this.props.title}>
+                <Tooltip
+                    leaveTouchDelay={5000}
+                    placement="top" open={showTooltip}
+                    onClose={() => this.setState({showTooltip: false})} arrow
+                    title={this.props.title}
+                    {...this.props}>
                     <IconButton aria-label="info" onClick={() => this.setState({showTooltip: true})}>
                         <InfoIcon />
                     </IconButton>

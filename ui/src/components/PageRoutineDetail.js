@@ -43,6 +43,7 @@ import {ReactComponent as ExerciseIcon} from '../icons/exercise.svg'
 import {ReactComponent as RefreshIcon} from '../icons/refresh.svg'
 import {ReactComponent as BlockTypeIcon} from '../icons/manufacturing.svg'
 import {TooltipInfoButton} from "./mui/TooltipInfoButton";
+import {Tooltip} from "@mui/material";
 
 const MenuHeaderRender = ({
                               alreadyMarkedByMe,
@@ -120,7 +121,7 @@ const MenuHeaderRender = ({
                 <Icon name={'copy outline'} className={'header-icon'}  onClick={() => openCopyToPlanificationModal()}/>
             }
             {
-                canExecuteRoutine && !alreadyMarkedByMe && !isTemplate && !editionMode && !routineStarted &&
+                canExecuteRoutine && !isTemplate && !editionMode && !routineStarted &&
                 <Icon className={'header-icon'} name={'play circle outline'} onClick={() => {
                     setRoutineStarted(true)
                     startRoutine()
@@ -668,10 +669,10 @@ class PageRoutineDetail extends Component{
                 description: <span><Icon name={'plus'}/> Nuevo Bloque</span>
             }
             if (!canEdit && editRoutine) {
-                action.func = null
-                action.disabled=true
-                action.disableHeader='No es posible editar'
-                action.disableDescription='Tu o un atleta ya marcaron esta rutina como completada u omitida'
+                // action.func = null
+                // action.disabled=true
+                // action.disableHeader='No es posible editar'
+                // action.disableDescription='Tu o un atleta ya marcaron esta rutina como completada u omitida'
             } else if (!createManyExerciseBlocks) {
                 action.func = null
                 action.disabled=true
@@ -1113,7 +1114,7 @@ class PageRoutineDetail extends Component{
                         <Input
                             disabled={!routineStarted}
                             className={'size-two-digits align-center'}
-                            placeholder={e[e.currentWorkRange+'LastWeight'] ?? 's/n'}
+                            placeholder={e[e.currentWorkRange+'LastWeight'] ?? 's/n' }
                             value={e.effectiveSeries[z]?.kgs}
                             name={'kgs'}
                             onChange={(_, {value,name}) => this.storeSeriesData(j,i,k,z,name,value, e.reps)}
@@ -1152,11 +1153,19 @@ class PageRoutineDetail extends Component{
                             <Grid.Column width={editionMode ? !hasValue ? 13 : 8 : 16}>
                                 {e.isDraft && <div className={'label-new-item'}/>}
                                 {e.link ? <Link to={'#'} onClick={() => this.openExerciseVideo(e.link)}>{e.name}</Link> : e.name}
-                                <TooltipInfoButton title={
+                                <TooltipInfoButton
+                                    title={
                                     <div>
-                                        <p><b>Rango de fuerza: {e.forceLastWeight ?? 'sin datos'}</b></p>
-                                        <p><b>Rango de hipertrofia: {e.hypertrophyLastWeight ?? 'sin datos'}</b></p>
-                                        <p><b>Rango de resistencia: {e.resistenceLastWeight ?? 'sin datos'}</b></p>
+                                        <p><b>Ultimos registros</b></p>
+                                        <p><b>Rango de
+                                            fuerza:</b> {e.forceLastWeight ? e.forceLastEffectiveReps + ' X ' + e.forceLastWeight + 'kg' : 'sin datos'}
+                                        </p>
+                                        <p><b>Rango de
+                                            hipertrofia:</b> {e.hypertrophyLastWeight ? e.hypertrophyLastEffectiveReps + ' X ' + e.hypertrophyLastWeight + 'kg' : 'sin datos'}
+                                        </p>
+                                        <p><b>Rango de
+                                            resistencia:</b> {e.resistenceLastWeight ? e.resistenceLastEffectiveReps + ' X ' + e.resistenceLastWeight + 'kg' : 'sin datos'}
+                                        </p>
                                     </div>
                                 }/>
                                 {
@@ -1430,10 +1439,12 @@ class PageRoutineDetail extends Component{
                                             :
                                             canEdit ?
                                             <Icon name={'plus'} onClick={() => this.addWorkToGrouper(bg, j)}/> :
-                                            <PopUpDisabledAction
-                                                disableHeader={'No es posible agregar'}
-                                                disableDescription={'Tu o un atleta ya marcaron esta rutina como completada u omitida'}
-                                                trigger={<Icon name={'plus'} className={'disabled-btn'}/>}/> : null
+                                                <Icon name={'plus'} onClick={() => this.addWorkToGrouper(bg, j)}/>
+                                            // <PopUpDisabledAction
+                                            //     disableHeader={'No es posible agregar'}
+                                            //     disableDescription={'Tu o un atleta ya marcaron esta rutina como completada u omitida'}
+                                            //     trigger={<Icon name={'plus'} className={'disabled-btn'}/>}/>
+                                        : null
                                 }
                             </Divider>
                         </Segment>

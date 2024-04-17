@@ -5,9 +5,9 @@ import {AppContext, setData, showSuccess} from "../../context";
 import {MENU} from "../../enums";
 import {capitalize, contactByWhatsapp, setTheme} from "../../functions";
 import {
-    Avatar, CircularProgress,
+    Avatar, Box, Button, CircularProgress,
     Container,
-    Divider,
+    Divider, IconButton,
     List,
     ListItem,
     ListItemText,
@@ -35,8 +35,7 @@ class PageAccount extends Component {
             this.context.dispatch(setData({
                 noBottomBar: false,
                 menuButtonSelected: MENU.ACCOUNT,
-                MenuHeaderRender: <MenuHeaderRender/>,
-                secondaryActions: [{func: () => this.signout(), description: 'Salir'}]}))
+                MenuHeaderRender: <MenuHeaderRender/>}))
             const res = await getUserAccountDetails();
             this.setState({loading: false, userAccount: res.data})
         } catch (e) {
@@ -86,46 +85,67 @@ class PageAccount extends Component {
         return (
             // <Container>
                 <Stack>
-                    <Paper>
-                        <List>
-                            <ListItem>
-                                <ListItemText align="center">
-                                    <Avatar src={userAccount.pictureurl}/>
-                                </ListItemText>
-                            </ListItem>
-                            <ListItem>
-                                <ListItemText align="center">
-                                    {userAccount.name}
-                                </ListItemText>
-                            </ListItem>
-                            <Divider component="li" />
-                            <ListItem>
-                                <ListItemText>
-                                    <LeftTypography>
-                                        Email
-                                    </LeftTypography>
-                                    <RightTypography>
-                                        {userAccount.email}
-                                    </RightTypography>
-                                </ListItemText>
-                            </ListItem>
-                            <Divider component="li" />
-                            <ListItem>
-                                <ListItemText>
-                                    <LeftTypography>
-                                        Plan
-                                    </LeftTypography>
-                                    <RightTypography>
-                                        {userAccount.accounttype}
-                                    </RightTypography>
-                                </ListItemText>
-                            </ListItem>
-                        </List>
-                    </Paper>
-                    <Paper>
+                    <Box>
+                        <Paper>
+                            <List>
+                                <ListItem>
+                                    <ListItemText align="center">
+                                        <Avatar src={userAccount.pictureurl}/>
+                                    </ListItemText>
+                                </ListItem>
+                                <ListItem>
+                                    <ListItemText align="center">
+                                        {userAccount.name}
+                                    </ListItemText>
+                                </ListItem>
+                                <Divider component="li" />
+                                <ListItem>
+                                    <ListItemText>
+                                        <LeftTypography>
+                                            Email
+                                        </LeftTypography>
+                                        <RightTypography>
+                                            {userAccount.email}
+                                        </RightTypography>
+                                    </ListItemText>
+                                </ListItem>
+                                <Divider component="li" />
+                                <ListItem>
+                                    <ListItemText>
+                                        <LeftTypography>
+                                            Plan
+                                        </LeftTypography>
+                                        <RightTypography>
+                                            {userAccount.accounttype}
+                                        </RightTypography>
+                                    </ListItemText>
+                                </ListItem>
+                            </List>
+                        </Paper>
+                    </Box>
+                    <Box mt={2}>
+                        {/*<Typography variant="caption" display="block" gutterBottom>*/}
+                        {/*    Configuracion*/}
+                        {/*</Typography>*/}
+                        {/*<ListItem>*/}
+                        {/*    <Typography variant="caption" display="block" gutterBottom>*/}
+                        {/*        Configuracion*/}
+                        {/*    </Typography>*/}
+                        {/*    {*/}
+                        {/*        dirty &&*/}
+                        {/*        <IconButton aria-label="save" onClick={() => this.saveConfig()}>*/}
+                        {/*            <SaveIcon />*/}
+                        {/*        </IconButton>*/}
+                        {/*    }*/}
+                        {/*</ListItem>*/}
                         <AccountConfigs userAccount={userAccount}/>
-                    </Paper>
+                    </Box>
                     <MyEquipment/>
+                    <Box textAlign={'center'}>
+                        <Paper>
+                            <Button onClick={() => this.signout()}>Salir</Button>
+                        </Paper>
+                    </Box>
                 </Stack>
             // </Container>
         )

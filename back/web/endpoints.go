@@ -1446,10 +1446,10 @@ func (o *Endpoints) saveExerciseBlockValidations(
 			panic(&BadRequestResponse{ErrorCode: util.PString("no_access")})
 		}
 
-		header := db.GetRoutineHeader(o.db, tx, *routineId, userId, userId)
-		if *header.TimesMarked > 0 {
-			panic(&BadRequestResponse{ErrorCode: util.PString("cannot_modify_routine")})
-		}
+		//header := db.GetRoutineHeader(o.db, tx, *routineId, userId, userId)
+		//if *header.TimesMarked > 0 {
+		//	panic(&BadRequestResponse{ErrorCode: util.PString("cannot_modify_routine")})
+		//}
 
 		blocks := db.CalculateRoutineBlocksAmount(o.db, tx, *routineId)
 		if *plan == db.StudentFree && blocks >= *o.conf.StudentFreeAccountRoutineBlocksLimit {
