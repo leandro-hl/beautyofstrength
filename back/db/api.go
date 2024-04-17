@@ -71,7 +71,8 @@ const (
 	InviteAthletesToAssociateWithMe    AppEvent = "InviteAthletesToAssociateWithMe"
 	AcceptInstructorInvite             AppEvent = "AcceptInstructorInvite"
 	SharePlanification                 AppEvent = "SharePlanification"
-	StartJourney                       AppEvent = "StartJourney"
+	StartJourneyInstructor             AppEvent = "StartJourneyInstructor"
+	StartJourneyAthlete                AppEvent = "StartJourneyAthlete"
 	SaveProfileConfiguration           AppEvent = "SaveProfileConfiguration"
 )
 

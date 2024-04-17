@@ -1195,12 +1195,13 @@ func (o *Endpoints) startJourney(w http.ResponseWriter, r *http.Request, tx *sql
 	switch *t.As {
 	case "instructor":
 		db.UpdateAccountToInstructor(o.db, tx, usr)
+		db.RegisterEvent(o.db, tx, usr, db.StartJourneyInstructor)
 		break
 	case "athlete":
 		db.UpdateAccountToAthletePremium(o.db, tx, usr)
+		db.RegisterEvent(o.db, tx, usr, db.StartJourneyAthlete)
 		break
 	}
-	db.RegisterEvent(o.db, tx, usr, db.StartJourney)
 }
 
 func (o *Endpoints) listLastUserRmHistoryStats(w http.ResponseWriter, r *http.Request, tx *sqlx.Tx) {
