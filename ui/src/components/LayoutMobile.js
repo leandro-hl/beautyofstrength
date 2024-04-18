@@ -14,7 +14,7 @@ class LayoutMobile extends Component {
         const {children} = this.props;
 
         let segmentStyle = {
-            height: noBottomBar? '100%' : '90%',
+            // height: noBottomBar? '100%' : '90%', checking if not needed
             overflowY: 'scroll',
             paddingTop: 20
         }
@@ -32,7 +32,7 @@ class LayoutMobile extends Component {
             height: '100%',
             overflowY: 'scroll',
             overflowX: 'hidden',
-            paddingBottom: 80,
+            paddingBottom: 120,
             marginTop: 0
         }
 

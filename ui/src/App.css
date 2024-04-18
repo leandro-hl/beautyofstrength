@@ -858,6 +858,10 @@ input[type="number"] {
   -moz-appearance: textfield;
 }
 
+.ui.modal>.content {
+  color: #212121 !important;
+}
+
 @media only screen and (max-width: 767px) {
   .ui.modal>.content.no-padding{
     padding: 0px !important;
