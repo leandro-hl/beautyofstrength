@@ -37,6 +37,7 @@ import {ExerciseSearch} from "./ExerciseSearch";
 import {PopUpContinueEditing} from "./PopUpContinueEditing";
 import {PopUpDisabledAction} from "./PopUpDisabledAction";
 import {TooltipInfoButton} from "./mui/TooltipInfoButton";
+import {FormControlLabel, Switch} from "@mui/material";
 
 const MenuHeaderRender = ({
                               blockType,
@@ -169,7 +170,8 @@ class PageBlockCreate extends Component {
             ...selected[selected.length - 1],
             hideAddNext: exercises[index].hideAddNext,
             reps: exercises[index].reps,
-            series: exercises[index].series
+            series: exercises[index].series,
+            type: exercises[index].type,
         }
         this.setState({exercises});
     }
@@ -250,7 +252,7 @@ class PageBlockCreate extends Component {
                 newBlockGroupName,
                 newBlockGroupId,
                 newBlockGroupOrder: nextBlockNumber,
-                exercises: exercises.filter(e=>e.key).map(e => ({id:e.key, name:e.text, series: parseInt(e.series, 10), reps: parseInt(e.reps, 10), type: e.type})),
+                exercises: exercises.filter(e=>e.key).map(e => ({id:e.key, name:e.text, series: parseInt(e.series, 10), reps: parseInt(e.reps, 10), type: e.type ?? (this.state.configureDefaultSec ? 'secs' : null)})),
                 laps: parseInt(laps, 10),
                 workingInterval: parseInt(workingInterval, 10),
                 restingInteval: parseInt(restingInteval, 10),
@@ -278,7 +280,7 @@ class PageBlockCreate extends Component {
                 newBlockGroupName,
                 newBlockGroupId,
                 newBlockGroupOrder: nextBlockNumber,
-                exercises: exercises.filter(e=>e.key).map(e => ({id:e.key, name:e.text, series: parseInt(e.series, 10), reps: parseInt(e.reps, 10), type: e.type})),
+                exercises: exercises.filter(e=>e.key).map(e => ({id:e.key, name:e.text, series: parseInt(e.series, 10), reps: parseInt(e.reps, 10), type: e.type ?? (this.state.configureDefaultSec ? 'secs' : null)})),
                 laps: parseInt(laps, 10),
                 restingInteval: parseInt(restingInteval, 10),
                 exeRestingInteval: parseInt(exeRestingInteval, 10),
@@ -313,7 +315,7 @@ class PageBlockCreate extends Component {
                 newBlockGroupName,
                 newBlockGroupId,
                 newBlockGroupOrder: nextBlockNumber,
-                exercises: exercises.filter(e=>e.key).map(e => ({id:e.key, name:e.text, series: parseInt(e.series, 10), reps: parseInt(e.reps, 10), type: e.type})),
+                exercises: exercises.filter(e=>e.key).map(e => ({id:e.key, name:e.text, series: parseInt(e.series, 10), reps: parseInt(e.reps, 10), type: e.type ?? (this.state.configureDefaultSec ? 'secs' : null)})),
                 blockDuration: parseInt(blockDuration,10),
                 laps: null,
                 workingInterval: null,
@@ -341,7 +343,7 @@ class PageBlockCreate extends Component {
                 newBlockGroupName,
                 newBlockGroupId,
                 newBlockGroupOrder: nextBlockNumber,
-                exercises: exercises.filter(e=>e.key).map(e => ({id:e.key, name:e.text, series: parseInt(e.series, 10), reps: parseInt(e.reps, 10), type: e.type})),
+                exercises: exercises.filter(e=>e.key).map(e => ({id:e.key, name:e.text, series: parseInt(e.series, 10), reps: parseInt(e.reps, 10), type: e.type ?? (this.state.configureDefaultSec ? 'secs' : null)})),
                 laps: parseInt(laps, 10),
                 isTemplate
             }
@@ -464,10 +466,15 @@ class PageBlockCreate extends Component {
                 <Segment textAlign='center'>
                     <Divider horizontal>Descanso Entre Ejercicios<br/>(Segundos)</Divider>
                     <InputNumber seconds large onChange={({amount}) => this.setState({exeRestingInteval: amount, next: null})}/>
-                    <Divider horizontal>Rondas<TooltipInfoButton title={"Tambien llamadas Sets"}/></Divider>
-                    <InputNumber large onChange={({amount}) => this.setState({laps: amount, next: null})}/>
-                    <Divider horizontal>Descanso Entre Rondas<br/>(Segundos)</Divider>
-                    <InputNumber seconds large onChange={({amount}) => this.setState({restingInteval: amount, next: null})}/>
+                    {
+                        this.state.configureLaps &&
+                        <>
+                            <Divider horizontal>Rondas<TooltipInfoButton title={"Tambien llamadas Sets"}/></Divider>
+                            <InputNumber large onChange={({amount}) => this.setState({laps: amount, next: null})}/>
+                            <Divider horizontal>Descanso Entre Rondas<br/>(Segundos)</Divider>
+                            <InputNumber seconds large onChange={({amount}) => this.setState({restingInteval: amount, next: null})}/>
+                        </>
+                    }
                 </Segment>
             </>
         )
@@ -603,35 +610,73 @@ class PageBlockCreate extends Component {
                                 selectOnBlur={false}/>
                         </Header>
                         <Segment>
-                            <Checkbox
-                                slider={true}
-                                label={'1 serie'}
-                                onChange={(e,{checked}) => {
-                                    const {exercises} = this.state;
-                                    for (let i = 0; i < exercises.length; i++) {
-                                        exercises[i].series = 1
-                                    }
-                                    this.setState({exercises, defaultSeries: checked})
-                                }} checked={this.state.defaultSeries}/>
-                            {
-                                exercises.map((e, index) => {
-                                    return (<ExerciseListItemFree
-                                        onExerciseSelected={(selected)=> this.onExerciseSelected(index, selected)}
-                                        onAddExercise={() => this.onAddExcercise(index)}
-                                        hideAddNext={e.hideAddNext}
-                                        disableSeries={this.state.defaultSeries}
-                                        key={index}
-                                        item={e}
-                                        focus={index===next}
-                                        selected={currentSelectedIndex === index}
-                                        finished={(series, reps, goNext) => this.saveExercise(index, series, reps, goNext)}
-                                        onRepeat={(item) => this.repeatExercise(item, false, index)}
-                                        moveUp={() => this.moveUp(index)}
-                                        moveDown={() => this.moveDown(index)}
-                                        onIntervalSelected={(val) => this.onIntervalSelected(index,val)}
-                                    />)
-                                })
-                            }
+                            <Grid>
+                                <Grid.Row>
+                                    <Grid.Column width={14}>
+                                        <FormControlLabel control={<Switch
+                                            size="small"
+                                            onChange={({target: {checked}}) => {
+                                                this.setState({configureSelectRepSec: checked})
+                                            }} checked={this.state.configureSelectRepSec}/>} className={'no-margin'} label={<span>Elegir<TooltipInfoButton title={"Elige entre repeticiones o segundos para cada ejercicio. Por defecto los ejercicios usan Repeticiones"}/></span>}/>
+                                        <FormControlLabel control={<Switch
+                                            size="small"
+                                            onChange={({target: {checked}}) => {
+                                                this.setState({configureLaps: checked})
+                                            }} checked={this.state.configureLaps}/>} className={'no-margin'} label={<span>Rondas<TooltipInfoButton title={"Configura Rondas. Tambien llamadas Sets"}/></span>}/>
+                                        <FormControlLabel control={<Switch
+                                            size="small"
+                                            onChange={({target: {checked}}) => {
+                                                const {exercises} = this.state;
+                                                for (let i = 0; i < exercises.length; i++) {
+                                                    exercises[i].series = null
+                                                }
+                                                this.setState({exercises, defaultSeries: checked})
+                                            }} checked={this.state.defaultSeries}/>} className={'no-margin'} label={<span>Series<TooltipInfoButton title={"Agrega series a tus ejercicios para poder cargar peso al ejecutar la rutina"}/></span>}/>
+                                        <FormControlLabel control={<Switch
+                                            size="small"
+                                            onChange={({target: {checked}}) => {
+                                                this.setState({configureDefaultSec: checked})
+                                            }} checked={this.state.configureDefaultSec}/>} className={'no-margin'} label={<span>Segundos<TooltipInfoButton title={"Cambia la seleccion por defecto a Segundos para todos los ejercicios en vez de Repeticiones"}/></span>}/>
+                                    </Grid.Column>
+                                    <Grid.Column width={1} textAlign={'right'}>
+                                        <Icon
+                                            name={'plus circle'}
+                                            onClick={() => this.onAddExcercise(0)}/>
+                                    </Grid.Column>
+                                </Grid.Row>
+                                <Grid.Row>
+                                    {/*
+                                    - Mejorar algoritmo de busqueda para que sea por palabras claves
+                                    - Focusear como defecto al agregar una nueva linea
+                                    - No distinguir entre acentos o no (es el mismo ejercicio) 
+                                    - Al seleccionar pasar al siguiente input (ver matriz de focuses)
+                                    */}
+                                    <Grid.Column>
+                                        {
+                                            exercises.map((e, index) => {
+                                                return (<ExerciseListItemFree
+                                                    createNewExercises={createNewExercises}
+                                                    onExerciseSelected={(selected)=> this.onExerciseSelected(index, selected)}
+                                                    // onAddExercise={() => this.onAddExcercise(index)}
+                                                    hideAddNext={e.hideAddNext}
+                                                    withSeries={this.state.defaultSeries}
+                                                    configureSelectRepSec={this.state.configureSelectRepSec}
+                                                    configureDefaultSec={this.state.configureDefaultSec}
+                                                    key={index}
+                                                    item={e}
+                                                    focus={index===next}
+                                                    selected={currentSelectedIndex === index}
+                                                    finished={(series, reps, goNext) => this.saveExercise(index, series, reps, goNext)}
+                                                    onRepeat={(item) => this.repeatExercise(item, false, index)}
+                                                    moveUp={() => this.moveUp(index)}
+                                                    moveDown={() => this.moveDown(index)}
+                                                    onIntervalSelected={(val) => this.onIntervalSelected(index,val)}
+                                                />)
+                                            })
+                                        }
+                                    </Grid.Column>
+                                </Grid.Row>
+                            </Grid>
                         </Segment>
                         {this.renderBlockTypeUI()}
                     </>

@@ -71,6 +71,7 @@ export class AccountConfigs extends Component {
                     <TextFieldCentered
                         name={name}
                         value={config[name+'Min']}
+                        type={'number'}
                         onChange={(e) => this.setState({dirty:true, config: {...config, [name+'Min']: e.target.value}})}
                         className={'size-two-digits'}
                         placeholder={min}
@@ -79,6 +80,7 @@ export class AccountConfigs extends Component {
                     <TextFieldCentered
                         name={name}
                         value={config[name+'Max']}
+                        type={'number'}
                         onChange={(e) => this.setState({dirty:true, config: {...config, [name+'Max']: e.target.value}})}
                         className={'size-two-digits'}
                         placeholder={max}
@@ -133,13 +135,7 @@ export class AccountConfigs extends Component {
                     <Divider component="li" />
                     <ListItem>
                         <ListItemText  primary="Tema Oscuro" />
-                        <Switch
-                            edge="end"
-                            checked={darkTheme} onChange={() => this.changeTheme()}
-                            inputProps={{
-                                'aria-labelledby': 'switch-list-label-bluetooth',
-                            }}
-                        />
+                        <Switch checked={darkTheme} onChange={() => this.changeTheme()} />
                     </ListItem>
                 </List>
             </Paper>

@@ -756,9 +756,9 @@ body > div#root {
   max-height: 14.3em !important;
 }
 
-.ui.segment > .ui.segment:hover {
-  cursor: pointer !important;
-}
+/*.ui.segment > .ui.segment:hover {*/
+/*  cursor: pointer !important;*/
+/*}*/
 
 div#g_id_onload, div.g_id_signin {
   width: 100%;

@@ -180,13 +180,16 @@ export class ExerciseSearch extends Component {
                     multiple={!basic}
                     search
                     selection
+                    onFocus={() => this.props.onFocus()}
+                    onMouseDown={() => this.props.onFocus()}
+                    onBlur={() => this.props.onBlur()}
                     allowAdditions={allowAdditions}
                     additionLabel='Agregar '
                     options={exerciseOptions}
                     onAddItem={(e, { value }) => this.onAddItem(value)}
-                    value={basic ? exercisesBuffer.map(e => e.value)[0] : exercisesBuffer.map(e => e.value)}
+                    value={basic ? exercisesBuffer.map(e => e.value)[exercisesBuffer.length-1] : exercisesBuffer.map(e => e.value)}
                     onChange={this.handleExerciseSelection}
-                    openOnFocus={true}
+                    openOnFocus={this.props.openOnFocus ?? true}
                     tabIndex={0}
                     noResultsMessage={'No se encontro el ejercicio'}
                     selectOnBlur={false}/>
