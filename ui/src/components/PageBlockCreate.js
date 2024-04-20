@@ -168,7 +168,7 @@ class PageBlockCreate extends Component {
         const {exercises} = this.state
         exercises[index] = {
             ...selected[selected.length - 1],
-            hideAddNext: exercises[index].hideAddNext,
+            // hideAddNext: exercises[index].hideAddNext,
             reps: exercises[index].reps,
             series: exercises[index].series,
             type: exercises[index].type,
@@ -178,7 +178,7 @@ class PageBlockCreate extends Component {
 
     onAddExcercise(index) {
         const {exercises} = this.state
-        exercises[index].hideAddNext=true
+        // exercises[index].hideAddNext=true
         exercises.push({})
         this.setState({exercises})
     }
@@ -658,7 +658,7 @@ class PageBlockCreate extends Component {
                                                     createNewExercises={createNewExercises}
                                                     onExerciseSelected={(selected)=> this.onExerciseSelected(index, selected)}
                                                     // onAddExercise={() => this.onAddExcercise(index)}
-                                                    hideAddNext={e.hideAddNext}
+                                                    // hideAddNext={e.hideAddNext}
                                                     withSeries={this.state.defaultSeries}
                                                     configureSelectRepSec={this.state.configureSelectRepSec}
                                                     configureDefaultSec={this.state.configureDefaultSec}

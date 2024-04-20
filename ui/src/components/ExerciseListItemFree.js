@@ -1,30 +1,45 @@
 import React, {Component, createRef} from "react";
-import {Dropdown, Grid, Icon, Input, Label, List, Segment} from "semantic-ui-react";
+import {Dropdown, Grid, Icon, Input, Label, List, Loader, Segment} from "semantic-ui-react";
 import {SegMinButtonGroup} from "./SegMinButtonGroup";
 import {SegRepsButtonGroup} from "./SegRepsButtonGroup";
 import {ExerciseSearch} from "./ExerciseSearch";
 import {TextFieldCentered} from "./mui/customizations";
 
 export class ExerciseListItemFree extends Component {
-    inputRef = createRef()
+    inputRefExercise = createRef()
     inputRefSeries = createRef()
+    inputRefReps = createRef()
+
 
     constructor(props) {
         super(props);
-        this.state = {focusSeries:true}
+        this.state = {
+            loading:true,
+            focusList:[],
+            focusCurrent:0,
+        }
+    }
+
+    componentDidMount() {
+        this.setState({
+            focusList:[
+                this.inputRefExercise,
+                this.inputRefSeries,
+                this.inputRefReps,
+            ]
+        })
     }
 
     handleChangeSerie(value) {
         this.props.finished(value, null)
         if (value !== "") {
-            this.setState({focusSeries: false})
-            this.inputRef.current.focus()
+            this.setState({focusCurrent:2})
         } else {
-            this.setState({focusSeries: true})
+            this.setState({focusCurrent:1})
         }
     }
 
-    handleChange(value) {
+    handleChangeReps(value) {
         if (10 / value <= 1) {
             this.props.finished(this.props.item.series, value, true)
         } else {
@@ -41,10 +56,10 @@ export class ExerciseListItemFree extends Component {
 
     render() {
         if(this.props.focus) {
-            if (this.props.withSeries && this.inputRefSeries.current && this.state.focusSeries) {
-                this.inputRefSeries.current.focus()
-            } else if (this.inputRef.current) {
-                this.inputRef.current.focus()
+            if (this.state.focusCurrent===0) {
+                this.state.focusList[this.state.focusCurrent]?.current?.open()
+            } else {
+                this.state.focusList[this.state.focusCurrent]?.current?.focus()
             }
         }
         // const options = [
@@ -83,12 +98,15 @@ export class ExerciseListItemFree extends Component {
                         <Grid.Column width={exerciseSearchWidth} stretched className={'no-right-padding'} style={{transition: 'width 0.5s'}}>
                             <ExerciseSearch
                                 basic
+                                inputRef={this.inputRefExercise}
                                 allowAdditions={this.props.createNewExercises}
                                 defaultSelected={[this.props.item]}
+                                onLoaded={() => this.setState({loading: false})}
                                 onFocus={() => this.setState({searchFocused: true})}
                                 onBlur={() => this.setState({searchFocused: false})}
                                 onSelected={(selected) => {
                                     this.props.onExerciseSelected(selected)
+                                    this.setState({focusCurrent: this.props.withSeries? 1 : 2})
                                 }}/>
                         </Grid.Column>
                         {
@@ -117,12 +135,12 @@ export class ExerciseListItemFree extends Component {
                             <TextFieldCentered
                                 style={{justifyContent: 'center'}}
                                 className={'padding-top-1'}
-                                inputRef={this.inputRef}
+                                inputRef={this.inputRefReps}
                                 placeholder='8'
                                 value={this.props.item.reps}
                                 type={'number'}
                                 onKeyDown={(event) => this.handleKeyDown(event)}
-                                onChange={(e) => this.handleChange(e.target.value)}
+                                onChange={(e) => this.handleChangeReps(e.target.value)}
                                 variant="standard" />
                         </Grid.Column>
                         {

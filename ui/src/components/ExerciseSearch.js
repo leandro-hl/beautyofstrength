@@ -81,6 +81,7 @@ export class ExerciseSearch extends Component {
                 loading: false
             })
 
+            this.props.onLoaded()
             this.context.dispatch(setData({prepareExercises: {data: res.data}}))
         } catch (e) {
             console.error(e)
@@ -187,6 +188,7 @@ export class ExerciseSearch extends Component {
             <>
                 <Dropdown
                     placeholder={basic ? 'Ejercicio' : 'Elegi los ejercicios'}
+                    ref={this.props.inputRef}
                     fluid
                     multiple={!basic}
                     search={this.searchByKeyWord}
