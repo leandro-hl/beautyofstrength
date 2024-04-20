@@ -70,6 +70,7 @@ export class ExerciseSearch extends Component {
                         </Grid> : e.name
                 ),
                 // createdbyuser: e.createdbyuser.toLowerCase(),
+                keyWords: e.name.toLowerCase().trim().normalize("NFD").replace(/[\u0300-\u036f]/g, "").split(' '),
                 comparer: e.name.toLowerCase().trim().replaceAll(' ', '')
             }))
 
@@ -118,7 +119,7 @@ export class ExerciseSearch extends Component {
                 const res = await createNewExercise({name, equipment: selectedEquipment.map(s => ({id: s.id, occurrences: s.occurrences}))})
 
                 //adding exercise to current cached data
-                const exercise = {text: name, key: res.data.id, value: res.data.id, name:name, id:res.data.id}
+                const exercise = {text: name, keyWords: name.toLowerCase().trim().normalize("NFD").replace(/[\u0300-\u036f]/g, "").split(' '), key: res.data.id, value: res.data.id, name:name, id:res.data.id}
                 exerciseOptions.push({...exercise, comparer: sanitizedInput})
                 exercisesBuffer.push(exercise)
                 this.setState({exerciseOptions, exercisesBuffer})
@@ -165,8 +166,18 @@ export class ExerciseSearch extends Component {
         }
     }
 
+    searchByKeyWord(options, query) {
+        const arraySearch = query.trim().normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().split(' ')
+
+        const filterFunc = (opt) => {
+            return arraySearch.filter(word => opt.keyWords.find(keyWord => keyWord.includes(word))).length===arraySearch.length
+        }
+
+        return options.filter(filterFunc)
+    }
+
     render() {
-        const {loading, allowAdditions, exerciseOptions, exercisesBuffer, basic, openNewExerciseModal, newExerciseName} = this.state
+        const {loading, allowAdditions, exerciseOptions, exercisesBuffer, basic, openNewExerciseModal, newExerciseName, searchQuery} = this.state
 
         if(loading) {
             return <Loader active/>
@@ -178,7 +189,7 @@ export class ExerciseSearch extends Component {
                     placeholder={basic ? 'Ejercicio' : 'Elegi los ejercicios'}
                     fluid
                     multiple={!basic}
-                    search
+                    search={this.searchByKeyWord}
                     selection
                     onFocus={() => this.props.onFocus()}
                     onMouseDown={() => this.props.onFocus()}

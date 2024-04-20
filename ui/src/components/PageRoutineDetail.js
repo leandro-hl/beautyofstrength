@@ -1073,7 +1073,7 @@ class PageRoutineDetail extends Component{
             ...blockGroupers[j].blocks[i].exercises[k].effectiveSeries[z],
             [name]: value
         }
-        if (reps) {
+        if (!blockGroupers[j].blocks[i].exercises[k].effectiveSeries[z].reps && reps) {
             blockGroupers[j].blocks[i].exercises[k].effectiveSeries[z].reps = reps
         }
         this.setState({blockGroupers: [...blockGroupers]})
@@ -1102,6 +1102,7 @@ class PageRoutineDetail extends Component{
                 <Table.Row key={z}>
                     <Table.Cell>
                         <Input
+                            type={'number'}
                             disabled={!routineStarted}
                             className={'size-two-digits align-center'}
                             placeholder={e.reps}
@@ -1112,6 +1113,7 @@ class PageRoutineDetail extends Component{
                     </Table.Cell>
                     <Table.Cell>
                         <Input
+                            type={'number'}
                             disabled={!routineStarted}
                             className={'size-two-digits align-center'}
                             placeholder={e[e.currentWorkRange+'LastWeight'] ?? 's/n' }
@@ -1386,7 +1388,7 @@ class PageRoutineDetail extends Component{
                     </Message>
                 }
                 <Accordion
-                    style={{marginBottom: '1em'}}
+                    style={{marginBottom: '3rem'}}
                     exclusive={false}
                     fluid>
                     {blockGroupers.map((bg,j) => (
