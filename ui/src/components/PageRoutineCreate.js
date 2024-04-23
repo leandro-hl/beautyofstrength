@@ -1,4 +1,4 @@
-import React, {Component, createRef} from "react";
+import React, {Component, createRef, useState} from "react";
 import {
     Button,
     Divider,
@@ -21,13 +21,22 @@ import BottomMenuBar from "./BottomMenuBar";
 import LayoutMobile from "./LayoutMobile";
 import {MENU} from "../enums";
 import {ModalBlockCreate} from "./ModalBlockCreate";
+import {ReactComponent as BackArrowIcon} from '../icons/arrow_back.svg'
 
-const MenuHeaderRender = ({routineName, onGoBack}) => {
+const MenuHeaderRender = ({routineName, onGoBack, onRoutineNameChange}) => {
+    const [name, setRoutineName] = useState(routineName)
     return <>
         <Button className={'header-back-arrow'} icon onClick={() => onGoBack()}>
-            <Icon name={'arrow left'}/>
+            <BackArrowIcon/>
         </Button>
-        {routineName}
+        <Input
+            className={'input-header'}
+            placeholder={name}
+            value={name}
+            onChange={(e, {value}) => {
+                setRoutineName(value)
+                onRoutineNameChange(value)
+            }}/>
     </>
 }
 
@@ -45,6 +54,10 @@ class PageRoutineCreate extends Component {
         }
     }
 
+    onRoutineNameChange(newName) {
+        this.context.dispatch(setData({routineName: newName}))
+    }
+
     async componentDidMount() {
         try {
             const {nextBlockNumber} = this.state
@@ -57,13 +70,13 @@ class PageRoutineCreate extends Component {
                 menuButtonSelected: isTemplate? MENU.INSTRUCTOR_SUITE : MENU.PLANIFICATIONS,
                 MenuHeaderRender: <MenuHeaderRender
                     routineName={routineName}
+                    onRoutineNameChange={(newName) => this.onRoutineNameChange(newName)}
                     onGoBack={() => isTemplate ? this.redirectToSuite() : this.redirectToPlanification()}
                 />
             }))
             this.context.dispatch(setData({routineId: null, nextBlockNumber}, true))
             this.setState({
                 planificationId: planificationId,
-                routineName: routineName,
                 routineNumber
             })
         } catch (e) {

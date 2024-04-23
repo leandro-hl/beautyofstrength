@@ -29,6 +29,7 @@ import {ModalPlanificationRequestAccess} from "./ModalPlanificationRequestAccess
 import {ModalPlanificationsPendingRequests} from "./ModalPlanificationsPendingRequests";
 import {PopUpConfirmation} from "./PopUpConfirmation";
 import {ModalInstructorInviteAccept} from "./ModalInstructorInviteAccept";
+import TimeLineCalendar from "./TimelineCalendar";
 
 const MenuHeaderRender = ({onRefresh}) => {
     const [refreshing, setRefreshing] = useState(false)
@@ -233,6 +234,7 @@ class PagePlanificationList extends Component {
         return (
             <>
                 {sharePlanification && <Button primary fluid onClick={() => this.fetchPendingRequests()}>Revisar solicitudes pendientes</Button>}
+                <TimeLineCalendar/>
                 {refreshing && <Loader active/>}
                 {
                     !refreshing &&

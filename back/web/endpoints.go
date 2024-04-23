@@ -1404,7 +1404,8 @@ func (o *Endpoints) saveRoutineEditions(w http.ResponseWriter, r *http.Request, 
 func (o *Endpoints) saveExerciseBlockValidations(
 	r *http.Request,
 	tx *sqlx.Tx,
-	routineId, planificationId *int64,
+	routineId *int64, routineName *string,
+	planificationId *int64,
 	exercises []ExerciseRequest,
 	newName *string,
 	isTemplate bool) ([]ExerciseRequest, *int64) {
@@ -1428,8 +1429,12 @@ func (o *Endpoints) saveExerciseBlockValidations(
 	}
 
 	if routineId == nil && isTemplate {
-		n := db.CalculateRoutineNumber(o.db, tx, userId)
-		routineId = db.CreateRoutineTemplateDefault(o.db, tx, fmt.Sprintf("Rutina Nro %d", n+1), userId)
+		if routineName != nil {
+			routineId = db.CreateRoutineTemplateDefault(o.db, tx, *routineName, userId)
+		} else {
+			n := db.CalculateRoutineNumber(o.db, tx, userId)
+			routineId = db.CreateRoutineTemplateDefault(o.db, tx, fmt.Sprintf("Rutina Nro %d", n+1), userId)
+		}
 		db.RegisterEvent(o.db, tx, userId, db.CreateRoutineTemplate)
 	} else if routineId != nil && isTemplate {
 		if !db.CalculateUserOwnsRoutineTemplate(o.db, tx, userId, *routineId) {
@@ -1440,7 +1445,13 @@ func (o *Endpoints) saveExerciseBlockValidations(
 		if *plan == db.StudentFree && *last > 0 {
 			panic(&BadRequestResponse{ErrorCode: util.PString("free_create_routine_limit")})
 		}
-		routineId = db.CreateRoutineDefault(o.db, tx, fmt.Sprintf("Dia %d", *last+1), *planificationId, userId)
+
+		if routineName != nil {
+			routineId = db.CreateRoutineDefault(o.db, tx, *routineName, *planificationId, userId)
+		} else {
+			routineId = db.CreateRoutineDefault(o.db, tx, fmt.Sprintf("Dia %d", *last+1), *planificationId, userId)
+		}
+
 		db.RegisterEvent(o.db, tx, userId, db.CreateRoutinee)
 	} else if routineId != nil && !isTemplate {
 		if !db.CalculateUserOwnsRoutine(o.db, tx, userId, *planificationId, *routineId) {
@@ -1468,7 +1479,7 @@ func (o *Endpoints) saveExercisesBlock(w http.ResponseWriter, r *http.Request, t
 	err := o.Decode(r, &t)
 	util.Check(err)
 
-	validExercises, routineId := o.saveExerciseBlockValidations(r, tx, t.RoutineId, t.PlanificationId, t.Exercises, t.NewBlockGroupName, t.IsTemplate)
+	validExercises, routineId := o.saveExerciseBlockValidations(r, tx, t.RoutineId, t.RoutineName, t.PlanificationId, t.Exercises, t.NewBlockGroupName, t.IsTemplate)
 	exercises := make([]db.ExerciseBlockGroup, 0)
 	for _, e := range validExercises {
 		if e.Type != nil && *e.Type == "secs" {
@@ -1982,9 +1993,9 @@ func (o *Endpoints) savePlanificationEditions(w http.ResponseWriter, r *http.Req
 		panic(&BadRequestResponse{ErrorCode: util.PString("no_access")})
 	}
 
-	if db.CalculatePlanificationAlreadyExecutedBySomeone(o.db, tx, *p.PlanificationId) {
-		panic(&BadRequestResponse{ErrorCode: util.PString("cannot_edit_planification_being_executed")})
-	}
+	//if db.CalculatePlanificationAlreadyExecutedBySomeone(o.db, tx, *p.PlanificationId) {
+	//	panic(&BadRequestResponse{ErrorCode: util.PString("cannot_edit_planification_being_executed")})
+	//}
 
 	if p.NewMesocycle != nil {
 		if *p.NewMesocycle > 30 {

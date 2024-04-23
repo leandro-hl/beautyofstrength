@@ -38,6 +38,7 @@ import {PopUpContinueEditing} from "./PopUpContinueEditing";
 import {PopUpDisabledAction} from "./PopUpDisabledAction";
 import {TooltipInfoButton} from "./mui/TooltipInfoButton";
 import {FormControlLabel, Switch} from "@mui/material";
+import {ReactComponent as BackArrowIcon} from '../icons/arrow_back.svg'
 
 const MenuHeaderRender = ({
                               blockType,
@@ -72,7 +73,7 @@ const MenuHeaderRender = ({
         // </Grid>
         <>
             <Button className={'header-back-arrow'} icon onClick={() => redirectBackToRoutine()}>
-                 <Icon name={'arrow left'}/>
+                 <BackArrowIcon/>
              </Button>
             {/*<ExerciseSearch alwaysClear={true} onSelected={(selected) => onExerciseSelected(selected)}/>*/}
         </>
@@ -124,7 +125,7 @@ class PageBlockCreate extends Component {
 
     async componentDidMount() {
         try {
-            const {state: {planificationId, routineId, newBlockGroupName, nextWorkNumber, newBlockGroupId, nextBlockNumber}} = this.context
+            const {state: {planificationId, routineId, routineName, newBlockGroupName, nextWorkNumber, newBlockGroupId, nextBlockNumber}} = this.context
             this.context.dispatch(setData({secondaryActions: []}))
             this.setState({loading: true})
 
@@ -147,6 +148,7 @@ class PageBlockCreate extends Component {
                 loading: false,
                 planificationId,
                 routineId,
+                routineName,
                 defaultWorkName,
                 nextBlockNumber,
                 newBlockGroupName,
@@ -241,12 +243,13 @@ class PageBlockCreate extends Component {
 
     async saveExercisesBlockCpt(isTemplate) {
         try {
-            const {exercises, laps, blockType, workingInterval, restingInteval, blockName, planificationId, routineId, newBlockGroupName,newBlockGroupId,nextBlockNumber} = this.state
+            const {routineName, exercises, laps, blockType, workingInterval, restingInteval, blockName, planificationId, routineId, newBlockGroupName,newBlockGroupId,nextBlockNumber} = this.state
             this.setState({saving: true})
 
             const request = {
                 planificationId: parseInt(planificationId,10),
                 routineId: !!routineId ? parseInt(routineId,10) : null,
+                routineName,
                 blockName: (blockName??this.state.defaultWorkName)+' - '+blockType,
                 blockType: blockType,
                 newBlockGroupName,
@@ -268,13 +271,14 @@ class PageBlockCreate extends Component {
 
     async saveExercisesBlockFree(isTemplate) {
         try {
-            const {exercises, laps, exeRestingInteval, restingInteval, blockName, blockType, planificationId, routineId, newBlockGroupName,newBlockGroupId,nextBlockNumber} = this.state
+            const {routineName, exercises, laps, exeRestingInteval, restingInteval, blockName, blockType, planificationId, routineId, newBlockGroupName,newBlockGroupId,nextBlockNumber} = this.state
             this.setState({saving: true})
 
             const request = {
                 blockType: blockType,
                 planificationId: parseInt(planificationId,10),
                 routineId: !!routineId ? parseInt(routineId,10) : null,
+                routineName,
                 //todo: refactor to have block type outside name
                 blockName: (blockName??this.state.defaultWorkName)+' - '+blockType,
                 newBlockGroupName,
@@ -300,7 +304,7 @@ class PageBlockCreate extends Component {
 
     async saveExercisesBlockAmrap(isTemplate) {
         try {
-            const {exercises, blockName,blockType, blockDuration, planificationId, routineId,newBlockGroupName, newBlockGroupId,nextBlockNumber} = this.state
+            const {routineName, exercises, blockName,blockType, blockDuration, planificationId, routineId,newBlockGroupName, newBlockGroupId,nextBlockNumber} = this.state
             this.setState({saving: true})
 
             if(!blockDuration) {
@@ -310,6 +314,7 @@ class PageBlockCreate extends Component {
             const request = {
                 planificationId: parseInt(planificationId,10),
                 routineId: !!routineId ? parseInt(routineId,10) : null,
+                routineName,
                 blockName: (blockName??this.state.defaultWorkName)+' - '+blockType,
                 blockType: blockType,
                 newBlockGroupName,
@@ -332,12 +337,13 @@ class PageBlockCreate extends Component {
 
     async saveExercisesBlockCombo(isTemplate) {
         try {
-            const {exercises, laps, blockType, blockName, planificationId, routineId,newBlockGroupName,newBlockGroupId,nextBlockNumber} = this.state
+            const {routineName, exercises, laps, blockType, blockName, planificationId, routineId,newBlockGroupName,newBlockGroupId,nextBlockNumber} = this.state
             this.setState({saving: true})
 
             const request = {
                 planificationId: parseInt(planificationId,10),
                 routineId: !!routineId ? parseInt(routineId,10) : null,
+                routineName,
                 blockName: (blockName??this.state.defaultWorkName)+' - '+blockType,
                 blockType: blockType,
                 newBlockGroupName,
@@ -357,12 +363,13 @@ class PageBlockCreate extends Component {
 
     async saveExerciseBlockPir(isTemplate) {
         try {
-            const {exercises, laps, blockType, blockName, planificationId, routineId,newBlockGroupName,newBlockGroupId,nextBlockNumber} = this.state
+            const {routineName, exercises, laps, blockType, blockName, planificationId, routineId,newBlockGroupName,newBlockGroupId,nextBlockNumber} = this.state
             this.setState({saving: true})
 
             const request = {
                 planificationId: parseInt(planificationId,10),
                 routineId: !!routineId ? parseInt(routineId,10) : null,
+                routineName,
                 blockName: (blockName??this.state.defaultWorkName)+' - '+blockType,
                 blockType: blockType,
                 newBlockGroupName,

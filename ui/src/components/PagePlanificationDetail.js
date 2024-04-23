@@ -30,6 +30,9 @@ import {PopUpDisabledAction} from "./PopUpDisabledAction";
 import {PopUpContinueEditing} from "./PopUpContinueEditing";
 import {PopUpConfirmation} from "./PopUpConfirmation";
 import {ModalBorgScale} from "./ModalBorgScale";
+import {ReactComponent as EditIcon} from '../icons/edit.svg'
+import {ReactComponent as ShareIcon} from '../icons/share.svg'
+import {ReactComponent as BackArrowIcon} from '../icons/arrow_back.svg'
 
 const MenuHeaderRender = ({
                               isEditable,
@@ -44,16 +47,16 @@ const MenuHeaderRender = ({
     const [editionMode, setEditionMode] = useState(false)
     const [savingEditions, setSavingEditions] = useState(false)
     const actionable = isOwner
-    const canEdit = !editionMode && isEditable
+    const canEdit = !editionMode //&& isEditable
     const canShare = !editionMode && sharePlanification && actionable
-    const savingMode = editionMode && isEditable && editPlanification && actionable
+    const savingMode = editionMode && editPlanification && actionable //&& isEditable
 
     return (
         <>
             {
                 !editionMode &&
                 <Button className={'header-back-arrow'} icon onClick={() => onBackArrow()}>
-                    <Icon name={'arrow left'}/>
+                    <BackArrowIcon/>
                 </Button>
             }
             {
@@ -66,13 +69,13 @@ const MenuHeaderRender = ({
             <span>{planificationName ?? 'Mis Rutinas'}</span>
             {
                 canShare &&
-                <Icon name={'share square outline'} className={'header-icon'} onClick={() => onSharePlanification()}/>
+                <ShareIcon className={'header-icon'} onClick={() => onSharePlanification()}/>
             }
             {
                 (!editionMode && actionable) ?
                     editPlanification ?
                         canEdit ?
-                            <Icon name={'edit outline'} className={'header-icon'} onClick={() => {
+                            <EditIcon className={'header-icon'} onClick={() => {
                                 setEditionMode(true)
                                 enableEditionPlanification()
                             }}/>
@@ -80,8 +83,8 @@ const MenuHeaderRender = ({
                             <PopUpDisabledAction
                                 disableHeader={'No es posible editar'}
                                 disableDescription={'Tu o un atleta ya marcaron una rutina de esta planificacion'}
-                                trigger={<Icon name={'edit outline'} className={'header-icon disabled-btn'}/>}/>
-                        : <PopUpDisabledAction trigger={<Icon name={'edit outline'} className={'header-icon disabled-btn'}/>}/>
+                                trigger={<EditIcon className={'header-icon disabled-btn'}/>}/>
+                        : <PopUpDisabledAction trigger={<EditIcon className={'header-icon disabled-btn'}/>}/>
                     : null
             }
             {
@@ -376,6 +379,7 @@ class PagePlanificationDetail extends Component {
         }
 
         let weekNumber = 1
+        let nextDefaultRoutineCover=1
         return (
             <>
                 <Menu compact vertical borderless className={'planification-mesocycle-index'}>
@@ -450,9 +454,15 @@ class PagePlanificationDetail extends Component {
                             : (objective ?? 'No definido')
                         }
                         </List.Item>
-                        <List.Item>
-                            Fecha de inicio: A definir
-                        </List.Item>
+                        {/*todo: if a planification is meant to be for only one person then the start date makes sense
+                             but the idea is for this to be a general template to guide any athlete that wants to do it.
+                             we should make this planifications discoverable by athletes in the platform in some way
+                             to increment interaction between instructors and athletes. (maybe)
+                             What about separating Program of Planification?
+                             */}
+                        {/*<List.Item>*/}
+                        {/*    Fecha de inicio: A definir*/}
+                        {/*</List.Item>*/}
                         <List.Item>
                             Mesociclo: {editionMode ?
                             <Input
@@ -478,7 +488,19 @@ class PagePlanificationDetail extends Component {
                     const completed = p.completed === true;
                     const disableActions = !p.isActionable;
                     const disableLookup = !p.id;
-                    const coverStyle = {backgroundImage: `url(${p.coverImageUrl})`}
+
+                    if (!p.coverImageUrl) {
+                        p.coverImageUrl = 'routine-cover-default-'+nextDefaultRoutineCover+'.png'
+                        if (nextDefaultRoutineCover === 6) {
+                            nextDefaultRoutineCover=1
+                        } else {
+                            nextDefaultRoutineCover++
+                        }
+                    }
+                    const coverStyle = {
+                        border: 'unset',
+                        background: `linear-gradient(180deg, rgba(18, 18, 18, 0.00) 42.53%, rgba(18, 18, 18, 0.72) 79.4%, #121212 105.29%), url(${p.coverImageUrl}) lightgray 50% / cover no-repeat`,
+                    }
                     return (
                         <>
                             {
@@ -486,7 +508,7 @@ class PagePlanificationDetail extends Component {
                                 <Divider horizontal id={'M'+p.mesocycleNumber}>Mesociclo {p.mesocycleNumber}</Divider>
                             }
                             {p.isStartOfWeek && <Header as={'h5'} className={p.initMesocycle? 'no-top-margin': null}>Semana {weekNumber++}</Header>}
-                            <Segment style={p.coverImageUrl ? coverStyle : {width: '100%'}} className={p.coverImageUrl ? 'cover-background' : null} key={i} disabled={disableLookup}>
+                            <Segment style={coverStyle} className={'cover-background'} key={i} disabled={disableLookup}>
                                 <Grid>
                                     <Grid.Column width={!disableLookup? 11 : 16} onClick={() => !editionMode ? this.redirectToRoutine(p.id, p.coverImageUrl) : null}>
                                         <Header sub>{p.name}{skipped? <Chip omit content={'Omitida'}/> : ''}{completed? <Chip success content={'Completada'}/> : ''}</Header>
@@ -496,7 +518,7 @@ class PagePlanificationDetail extends Component {
                                         </span>
                                     </Grid.Column>
                                     {
-                                        (editionMode && !disableActions) &&
+                                        (editionMode && !disableActions && isEditable) &&
                                         <Grid.Column width={5} className={'no-right-padding no-left-padding'}>
                                             <PopUpConfirmation
                                                 title={'Borrar rutina '+p.name+'?'}

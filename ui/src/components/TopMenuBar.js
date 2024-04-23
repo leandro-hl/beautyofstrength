@@ -6,7 +6,7 @@ export class TopMenuBar extends Component {
     static contextType = AppContext
 
     render() {
-        const {state: {MenuHeaderRender, removeMenuHeaderPadding, coverImageUrl}} = this.context
+        const {state: {MenuHeaderRender, removeMenuHeaderPadding, loadCoverImage}} = this.context
         return (
             <>
                 {
@@ -15,7 +15,7 @@ export class TopMenuBar extends Component {
                         style={{width: '100%', zIndex: 100}}
                         className={'no-margin'
                             + (removeMenuHeaderPadding ? ' no-padding' : '')
-                            + (coverImageUrl ? ' transparent top-bar-absolute': ' top-menu-bar')}>
+                            + (loadCoverImage ? ' transparent top-bar-absolute': ' top-menu-bar')}>
                         <Header as={'h3'} className={'top-bar'}>
                             {MenuHeaderRender}
                         </Header>

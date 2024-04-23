@@ -3,11 +3,12 @@ import React, {Component} from "react";
 import {Header, Checkbox, Loader, Button, Icon, Message} from "semantic-ui-react";
 import {AppContext, setData, showSuccess} from "../context";
 import {savePlanificationDays} from "../service";
+import {ReactComponent as BackArrowIcon} from '../icons/arrow_back.svg'
 
 const MenuHeaderRender = ({planificationName, onGoBack}) => {
     return <>
         <Button className={'header-back-arrow'} icon onClick={() => onGoBack()}>
-            <Icon name={'arrow left'}/>
+            <BackArrowIcon/>
         </Button>
         {planificationName ?? 'Mis Rutinas'}
     </>

@@ -13,6 +13,20 @@ export function urlBase64ToUint8Array(base64String) {
     return outputArray;
 }
 
+export function getNextCoverUrl() {
+    const n = localStorage.getItem('cover-number')
+    if (!n) {
+        localStorage.setItem('cover-number', "1")
+        return 'routine-cover-default-1.png'
+    }
+    if (parseInt(n) < 6) {
+        localStorage.setItem('cover-number', (parseInt(n) + 1).toString())
+    } else {
+        localStorage.setItem('cover-number', "1")
+    }
+    return 'routine-cover-default-'+n+'.png'
+}
+
 export function copyToClipboard(text) {
     const textarea = document.createElement('textarea');
     textarea.value = text;

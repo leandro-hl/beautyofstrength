@@ -6,6 +6,8 @@ import {TopMenuBar} from "./TopMenuBar";
 import {AppContext, setData} from "../context";
 import {MENU} from "../enums";
 import {CoverImageEventHandler} from "./CoverImageEventHandler";
+import {Tooltip} from "@mui/material";
+import {getNextCoverUrl} from "../functions";
 
 class LayoutMobile extends Component {
     static contextType = AppContext
@@ -59,18 +61,30 @@ class LayoutMobile extends Component {
                      style={containerStyle}>
                     {
                         loadCoverImage &&
-                        <div className="square-wrapper">
-                            <img src={coverImageUrl} alt="cover"/>
-                        </div>
+                        <>
+                            <div className="square-wrapper" style={{
+                                background: `
+                            linear-gradient(180deg, rgba(18, 18, 18, 0.00) 56.79%, #121212 100%), 
+                            url(${coverImageUrl ?? getNextCoverUrl()}) lightgray 50% / cover no-repeat`,
+                            }}>
+                                <span style={{
+                                        position: 'absolute',
+                                        bottom: '10px',
+                                        right: '10px',
+                                        color: '#8c8c8c',
+                                    fontStyle: 'italic',
+                                }}>Atleta: Anonimo</span>
+                            </div>
+                        </>
                     }
                     <Segment
                         className={loadCoverImage ? '' : 'body-app scrolling-no-scrollbar'}
-                         basic style={segmentStyle}>
+                        basic style={segmentStyle}>
                         {children}
-                        <div style={{marginBottom: 100}}></div>
+                        <div style={{paddingTop: '40%'}}></div>
                     </Segment>
                 </div>
-                {loadCoverImage && <CoverImageEventHandler/>}
+                {/*{loadCoverImage && <CoverImageEventHandler/>}*/}
                 {!noMenu && <BottomMenuBar noBottomBar={noBottomBar} secondaryActions={secondaryActions} selected={menuButtonSelected}
                                 onSelected={(val) => this.context.dispatch(setData({menuButtonSelected: val, secondaryActions: []}))}/>}
             </>

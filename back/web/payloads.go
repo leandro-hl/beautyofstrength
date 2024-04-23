@@ -57,6 +57,7 @@ type SaveExercisesBlockCptRequest struct {
 
 type SaveExercisesBlockRequest struct {
 	RoutineId          *int64            `json:"routineId"`
+	RoutineName        *string           `json:"routineName"`
 	PlanificationId    *int64            `json:"planificationId"`
 	BlockType          *string           `json:"blockType"`
 	Exercises          []ExerciseRequest `json:"exercises"`

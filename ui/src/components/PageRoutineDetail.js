@@ -42,8 +42,13 @@ import {ImageCropper} from "./ImageCropper";
 import {ReactComponent as ExerciseIcon} from '../icons/exercise.svg'
 import {ReactComponent as RefreshIcon} from '../icons/refresh.svg'
 import {ReactComponent as BlockTypeIcon} from '../icons/manufacturing.svg'
+import {ReactComponent as EditIcon} from '../icons/edit.svg'
+import {ReactComponent as PlayIcon} from '../icons/play_circle.svg'
+import {ReactComponent as ShareIcon} from '../icons/share.svg'
 import {TooltipInfoButton} from "./mui/TooltipInfoButton";
 import {Tooltip} from "@mui/material";
+import {TextFieldCentered} from "./mui/customizations";
+import {ReactComponent as BackArrowIcon} from '../icons/arrow_back.svg'
 
 const MenuHeaderRender = ({
                               alreadyMarkedByMe,
@@ -88,7 +93,7 @@ const MenuHeaderRender = ({
             {
                 !editionMode && !routineStarted &&
                 <Button className={'header-back-arrow'} icon onClick={() => isTemplate ? redirectToSuite() : isShared? redirectToPlanifications() : redirectToPlanification()}>
-                    <Icon name={'arrow left'}/>
+                    <BackArrowIcon/>
                 </Button>
             }
             {
@@ -118,18 +123,18 @@ const MenuHeaderRender = ({
             }
             {
                 isTemplate && !editionMode &&
-                <Icon name={'copy outline'} className={'header-icon'}  onClick={() => openCopyToPlanificationModal()}/>
+                <EditIcon className={'header-icon'}  onClick={() => openCopyToPlanificationModal()}/>
             }
             {
                 canExecuteRoutine && !isTemplate && !editionMode && !routineStarted &&
-                <Icon className={'header-icon'} name={'play circle outline'} onClick={() => {
+                <PlayIcon className={'header-icon'} onClick={() => {
                     setRoutineStarted(true)
                     startRoutine()
                 }}/>
             }
             {
                 !canExecuteRoutine &&
-                <PopUpDisabledAction trigger={<Icon name={'play circle outline'} className={'header-icon disabled-btn'}/>}/>
+                <PopUpDisabledAction trigger={<PlayIcon className={'header-icon disabled-btn'}/>}/>
             }
             {
                 !isTemplate && !editionMode && routineStarted &&
@@ -146,7 +151,7 @@ const MenuHeaderRender = ({
                     secondary={'Cancelar'}
                     isManaged
                     open={showPopUp}
-                    trigger={<Icon name={'share square outline'} className={'header-icon'} onClick={() => setShowPopUp(true)}/>}
+                    trigger={<ShareIcon className={'header-icon'} onClick={() => setShowPopUp(true)}/>}
                     onPrimaryAction={() => {
                         shareRoutine(canBeSavedConf)
                         setShowPopUp(false)
@@ -180,7 +185,7 @@ const MenuHeaderRender = ({
                 (!editionMode && !routineStarted && actionable) ?
                     editRoutine ?
                         (canEdit ?
-                            <Icon name={'edit outline'} className={'header-icon'} onClick={() => {
+                            <EditIcon className={'header-icon'} onClick={() => {
                                 setEditionMode(true)
                                 enableEditionRoutine()
                             }}/>
@@ -188,9 +193,9 @@ const MenuHeaderRender = ({
                             <PopUpDisabledAction
                                 disableHeader={'No es posible editar'}
                                 disableDescription={'Tu o un atleta ya marcaron esta rutina como completada u omitida'}
-                                trigger={<Icon name={'edit outline'} className={'header-icon disabled-btn'}/>}/>)
+                                trigger={<EditIcon className={'header-icon disabled-btn'}/>}/>)
                         :
-                        <PopUpDisabledAction trigger={<Icon name={'edit outline'} className={'header-icon disabled-btn'}/>}/>
+                        <PopUpDisabledAction trigger={<EditIcon className={'header-icon disabled-btn'}/>}/>
                     : null
             }
             {
@@ -260,7 +265,7 @@ class PageRoutineDetail extends Component{
                     noBottomBar: false,
                     menuButtonSelected: MENU.PLANIFICATIONS,
                     nextBlockNumber: res.data.blockGroupers.length+1}))
-                this.context.dispatch(setData({routineId: res.data.id, isTemplate: false, shared: true, coverImageUrl:  res.data.coverImageUrl, loadCoverImage: !!res.data.coverImageUrl}, true))
+                this.context.dispatch(setData({routineId: res.data.id, isTemplate: false, shared: true, coverImageUrl:  res.data.coverImageUrl, loadCoverImage: true}, true))
                 this.setState({
                     loading: false,
                     isShared: !isShared,
@@ -287,12 +292,9 @@ class PageRoutineDetail extends Component{
         const {state: {permissions: {canUploadRoutineCover}}} = this.context
         const res = await getRoutineDetails(routineId, isTemplate);
         let cover = coverImageUrl
-        let loadCoverImage = false
+        let loadCoverImage = true
         if (!cover) {
             cover = res.data.coverImageUrl
-        }
-        if(cover) {
-            loadCoverImage=true
         }
         const actionable = isOwner
         let canEdit = false
@@ -332,7 +334,7 @@ class PageRoutineDetail extends Component{
             updates: {},
             planificationId,
             isOwner,
-            showUploadRoutineImage: canUploadRoutineCover && isOwner && !cover,
+            showUploadRoutineImage: canUploadRoutineCover && isOwner && !res.data.coverImageUrl,
             routineId,
             canEdit,
             isCopy: res.data.isCopy,
@@ -1067,15 +1069,26 @@ class PageRoutineDetail extends Component{
         )
     }
 
-    storeSeriesData(j, i, k,z, name, value, reps) {
+    storeSeriesData(series, j, i, k,z, name, value, reps) {
         const {blockGroupers} = this.state
-        blockGroupers[j].blocks[i].exercises[k].effectiveSeries[z]={
-            ...blockGroupers[j].blocks[i].exercises[k].effectiveSeries[z],
-            [name]: value
+        const exercise = blockGroupers[j].blocks[i].exercises[k]
+
+        if (!exercise.effectiveSeries[z]) {
+            exercise.effectiveSeries[z]={}
         }
-        if (!blockGroupers[j].blocks[i].exercises[k].effectiveSeries[z].reps && reps) {
-            blockGroupers[j].blocks[i].exercises[k].effectiveSeries[z].reps = reps
+
+        if(name ==='reps') {
+            exercise.effectiveSeries[z].reps = value
         }
+
+        if(name === 'kgs') {
+            exercise.effectiveSeries[z].kgs = value
+
+            if (!exercise.effectiveSeries[z].reps) {
+                exercise.effectiveSeries[z].reps = reps
+            }
+        }
+
         this.setState({blockGroupers: [...blockGroupers]})
     }
 
@@ -1101,26 +1114,31 @@ class PageRoutineDetail extends Component{
             rows.push(<>
                 <Table.Row key={z}>
                     <Table.Cell>
-                        <Input
-                            type={'number'}
+                        <TextFieldCentered
+                            style={{justifyContent: 'center'}}
+                            className={'size-two-digits'}
+                            // inputRef={this.inputRefSeries}
                             disabled={!routineStarted}
-                            className={'size-two-digits align-center'}
                             placeholder={e.reps}
+                            // defaultValue={e.reps}
                             value={e.effectiveSeries[z]?.reps}
-                            name={'reps'}
-                            onChange={(e, {value,name}) => this.storeSeriesData(j,i,k,z,name,value)}
-                        />
+                            onChange={(ev) => this.storeSeriesData(e.series, j,i,k,z,'reps',ev.target.value)}
+                            type={'number'}
+                            variant="standard" />
                     </Table.Cell>
                     <Table.Cell>
-                        <Input
-                            type={'number'}
+                        <TextFieldCentered
+                            style={{justifyContent: 'center'}}
+                            className={'size-two-digits'}
+                            // inputRef={this.inputRefSeries}
                             disabled={!routineStarted}
-                            className={'size-two-digits align-center'}
                             placeholder={e[e.currentWorkRange+'LastWeight'] ?? 's/n' }
                             value={e.effectiveSeries[z]?.kgs}
-                            name={'kgs'}
-                            onChange={(_, {value,name}) => this.storeSeriesData(j,i,k,z,name,value, e.reps)}
-                        />
+                            // onKeyDown={(event) => {console.log(event)}}
+                            // onFocus={(event) => {console.log(event)}}
+                            onChange={(ev) => this.storeSeriesData(e.series, j,i,k,z,'kgs',ev.target.value, e.reps)}
+                            type={'number'}
+                            variant="standard" />
                     </Table.Cell>
                 </Table.Row>
             </>)
@@ -1388,7 +1406,6 @@ class PageRoutineDetail extends Component{
                     </Message>
                 }
                 <Accordion
-                    style={{marginBottom: '3rem'}}
                     exclusive={false}
                     fluid>
                     {blockGroupers.map((bg,j) => (
