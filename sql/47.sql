@@ -1,0 +1,1 @@
+alter table profileconfiguration add column save_routine_with_latest_weight_available boolean default false;

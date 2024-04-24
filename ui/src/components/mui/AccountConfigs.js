@@ -101,6 +101,7 @@ export class AccountConfigs extends Component {
                 hypertrophyMax: parseInt(config.hypertrophyMax,10),
                 resistenceMin: parseInt(config.resistenceMin,10),
                 resistenceMax: parseInt(config.resistenceMax,10),
+                saveRoutineWithLatestWeightAvailable: config.saveRoutineWithLatestWeightAvailable
             })
             this.setState({dirty:false})
             showSuccess(this.context, '', 'Configuracion guardada con exito!')
@@ -110,7 +111,7 @@ export class AccountConfigs extends Component {
     }
 
     render() {
-        const {dirty} = this.state
+        const {dirty, config} = this.state
         const {state: {darkTheme}} = this.context
 
         return (
@@ -132,6 +133,12 @@ export class AccountConfigs extends Component {
                     {this.renderItem('Rango de Hipertrofia',7,12, 'hypertrophy')}
                     <Divider  component="li" />
                     {this.renderItem('Rango de Resistencia',13,50, 'resistence')}
+                    <Divider component="li" />
+                    <ListItem>
+                        <ListItemText  primary="Guardar Rutina Con Ultimo Peso Disponible" />
+                        <TooltipInfoButton title={'Si ya tenes un peso de referencia cargado en la app para el rango de entrenamiento correspondiente, la serie se guarda con ese peso al ejecutar la rutina sin cambios'}/>
+                        <Switch checked={config.saveRoutineWithLatestWeightAvailable} onChange={(e) => this.setState({dirty:true, config: {...config, saveRoutineWithLatestWeightAvailable: !config.saveRoutineWithLatestWeightAvailable}})}/>
+                    </ListItem>
                     <Divider component="li" />
                     <ListItem>
                         <ListItemText  primary="Tema Oscuro" />

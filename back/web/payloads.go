@@ -5,12 +5,13 @@ import (
 )
 
 type SaveProfileConfigurationRequest struct {
-	ForceMin       *int `json:"forceMin"`
-	ForceMax       *int `json:"forceMax"`
-	HypertrophyMin *int `json:"hypertrophyMin"`
-	HypertrophyMax *int `json:"hypertrophyMax"`
-	ResistenceMin  *int `json:"resistenceMin"`
-	ResistenceMax  *int `json:"resistenceMax"`
+	ForceMin                             *int  `json:"forceMin"`
+	ForceMax                             *int  `json:"forceMax"`
+	HypertrophyMin                       *int  `json:"hypertrophyMin"`
+	HypertrophyMax                       *int  `json:"hypertrophyMax"`
+	ResistenceMin                        *int  `json:"resistenceMin"`
+	ResistenceMax                        *int  `json:"resistenceMax"`
+	SaveRoutineWithLatestWeightAvailable *bool `json:"saveRoutineWithLatestWeightAvailable"`
 }
 
 type SignUpRequest struct {
@@ -97,17 +98,18 @@ type SaveUserTrainedTodayRequest struct {
 }
 
 type GetRoutineDetailsResponse struct {
-	Id                      *int64                          `json:"id"`
-	CoverImageUrl           *string                         `json:"coverImageUrl"`
-	CanBeSaved              *bool                           `json:"canBeSaved"`
-	IsCopy                  *bool                           `json:"isCopy"`
-	AlreadyCopied           *bool                           `json:"alreadyCopied"`
-	Name                    *string                         `json:"name"`
-	Difficulty              *int                            `json:"difficulty"`
-	Duration                *string                         `json:"duration"`
-	AlreadyMarkedByMe       *bool                           `json:"alreadyMarkedByMe"`
-	AlreadyMarkedByAthetles *bool                           `json:"alreadyMarkedByAthetles"`
-	BlockGroupers           []GetRoutineDetailsBlockGrouper `json:"blockGroupers"`
+	Id                                   *int64                          `json:"id"`
+	CoverImageUrl                        *string                         `json:"coverImageUrl"`
+	CanBeSaved                           *bool                           `json:"canBeSaved"`
+	IsCopy                               *bool                           `json:"isCopy"`
+	AlreadyCopied                        *bool                           `json:"alreadyCopied"`
+	Name                                 *string                         `json:"name"`
+	Difficulty                           *int                            `json:"difficulty"`
+	Duration                             *string                         `json:"duration"`
+	AlreadyMarkedByMe                    *bool                           `json:"alreadyMarkedByMe"`
+	AlreadyMarkedByAthetles              *bool                           `json:"alreadyMarkedByAthetles"`
+	BlockGroupers                        []GetRoutineDetailsBlockGrouper `json:"blockGroupers"`
+	SaveRoutineWithLatestWeightAvailable *bool                           `json:"saveRoutineWithLatestWeightAvailable"`
 }
 
 type GetRoutineDetailsBlockGrouper struct {

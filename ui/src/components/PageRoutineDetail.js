@@ -277,6 +277,7 @@ class PageRoutineDetail extends Component{
                     alreadyCopied: res.data.alreadyCopied,
                     difficulty: res.data.difficulty,
                     duration: res.data.duration,
+                    saveRoutineWithLatestWeightAvailable: res.data.saveRoutineWithLatestWeightAvailable,
                     nextBlockNumber: res.data.blockGroupers.length+1})
             } else {
                 await this.refresh()
@@ -339,6 +340,7 @@ class PageRoutineDetail extends Component{
             canEdit,
             isCopy: res.data.isCopy,
             alreadyCopied: res.data.alreadyCopied,
+            saveRoutineWithLatestWeightAvailable: res.data.saveRoutineWithLatestWeightAvailable,
             actionable,
             shared: false,
             alreadyMarkedByAthetles: res.data.alreadyMarkedByAthetles,
@@ -946,11 +948,26 @@ class PageRoutineDetail extends Component{
                         <TooltipInfoButton title={"Tambien llamadas Sets"}/>
                     </Chip>}
 
-                    {routineStarted &&
-                        <Icon className={'table-play'} name={'play'}
-                              style={{position: 'relative', float: 'right', padding: 0, fontSize: 13}}
-                              onClick={() => this.executeWorkGroup(b, j, i)}/>}
-
+                    {
+                        routineStarted &&
+                        <>
+                            {
+                                b.exercises.filter(e => e.secs).length > 0 ?
+                                <PlayIcon className={'table-play'}
+                                          style={{position: 'relative', float: 'right', padding: 0, fontSize: 13}}
+                                          onClick={() => this.executeWorkGroup(b, j, i)}/>
+                                :
+                                <PopUpDisabledAction
+                                    disableHeader={'Nada que ejecutar'}
+                                    disableDescription={'Agrega ejercicios por tiempo para usar el timer'}
+                                    trigger={
+                                        <PlayIcon
+                                            className={'table-play disabled-btn'}
+                                                  style={{position: 'relative', float: 'right', padding: 0, fontSize: 13}}
+                                                  onClick={() => this.executeWorkGroup(b, j, i)}/>}/>
+                            }
+                        </>
+                    }
                     {
                         editionMode &&
                         <PopUpConfirmation
@@ -1267,14 +1284,17 @@ class PageRoutineDetail extends Component{
 
     executeWorkGroup(b, j, i) {
         const queue = []
-        for (let k = b.exercises.length-1; k >= 0; k--) {
-            const e = b.exercises[k]
+        const exercisesToExecute = b.exercises.filter(e => e.secs)
+        for (let k = exercisesToExecute.length-1; k >= 0; k--) {
+            const e = exercisesToExecute[k]
             queue.push({e,j,i,k})
             if (b.exerestinterval && k > 0) {
                 queue.push({e:{name: 'Descanso', secs: b.exerestinterval}})
             }
         }
-        this.setState({nextQueuedIntervals: queue})
+        if (queue.length>0){
+            this.setState({nextQueuedIntervals: queue})
+        }
     }
 
     startRoutine() {
@@ -1290,6 +1310,8 @@ class PageRoutineDetail extends Component{
 
     async confirmBorgScale(s) {
         try {
+            //todo: this config could be saved in the context once retrieved from the server
+            const {saveRoutineWithLatestWeightAvailable}=this.state
             const {state: {permissions: {canSaveRoutineExecution}}} = this.context
             if (!canSaveRoutineExecution) {
                 return
@@ -1314,14 +1336,24 @@ class PageRoutineDetail extends Component{
                                 })
                             }
                         } else if(e.series) {
-                            for (let l = 0; l < e.effectiveSeries.length; l++) {
-                                const r = e.effectiveSeries[l]
-                                exercises.push({
-                                    id: e.exId,
-                                    reps: e.reps,
-                                    effectiveReps: parseInt(r.reps,10),
-                                    kg: parseInt(r.kgs,10)
-                                })
+                            for (let l = 0; l < e.series; l++) {
+                                const loadedSerie = e.effectiveSeries[l]
+                                if (loadedSerie) {
+                                    exercises.push({
+                                        id: e.exId,
+                                        reps: e.reps,
+                                        effectiveReps: parseInt(loadedSerie.reps,10),
+                                        kg: parseInt(loadedSerie.kgs,10)
+                                    })
+                                } else if (saveRoutineWithLatestWeightAvailable && e[e.currentWorkRange+'LastWeight']) {
+                                    //we have a weight of reference we can use.
+                                    exercises.push({
+                                        id: e.exId,
+                                        reps: e.reps,
+                                        effectiveReps: e.reps,
+                                        kg: e[e.currentWorkRange+'LastWeight']
+                                    })
+                                }
                             }
                         } else if(e.reps && b.laps) {
                             for (let l = 0; l < b.laps; l++) {

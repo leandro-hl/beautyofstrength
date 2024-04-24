@@ -587,17 +587,18 @@ func (o *Endpoints) calculateRoutineDetailsResponse(
 	canBeSaved bool,
 	config *db.ProfileConfiguration) *GetRoutineDetailsResponse {
 	res := &GetRoutineDetailsResponse{
-		Id:                      header.Routineid,
-		Name:                    header.Routinename,
-		CoverImageUrl:           header.CoverImageUrl,
-		Difficulty:              header.Difficulty,
-		Duration:                header.Duration,
-		IsCopy:                  header.IsCopy,
-		AlreadyCopied:           header.AlreadyCopied,
-		CanBeSaved:              &canBeSaved,
-		AlreadyMarkedByMe:       util.PBool(*header.TimesIMarkedIt > 0),
-		AlreadyMarkedByAthetles: util.PBool(*header.TimesMarked > 0),
-		BlockGroupers:           make([]GetRoutineDetailsBlockGrouper, 0),
+		Id:                                   header.Routineid,
+		Name:                                 header.Routinename,
+		CoverImageUrl:                        header.CoverImageUrl,
+		Difficulty:                           header.Difficulty,
+		Duration:                             header.Duration,
+		IsCopy:                               header.IsCopy,
+		AlreadyCopied:                        header.AlreadyCopied,
+		CanBeSaved:                           &canBeSaved,
+		AlreadyMarkedByMe:                    util.PBool(*header.TimesIMarkedIt > 0),
+		AlreadyMarkedByAthetles:              util.PBool(*header.TimesMarked > 0),
+		BlockGroupers:                        make([]GetRoutineDetailsBlockGrouper, 0),
+		SaveRoutineWithLatestWeightAvailable: config.SaveRoutineWithLatestWeightAvailable,
 	}
 
 	if len(result) == 1 && result[0].GrouperId == nil {
@@ -877,18 +878,21 @@ func (o *Endpoints) saveProfileConfiguration(w http.ResponseWriter, r *http.Requ
 	current := db.GetProfileConfiguration(o.db, tx, usr)
 	if nil == current {
 		db.InsertProfileConfiguration(o.db, tx, &db.ProfileConfiguration{
-			ForceMin:        t.ForceMin,
-			ForceMax:        t.ForceMax,
-			HypertrophyMin:  t.HypertrophyMin,
-			HypertrophyMax:  t.HypertrophyMax,
-			ResistenceMin:   t.ResistenceMin,
-			ResistenceMax:   t.ResistenceMax,
-			UserAccountId:   &usr,
-			LastUpdatedDate: time.Now(),
+			ForceMin:                             t.ForceMin,
+			ForceMax:                             t.ForceMax,
+			HypertrophyMin:                       t.HypertrophyMin,
+			HypertrophyMax:                       t.HypertrophyMax,
+			ResistenceMin:                        t.ResistenceMin,
+			ResistenceMax:                        t.ResistenceMax,
+			UserAccountId:                        &usr,
+			SaveRoutineWithLatestWeightAvailable: t.SaveRoutineWithLatestWeightAvailable,
+			LastUpdatedDate:                      time.Now(),
 		})
 		db.RegisterEvent(o.db, tx, usr, db.SaveProfileConfiguration)
 		return
 	}
+
+	current.SaveRoutineWithLatestWeightAvailable = t.SaveRoutineWithLatestWeightAvailable
 
 	if t.ForceMin != nil && *t.ForceMin != *current.ForceMin {
 		current.ForceMin = t.ForceMin
@@ -1844,11 +1848,11 @@ func (o *Endpoints) googleSignIn(w http.ResponseWriter, r *http.Request, tx *sql
 		if plan == nil {
 			http.Redirect(w, r, *o.conf.AddressUi+"/app"+"/onboarding", http.StatusFound)
 		} else if *plan == db.StudentFree {
-			http.Redirect(w, r, *o.conf.AddressUi+"/app"+"/my-planifications", http.StatusFound)
+			http.Redirect(w, r, *o.conf.AddressUi+"/app"+"/account", http.StatusFound)
 		} else if *plan == db.StudentPremium {
-			http.Redirect(w, r, *o.conf.AddressUi+"/app"+"/my-planifications", http.StatusFound)
+			http.Redirect(w, r, *o.conf.AddressUi+"/app"+"/account", http.StatusFound)
 		} else if *plan == db.Professor {
-			http.Redirect(w, r, *o.conf.AddressUi+"/app"+"/my-planifications", http.StatusFound)
+			http.Redirect(w, r, *o.conf.AddressUi+"/app"+"/account", http.StatusFound)
 		} else {
 			http.Redirect(w, r, *o.conf.AddressUi+"/app"+"/onboarding", http.StatusFound)
 		}

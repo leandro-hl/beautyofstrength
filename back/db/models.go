@@ -26,15 +26,16 @@ const (
 )
 
 type ProfileConfiguration struct {
-	Id              *int64    `json:"id"`
-	ForceMin        *int      `json:"force_min"`
-	ForceMax        *int      `json:"force_max"`
-	HypertrophyMin  *int      `json:"hypertrophy_min"`
-	HypertrophyMax  *int      `json:"hypertrophy_max"`
-	ResistenceMin   *int      `json:"resistence_min"`
-	ResistenceMax   *int      `json:"resistence_max"`
-	UserAccountId   *int64    `json:"user_account_id"`
-	LastUpdatedDate time.Time `json:"lastupdateddate"`
+	Id                                   *int64    `json:"id"`
+	ForceMin                             *int      `json:"force_min"`
+	ForceMax                             *int      `json:"force_max"`
+	HypertrophyMin                       *int      `json:"hypertrophy_min"`
+	HypertrophyMax                       *int      `json:"hypertrophy_max"`
+	ResistenceMin                        *int      `json:"resistence_min"`
+	ResistenceMax                        *int      `json:"resistence_max"`
+	UserAccountId                        *int64    `json:"user_account_id"`
+	SaveRoutineWithLatestWeightAvailable *bool     `json:"save_routine_with_latest_weight_available"`
+	LastUpdatedDate                      time.Time `json:"lastupdateddate"`
 }
 
 type UserExercise struct {

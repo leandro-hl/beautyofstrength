@@ -173,12 +173,22 @@ func UpdateProfileConfiguration(db *DB, tx *sqlx.Tx, p *ProfileConfiguration) {
 			hypertrophy_max=$4,
 			resistence_min=$5,
 			resistence_max=$6,
+			save_routine_with_latest_weight_available=$8,
 			lastupdateddate=now()
 		where user_account_id=$7`
 	stmt, err := getTxPreparedStmt(db, tx, query)
 	util.Check(err)
 
-	stmt.Exec(p.ForceMin, p.ForceMax, p.HypertrophyMin, p.HypertrophyMax, p.ResistenceMin, p.ResistenceMax, p.UserAccountId)
+	stmt.Exec(
+		p.ForceMin,
+		p.ForceMax,
+		p.HypertrophyMin,
+		p.HypertrophyMax,
+		p.ResistenceMin,
+		p.ResistenceMax,
+		p.UserAccountId,
+		p.SaveRoutineWithLatestWeightAvailable,
+	)
 }
 
 func ListMyPlanifications(db *DB, tx *sqlx.Tx, userId int64) []ListPlanificationsQuery {
