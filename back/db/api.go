@@ -338,7 +338,7 @@ func GetRoutineDetails(db *DB, tx *sqlx.Tx, routineId int64, userId int64) []Get
 		left join blockgroup b on r.id = b.routine_id and bg.id=b.blockgroupgrouper_id and b.active=true
 		left join exerciseblockgroup eb on b.id = eb.blockgroup_id and eb.active=true
 		left join exercise e on e.id = eb.exercise_id
-		left join userexercise ue on e.id = ue.exercise_id and ue.useraccount_id = ue.useraccount_id
+		left join userexercise ue on e.id = ue.exercise_id and ue.useraccount_id = u.useraccount_id
 		left join instructorexercise ie on e.id = ie.exercise_id and r.creator_id = ie.useraccount_id
 		where 
 		    p.active=true 
