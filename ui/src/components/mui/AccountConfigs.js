@@ -33,6 +33,7 @@ export class AccountConfigs extends Component {
                 hypertrophyMax: props.userAccount.hypertrophy_max,
                 resistenceMin: props.userAccount.resistence_min,
                 resistenceMax: props.userAccount.resistence_max,
+                saveRoutineWithLatestWeightAvailable: props.userAccount.save_routine_with_latest_weight_available,
             },
             dirty: false
         }
