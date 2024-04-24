@@ -587,18 +587,21 @@ func (o *Endpoints) calculateRoutineDetailsResponse(
 	canBeSaved bool,
 	config *db.ProfileConfiguration) *GetRoutineDetailsResponse {
 	res := &GetRoutineDetailsResponse{
-		Id:                                   header.Routineid,
-		Name:                                 header.Routinename,
-		CoverImageUrl:                        header.CoverImageUrl,
-		Difficulty:                           header.Difficulty,
-		Duration:                             header.Duration,
-		IsCopy:                               header.IsCopy,
-		AlreadyCopied:                        header.AlreadyCopied,
-		CanBeSaved:                           &canBeSaved,
-		AlreadyMarkedByMe:                    util.PBool(*header.TimesIMarkedIt > 0),
-		AlreadyMarkedByAthetles:              util.PBool(*header.TimesMarked > 0),
-		BlockGroupers:                        make([]GetRoutineDetailsBlockGrouper, 0),
-		SaveRoutineWithLatestWeightAvailable: config.SaveRoutineWithLatestWeightAvailable,
+		Id:                      header.Routineid,
+		Name:                    header.Routinename,
+		CoverImageUrl:           header.CoverImageUrl,
+		Difficulty:              header.Difficulty,
+		Duration:                header.Duration,
+		IsCopy:                  header.IsCopy,
+		AlreadyCopied:           header.AlreadyCopied,
+		CanBeSaved:              &canBeSaved,
+		AlreadyMarkedByMe:       util.PBool(*header.TimesIMarkedIt > 0),
+		AlreadyMarkedByAthetles: util.PBool(*header.TimesMarked > 0),
+		BlockGroupers:           make([]GetRoutineDetailsBlockGrouper, 0),
+	}
+
+	if config != nil {
+		res.SaveRoutineWithLatestWeightAvailable = config.SaveRoutineWithLatestWeightAvailable
 	}
 
 	if len(result) == 1 && result[0].GrouperId == nil {
