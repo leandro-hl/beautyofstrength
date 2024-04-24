@@ -1,81 +1,171 @@
 import {withRouter} from "react-router-dom";
-import {Box, Paper, Slider, Typography} from "@mui/material";
+import {Box, FormControlLabel, Paper, Slider, Typography, Checkbox, Grid, Container} from "@mui/material";
 import React,{Component} from "react";
 import {TooltipInfoButton} from "./TooltipInfoButton";
+import {AppContext, setData} from "../../context";
+import {queryParam} from "../../functions";
+
+const LineItem = ({keyId, label, tooltip, price, onChange}) => (
+    <Grid container item justifyContent={'space-between'}>
+        <Grid item>
+            <FormControlLabel control={<Checkbox onChange={(event) => {
+                onChange(keyId, event.target.checked, parseInt(price.substring(1, price.length), 10))
+            }}/>} label={
+                <>
+                    {label}
+                    <TooltipInfoButton title={tooltip}/>
+                </>
+            }/>
+        </Grid>
+        <Grid item>
+            <Box height={'100%'} display={'inline-flex'} alignItems={'center'}>{price}</Box>
+        </Grid>
+    </Grid>
+)
 
 class PageBundles extends Component {
-    constructor(props) {
-        super(props);
+    static contextType = AppContext
 
-        this.state = {
-            loading: true,
-            options: [
-                {
-                    title: 'Rutinas que quiero crear',
-                    description: 'Elige cuantas rutinas quieres agregar a tu paquete',
-                    type: 'slider',
-                    //quantity?
-                    price: {
-                        min: 10,
-                        max: 1000,
-                        interval: 100,
-                        given: 10
-                    }
-                }
-            ]
+    state = {loading: true, selectedFeatures: [], total: 0, defaultMessage: 'Elige tus herramientas para continuar'}
+
+    onAction = () => {
+        console.log('action')
+    }
+
+    componentDidMount() {
+        const journey = queryParam(this.props, 'journey')
+        this.context.dispatch(setData({
+            secondaryActions: [],
+            fullScreen: true,
+            noMenu: true,
+            singleActionMenuBar: {onAction: () => this.onAction(), disable: true, actionTitle: this.state.defaultMessage}
+        }))
+        this.setState({journey: journey ?? 'instructor', loading:false})
+    }
+
+    onChange(keyId, selected, price) {
+        const {total, selectedFeatures, defaultMessage}= this.state
+        let currentTotal = total
+        if (selected) {
+            currentTotal += price
+            selectedFeatures.push(keyId)
+        } else {
+            currentTotal -= price
+            selectedFeatures.splice(selectedFeatures.indexOf(keyId), 1)
         }
+        console.log(selectedFeatures)
+        this.setState({total: currentTotal, selectedFeatures})
+        const noFeatures = selectedFeatures.length===0
+        this.context.dispatch(setData({singleActionMenuBar: {onAction: () => this.onAction(), disable: noFeatures, actionTitle: noFeatures? defaultMessage : `Unirme por $${currentTotal}`}}))
     }
 
-    handleSliderChange = (index, value) => {
-        const newStep = this.calculateStep(value);
-        this.setState(prevState => {
-            let newOptions = prevState.options.slice();
-            newOptions[index].price.interval = newStep;
-            return {
-                options: newOptions
-            }
-        });
-    }
+    renderInstructorJourney() {
+        return (
+            <>
+                <h1>Personalizacion</h1>
+                <Grid container>
+                    <LineItem onChange={(keyId, selected, price) => this.onChange(keyId, selected, price)}
+                        keyId={'uploadAppLogo'}
+                        label={'Subi tu propio Logo'}
+                        tooltip={'Obten un codigo de creador y permite que tus atletas descarguen la aplicacion con tu logo'}
+                        price={'$50'}
+                    />
+                    <LineItem onChange={(keyId, selected, price) => this.onChange(keyId, selected, price)}
+                        keyId={'changeAppName'}
+                        label={'Elegi el nombre de la app'}
+                        tooltip={'Obten un codigo de creador y configura como se ve la App en la pantalla de Inicio del celular de tus atletas'}
+                        price={'$50'}
+                    />
+                    <LineItem onChange={(keyId, selected, price) => this.onChange(keyId, selected, price)}
+                        keyId={'changeAppColors'}
+                        label={'Eligi tus propios colores'}
+                        tooltip={'Para los botones tanto en light mode como en dark mode'}
+                        price={'$50'}
+                    />
+                    <LineItem onChange={(keyId, selected, price) => this.onChange(keyId, selected, price)}
+                        keyId={'uploadCoverImageToRoutine'}
+                        label={'Agrega foto de portada hasta a 100 rutinas'}
+                        tooltip={'Dale mas vida a tus rutinas con una foto de portada propia'}
+                        price={'$200'}
+                    />
+                    <LineItem onChange={(keyId, selected, price) => this.onChange(keyId, selected, price)}
+                        keyId={'uploadExerciseVideos'}
+                        label={'Subi hasta 100 videos de ejercicios'}
+                        tooltip={'Agrega videos de hasta 10 segundos a cada ejercicio y personaliza la experiencia de tus atletas'}
+                        price={'$500'}
+                    />
+                    <LineItem onChange={(keyId, selected, price) => this.onChange(keyId, selected, price)}
+                        keyId={'uploadExerciseVideoLinks'}
+                        label={'Subi sin limite links de YouTube Shorts'}
+                        tooltip={'Agrega links a cada ejercicio y personaliza la experiencia de tus atletas'}
+                        price={'$100'}
+                    />
+                </Grid>
 
-    calculateStep = (value) => {
-        // Define your function to calculate step based on current value
-        // For now, let's use a simple linear function
-        return 100 - 0.1 * value;
+                <h1>Datos</h1>
+                <Grid container>
+                    {/*todo: definir que ejercicios entran en este pack y cuantos son. Ver stories de data*/}
+                    <LineItem onChange={(keyId, selected, price) => this.onChange(keyId, selected, price)}
+                        keyId={'basicExercisesPack'}
+                        label={'Pack de ejercicios basico'}
+                        tooltip={'200 ejercicios de gimnasio. Con grupos musculares y equipo asociado'}
+                        price={'$200'}
+                    />
+                    {/*todo: clasificacion por deporte. Otras clasificaciones?*/}
+                    <LineItem onChange={(keyId, selected, price) => this.onChange(keyId, selected, price)}
+                        keyId={'premiumExercisesPack'}
+                        label={'Pack de ejercicios premium'}
+                        tooltip={'200 ejercicios de gimnasio. Con grupos musculares y equipo asociado'}
+                        price={'$200'}
+                    />
+                    <LineItem onChange={(keyId, selected, price) => this.onChange(keyId, selected, price)}
+                        keyId={'createYourOwnExercises'}
+                        label={'Crea tus propios ejercicios'}
+                        tooltip={'Crea hasta 500 ejercicios propios y personaliza aun mas tus rutinas'}
+                        price={'$300'}
+                    />
+                    <LineItem onChange={(keyId, selected, price) => this.onChange(keyId, selected, price)}
+                        keyId={'createUpTo100Routines'}
+                        label={'Crea hasta 100 rutinas'}
+                        tooltip={'Tus rutinas siempre en la nube'}
+                        price={'$50'}
+                    />
+                    <LineItem onChange={(keyId, selected, price) => this.onChange(keyId, selected, price)}
+                        keyId={'shareWithUpTo100Athletes'}
+                        label={'Asocia tu perfil hasta con 100 atletas'}
+                        tooltip={'Comparte tu codigo personal hasta con 100 atletas'}
+                        price={'$50'}
+                    />
+                    <LineItem onChange={(keyId, selected, price) => this.onChange(keyId, selected, price)}
+                        keyId={'createUpTo100Planifications'}
+                        label={'Crea hasta 100 planificaciones'}
+                        tooltip={'Para agrupar rutinas o compartir con atletas'}
+                        price={'$50'}
+                    />
+                </Grid>
+
+                <h1>Mis Atletas</h1>
+                <Grid container>
+                    <LineItem onChange={(keyId, selected, price) => this.onChange(keyId, selected, price)}
+                        keyId={'myAthletesCanExecuteMyRoutines'}
+                        label={'Ejecutar rutina'}
+                        tooltip={'Permite a tus atletas ejecutar tus rutinas con timer e historico de ejercicios'}
+                        price={'$500'}
+                    />
+                </Grid>
+            </>
+        )
     }
 
     render() {
-        const { loading, options } = this.state;
-        function valuetext(value) {
-            return `${value}`;
-        }
+        const {journey} = this.state;
+
         return (
-            <div>
-                <h1>Configura tu paquete!</h1>
-                {options.map((o, i) => {
-                    return (
-                        <Paper>
-                            <Box p={2}>
-                                <Typography gutterBottom>
-                                    {o.title}
-                                    <TooltipInfoButton title={o.description}/>
-                                </Typography>
-                                <Slider
-                                    style={{textAlign:`center`, color: 'white'}}
-                                    defaultValue={o.price.given}
-                                    getAriaValueText={valuetext}
-                                    aria-labelledby="discrete-slider"
-                                    valueLabelDisplay="auto"
-                                    step={o.price.interval}
-                                    marks={true}
-                                    min={o.price.min}
-                                    max={o.price.max}
-                                    onChange={(_, value) => this.handleSliderChange(i, value)}
-                                />
-                            </Box>
-                        </Paper>
-                    )
-                })}
-            </div>
+            <Container className={'onboarding-container'}>
+                <Box pt={4}>
+                    {journey === 'instructor'? this.renderInstructorJourney() : null}
+                </Box>
+            </Container>
         )
     }
 }

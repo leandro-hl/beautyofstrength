@@ -17,7 +17,11 @@ class PageOnboarding extends Component {
     }
 
     componentDidMount() {
-        this.context.dispatch(setData({secondaryActions: [], fullScreen: true, noMenu: true}))
+        this.context.dispatch(setData({
+            secondaryActions: [],
+            fullScreen: true,
+            noMenu: true
+        }))
     }
 
     async startJourney(){
@@ -25,9 +29,11 @@ class PageOnboarding extends Component {
             const {instructorSelected, athleteSelected} = this.state
             if (instructorSelected || athleteSelected) {
                 this.setState({startingJourney: true})
-                await startJourney({as: instructorSelected ? 'instructor' : athleteSelected ? 'athlete' : null})
+                const journeyAs = instructorSelected ? 'instructor' : athleteSelected ? 'athlete' : null
+                await startJourney({as: journeyAs})
                 const b = await getUserPermissions();
                 this.context.dispatch(setData({isAuthenticated: true, permissions: b.data, fullScreen: false, noMenu: false}))
+                // this.props.history.push(`/bundle?journey=${journeyAs}`)
                 this.props.history.push('/my-planifications')
             }
         } catch (error) {

@@ -8,11 +8,12 @@ import {MENU} from "../enums";
 import {CoverImageEventHandler} from "./CoverImageEventHandler";
 import {Tooltip} from "@mui/material";
 import {getNextCoverUrl} from "../functions";
+import SingleActionMenuBar from "./mui/SingleActionMenuBar";
 
 class LayoutMobile extends Component {
     static contextType = AppContext
     render() {
-        const {state: {loading, withTopBar, coverImageUrl, noBottomBar, fullScreen, noMenu, secondaryActions, menuButtonSelected, loadCoverImage}} = this.context
+        const {state: {singleActionMenuBar, loading, withTopBar, coverImageUrl, noBottomBar, fullScreen, noMenu, secondaryActions, menuButtonSelected, loadCoverImage}} = this.context
         const {children} = this.props;
 
         let segmentStyle = {
@@ -85,6 +86,7 @@ class LayoutMobile extends Component {
                     </Segment>
                 </div>
                 {/*{loadCoverImage && <CoverImageEventHandler/>}*/}
+                {singleActionMenuBar && <SingleActionMenuBar/>}
                 {!noMenu && <BottomMenuBar noBottomBar={noBottomBar} secondaryActions={secondaryActions} selected={menuButtonSelected}
                                 onSelected={(val) => this.context.dispatch(setData({menuButtonSelected: val, secondaryActions: []}))}/>}
             </>

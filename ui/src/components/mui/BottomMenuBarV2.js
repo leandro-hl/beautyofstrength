@@ -5,7 +5,7 @@ import {AppContext} from "../context";
 import {MENU} from "../enums";
 import {PopUpDisabledAction} from "./PopUpDisabledAction";
 
-class BottomMenuBar extends Component {
+class BottomMenuBarV2 extends Component {
     static contextType = AppContext
 
     constructor(props) {
@@ -70,4 +70,4 @@ class BottomMenuBar extends Component {
     }
 }
 
-export default withRouter(BottomMenuBar);
+export default withRouter(BottomMenuBarV2);
