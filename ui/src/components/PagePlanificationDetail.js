@@ -33,6 +33,7 @@ import {ModalBorgScale} from "./ModalBorgScale";
 import {ReactComponent as EditIcon} from '../icons/edit.svg'
 import {ReactComponent as ShareIcon} from '../icons/share.svg'
 import {ReactComponent as BackArrowIcon} from '../icons/arrow_back.svg'
+import {Grid as GridMUI} from "@mui/material";
 
 const MenuHeaderRender = ({
                               isEditable,
@@ -380,6 +381,81 @@ class PagePlanificationDetail extends Component {
 
         let weekNumber = 1
         let nextDefaultRoutineCover=1
+        const routineGroups = []
+
+        routines.map((p, i) => {
+            const skipped = p.completed === false;
+            const completed = p.completed === true;
+            const disableActions = !p.isActionable;
+            const disableLookup = !p.id;
+
+            if (!p.coverImageUrl) {
+                p.coverImageUrl = 'routine-cover-default-'+nextDefaultRoutineCover+'.png'
+                if (nextDefaultRoutineCover === 6) {
+                    nextDefaultRoutineCover=1
+                } else {
+                    nextDefaultRoutineCover++
+                }
+            }
+            const coverStyle = {
+                border: 'unset',
+                margin: '1rem 0.5rem',
+                minWidth: 200,
+                background: `linear-gradient(180deg, rgba(18, 18, 18, 0.00) 42.53%, rgba(18, 18, 18, 0.72) 79.4%, #121212 105.29%), url(${p.coverImageUrl}) lightgray 50% / cover no-repeat`,
+            }
+
+            const routineTemplate = (
+                <Segment style={coverStyle} className={'cover-background'} key={i} disabled={disableLookup}>
+                    <Grid>
+                        <Grid.Column width={!disableLookup? 11 : 16} onClick={() => !editionMode ? this.redirectToRoutine(p.id, p.coverImageUrl) : null}>
+                            <Header sub>{p.name}{skipped? <Chip omit content={'Omitida'}/> : ''}{completed? <Chip success content={'Completada'}/> : ''}</Header>
+                            <span>
+                                            {p.blockCount > 1 ? p.blockCount+' Bloques, ' : p.blockCount+' Bloque, '}
+                                {p.workCount > 1 ? p.workCount+' Trabajos' : p.workCount+' Trabajo'}
+                                        </span>
+                        </Grid.Column>
+                        {
+                            (editionMode && !disableActions && isEditable) &&
+                            <Grid.Column width={5} className={'no-right-padding no-left-padding'}>
+                                <PopUpConfirmation
+                                    title={'Borrar rutina '+p.name+'?'}
+                                    primary={'Borrar'}
+                                    secondary={'Cancelar'}
+                                    isManaged
+                                    open={i===confirmRoutineDeletionIndex}
+                                    trigger={<Button disabled={disableActions}
+                                                     onClick={() => this.openDeleteRoutinePopUpConfirmation(i)}
+                                                     basic secondary icon='close' style={{position: 'relative', float: 'right'}}/>}
+                                    onPrimaryAction={() => this.deleteRoutine(p.id, i)}
+                                    onSecondaryAction={() => this.setState({confirmRoutineDeletionIndex: null})}
+                                />
+                            </Grid.Column>
+                        }
+                        {
+                            (!editionMode && !disableActions && canMarkRoutine) &&
+                            <Grid.Column width={5} className={'no-right-padding no-left-padding'}>
+                                <Button disabled={disableActions}
+                                        onClick={() => this.setState({showModalRoutineActionated: true, actionatedRoutineIndex: i, actionatedRoutineId: p.id, actionatedRoutineAction: 'finished'})}
+                                        basic secondary icon='check' style={{position: 'relative', float: 'right'}}/>
+                                <Button disabled={disableActions}
+                                        onClick={() => this.setState({showModalRoutineActionated: true, actionatedRoutineIndex: i, actionatedRoutineId: p.id, actionatedRoutineAction: 'skip'})}
+                                        basic secondary icon='close' style={{position: 'relative', float: 'right'}}/>
+                            </Grid.Column>
+                        }
+                    </Grid>
+                </Segment>
+            )
+
+            if (p.isStartOfWeek) {
+                //creates a new group that contains an array of routines
+                routineGroups.push({initMesocycle: p.initMesocycle, routines: [routineTemplate]})
+            } else {
+                //adds the routine to the latest group in the array
+                routineGroups[routineGroups.length - 1].initMesocycle = p.initMesocycle
+                routineGroups[routineGroups.length - 1].routines.push(routineTemplate)
+            }
+        })
+
         return (
             <>
                 <Menu compact vertical borderless className={'planification-mesocycle-index'}>
@@ -483,73 +559,22 @@ class PagePlanificationDetail extends Component {
                         <p>Comienza agregando una rutina a tu planificacion. Usualmente una rutina es un dia de la semana.</p>
                     </Message>
                 }
-                {routines.map((p, i) => {
-                    const skipped = p.completed === false;
-                    const completed = p.completed === true;
-                    const disableActions = !p.isActionable;
-                    const disableLookup = !p.id;
-
-                    if (!p.coverImageUrl) {
-                        p.coverImageUrl = 'routine-cover-default-'+nextDefaultRoutineCover+'.png'
-                        if (nextDefaultRoutineCover === 6) {
-                            nextDefaultRoutineCover=1
-                        } else {
-                            nextDefaultRoutineCover++
-                        }
-                    }
-                    const coverStyle = {
-                        border: 'unset',
-                        background: `linear-gradient(180deg, rgba(18, 18, 18, 0.00) 42.53%, rgba(18, 18, 18, 0.72) 79.4%, #121212 105.29%), url(${p.coverImageUrl}) lightgray 50% / cover no-repeat`,
-                    }
-                    return (
-                        <>
-                            {
-                                p.initMesocycle &&
-                                <Divider horizontal id={'M'+p.mesocycleNumber}>Mesociclo {p.mesocycleNumber}</Divider>
-                            }
-                            {p.isStartOfWeek && <Header as={'h5'} className={p.initMesocycle? 'no-top-margin': null}>Semana {weekNumber++}</Header>}
-                            <Segment style={coverStyle} className={'cover-background'} key={i} disabled={disableLookup}>
-                                <Grid>
-                                    <Grid.Column width={!disableLookup? 11 : 16} onClick={() => !editionMode ? this.redirectToRoutine(p.id, p.coverImageUrl) : null}>
-                                        <Header sub>{p.name}{skipped? <Chip omit content={'Omitida'}/> : ''}{completed? <Chip success content={'Completada'}/> : ''}</Header>
-                                        <span>
-                                            {p.blockCount > 1 ? p.blockCount+' Bloques, ' : p.blockCount+' Bloque, '}
-                                            {p.workCount > 1 ? p.workCount+' Trabajos' : p.workCount+' Trabajo'}
-                                        </span>
-                                    </Grid.Column>
-                                    {
-                                        (editionMode && !disableActions && isEditable) &&
-                                        <Grid.Column width={5} className={'no-right-padding no-left-padding'}>
-                                            <PopUpConfirmation
-                                                title={'Borrar rutina '+p.name+'?'}
-                                                primary={'Borrar'}
-                                                secondary={'Cancelar'}
-                                                isManaged
-                                                open={i===confirmRoutineDeletionIndex}
-                                                trigger={<Button disabled={disableActions}
-                                                                 onClick={() => this.openDeleteRoutinePopUpConfirmation(i)}
-                                                                 basic secondary icon='close' style={{position: 'relative', float: 'right'}}/>}
-                                                onPrimaryAction={() => this.deleteRoutine(p.id, i)}
-                                                onSecondaryAction={() => this.setState({confirmRoutineDeletionIndex: null})}
-                                            />
-                                        </Grid.Column>
-                                    }
-                                    {
-                                        (!editionMode && !disableActions && canMarkRoutine) &&
-                                        <Grid.Column width={5} className={'no-right-padding no-left-padding'}>
-                                            <Button disabled={disableActions}
-                                                    onClick={() => this.setState({showModalRoutineActionated: true, actionatedRoutineIndex: i, actionatedRoutineId: p.id, actionatedRoutineAction: 'finished'})}
-                                                    basic secondary icon='check' style={{position: 'relative', float: 'right'}}/>
-                                            <Button disabled={disableActions}
-                                                    onClick={() => this.setState({showModalRoutineActionated: true, actionatedRoutineIndex: i, actionatedRoutineId: p.id, actionatedRoutineAction: 'skip'})}
-                                                    basic secondary icon='close' style={{position: 'relative', float: 'right'}}/>
-                                        </Grid.Column>
-                                    }
-                                </Grid>
-                            </Segment>
-                        </>
-                    )
-                })}
+                {
+                    routineGroups.map((p, i) => {
+                        return (
+                            <React.Fragment key={i}>
+                                {
+                                    p.initMesocycle &&
+                                    <Divider horizontal id={'M'+p.mesocycleNumber}>Mesociclo {p.mesocycleNumber}</Divider>
+                                }
+                                <Header as={'h5'} className={p.initMesocycle? 'no-top-margin': null}>Semana {weekNumber++}</Header>
+                                <GridMUI container flexWrap={'nowrap'} style={{overflowX: 'scroll'}} spacing={2}>
+                                    {p.routines}
+                                </GridMUI>
+                            </React.Fragment>
+                        )
+                    })
+                }
                 {
                     showModalRoutineActionated &&
                     <ModalRoutineActionatedConfirmation

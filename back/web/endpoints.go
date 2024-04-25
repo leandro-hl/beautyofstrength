@@ -424,7 +424,7 @@ func (o *Endpoints) getUserPermissions(w http.ResponseWriter, r *http.Request, t
 		permissions["canSaveRoutineExecution"] = true
 	}
 
-	if *plan == db.StudentPremium {
+	if *plan == db.StudentPremium || *plan == db.Professor {
 		permissions["statistics"] = true
 		permissions["canMarkRoutine"] = true
 	}
