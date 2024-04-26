@@ -19,7 +19,7 @@ import {
 } from "@mui/material";
 import {ModalMyEquipmentCreate} from "../ModalMyEquipmentCreate";
 import {AccountConfigs} from "./AccountConfigs";
-import {LeftTypography, ListItemTextJustifyBetween, RightTypography} from "./customizations";
+import {LeftTypography, RightTypography} from "./customizations";
 import {MyEquipment} from "../MyEquipment";
 
 const MenuHeaderRender = () => {

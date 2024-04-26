@@ -37,8 +37,9 @@ import {ExerciseSearch} from "./ExerciseSearch";
 import {PopUpContinueEditing} from "./PopUpContinueEditing";
 import {PopUpDisabledAction} from "./PopUpDisabledAction";
 import {TooltipInfoButton} from "./mui/TooltipInfoButton";
-import {FormControlLabel, Switch} from "@mui/material";
+import {Box, FormControlLabel, styled, SwipeableDrawer, Switch} from "@mui/material";
 import {ReactComponent as BackArrowIcon} from '../icons/arrow_back.svg'
+import {Drawable} from "./mui/Drawable";
 
 const MenuHeaderRender = ({
                               blockType,
@@ -206,6 +207,12 @@ class PageBlockCreate extends Component {
         }
     }
 
+    saveNotes(index, notes) {
+        const {exercises} = this.state
+        exercises[index].notes = notes
+        this.setState({exercises})
+    }
+
     onIntervalSelected(index, val) {
         const {exercises} = this.state
         exercises[index].type = val
@@ -255,7 +262,7 @@ class PageBlockCreate extends Component {
                 newBlockGroupName,
                 newBlockGroupId,
                 newBlockGroupOrder: nextBlockNumber,
-                exercises: exercises.filter(e=>e.key).map(e => ({id:e.key, name:e.text, series: parseInt(e.series, 10), reps: parseInt(e.reps, 10), type: e.type ?? (this.state.configureDefaultSec ? 'secs' : null)})),
+                exercises: exercises.filter(e=>e.key).map(e => ({id:e.key, name:e.text, notes: e.notes, series: parseInt(e.series, 10), reps: parseInt(e.reps, 10), type: e.type ?? (this.state.configureDefaultSec ? 'secs' : null)})),
                 laps: parseInt(laps, 10),
                 workingInterval: parseInt(workingInterval, 10),
                 restingInteval: parseInt(restingInteval, 10),
@@ -284,7 +291,7 @@ class PageBlockCreate extends Component {
                 newBlockGroupName,
                 newBlockGroupId,
                 newBlockGroupOrder: nextBlockNumber,
-                exercises: exercises.filter(e=>e.key).map(e => ({id:e.key, name:e.text, series: parseInt(e.series, 10), reps: parseInt(e.reps, 10), type: e.type ?? (this.state.configureDefaultSec ? 'secs' : null)})),
+                exercises: exercises.filter(e=>e.key).map(e => ({id:e.key, name:e.text, notes: e.notes, series: parseInt(e.series, 10), reps: parseInt(e.reps, 10), type: e.type ?? (this.state.configureDefaultSec ? 'secs' : null)})),
                 laps: parseInt(laps, 10),
                 restingInteval: parseInt(restingInteval, 10),
                 exeRestingInteval: parseInt(exeRestingInteval, 10),
@@ -320,7 +327,7 @@ class PageBlockCreate extends Component {
                 newBlockGroupName,
                 newBlockGroupId,
                 newBlockGroupOrder: nextBlockNumber,
-                exercises: exercises.filter(e=>e.key).map(e => ({id:e.key, name:e.text, series: parseInt(e.series, 10), reps: parseInt(e.reps, 10), type: e.type ?? (this.state.configureDefaultSec ? 'secs' : null)})),
+                exercises: exercises.filter(e=>e.key).map(e => ({id:e.key,notes: e.notes,  name:e.text, series: parseInt(e.series, 10), reps: parseInt(e.reps, 10), type: e.type ?? (this.state.configureDefaultSec ? 'secs' : null)})),
                 blockDuration: parseInt(blockDuration,10),
                 laps: null,
                 workingInterval: null,
@@ -349,7 +356,7 @@ class PageBlockCreate extends Component {
                 newBlockGroupName,
                 newBlockGroupId,
                 newBlockGroupOrder: nextBlockNumber,
-                exercises: exercises.filter(e=>e.key).map(e => ({id:e.key, name:e.text, series: parseInt(e.series, 10), reps: parseInt(e.reps, 10), type: e.type ?? (this.state.configureDefaultSec ? 'secs' : null)})),
+                exercises: exercises.filter(e=>e.key).map(e => ({id:e.key, notes: e.notes, name:e.text, series: parseInt(e.series, 10), reps: parseInt(e.reps, 10), type: e.type ?? (this.state.configureDefaultSec ? 'secs' : null)})),
                 laps: parseInt(laps, 10),
                 isTemplate
             }
@@ -375,7 +382,7 @@ class PageBlockCreate extends Component {
                 newBlockGroupName,
                 newBlockGroupId,
                 newBlockGroupOrder: nextBlockNumber,
-                exercises: exercises.filter(e=>e.key).map(e => ({id:e.key, name:e.text, reps: parseInt(e.reps, 10)})),
+                exercises: exercises.filter(e=>e.key).map(e => ({id:e.key, notes: e.notes, name:e.text, reps: parseInt(e.reps, 10)})),
                 laps: parseInt(laps, 10),
                 isTemplate
             }
@@ -623,8 +630,13 @@ class PageBlockCreate extends Component {
                                         <FormControlLabel control={<Switch
                                             size="small"
                                             onChange={({target: {checked}}) => {
+                                                this.setState({configureNotes: checked})
+                                            }} checked={this.state.configureNotes}/>} className={'no-margin'} label={<span>Notas<TooltipInfoButton title={"Agrega notas a tus ejercicios"}/></span>}/>
+                                        <FormControlLabel control={<Switch
+                                            size="small"
+                                            onChange={({target: {checked}}) => {
                                                 this.setState({configureSelectRepSec: checked})
-                                            }} checked={this.state.configureSelectRepSec}/>} className={'no-margin'} label={<span>Elegir<TooltipInfoButton title={"Elige entre repeticiones o segundos para cada ejercicio. Por defecto los ejercicios usan Repeticiones"}/></span>}/>
+                                            }} checked={this.state.configureSelectRepSec}/>} className={'no-margin'} label={<span>Reps/Segs<TooltipInfoButton title={"Elige entre repeticiones o segundos para cada ejercicio. Por defecto los ejercicios usan Repeticiones"}/></span>}/>
                                         <FormControlLabel control={<Switch
                                             size="small"
                                             onChange={({target: {checked}}) => {
@@ -664,11 +676,13 @@ class PageBlockCreate extends Component {
                                                 return (<ExerciseListItemFree
                                                     createNewExercises={createNewExercises}
                                                     onExerciseSelected={(selected)=> this.onExerciseSelected(index, selected)}
+                                                    onNotesChanged={(notes) => this.saveNotes(index,notes)}
                                                     // onAddExercise={() => this.onAddExcercise(index)}
                                                     // hideAddNext={e.hideAddNext}
                                                     withSeries={this.state.defaultSeries}
                                                     configureSelectRepSec={this.state.configureSelectRepSec}
                                                     configureDefaultSec={this.state.configureDefaultSec}
+                                                    configureNotes={this.state.configureNotes}
                                                     key={index}
                                                     item={e}
                                                     focus={index===next}

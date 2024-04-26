@@ -12,12 +12,14 @@ export class TooltipInfoButton extends Component {
             <>
                 <Tooltip
                     leaveTouchDelay={5000}
-                    placement="top" open={showTooltip}
-                    onClose={() => this.setState({showTooltip: false})} arrow
+                    placement="top"
+                    open={showTooltip}
+                    onClose={() => this.setState({showTooltip: false})}
+                    arrow
                     title={this.props.title}
                     {...this.props}>
                     <IconButton aria-label="info" onClick={() => this.setState({showTooltip: true})}>
-                        <InfoIcon />
+                        {this.props.icon ? this.props.icon : <InfoIcon/>}
                     </IconButton>
                 </Tooltip>
             </>

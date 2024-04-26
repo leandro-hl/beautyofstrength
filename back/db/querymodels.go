@@ -81,6 +81,7 @@ type GetRoutineDetailsQuery struct {
 	Reps                         *int    `json:"reps"`
 	Secs                         *int    `json:"secs"`
 	Series                       *int    `json:"series"`
+	Notes                        *string `json:"notes"`
 	ExerciseBGID                 *int64  `json:"exercisebgid"`
 	ExerciseId                   *int64  `json:"exerciseid"`
 	Exercisename                 *string `json:"exercisename"`

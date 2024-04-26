@@ -645,6 +645,7 @@ func (o *Endpoints) calculateRoutineDetailsResponse(
 						Secs:                         re.Secs,
 						Reps:                         re.Reps,
 						Series:                       re.Series,
+						Notes:                        re.Notes,
 						Link:                         re.Link,
 						VideoCode:                    re.VideoCode,
 						ForceLastEffectiveReps:       re.ForceLastEffectiveReps,
@@ -680,6 +681,7 @@ func (o *Endpoints) calculateRoutineDetailsResponse(
 						Reps:                         re.Reps,
 						Secs:                         re.Secs,
 						Series:                       re.Series,
+						Notes:                        re.Notes,
 						Name:                         re.Exercisename,
 						Link:                         re.Link,
 						VideoCode:                    re.VideoCode,
@@ -702,6 +704,7 @@ func (o *Endpoints) calculateRoutineDetailsResponse(
 					Secs:                         re.Secs,
 					Reps:                         re.Reps,
 					Series:                       re.Series,
+					Notes:                        re.Notes,
 					Link:                         re.Link,
 					VideoCode:                    re.VideoCode,
 					ForceLastEffectiveReps:       re.ForceLastEffectiveReps,
@@ -801,7 +804,7 @@ func (o *Endpoints) saveSharedRoutine(w http.ResponseWriter, r *http.Request, tx
 				originalExercises := db.ListBlockGroupExerciseByBlockId(o.db, tx, *b.Id, "")
 
 				for _, ex := range originalExercises {
-					db.CreateExerciseBlockGroup(o.db, tx, *newBlockGroupId, *ex.ExerciseId, *ex.Order, ex.Reps, ex.Secs, ex.Series, "")
+					db.CreateExerciseBlockGroup(o.db, tx, *newBlockGroupId, *ex.ExerciseId, *ex.Order, ex.Reps, ex.Secs, ex.Series, ex.Notes, "")
 				}
 			}
 		}
@@ -1391,11 +1394,11 @@ func (o *Endpoints) saveRoutineEditions(w http.ResponseWriter, r *http.Request, 
 		for i := 0; i < len(currentValid)+len(wk.Exercises); i++ {
 			if iNew < len(wk.Exercises) && i == *wk.Exercises[iNew].Order {
 				e := wk.Exercises[iNew]
-				db.CreateExerciseBlockGroup(o.db, tx, *e.WorkoutId, *e.ExerciseId, i, e.Reps, e.Secs, e.Series, schema)
+				db.CreateExerciseBlockGroup(o.db, tx, *e.WorkoutId, *e.ExerciseId, i, e.Reps, e.Secs, e.Series, e.Notes, schema)
 				iNew++
 			} else {
 				e := currentValid[iCurrent]
-				db.CreateExerciseBlockGroup(o.db, tx, *e.BlockGroupId, *e.ExerciseId, i, e.Reps, e.Secs, e.Series, schema)
+				db.CreateExerciseBlockGroup(o.db, tx, *e.BlockGroupId, *e.ExerciseId, i, e.Reps, e.Secs, e.Series, e.Notes, schema)
 				iCurrent++
 			}
 		}
@@ -1494,12 +1497,14 @@ func (o *Endpoints) saveExercisesBlock(w http.ResponseWriter, r *http.Request, t
 				ExerciseId: e.Id,
 				Secs:       e.Reps,
 				Series:     e.Series,
+				Notes:      e.Notes,
 			})
 		} else {
 			exercises = append(exercises, db.ExerciseBlockGroup{
 				ExerciseId: e.Id,
 				Reps:       e.Reps,
 				Series:     e.Series,
+				Notes:      e.Notes,
 			})
 		}
 	}
@@ -2098,7 +2103,7 @@ func (o *Endpoints) copyTemplateRoutineToPlanification(w http.ResponseWriter, r 
 			originalExercises := db.ListBlockGroupExerciseByBlockId(o.db, tx, *b.Id, schema)
 
 			for _, ex := range originalExercises {
-				db.CreateExerciseBlockGroup(o.db, tx, *newBlockGroupId, *ex.ExerciseId, *ex.Order, ex.Reps, ex.Secs, ex.Series, "")
+				db.CreateExerciseBlockGroup(o.db, tx, *newBlockGroupId, *ex.ExerciseId, *ex.Order, ex.Reps, ex.Secs, ex.Series, ex.Notes, "")
 			}
 		}
 	}

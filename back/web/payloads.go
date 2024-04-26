@@ -82,6 +82,7 @@ type ExerciseRequest struct {
 	Name   *string `json:"name"`
 	Reps   *int    `json:"reps"`
 	Series *int    `json:"series"`
+	Notes  *string `json:"notes"`
 	Type   *string `json:"type"`
 }
 
@@ -135,6 +136,7 @@ type GetRoutineDetailsBlockExercise struct {
 	Reps                         *int          `json:"reps"`
 	Secs                         *int          `json:"secs"`
 	Series                       *int          `json:"series"`
+	Notes                        *string       `json:"notes"`
 	Name                         *string       `json:"name"`
 	Link                         *string       `json:"link"`
 	VideoCode                    *string       `json:"videoCode"`
@@ -274,7 +276,9 @@ type EditRoutineRequest struct {
 			Order      *int   `json:"order"`
 			Reps       *int   `json:"reps"`
 			Secs       *int   `json:"secs"`
-			Series     *int   `json:"series"`
+			//todo: these two fields are not yet implemented on edition!
+			Series *int    `json:"series"`
+			Notes  *string `json:"notes"`
 		} `exercises`
 	} `json:"exercisesToAdd"`
 	ExercisesToDelete []struct {

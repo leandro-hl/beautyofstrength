@@ -119,6 +119,13 @@ body {
     color: #000000 !important;
 }
 
+.no-segment,
+.body-dark .no-segment{
+    background-color: unset !important;
+    padding: 0px !important;
+    box-shadow: none !important;
+}
+
 .body-dark .ui.segment > .ui.segment,
 .body-dark .ui.segment .ui.sub.header,
 .body-dark .ui.message,
@@ -325,6 +332,15 @@ body {
 .cover-background .ui.sub.header,
 .cover-background .ui.basic.secondary.button {
     color: #ffffff !important;
+}
+
+.MuiDrawer-root > .MuiPaper-root {
+    height: calc(50% - 156px);
+    overflow: visible;
+}
+
+.gray-input > .MuiInputBase-root.MuiInput-root::before {
+    border-bottom: 1px solid rgb(101 101 101);
 }
 
 .ui.segment.cover-background .ui.sub.header, .body-dark .ui.segment.cover-background .ui.sub.header {

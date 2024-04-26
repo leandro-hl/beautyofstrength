@@ -3,12 +3,14 @@ import {Dropdown, Grid, Icon, Input, Label, List, Loader, Segment} from "semanti
 import {SegMinButtonGroup} from "./SegMinButtonGroup";
 import {SegRepsButtonGroup} from "./SegRepsButtonGroup";
 import {ExerciseSearch} from "./ExerciseSearch";
-import {TextFieldCentered} from "./mui/customizations";
+import {TextFieldBottomSmooth, TextFieldCentered} from "./mui/customizations";
+import {TextField} from "@mui/material";
 
 export class ExerciseListItemFree extends Component {
     inputRefExercise = createRef()
     inputRefSeries = createRef()
     inputRefReps = createRef()
+    inputRefNotes = createRef()
 
 
     constructor(props) {
@@ -26,6 +28,7 @@ export class ExerciseListItemFree extends Component {
                 this.inputRefExercise,
                 this.inputRefSeries,
                 this.inputRefReps,
+                this.inputRefNotes
             ]
         })
     }
@@ -41,13 +44,30 @@ export class ExerciseListItemFree extends Component {
 
     handleChangeReps(value) {
         if (10 / value <= 1) {
-            this.props.finished(this.props.item.series, value, true)
+            if (this.props.configureNotes) {
+                this.setState({focusCurrent:3})
+                this.props.finished(this.props.item.series, value)
+            } else {
+                this.props.finished(this.props.item.series, value, true)
+            }
         } else {
             this.props.finished(this.props.item.series, value)
         }
     }
 
     handleKeyDown(event) {
+        const key = event.key.toLowerCase()
+        if (key === 'enter' || key === 'tab') {
+            if (this.props.configureNotes) {
+                this.setState({focusCurrent:3})
+                this.props.finished(this.props.item.series, this.props.item.reps)
+            } else {
+                this.props.finished(this.props.item.series, this.props.item.reps, true)
+            }
+        }
+    };
+
+    handleKeyDownEnd(event) {
         const key = event.key.toLowerCase()
         if (key === 'enter' || key === 'tab') {
             this.props.finished(this.props.item.series, this.props.item.reps, true)
@@ -86,7 +106,7 @@ export class ExerciseListItemFree extends Component {
         return (
             <Segment className={`no-padding ${this.props.selected ? 'mine-selected' : ''}`} basic>
                 <Grid>
-                    <Grid.Row style={{ flexWrap:'nowrap' }}>
+                    <Grid.Row style={{ flexWrap:'nowrap' }} className={this.props.configureNotes ? 'no-bottom-padding' : ''}>
                         {/*<Grid.Column width={1} stretched>*/}
                         {/*    <div className={'center-content-vertically'}>*/}
                         {/*        <div>*/}
@@ -119,8 +139,8 @@ export class ExerciseListItemFree extends Component {
                                         inputRef={this.inputRefSeries}
                                         placeholder='1'
                                         value={this.props.item.series}
-                                        onKeyDown={(event) => this.handleKeyDown(event)}
                                         onChange={(e) => this.handleChangeSerie(e.target.value)}
+                                        onFocus={() => this.setState({focusCurrent: 1})}
                                         type={'number'}
                                         variant="standard" />
                                 </Grid.Column>
@@ -139,6 +159,7 @@ export class ExerciseListItemFree extends Component {
                                 placeholder='8'
                                 value={this.props.item.reps}
                                 type={'number'}
+                                onFocus={() => this.setState({focusCurrent: 2})}
                                 onKeyDown={(event) => this.handleKeyDown(event)}
                                 onChange={(e) => this.handleChangeReps(e.target.value)}
                                 variant="standard" />
@@ -152,6 +173,25 @@ export class ExerciseListItemFree extends Component {
                             </Grid.Column>
                         }
                     </Grid.Row>
+                    {
+                        this.props.configureNotes &&
+                        <Grid.Row className={'no-top-padding'}>
+                            <Grid.Column>
+                                <TextField
+                                    onKeyDown={(event) => this.handleKeyDownEnd(event)}
+                                    inputRef={this.inputRefNotes}
+                                    fullWidth
+                                    variant="standard"
+                                    multiline
+                                    minRows={2}
+                                    placeholder="Notas del ejercicio"
+                                    className={'gray-input'}
+                                    value={this.props.item.notes}
+                                    onChange={(e) => this.props.onNotesChanged(e.target.value)}
+                                />
+                            </Grid.Column>
+                        </Grid.Row>
+                    }
                 </Grid>
             </Segment>
         )

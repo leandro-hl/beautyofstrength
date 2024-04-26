@@ -18,16 +18,16 @@ export const TextFieldCentered = styled(TextField)`
   }
 `;
 
+export const TextFieldBottomSmooth = styled(TextField)`
+    &.MuiInputBase-root.MuiInput-root::before {
+        border-bottom: 1px solid rgb(101, 101, 101);
+    }
+`;
+
 export const ListItemJustifyBetween = styled(ListItem)`
     display: flex;
     justify-content: space-between;
 `;
-
-export const ListItemTextJustifyBetween = styled(ListItemText)`
-  display: flex;
-    justify-content: ;
-`;
-
 
 export const ExampleSwitch = styled(Switch)(({ theme }) => ({
     // width: 62,

@@ -1206,6 +1206,16 @@ class PageRoutineDetail extends Component{
                                     </div>
                                 }/>
                                 {
+                                    e.notes &&
+                                    <TooltipInfoButton
+                                        icon={<ExerciseIcon/>}
+                                        title={
+                                            <div>
+                                                {e.notes}
+                                            </div>
+                                        }/>
+                                }
+                                {
                                     e.series && e.reps && !editionMode &&
                                     this.renderExerciseTableSeries(j, i, k, e, routineStarted)
                                 }
