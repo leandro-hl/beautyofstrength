@@ -451,8 +451,21 @@ class PagePlanificationDetail extends Component {
                 routineGroups.push({initMesocycle: p.initMesocycle, routines: [routineTemplate]})
             } else {
                 //adds the routine to the latest group in the array
-                routineGroups[routineGroups.length - 1].initMesocycle = p.initMesocycle
-                routineGroups[routineGroups.length - 1].routines.push(routineTemplate)
+                //if group doe snot exists then we create it.
+                /*
+                    Milu's Bug
+                    2 routines
+                    1 day mesocycle
+                    1 day week (monday)
+                    fails initMesocycle
+                    might be bad calculation of isStartOfWeek flag.
+                 */
+                if (routineGroups[routineGroups.length - 1]) {
+                    routineGroups[routineGroups.length - 1].initMesocycle = p.initMesocycle
+                    routineGroups[routineGroups.length - 1].routines.push(routineTemplate)
+                } else {
+                    routineGroups.push({initMesocycle: p.initMesocycle, routines: [routineTemplate]})
+                }
             }
         })
 
