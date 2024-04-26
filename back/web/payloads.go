@@ -25,7 +25,8 @@ type SignInRequest struct {
 }
 
 type StartJourneyRequest struct {
-	As *string `json:"as"`
+	As     *string `json:"as"`
+	Gender string  `json:"gender"`
 }
 
 type CopyTemplateRoutineToPlanificationRequest struct {

@@ -15,14 +15,14 @@ import {
     Segment
 } from "semantic-ui-react";
 import {
-    actionateRoutine,
-    getPlanificationDetails,
+    actionateRoutine, getMyLastMonthTrainings,
+    getPlanificationDetails, listMyLastMonthTrainings,
     repeatLastMesocycle,
     savePlanificationEditions,
     sharePlanification
 } from "../service";
 import {withRouter} from "react-router-dom";
-import {isLocalhost} from "../functions";
+import {defaultCoversByGender, isLocalhost} from "../functions";
 import {AppContext, setData, showSuccess} from "../context";
 import {ModalRoutineActionatedConfirmation} from "./ModalRoutineActionatedConfirmation";
 import {Chip} from "./Chip";
@@ -340,7 +340,7 @@ class PagePlanificationDetail extends Component {
     }
 
     render() {
-        const {state: {planificationName, isOwner, permissions: {sharePlanification, editPlanification, repeatLastMesocycle, canMarkRoutine}}} = this.context
+        const {state: {planificationName, isOwner, permissions: {isFemale, sharePlanification, editPlanification, repeatLastMesocycle, canMarkRoutine}}} = this.context
         const {
             loading,
             isEditable,
@@ -362,7 +362,6 @@ class PagePlanificationDetail extends Component {
             actionatedRoutineIndex,
             showBorgScale,
             repeatWeekOnly} = this.state;
-
         if (loading) {
             return <Loader active/>
         }
@@ -390,8 +389,8 @@ class PagePlanificationDetail extends Component {
             const disableLookup = !p.id;
 
             if (!p.coverImageUrl) {
-                p.coverImageUrl = 'routine-cover-default-'+nextDefaultRoutineCover+'.png'
-                if (nextDefaultRoutineCover === 6) {
+                p.coverImageUrl = 'routine-cover-default-'+nextDefaultRoutineCover+ (isFemale? '-f' : '-m') +'.png'
+                if (nextDefaultRoutineCover === defaultCoversByGender) {
                     nextDefaultRoutineCover=1
                 } else {
                     nextDefaultRoutineCover++

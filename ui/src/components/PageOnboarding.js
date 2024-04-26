@@ -3,17 +3,20 @@ import {withRouter} from "react-router-dom";
 import {Button, Grid, Loader, Segment} from "semantic-ui-react";
 import {AppContext, setData} from "../context";
 import { Image } from 'semantic-ui-react'
-import schoolWhite from '../icons/school-white-outlined.svg'
-import schoolBlack from '../icons/school-black.svg'
-import medalWhite from '../icons/medal-white-outlined.svg'
-import medalBlack from '../icons/medal-black.svg'
+import {ReactComponent as SchoolIcon} from '../icons/school.svg'
+import {ReactComponent as MedalIcon} from '../icons/medal.svg'
+import {ReactComponent as FemaleIcon} from '../icons/female.svg'
+import {ReactComponent as MaleIcon} from '../icons/male.svg'
 import {getUserPermissions, startJourney} from "../service";
 
 class PageOnboarding extends Component {
     static contextType = AppContext
     state = {
         instructorSelected: false,
-        athleteSelected: false
+        athleteSelected: false,
+        womenSelected: false,
+        menSelected: false,
+        renderGenderSelection: false
     }
 
     componentDidMount() {
@@ -24,15 +27,25 @@ class PageOnboarding extends Component {
         }))
     }
 
+    async instructorAthleteSelected()  {
+        this.setState({renderGenderSelection: true})
+    }
+
     async startJourney(){
         try {
-            const {instructorSelected, athleteSelected} = this.state
+            const {
+                instructorSelected,
+                athleteSelected,
+                womenSelected,
+                menSelected
+            } = this.state
             if (instructorSelected || athleteSelected) {
                 this.setState({startingJourney: true})
                 const journeyAs = instructorSelected ? 'instructor' : athleteSelected ? 'athlete' : null
-                await startJourney({as: journeyAs})
+                const gender = womenSelected ? 'f' : menSelected ?'m' : null
+                await startJourney({as: journeyAs, gender})
                 const b = await getUserPermissions();
-                this.context.dispatch(setData({isAuthenticated: true, permissions: b.data, fullScreen: false, noMenu: false}))
+                this.context.dispatch(setData({isAuthenticated: true, gender:gender, permissions: b.data, fullScreen: false, noMenu: false}))
                 // this.props.history.push(`/bundle?journey=${journeyAs}`)
                 this.props.history.push('/my-planifications')
             }
@@ -41,7 +54,60 @@ class PageOnboarding extends Component {
         }
     }
 
-    render() {
+    renderGenderSelection = () => {
+        const {womenSelected, menSelected, startingJourney} = this.state
+        return (
+            <Segment basic={true} className={'onboarding-container center-content-vh'}>
+                <div>
+                    <Grid padded={true}>
+                        <Grid.Row>
+                            <Grid.Column>
+                                <h3 className={'onboarding-header'}>CUENTANOS</h3>
+                                <h5 className={'onboarding-subheader'}>UN POCO SOBRE TI</h5>
+                            </Grid.Column>
+                        </Grid.Row>
+                        <Grid.Row>
+                            <Grid.Column width={8}>
+                                <Segment padded={'very'} textAlign={'center'} vertical={true}
+                                         className={`center-content-vh onboarding-select-women ${womenSelected ? 'onboarding-selected' : ''}`}
+                                         onClick={() => this.setState({womenSelected: true, menSelected: false})}>
+                                    <div>
+                                        <FemaleIcon className={'margin-center'}/>
+                                        <p>Mujer</p>
+                                    </div>
+                                </Segment>
+                            </Grid.Column>
+                            <Grid.Column width={8}>
+                                <Segment padded={'very'} textAlign={'center'} vertical={true}
+                                         className={`center-content-vh onboarding-select-men ${menSelected ? 'onboarding-selected' : ''}`}
+                                         onClick={() => this.setState({menSelected: true, womenSelected: false})}>
+                                    <div>
+                                        <MaleIcon className={'margin-center'}/>
+                                        <p>Hombre</p>
+                                    </div>
+                                </Segment>
+                            </Grid.Column>
+                        </Grid.Row>
+                        <Grid.Row>
+                            <Grid.Column>
+                                <Segment basic padded={'very'} textAlign={'center'}>
+                                    {startingJourney && <Loader active/>}
+                                    {!startingJourney &&
+                                        <Button disabled={!menSelected && !womenSelected}
+                                                primary={true}
+                                                onClick={() => this.startJourney()}>
+                                            Comenzar
+                                        </Button>}
+                                </Segment>
+                            </Grid.Column>
+                        </Grid.Row>
+                    </Grid>
+                </div>
+            </Segment>
+        )
+    }
+
+    firstPage = () => {
         const {instructorSelected, athleteSelected, startingJourney} = this.state
         return (
             <Segment basic={true} className={'onboarding-container center-content-vh'}>
@@ -49,7 +115,7 @@ class PageOnboarding extends Component {
                     <Grid padded={true}>
                         <Grid.Row>
                             <Grid.Column>
-                                <h3 className={'onboarding-header'}>BIENVENID@</h3>
+                                <h3 className={'onboarding-header'}>BIENVENIDO!</h3>
                                 <h5 className={'onboarding-subheader'}>AL SISTEMA OPERATIVO DEL ENTRENAMIENTO</h5>
                             </Grid.Column>
                         </Grid.Row>
@@ -59,7 +125,7 @@ class PageOnboarding extends Component {
                                          className={`center-content-vh onboarding-select-instructor ${instructorSelected ? 'onboarding-selected' : ''}`}
                                          onClick={() => this.setState({instructorSelected: true, athleteSelected: false})}>
                                     <div>
-                                        <Image className={'margin-center'} src={instructorSelected ? schoolBlack : schoolWhite}/>
+                                        <SchoolIcon className={'margin-center'}/>
                                         <p>Instructor</p>
                                     </div>
                                 </Segment>
@@ -69,7 +135,7 @@ class PageOnboarding extends Component {
                                          className={`center-content-vh onboarding-select-athlete ${athleteSelected ? 'onboarding-selected' : ''}`}
                                          onClick={() => this.setState({athleteSelected: true, instructorSelected: false})}>
                                     <div>
-                                        <Image className={'margin-center'} src={athleteSelected ? medalBlack : medalWhite}/>
+                                        <MedalIcon className={'margin-center'}/>
                                         <p>Atleta</p>
                                     </div>
                                 </Segment>
@@ -81,16 +147,25 @@ class PageOnboarding extends Component {
                                     {startingJourney && <Loader active/>}
                                     {!startingJourney &&
                                         <Button disabled={!athleteSelected && !instructorSelected}
-                                                                 primary={true}
-                                                                 onClick={() => this.startJourney()}>
-                                        Comenzar
-                                    </Button>}
+                                                primary={true}
+                                                onClick={() => this.instructorAthleteSelected()}>
+                                            Comenzar
+                                        </Button>}
                                 </Segment>
                             </Grid.Column>
                         </Grid.Row>
                     </Grid>
                 </div>
             </Segment>
+        )
+    }
+
+    render() {
+        const {renderGenderSelection} = this.state
+        return (
+            <>
+                {renderGenderSelection? this.renderGenderSelection() : this.firstPage()}
+            </>
         )
     }
 }

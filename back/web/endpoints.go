@@ -314,6 +314,7 @@ func (o *Endpoints) Handle() http.Handler {
 	api.Path("/uploadRoutineImage").HandlerFunc(o.HandleAuthenticatedTransactional(o.HandleAuthorization(o.uploadRoutineImage, db.Professor)))
 
 	//Premium services
+	api.Path("/listMyLastMonthTrainings").HandlerFunc(o.HandleAuthenticatedTransactional(o.HandleAuthorization(o.listMyLastMonthTrainings, db.StudentPremium, db.Professor)))
 	api.Path("/savePlanificationEditions").HandlerFunc(o.HandleAuthenticatedTransactional(o.HandleAuthorization(o.savePlanificationEditions, db.StudentPremium, db.Professor)))
 	api.Path("/saveRoutineEditions").HandlerFunc(o.HandleAuthenticatedTransactional(o.HandleAuthorization(o.saveRoutineEditions, db.StudentPremium, db.Professor)))
 	api.Path("/repeatLastMesocycle").HandlerFunc(o.HandleAuthenticatedTransactional(o.HandleAuthorization(o.repeatLastMesocycle, db.StudentPremium, db.Professor)))
@@ -427,6 +428,7 @@ func (o *Endpoints) getUserPermissions(w http.ResponseWriter, r *http.Request, t
 	if *plan == db.StudentPremium || *plan == db.Professor {
 		permissions["statistics"] = true
 		permissions["canMarkRoutine"] = true
+		permissions["canUploadRoutineCover"] = true
 	}
 
 	if *plan == db.Professor {
@@ -438,7 +440,12 @@ func (o *Endpoints) getUserPermissions(w http.ResponseWriter, r *http.Request, t
 		permissions["createNewMuscles"] = true
 		permissions["createNewEquipment"] = true
 		permissions["sharePlanification"] = true
-		permissions["canUploadRoutineCover"] = true
+	}
+
+	usr := util.UserId(r)
+	userDetails := db.GetUserAccountDetails(o.db, tx, usr)
+	if userDetails != nil {
+		permissions["isFemale"] = userDetails.Gender != nil && *userDetails.Gender == string(db.Female)
 	}
 
 	o.Respond(w, permissions, http.StatusOK)
@@ -1202,13 +1209,16 @@ func (o *Endpoints) startJourney(w http.ResponseWriter, r *http.Request, tx *sql
 	err := o.Decode(r, &t)
 	util.Check(err)
 	usr := util.UserId(r)
+	if !(len(t.Gender) == 1 || len(t.Gender) == 0) {
+		panic(&BadRequestResponse{ErrorCode: util.PString("invalid_gender")})
+	}
 	switch *t.As {
 	case "instructor":
-		db.UpdateAccountToInstructor(o.db, tx, usr)
+		db.UpdateAccountToInstructor(o.db, tx, usr, t.Gender)
 		db.RegisterEvent(o.db, tx, usr, db.StartJourneyInstructor)
 		break
 	case "athlete":
-		db.UpdateAccountToAthletePremium(o.db, tx, usr)
+		db.UpdateAccountToAthletePremium(o.db, tx, usr, t.Gender)
 		db.RegisterEvent(o.db, tx, usr, db.StartJourneyAthlete)
 		break
 	}
@@ -1990,6 +2000,11 @@ func (o *Endpoints) declinePlanificationAccessRequest(w http.ResponseWriter, r *
 		db.DeclinePlanificationAccessRequest(o.db, tx, *p.PlanificationId, *p.RequesterUserId, userId)
 		db.RegisterEvent(o.db, tx, userId, db.DeclinePlanificationAccessRequestt)
 	}
+}
+
+func (o *Endpoints) listMyLastMonthTrainings(w http.ResponseWriter, r *http.Request, tx *sqlx.Tx) {
+	userId := util.UserId(r)
+	o.Respond(w, db.ListMyLastMonthTrainings(o.db, tx, userId), http.StatusOK)
 }
 
 func (o *Endpoints) savePlanificationEditions(w http.ResponseWriter, r *http.Request, tx *sqlx.Tx) {

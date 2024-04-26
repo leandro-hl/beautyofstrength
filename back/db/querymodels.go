@@ -21,6 +21,12 @@ type ListEquipmentQuery struct {
 	Name *string `json:"name"`
 }
 
+type ListMyLastMonthTrainingsQuery struct {
+	RoutineId *int64    `json:"routine_id"`
+	Date      time.Time `json:"date"`
+	Rpe       *int      `json:"rpe"`
+}
+
 type ListQueuedPlanificationAccessRequestsQuery struct {
 	RequesterName     *string `json:"requestername"`
 	PlanificationName *string `json:"planificationname"`
@@ -40,6 +46,7 @@ type GetUserAccountDetailsQuery struct {
 	Name        *string `json:"name"`
 	Email       *string `json:"email"`
 	PictureUrl  *string `json:"pictureurl"`
+	Gender      *string `json:"gender"`
 	AccountType *string `json:"accounttype"`
 	Trainer     *int64  `json:"trainer"`
 	Code        *string `json:"code"`

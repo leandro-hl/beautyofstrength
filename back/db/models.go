@@ -9,6 +9,13 @@ const (
 	Student UserPlanificationRelationshipType = 's'
 )
 
+type Gender rune
+
+const (
+	Female Gender = 'f'
+	Male   Gender = 'm'
+)
+
 type AccountPlanType rune
 
 const (

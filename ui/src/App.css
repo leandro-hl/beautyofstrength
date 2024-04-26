@@ -908,6 +908,7 @@ input[type="number"] {
     line-height: 20px;
     letter-spacing: 0.35px;
     text-align: center;
+    color: white;
 }
 
 .onboarding-select-instructor {
@@ -918,7 +919,19 @@ input[type="number"] {
     background: linear-gradient(rgba(0, 0, 0, 0.6), rgba(0, 0, 0, 0.6)), url("../public/static/media/onboarding-athlete-select-button.png") !important;
 }
 
-.onboarding-select-instructor, .onboarding-select-athlete {
+.onboarding-select-women {
+    background: linear-gradient(rgba(0, 0, 0, 0.6), rgba(0, 0, 0, 0.6)), url("../public/static/media/onboarding-women-select-button.png") !important;
+}
+
+.onboarding-select-men {
+    background: linear-gradient(rgba(0, 0, 0, 0.6), rgba(0, 0, 0, 0.6)), url("../public/static/media/onboarding-men-select-button.png") !important;
+}
+
+.onboarding-select-instructor,
+.onboarding-select-athlete,
+.onboarding-select-women,
+.onboarding-select-men
+{
     background-size: cover !important;
     background-position: center !important;
     background-repeat: no-repeat !important;

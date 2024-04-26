@@ -14,7 +14,7 @@ import {
 } from "semantic-ui-react";
 import {
     acceptInstructorInvite,
-    createPlanification, deletePlanification, getUserPermissions,
+    createPlanification, deletePlanification, getUserPermissions, listMyLastMonthTrainings,
     listPlanifications,
     listQueuedPlanificationAccessRequests,
     requestAccessToSharedPlanification
@@ -79,6 +79,9 @@ class PagePlanificationList extends Component {
             } else {
                 this.context.dispatch(setData({noBottomBar: false, secondaryActions: [], menuButtonSelected: MENU.PLANIFICATIONS}))
             }
+
+            this.getLastMonthTrainings()
+
             const res = await listPlanifications();
             const ownedPlanifications = res.data.filter(p => p.owner);
             const sharedPlanifications = res.data.filter(p => !p.owner)
@@ -86,6 +89,14 @@ class PagePlanificationList extends Component {
             this.context.dispatch(setData({myPlanifications: ownedPlanifications}, true))
         } catch (e) {
             console.error(e)
+        }
+    }
+
+    async getLastMonthTrainings() {
+        try {
+            await listMyLastMonthTrainings()
+        } catch (e) {
+
         }
     }
 

@@ -1142,7 +1142,7 @@ func GetAccountPlanIdentifierByUserId(db *DB, tx *sqlx.Tx, userId int64) *Accoun
 func GetUserAccountDetails(db *DB, tx *sqlx.Tx, userId int64) *GetUserAccountDetailsQuery {
 	query := `
 	   select 
-	       u.name, u.email, u.pictureurl, a.name as accounttype, u.trainer, u.code, 
+	       u.name, u.email, u.pictureurl, u.gender, a.name as accounttype, u.trainer, u.code, 
 	       pc.*
 	   from useraccount u
 	   inner join accountplan a on u.accountplan_id = a.id
@@ -1270,6 +1270,18 @@ func ListQueuedPlanificationAccessRequests(db *DB, tx *sqlx.Tx, userId int64) []
 	util.Check(err)
 
 	dest := make([]ListQueuedPlanificationAccessRequestsQuery, 0)
+	stmt.Select(&dest, userId)
+	return dest
+}
+
+func ListMyLastMonthTrainings(db *DB, tx *sqlx.Tx, userId int64) []ListMyLastMonthTrainingsQuery {
+	query := `
+		select hr.routine_id, hr.date, hr.rpe from history.routine hr
+		where hr.useraccount_id=$1 and hr.date>= (CURRENT_DATE - INTERVAL '1 month')`
+	stmt, err := getTxPreparedStmt(db, tx, query)
+	util.Check(err)
+
+	dest := make([]ListMyLastMonthTrainingsQuery, 0)
 	stmt.Select(&dest, userId)
 	return dest
 }
@@ -1809,16 +1821,16 @@ func UpdateAccountToAthleteBasic(db *DB) {
 	stmt.Exec()
 }
 
-func UpdateAccountToAthletePremium(db *DB, tx *sqlx.Tx, usrId int64) {
-	query := `update useraccount set accountplan_id=2, usertype='z' where id=$1`
+func UpdateAccountToAthletePremium(db *DB, tx *sqlx.Tx, usrId int64, gender string) {
+	query := `update useraccount set accountplan_id=2, usertype='z', gender=$2  where id=$1`
 	stmt, err := getTxPreparedStmt(db, tx, query)
 	util.Check(err)
-	stmt.Exec(usrId)
+	stmt.Exec(usrId, gender)
 }
 
-func UpdateAccountToInstructor(db *DB, tx *sqlx.Tx, usrId int64) {
-	query := `update useraccount set accountplan_id=3, usertype='p', code=LOWER(REPLACE(name, ' ', '.'))  where id=$1`
+func UpdateAccountToInstructor(db *DB, tx *sqlx.Tx, usrId int64, gender string) {
+	query := `update useraccount set accountplan_id=3, usertype='p', gender=$2, code=LOWER(REPLACE(name, ' ', '.'))  where id=$1`
 	stmt, err := getTxPreparedStmt(db, tx, query)
 	util.Check(err)
-	stmt.Exec(usrId)
+	stmt.Exec(usrId, gender)
 }

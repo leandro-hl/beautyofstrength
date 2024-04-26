@@ -25,7 +25,7 @@ import {
 import {AppContext, setData, showError, showSuccess, showWarning} from "../context";
 import BottomMenuBar from "./BottomMenuBar";
 import LayoutMobile from "./LayoutMobile";
-import {capitalize, isLocalhost, queryParam} from "../functions";
+import {capitalize, getNextCoverUrl, isLocalhost, queryParam} from "../functions";
 import {MENU} from "../enums";
 import {PopUpDisabledAction} from "./PopUpDisabledAction";
 import {ModalBlockCreate} from "./ModalBlockCreate";
@@ -258,6 +258,7 @@ class PageRoutineDetail extends Component{
                 }
             }
 
+            const {state: {permissions: {isFemale}}} = this.context
             if (!!share) {
                 const res = await getSharedRoutineDetails(share)
                 this.context.dispatch(setData({
@@ -265,7 +266,7 @@ class PageRoutineDetail extends Component{
                     noBottomBar: false,
                     menuButtonSelected: MENU.PLANIFICATIONS,
                     nextBlockNumber: res.data.blockGroupers.length+1}))
-                this.context.dispatch(setData({routineId: res.data.id, isTemplate: false, shared: true, coverImageUrl:  res.data.coverImageUrl, loadCoverImage: true}, true))
+                this.context.dispatch(setData({routineId: res.data.id, isTemplate: false, shared: true, coverImageUrl:  res.data.coverImageUrl ?? getNextCoverUrl(isFemale), loadCoverImage: true}, true))
                 this.setState({
                     loading: false,
                     isShared: !isShared,
@@ -285,6 +286,7 @@ class PageRoutineDetail extends Component{
             this.setTopBar()
         } catch (e) {
             console.error(e)
+            this.props.history.push('/planification')
         }
     }
 
@@ -296,6 +298,10 @@ class PageRoutineDetail extends Component{
         let loadCoverImage = true
         if (!cover) {
             cover = res.data.coverImageUrl
+        }
+        if(!cover) {
+            const {state: {permissions: {isFemale}}} = this.context
+            cover = getNextCoverUrl(isFemale)
         }
         const actionable = isOwner
         let canEdit = false

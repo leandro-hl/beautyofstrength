@@ -1,3 +1,5 @@
+export const defaultCoversByGender = 3
+
 export function urlBase64ToUint8Array(base64String) {
     var padding = '='.repeat((4 - base64String.length % 4) % 4);
     var base64 = (base64String + padding)
@@ -13,18 +15,18 @@ export function urlBase64ToUint8Array(base64String) {
     return outputArray;
 }
 
-export function getNextCoverUrl() {
+export function getNextCoverUrl(isFemale) {
     const n = localStorage.getItem('cover-number')
     if (!n) {
         localStorage.setItem('cover-number', "1")
-        return 'routine-cover-default-1.png'
+        return 'routine-cover-default-1-'+(isFemale? 'f':'m')+'.png'
     }
-    if (parseInt(n) < 6) {
+    if (parseInt(n) < defaultCoversByGender) {
         localStorage.setItem('cover-number', (parseInt(n) + 1).toString())
     } else {
         localStorage.setItem('cover-number', "1")
     }
-    return 'routine-cover-default-'+n+'.png'
+    return 'routine-cover-default-'+n+'-'+(isFemale? 'f':'m')+'.png'
 }
 
 export function copyToClipboard(text) {

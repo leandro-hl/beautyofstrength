@@ -60,6 +60,10 @@ export function listUserRms() {
     return axios.get("listUserRms")
 }
 
+export function listMyLastMonthTrainings() {
+    return axios.post("listMyLastMonthTrainings")
+}
+
 export function getPlanificationDetails(planificationId) {
     return axios.get("getPlanificationDetails?planificationId=" + planificationId)
 }
