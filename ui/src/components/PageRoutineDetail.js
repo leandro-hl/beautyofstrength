@@ -258,7 +258,7 @@ class PageRoutineDetail extends Component{
                 }
             }
 
-            const {state: {permissions: {isFemale}}} = this.context
+            const {state: {permissions: {isFemale, isGenderSet}}} = this.context
             if (!!share) {
                 const res = await getSharedRoutineDetails(share)
                 this.context.dispatch(setData({
@@ -266,7 +266,7 @@ class PageRoutineDetail extends Component{
                     noBottomBar: false,
                     menuButtonSelected: MENU.PLANIFICATIONS,
                     nextBlockNumber: res.data.blockGroupers.length+1}))
-                this.context.dispatch(setData({routineId: res.data.id, isTemplate: false, shared: true, coverImageUrl:  res.data.coverImageUrl ?? getNextCoverUrl(isFemale), loadCoverImage: true}, true))
+                this.context.dispatch(setData({routineId: res.data.id, isTemplate: false, shared: true, coverImageUrl:  res.data.coverImageUrl ?? getNextCoverUrl(isFemale, isGenderSet), loadCoverImage: true}, true))
                 this.setState({
                     loading: false,
                     isShared: !isShared,
@@ -300,8 +300,8 @@ class PageRoutineDetail extends Component{
             cover = res.data.coverImageUrl
         }
         if(!cover) {
-            const {state: {permissions: {isFemale}}} = this.context
-            cover = getNextCoverUrl(isFemale)
+            const {state: {permissions: {isFemale, isGenderSet}}} = this.context
+            cover = getNextCoverUrl(isFemale, isGenderSet)
         }
         const actionable = isOwner
         let canEdit = false

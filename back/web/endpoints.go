@@ -445,6 +445,7 @@ func (o *Endpoints) getUserPermissions(w http.ResponseWriter, r *http.Request, t
 	usr := util.UserId(r)
 	userDetails := db.GetUserAccountDetails(o.db, tx, usr)
 	if userDetails != nil {
+		permissions["isGenderSet"] = userDetails.Gender != nil
 		permissions["isFemale"] = userDetails.Gender != nil && *userDetails.Gender == string(db.Female)
 	}
 

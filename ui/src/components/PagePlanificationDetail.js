@@ -22,7 +22,7 @@ import {
     sharePlanification
 } from "../service";
 import {withRouter} from "react-router-dom";
-import {defaultCoversByGender, isLocalhost} from "../functions";
+import {defaultCoversByGender, isLocalhost, roundRobinGender} from "../functions";
 import {AppContext, setData, showSuccess} from "../context";
 import {ModalRoutineActionatedConfirmation} from "./ModalRoutineActionatedConfirmation";
 import {Chip} from "./Chip";
@@ -340,7 +340,7 @@ class PagePlanificationDetail extends Component {
     }
 
     render() {
-        const {state: {planificationName, isOwner, permissions: {isFemale, sharePlanification, editPlanification, repeatLastMesocycle, canMarkRoutine}}} = this.context
+        const {state: {planificationName, isOwner, permissions: {isFemale, isGenderSet, sharePlanification, editPlanification, repeatLastMesocycle, canMarkRoutine}}} = this.context
         const {
             loading,
             isEditable,
@@ -389,7 +389,7 @@ class PagePlanificationDetail extends Component {
             const disableLookup = !p.id;
 
             if (!p.coverImageUrl) {
-                p.coverImageUrl = 'routine-cover-default-'+nextDefaultRoutineCover+ (isFemale? '-f' : '-m') +'.png'
+                p.coverImageUrl = 'routine-cover-default-'+nextDefaultRoutineCover+'-'+ (isFemale? 'f' : isGenderSet ? 'm' : roundRobinGender()) +'.png'
                 if (nextDefaultRoutineCover === defaultCoversByGender) {
                     nextDefaultRoutineCover=1
                 } else {

@@ -15,11 +15,24 @@ export function urlBase64ToUint8Array(base64String) {
     return outputArray;
 }
 
-export function getNextCoverUrl(isFemale) {
+export function roundRobinGender() {
+    let l = localStorage.getItem('last-shown')
+    if (!l) {
+        l='m'
+    } else if (l ==='m') {
+        l='f'
+    } else if (l === 'f') {
+        l='m'
+    }
+    localStorage.setItem('last-shown', l)
+    return l
+}
+
+export function getNextCoverUrl(isFemale, isGenderSet) {
     const n = localStorage.getItem('cover-number')
     if (!n) {
         localStorage.setItem('cover-number', "1")
-        return 'routine-cover-default-1-'+(isFemale? 'f':'m')+'.png'
+        return 'routine-cover-default-1-'+(isFemale? 'f': isGenderSet? 'm' : roundRobinGender())+'.png'
     }
     if (parseInt(n) < defaultCoversByGender) {
         localStorage.setItem('cover-number', (parseInt(n) + 1).toString())
