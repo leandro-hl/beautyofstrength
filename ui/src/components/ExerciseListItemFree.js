@@ -187,6 +187,7 @@ export class ExerciseListItemFree extends Component {
                                     placeholder="Notas del ejercicio"
                                     className={'gray-input'}
                                     value={this.props.item.notes}
+                                    onFocus={() => this.setState({focusCurrent: 3})}
                                     onChange={(e) => this.props.onNotesChanged(e.target.value)}
                                 />
                             </Grid.Column>

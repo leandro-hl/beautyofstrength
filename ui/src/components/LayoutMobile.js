@@ -66,7 +66,7 @@ class LayoutMobile extends Component {
                             <div className="square-wrapper" style={{
                                 background: `
                             linear-gradient(180deg, rgba(18, 18, 18, 0.00) 56.79%, #121212 100%), 
-                            url(${coverImageUrl ?? getNextCoverUrl()}) lightgray 50% / cover no-repeat`,
+                            url(${coverImageUrl}) lightgray 50% / cover no-repeat`,
                             }}>
                                 <span style={{
                                         position: 'absolute',
