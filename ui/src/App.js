@@ -37,6 +37,7 @@ import PageBundles from "./components/mui/PageBundles";
 import {createTheme, CssBaseline, ThemeProvider} from "@mui/material";
 import {yellow} from "@mui/material/colors";
 import PageAccountV2 from "./components/mui/PageAccountV2";
+import {PageMercadoPago} from "./components/mui/PageMercadoPago";
 
 
 class App extends Component {
@@ -55,6 +56,7 @@ class App extends Component {
                                     <Route exact path={"/terms"} component={PageTermsAndConditions}/>
                                     <Route exact path={"/privacy-policies"} component={PagePrivacyPolicies}/>
                                     <Route exact path={"/bundles"} component={PageBundles}/>
+                                    <Route exact path={"/checkout"} component={PageMercadoPago}/>
                                     {/*<Route exact path={"/signup"} component={SignUp}/>*/}
                                     <PrivateRoute exact path={"/onboarding"} component={PageOnboarding}/>
                                     <PrivateRoute exact path={"/suite"} component={PageCreateSuite}/>
