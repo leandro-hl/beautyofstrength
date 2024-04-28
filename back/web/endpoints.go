@@ -294,6 +294,7 @@ func (o *Endpoints) Handle() http.Handler {
 	}
 	api.Path("/googlesignin").HandlerFunc(o.HandleOptionsRequest(o.HandleIPWhiteListing(o.HandleFatal(o.HandleTransactional(o.googleSignIn)))))
 	api.Path("/logo").HandlerFunc(o.HandleOptionsRequest(o.HandleIPWhiteListing(o.HandleFatal(o.HandleTransactional(o.logo)))))
+	api.Path("/screenshot").HandlerFunc(o.HandleOptionsRequest(o.HandleIPWhiteListing(o.HandleFatal(o.HandleTransactional(o.screenshot)))))
 	api.Path("/manifest.json").HandlerFunc(o.HandleOptionsRequest(o.HandleIPWhiteListing(o.HandleFatal(o.HandleTransactional(o.manifest)))))
 
 	//Instructor services (all premium)
@@ -1747,7 +1748,71 @@ func (o *Endpoints) manifest(w http.ResponseWriter, r *http.Request, tx *sqlx.Tx
 		  "display": "standalone",
 		  "theme_color": "#000000",
 		  "background_color": "#121212",
-		  "description": "El sistema operativo del entrenamiento"
+		  "description": "El sistema operativo del entrenamiento",
+			"screenshots" : [
+				{
+				  "src": "/api/screenshot?screenshot=instructor_planifications.jpg",
+				  "type": "image/jpg",
+				  "label": "Instructor's Planifications Page",
+					"form_factor": "wide", "sizes": "1284x2253"
+				},
+				{
+				  "src": "/api/screenshot?screenshot=planification_home.jpg",
+				  "type": "image/jpg",
+				  "label": "Planification's Home Page",
+					"form_factor": "wide", "sizes": "1284x2233"
+				},
+				{
+				  "src": "/api/screenshot?screenshot=routine_detail.jpg",
+				  "type": "image/jpg",
+				  "label": "Routine's Detail Page",
+					"form_factor": "wide", "sizes": "1284x2229"
+
+				},
+				{
+				  "src": "/api/screenshot?screenshot=routine_execution.jpg",
+				  "type": "image/jpg",
+				  "label": "Routine's Execution Page",
+					"form_factor": "wide", "sizes": "1284x2253"
+				},
+				{
+				  "src": "/api/screenshot?screenshot=workout_setup.jpg",
+				  "type": "image/jpg",
+				  "label": "Workout's Setup Page",
+					"form_factor": "wide", "sizes": "1284x2229"
+				},
+				{
+				  "src": "/api/screenshot?screenshot=instructor_planifications.jpg",
+				  "type": "image/jpg",
+				  "label": "Instructor's Planifications Page",
+					"sizes": "1284x2253"
+				},
+				{
+				  "src": "/api/screenshot?screenshot=planification_home.jpg",
+				  "type": "image/jpg",
+				  "label": "Planification's Home Page",
+					"sizes": "1284x2233"
+				},
+				{
+				  "src": "/api/screenshot?screenshot=routine_detail.jpg",
+				  "type": "image/jpg",
+				  "label": "Routine's Detail Page",
+					"sizes": "1284x2229"
+
+				},
+				{
+				  "src": "/api/screenshot?screenshot=routine_execution.jpg",
+				  "type": "image/jpg",
+				  "label": "Routine's Execution Page",
+					"sizes": "1284x2253"
+				},
+				{
+				  "src": "/api/screenshot?screenshot=workout_setup.jpg",
+				  "type": "image/jpg",
+				  "label": "Workout's Setup Page",
+					"sizes": "1284x2229"
+				}
+			  ]
 		}`
 
 	if registerManifestDefault {
@@ -1787,6 +1852,12 @@ func (o *Endpoints) logo(w http.ResponseWriter, r *http.Request, tx *sqlx.Tx) {
 
 	input := r.URL.Query().Get("type")
 	serveFile(w, r, input, baseDirectory, []string{".png", ".ico"})
+}
+
+func (o *Endpoints) screenshot(w http.ResponseWriter, r *http.Request, tx *sqlx.Tx) {
+	name := r.URL.Query().Get("screenshot")
+	baseDirectory := "img/screenshots"
+	serveFile(w, r, name, baseDirectory, []string{".jpg"})
 }
 
 func (o *Endpoints) googleSignIn(w http.ResponseWriter, r *http.Request, tx *sqlx.Tx) {

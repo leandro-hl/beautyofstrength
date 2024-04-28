@@ -49,6 +49,7 @@ import {TooltipInfoButton} from "./mui/TooltipInfoButton";
 import {Tooltip} from "@mui/material";
 import {TextFieldCentered} from "./mui/customizations";
 import {ReactComponent as BackArrowIcon} from '../icons/arrow_back.svg'
+import {ExerciseListItemFree} from "./ExerciseListItemFree";
 
 const MenuHeaderRender = ({
                               alreadyMarkedByMe,
@@ -521,7 +522,9 @@ class PageRoutineDetail extends Component{
                                 grouperId: activeDraftExercise.grouperId,
                                 workoutId: activeDraftExercise.workoutId,
                                 exerciseId:activeDraftExercise.ex[0].value,
-                                [activeDraftExercise.type]: parseInt(activeDraftExercise.reps,10)
+                                [activeDraftExercise.type]: parseInt(activeDraftExercise.reps,10),
+                                series: parseInt(activeDraftExercise.series,10),
+                                notes: activeDraftExercise.notes
                             }
                             exercisesToAddPayload[additionIndex].exercises.push(item)
                         }
@@ -548,7 +551,9 @@ class PageRoutineDetail extends Component{
                                         grouperId: activeDraftExercise.grouperId,
                                         workoutId: activeDraftExercise.workoutId,
                                         exerciseId:activeDraftExercise.ex[0].value,
-                                        [activeDraftExercise.type]: parseInt(activeDraftExercise.reps,10)
+                                        [activeDraftExercise.type]: parseInt(activeDraftExercise.reps,10),
+                                        series: parseInt(activeDraftExercise.series, 10),
+                                        notes: activeDraftExercise.notes
                                     }
                                     exercisesToAddPayload[additionIndex].exercises.push(item)
                                 }
@@ -887,46 +892,55 @@ class PageRoutineDetail extends Component{
     }
 
     renderAddExerciseInputs(bg, b, addExerciseInputIndex, j,i,k, activeDraftExercise) {
-        return (
-            <>
-                {
-                    addExerciseInputIndex === j+'-'+i+'-'+k &&
-                    <Table.Row style={{position: 'relative'}}>
-                        <Table.Cell colSpan={'3'} style={{position: 'relative'}}>
-                            <Grid>
-                                <Grid.Row className={'padding-1 add-exercise-row'}>
-                                    <Grid.Column width={10} className={'no-padding'}>
-                                        <ExerciseSearch
-                                            basic
-                                            allowAdditions
-                                            defaultSelected={activeDraftExercise.ex}
-                                            onSelected={(selected)=> {
+        const {state: {permissions: {createNewExercises}}} = this.context
+        const ff = true
+        const index = j+'-'+i+'-'+k
+
+        if (ff) {
+            return (
+                <>
+                    {
+                        addExerciseInputIndex === j+'-'+i+'-'+k  &&
+                        <Table.Row style={{position:'relative'}}>
+                            <Table.Cell colSpan={'3'} style={{position:'relative'}}>
+                                <Grid>
+                                    <Grid.Row className={'add-exercise-row'}>
+                                        <ExerciseListItemFree
+                                            createNewExercises={createNewExercises}
+                                            onExerciseSelected={(selected)=> {
                                                 const newActiveDraftExercise = {...activeDraftExercise, grouperId: bg.id, workoutId: b.id, order: k, ex: selected}
                                                 this.setState({activeDraftExercise: newActiveDraftExercise})
-                                            }}/>
-                                    </Grid.Column>
-                                    <Grid.Column width={3} className={'no-padding'}>
-                                        <Input
-                                            className={'line-height-dropdown'}
-                                            fluid
-                                            placeholder='10' type={'number'}
-                                            min={1}
-                                            max={99}
-                                            value={activeDraftExercise.reps}
-                                            onKeyDown={(event) => {}}
-                                            onChange={(e, {value}) => this.setState({activeDraftExercise: {...activeDraftExercise, reps:value}})}/>
-                                    </Grid.Column>
-                                    <Grid.Column width={3} className={'no-padding'}>
-                                        <SegRepsButtonGroup default={activeDraftExercise.type} onIntervalSelected={(val) => this.setState({activeDraftExercise: {...activeDraftExercise, type:val}})}/>
-                                    </Grid.Column>
-                                </Grid.Row>
-                            </Grid>
-                            {this.renderAddExercise(bg, b, addExerciseInputIndex, j,i,k, true)}
-                        </Table.Cell>
-                    </Table.Row>
-                }
-            </>
-        )
+                                            }}
+                                            onNotesChanged={(notes) => {
+                                                this.setState({activeDraftExercise: {...activeDraftExercise, notes}})
+                                            }}
+                                            // onAddExercise={() => this.onAddExcercise(index)}
+                                            // hideAddNext={e.hideAddNext}
+                                            withSeries={true}
+                                            configureSelectRepSec={true}
+                                            configureDefaultSec={false}
+                                            configureNotes={true}
+                                            key={index}
+                                            item={activeDraftExercise}
+                                            focus={true}
+                                            selected={true}
+                                            finished={(series, reps, goNext) => {
+                                                this.setState({activeDraftExercise: {...activeDraftExercise, reps, series}})
+                                            }}
+                                            // onRepeat={(item) => this.repeatExercise(item, false, index)}
+                                            // moveUp={() => this.moveUp(index)}
+                                            // moveDown={() => this.moveDown(index)}
+                                            onIntervalSelected={(val) => this.setState({activeDraftExercise: {...activeDraftExercise, type:val}})}
+                                        />
+                                    </Grid.Row>
+                                </Grid>
+                                {this.renderAddExercise(bg, b, addExerciseInputIndex, j,i,k, true)}
+                            </Table.Cell>
+                        </Table.Row>
+                    }
+                </>
+            )
+        }
     }
 
     renderWorkoutGroup(bg, b, j, i,
