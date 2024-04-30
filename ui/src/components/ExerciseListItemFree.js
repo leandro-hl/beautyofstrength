@@ -122,7 +122,10 @@ export class ExerciseListItemFree extends Component {
                                 allowAdditions={this.props.createNewExercises}
                                 defaultSelected={[this.props.item]}
                                 onLoaded={() => this.setState({loading: false})}
-                                onFocus={() => this.setState({searchFocused: true})}
+                                onFocus={() => {
+                                    this.setState({searchFocused: true})
+                                    this.props.onFocusItem()
+                                }}
                                 onBlur={() => this.setState({searchFocused: false})}
                                 onSelected={(selected) => {
                                     this.props.onExerciseSelected(selected)
@@ -140,7 +143,10 @@ export class ExerciseListItemFree extends Component {
                                         placeholder='1'
                                         value={this.props.item.series}
                                         onChange={(e) => this.handleChangeSerie(e.target.value)}
-                                        onFocus={() => this.setState({focusCurrent: 1})}
+                                        onFocus={() => {
+                                            this.setState({focusCurrent: 1, searchFocused:false})
+                                            this.props.onFocusItem()
+                                        }}
                                         type={'number'}
                                         variant="standard" />
                                 </Grid.Column>
@@ -159,7 +165,10 @@ export class ExerciseListItemFree extends Component {
                                 placeholder='8'
                                 value={this.props.item.reps}
                                 type={'number'}
-                                onFocus={() => this.setState({focusCurrent: 2})}
+                                onFocus={() => {
+                                    this.setState({focusCurrent: 2, searchFocused:false})
+                                    this.props.onFocusItem()
+                                }}
                                 onKeyDown={(event) => this.handleKeyDown(event)}
                                 onChange={(e) => this.handleChangeReps(e.target.value)}
                                 variant="standard" />
@@ -187,7 +196,10 @@ export class ExerciseListItemFree extends Component {
                                     placeholder="Notas del ejercicio"
                                     className={'gray-input'}
                                     value={this.props.item.notes}
-                                    onFocus={() => this.setState({focusCurrent: 3})}
+                                    onFocus={() => {
+                                        this.setState({focusCurrent: 3, searchFocused:false})
+                                        this.props.onFocusItem()
+                                    }}
                                     onChange={(e) => this.props.onNotesChanged(e.target.value)}
                                 />
                             </Grid.Column>
