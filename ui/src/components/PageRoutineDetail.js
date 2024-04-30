@@ -548,6 +548,8 @@ class PageRoutineDetail extends Component{
                                     workoutId: ex.workoutId,
                                     exerciseId: ex.exerciseId,
                                     [ex.type]: parseInt(ex.amount,10),
+                                    series: parseInt(ex.series, 10),
+                                    notes: ex.notes
                                 })
                             }
                             if (addExerciseInputK === k) {
