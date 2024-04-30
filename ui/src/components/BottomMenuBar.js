@@ -30,8 +30,9 @@ class BottomMenuBar extends Component {
             menustatistics
         }}} = this.context
         const {selected, secondaryActions, noBottomBar} = this.props
+        // material tooltip has z-index 1500 lol
         return (
-            <div style={{position: 'absolute', bottom: 0, width: '100%', maxWidth: 600}}>
+            <div style={{position: 'absolute', bottom: 0, width: '100%', maxWidth: 600, zIndex: 1501}}>
                 {
                     secondaryActions && secondaryActions.length == 2 &&
                     <Button.Group fluid>
