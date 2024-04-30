@@ -1,0 +1,1 @@
+alter table history.routine add column pwr int;

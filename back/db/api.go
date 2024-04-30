@@ -1497,12 +1497,13 @@ func InsertNewUserRmHistory(db *DB, tx *sqlx.Tx, rmId int64, rm int) {
 	})
 }
 
-func InsertNewRoutineHistory(db *DB, tx *sqlx.Tx, routineId, userId int64, rpe int) *int64 {
+func InsertNewRoutineHistory(db *DB, tx *sqlx.Tx, routineId, userId int64, rpe, pwr int) *int64 {
 	return InsertSchema(tx, &history.Routine{
 		UserAccountId: &userId,
 		RoutineId:     &routineId,
 		Date:          time.Now(),
 		Rpe:           &rpe,
+		Pwr:           &pwr,
 	}, "history")
 }
 

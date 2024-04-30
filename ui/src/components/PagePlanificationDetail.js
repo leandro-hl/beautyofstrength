@@ -211,9 +211,9 @@ class PagePlanificationDetail extends Component {
         }
     }
 
-    async confirmBorgScale(s) {
+    async confirmBorgScale(p, s) {
         const {actionatedRoutineInfo}=this.state
-        const payload = {...actionatedRoutineInfo, rpe: s}
+        const payload = {...actionatedRoutineInfo, rpe: s, preWorkoutReadiness:p}
         await this.actionateRoutine(payload)
         this.setState({showBorgScale:false, actionatedRoutineInfo: null})
     }
@@ -607,7 +607,7 @@ class PagePlanificationDetail extends Component {
                         </Modal.Actions>
                     </Modal>
                 }
-                {showBorgScale && <ModalBorgScale onConfirm={s => this.confirmBorgScale(s)}/>}
+                {showBorgScale && <ModalBorgScale onConfirm={(p,s) => this.confirmBorgScale(p,s)} onCancel={()=>{this.setState({showBorgScale: false})}}/>}
             </>
         )
     }

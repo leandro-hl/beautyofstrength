@@ -207,6 +207,7 @@ type ActionateRoutineRequest struct {
 	ActionatedRoutineId     *int64  `json:"actionatedRoutineId"`
 	ActionatedRoutineAction *string `json:"actionatedRoutineAction"`
 	Rpe                     *int    `json:"rpe"`
+	PreWorkoutReadiness     *int    `json:"preWorkoutReadiness"`
 }
 
 type SaveSharedRoutineRequest struct {
@@ -321,10 +322,11 @@ type SaveNewRmRequest struct {
 }
 
 type SaveRoutineExecutionRequest struct {
-	PlanificationId *int64                                `json:"planificationId"`
-	RoutineId       *int64                                `json:"routineId"`
-	Rpe             *int                                  `json:"rpe"`
-	Exercises       []SaveRoutineExecutionExerciseRequest `json:"exercises"`
+	PlanificationId     *int64                                `json:"planificationId"`
+	RoutineId           *int64                                `json:"routineId"`
+	PreWorkoutReadiness *int                                  `json:"preWorkoutReadiness"`
+	Rpe                 *int                                  `json:"ratePerceivedExertion"`
+	Exercises           []SaveRoutineExecutionExerciseRequest `json:"exercises"`
 }
 
 type SaveRoutineExecutionExerciseRequest struct {

@@ -8,6 +8,7 @@ type Routine struct {
 	RoutineId     *int64    `json:"routine_id"`
 	Date          time.Time `json:"date"`
 	Rpe           *int      `json:"rpe"`
+	Pwr           *int      `json:"pwr"`
 }
 
 type Exercise struct {

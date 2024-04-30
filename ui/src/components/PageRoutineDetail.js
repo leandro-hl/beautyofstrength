@@ -25,7 +25,14 @@ import {
 import {AppContext, setData, showError, showSuccess, showWarning} from "../context";
 import BottomMenuBar from "./BottomMenuBar";
 import LayoutMobile from "./LayoutMobile";
-import {capitalize, getNextCoverUrl, isLocalhost, queryParam} from "../functions";
+import {
+    calculatePostTrainingRoutineBorgScale,
+    calculatePreStartRoutineBorgScale,
+    capitalize,
+    getNextCoverUrl,
+    isLocalhost,
+    queryParam
+} from "../functions";
 import {MENU} from "../enums";
 import {PopUpDisabledAction} from "./PopUpDisabledAction";
 import {ModalBlockCreate} from "./ModalBlockCreate";
@@ -36,7 +43,6 @@ import {ExerciseSearch} from "./ExerciseSearch";
 import {SegRepsButtonGroup} from "./SegRepsButtonGroup";
 import {ModalRoutineToPlanificationCopy} from "./ModalRoutineToPlanificationCopy";
 import {ModalExerciseExecuteTimer} from "./ModalExerciseExecuteTimer";
-import {ModalBorgScale} from "./ModalBorgScale";
 import {ImageUpload} from "./ImageUpload";
 import {ImageCropper} from "./ImageCropper";
 import {ReactComponent as ExerciseIcon} from '../icons/exercise.svg'
@@ -46,10 +52,11 @@ import {ReactComponent as EditIcon} from '../icons/edit.svg'
 import {ReactComponent as PlayIcon} from '../icons/play_circle.svg'
 import {ReactComponent as ShareIcon} from '../icons/share.svg'
 import {TooltipInfoButton} from "./mui/TooltipInfoButton";
-import {Tooltip} from "@mui/material";
+import {Box, Grid as MuiGrid, Paper} from "@mui/material";
 import {TextFieldCentered} from "./mui/customizations";
 import {ReactComponent as BackArrowIcon} from '../icons/arrow_back.svg'
 import {ExerciseListItemFree} from "./ExerciseListItemFree";
+import {BorgSlider} from "./mui/BorgSlider";
 
 const MenuHeaderRender = ({
                               alreadyMarkedByMe,
@@ -1156,7 +1163,7 @@ class PageRoutineDetail extends Component{
                             className={'size-two-digits'}
                             // inputRef={this.inputRefSeries}
                             disabled={!routineStarted}
-                            placeholder={e.reps}
+                            placeholder={e.reps.toString()}
                             // defaultValue={e.reps}
                             value={e.effectiveSeries[z]?.reps}
                             onChange={(ev) => this.storeSeriesData(e.series, j,i,k,z,'reps',ev.target.value)}
@@ -1169,7 +1176,7 @@ class PageRoutineDetail extends Component{
                             className={'size-two-digits'}
                             // inputRef={this.inputRefSeries}
                             disabled={!routineStarted}
-                            placeholder={e[e.currentWorkRange+'LastWeight'] ?? 's/n' }
+                            placeholder={e[e.currentWorkRange+'LastWeight']?.toString() ?? 's/n' }
                             value={e.effectiveSeries[z]?.kgs}
                             // onKeyDown={(event) => {console.log(event)}}
                             // onFocus={(event) => {console.log(event)}}
@@ -1225,16 +1232,7 @@ class PageRoutineDetail extends Component{
                                         </p>
                                     </div>
                                 }/>
-                                {
-                                    e.notes &&
-                                    <TooltipInfoButton
-                                        icon={<ExerciseIcon/>}
-                                        title={
-                                            <div>
-                                                {e.notes}
-                                            </div>
-                                        }/>
-                                }
+                                <p style={{color: '#777777', fontStyle: 'italic'}}>{e.notes}</p>
                                 {
                                     e.series && e.reps && !editionMode &&
                                     this.renderExerciseTableSeries(j, i, k, e, routineStarted)
@@ -1334,14 +1332,14 @@ class PageRoutineDetail extends Component{
         this.setState({routineStarted: true})
     }
 
-    finishRoutine() {
-        this.setState({showBorgScale: true})
+    async finishRoutine() {
+        await this.confirmBorgScale()
     }
 
-    async confirmBorgScale(s) {
+    async confirmBorgScale() {
         try {
             //todo: this config could be saved in the context once retrieved from the server
-            const {saveRoutineWithLatestWeightAvailable}=this.state
+            const {saveRoutineWithLatestWeightAvailable, preWorkoutReadiness, ratePerceivedExertion}=this.state
             const {state: {permissions: {canSaveRoutineExecution}}} = this.context
             if (!canSaveRoutineExecution) {
                 return
@@ -1399,8 +1397,8 @@ class PageRoutineDetail extends Component{
                 }
             }
 
-            await saveRoutineExecution({planificationId, routineId, exercises, rpe: s})
-            this.setState({showBorgScale:false, routineStarted: false})
+            await saveRoutineExecution({planificationId, routineId, exercises, preWorkoutReadiness, ratePerceivedExertion})
+            this.setState({routineStarted: false})
             this.setSecondaryActions()
             showSuccess(this.context, '', 'Ejecucion de rutina guardada con exito!')
         } catch (e) {
@@ -1449,7 +1447,6 @@ class PageRoutineDetail extends Component{
             routineStarted,
             executeWithTimer,
             nextQueuedIntervals,
-            showBorgScale,
             showUploadRoutineImage,
             showCropper
         } = this.state;
@@ -1467,6 +1464,10 @@ class PageRoutineDetail extends Component{
                         <p>Comienza agregando algunos bloques de trabajo</p>
                     </Message>
                 }
+                <MuiGrid container item justifyContent={'center'} pl={4} pr={4} pb={2}>
+                    Estas listo para entrenar?
+                    <BorgSlider isWhite onChange={(val) => this.setState({preWorkoutReadiness: val})} disabled={!routineStarted} config={calculatePreStartRoutineBorgScale()}/>
+                </MuiGrid>
                 <Accordion
                     exclusive={false}
                     fluid>
@@ -1532,6 +1533,10 @@ class PageRoutineDetail extends Component{
                         </Segment>
                     ))}
                 </Accordion>
+                <MuiGrid container item justifyContent={'center'} pl={4} pr={4} pt={4}>
+                    Como fue tu experiencia?
+                    <BorgSlider isWhite onChange={(val) => this.setState({ratePerceivedExertion: val})} disabled={!routineStarted} config={calculatePostTrainingRoutineBorgScale()}/>
+                </MuiGrid>
                 <ModalBlockCreate
                     open={showCreateBlockModal}
                     next={nextBlockNumber}
@@ -1564,7 +1569,6 @@ class PageRoutineDetail extends Component{
                         queue={nextQueuedIntervals}
                         onFinished={() => this.setState({executeWithTimer: null, nextQueuedIntervals: null})}/>
                 }
-                {showBorgScale && <ModalBorgScale onConfirm={s => this.confirmBorgScale(s)} onCancel={() => this.setState({showBorgScale: false})}/>}
             </>
         )
     }

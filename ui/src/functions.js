@@ -1,3 +1,9 @@
+import {ReactComponent as FaceDeathIcon} from "./icons/face_death.svg";
+import {ReactComponent as FaceSadIcon} from "./icons/face_sad.svg";
+import {ReactComponent as FaceCalmIcon} from "./icons/face_calm.svg";
+import {ReactComponent as FaceNeutralIcon} from "./icons/face_neutral.svg";
+import {ReactComponent as OnFireIcon} from "./icons/fire.svg";
+
 export const defaultCoversByGender = 3
 
 export function urlBase64ToUint8Array(base64String) {
@@ -134,4 +140,86 @@ export function queryData(loc) {
 
 export function isLocalhost() {
     return window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
+}
+
+export function calculatePreStartRoutineBorgScale() {
+    return {
+        labels: [
+            'Estoy Muerto',
+            'Muy Cansado',
+            'Cansado',
+            'Algo Cansado',
+            'Ok',
+            'Bien',
+            'Bastante Bien',
+            'Ready!',
+            'Go go go!',
+            'Excelente!',
+        ],
+        colors: [
+            '#00BCD4',
+            '#00BCD4',
+            '#4CAF50',
+            '#4CAF50',
+            '#FF9800',
+            '#FF9800',
+            '#FF9800',
+            '#FF5722',
+            '#FF5722',
+            '#FF5722',
+        ],
+        icons: [
+            FaceDeathIcon,
+            FaceDeathIcon,
+            FaceSadIcon,
+            FaceSadIcon,
+            FaceCalmIcon,
+            FaceCalmIcon,
+            FaceCalmIcon,
+            OnFireIcon,
+            OnFireIcon,
+            OnFireIcon
+        ]
+    }
+}
+
+export function calculatePostTrainingRoutineBorgScale() {
+    return {
+        labels: [
+            'Muy, Muy Ligero',
+            'Muy Ligero',
+            'Ligero',
+            'Algo pesado',
+            'Pesado',
+            'Bastante Pesado',
+            'Muy Pesado',
+            'Muy, Muy Pesado',
+            'Maximo',
+            'Extremo',
+        ],
+        colors: [
+            '#00BCD4',
+            '#00BCD4',
+            '#4CAF50',
+            '#4CAF50',
+            '#FF9800',
+            '#FF9800',
+            '#FF9800',
+            '#FF5722',
+            '#FF5722',
+            '#FF5722',
+        ],
+        icons: [
+            FaceSadIcon,
+            FaceSadIcon,
+            FaceNeutralIcon,
+            FaceNeutralIcon,
+            FaceCalmIcon,
+            FaceCalmIcon,
+            FaceCalmIcon,
+            FaceDeathIcon,
+            FaceDeathIcon,
+            FaceDeathIcon
+        ]
+    }
 }

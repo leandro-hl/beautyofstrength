@@ -847,7 +847,7 @@ func (o *Endpoints) saveRoutineExecution(w http.ResponseWriter, r *http.Request,
 
 	//historical data accumulated for making stats
 	//historical data routine header
-	historyId := db.InsertNewRoutineHistory(o.db, tx, *t.RoutineId, usr, *t.Rpe)
+	historyId := db.InsertNewRoutineHistory(o.db, tx, *t.RoutineId, usr, *t.Rpe, *t.PreWorkoutReadiness)
 	for i, e := range t.Exercises {
 		fmt.Println("iteration: " + strconv.Itoa(i))
 		//historical data details
@@ -934,7 +934,7 @@ func (o *Endpoints) actionateRoutine(w http.ResponseWriter, r *http.Request, tx 
 	usr := util.UserId(r)
 	if !db.CalculateUserHasNoAccessToPlanification(o.db, tx, *t.PlanificationId, usr) {
 		plan := db.GetAccountPlanIdentifierByUserId(o.db, tx, usr)
-		iAmPremium := *plan == db.StudentPremium
+		iAmPremium := *plan == db.StudentPremium || *plan == db.Professor
 		if !iAmPremium {
 			if db.CalculateUserAlreadyActionatedARoutineToday(o.db, tx, *t.PlanificationId, usr) {
 				panic(&BadRequestResponse{ErrorCode: util.PString("free_actionate_routine_limit")})
@@ -948,7 +948,7 @@ func (o *Endpoints) actionateRoutine(w http.ResponseWriter, r *http.Request, tx 
 			db.InsertUserRoutineHistory(o.db, tx, false, t.PlanificationId, *t.ActionatedRoutineId, usr)
 		} else if *t.ActionatedRoutineAction == "finished" {
 			db.InsertUserRoutineHistory(o.db, tx, true, t.PlanificationId, *t.ActionatedRoutineId, usr)
-			historyId := db.InsertNewRoutineHistory(o.db, tx, *t.ActionatedRoutineId, usr, *t.Rpe)
+			historyId := db.InsertNewRoutineHistory(o.db, tx, *t.ActionatedRoutineId, usr, *t.Rpe, *t.PreWorkoutReadiness)
 			exercises := db.ListExercisesByRoutineId(o.db, tx, *t.ActionatedRoutineId, usr)
 			for _, e := range exercises {
 				db.InsertNewExerciseHistory(o.db, tx, *t.ActionatedRoutineId, *historyId, usr, *e.ExerciseId, *e.Reps, *e.Reps, 0)
