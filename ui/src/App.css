@@ -962,6 +962,16 @@ input[type="number"] {
     color: #252525 !important;
 }
 
+.exercise-notes {
+    font-style: italic;
+    color: #252525 !important;
+}
+
+.body-dark .exercise-notes {
+    color: #cacaca !important;
+    font-style: italic;
+}
+
 .body-dark .timeline-calendar,
 .body-dark .timeline-calendar .react-datepicker__header {
     border: unset !important;

@@ -857,6 +857,8 @@ class PageRoutineDetail extends Component{
                 type: activeDraftExercise.type,
                 amount: activeDraftExercise.reps,
                 [activeDraftExercise.type]: activeDraftExercise.reps,
+                series: activeDraftExercise.series,
+                notes: activeDraftExercise.notes,
             })
 
             //recalc K if we're adding a new exercise to the same work we want to continue editing.
@@ -900,54 +902,51 @@ class PageRoutineDetail extends Component{
 
     renderAddExerciseInputs(bg, b, addExerciseInputIndex, j,i,k, activeDraftExercise) {
         const {state: {permissions: {createNewExercises}}} = this.context
-        const ff = true
         const index = j+'-'+i+'-'+k
 
-        if (ff) {
-            return (
-                <>
-                    {
-                        addExerciseInputIndex === j+'-'+i+'-'+k  &&
-                        <Table.Row style={{position:'relative'}}>
-                            <Table.Cell colSpan={'3'} style={{position:'relative'}}>
-                                <Grid>
-                                    <Grid.Row className={'add-exercise-row'}>
-                                        <ExerciseListItemFree
-                                            createNewExercises={createNewExercises}
-                                            onExerciseSelected={(selected)=> {
-                                                const newActiveDraftExercise = {...activeDraftExercise, grouperId: bg.id, workoutId: b.id, order: k, ex: selected}
-                                                this.setState({activeDraftExercise: newActiveDraftExercise})
-                                            }}
-                                            onNotesChanged={(notes) => {
-                                                this.setState({activeDraftExercise: {...activeDraftExercise, notes}})
-                                            }}
-                                            // onAddExercise={() => this.onAddExcercise(index)}
-                                            // hideAddNext={e.hideAddNext}
-                                            withSeries={true}
-                                            configureSelectRepSec={true}
-                                            configureDefaultSec={false}
-                                            configureNotes={true}
-                                            key={index}
-                                            item={activeDraftExercise}
-                                            focus={true}
-                                            selected={true}
-                                            finished={(series, reps, goNext) => {
-                                                this.setState({activeDraftExercise: {...activeDraftExercise, reps, series}})
-                                            }}
-                                            // onRepeat={(item) => this.repeatExercise(item, false, index)}
-                                            // moveUp={() => this.moveUp(index)}
-                                            // moveDown={() => this.moveDown(index)}
-                                            onIntervalSelected={(val) => this.setState({activeDraftExercise: {...activeDraftExercise, type:val}})}
-                                        />
-                                    </Grid.Row>
-                                </Grid>
-                                {this.renderAddExercise(bg, b, addExerciseInputIndex, j,i,k, true)}
-                            </Table.Cell>
-                        </Table.Row>
-                    }
-                </>
-            )
-        }
+        return (
+            <>
+                {
+                    addExerciseInputIndex === j+'-'+i+'-'+k  &&
+                    <Table.Row style={{position:'relative'}}>
+                        <Table.Cell colSpan={'3'} style={{position:'relative'}}>
+                            <Grid>
+                                <Grid.Row className={'add-exercise-row'}>
+                                    <ExerciseListItemFree
+                                        createNewExercises={createNewExercises}
+                                        onExerciseSelected={(selected)=> {
+                                            const newActiveDraftExercise = {...activeDraftExercise, grouperId: bg.id, workoutId: b.id, order: k, ex: selected}
+                                            this.setState({activeDraftExercise: newActiveDraftExercise})
+                                        }}
+                                        onNotesChanged={(notes) => {
+                                            this.setState({activeDraftExercise: {...activeDraftExercise, notes}})
+                                        }}
+                                        // onAddExercise={() => this.onAddExcercise(index)}
+                                        // hideAddNext={e.hideAddNext}
+                                        withSeries={true}
+                                        configureSelectRepSec={true}
+                                        configureDefaultSec={false}
+                                        configureNotes={true}
+                                        key={index}
+                                        item={activeDraftExercise}
+                                        focus={true}
+                                        selected={true}
+                                        finished={(series, reps, goNext) => {
+                                            this.setState({activeDraftExercise: {...activeDraftExercise, reps, series}})
+                                        }}
+                                        // onRepeat={(item) => this.repeatExercise(item, false, index)}
+                                        // moveUp={() => this.moveUp(index)}
+                                        // moveDown={() => this.moveDown(index)}
+                                        onIntervalSelected={(val) => this.setState({activeDraftExercise: {...activeDraftExercise, type:val}})}
+                                    />
+                                </Grid.Row>
+                            </Grid>
+                            {this.renderAddExercise(bg, b, addExerciseInputIndex, j,i,k, true)}
+                        </Table.Cell>
+                    </Table.Row>
+                }
+            </>
+        )
     }
 
     renderWorkoutGroup(bg, b, j, i,
@@ -1232,7 +1231,7 @@ class PageRoutineDetail extends Component{
                                         </p>
                                     </div>
                                 }/>
-                                <p style={{color: '#777777', fontStyle: 'italic'}}>{e.notes}</p>
+                                <p className={'exercise-notes'}>{e.notes}</p>
                                 {
                                     e.series && e.reps && !editionMode &&
                                     this.renderExerciseTableSeries(j, i, k, e, routineStarted)
