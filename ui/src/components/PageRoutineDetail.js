@@ -51,6 +51,7 @@ import {ReactComponent as BlockTypeIcon} from '../icons/manufacturing.svg'
 import {ReactComponent as EditIcon} from '../icons/edit.svg'
 import {ReactComponent as PlayIcon} from '../icons/play_circle.svg'
 import {ReactComponent as ShareIcon} from '../icons/share.svg'
+import {ReactComponent as CheckIcon} from '../icons/check.svg'
 import {TooltipInfoButton} from "./mui/TooltipInfoButton";
 import {Box, Grid as MuiGrid, Paper} from "@mui/material";
 import {TextFieldCentered} from "./mui/customizations";
@@ -902,6 +903,52 @@ class PageRoutineDetail extends Component{
         )
     }
 
+    renderAddExerciseInputsV2(bg, b, addExerciseInputIndex, j,i,k, activeDraftExercise) {
+        const {state: {permissions: {createNewExercises}}} = this.context
+        const index = j+'-'+i+'-'+k
+
+        return (
+            <>
+                {
+                    addExerciseInputIndex === j+'-'+i+'-'+k  &&
+                    <MuiGrid item container style={{position:'relative'}} pb={2} pt={2}>
+                        <MuiGrid item className={'add-exercise-row'}>
+                            <ExerciseListItemFree
+                                noGridMarginTop={true}
+                                createNewExercises={createNewExercises}
+                                onExerciseSelected={(selected)=> {
+                                    const newActiveDraftExercise = {...activeDraftExercise, grouperId: bg.id, workoutId: b.id, order: k, ex: selected}
+                                    this.setState({activeDraftExercise: newActiveDraftExercise})
+                                }}
+                                onNotesChanged={(notes) => {
+                                    this.setState({activeDraftExercise: {...activeDraftExercise, notes}})
+                                }}
+                                // onAddExercise={() => this.onAddExcercise(index)}
+                                // hideAddNext={e.hideAddNext}
+                                withSeries={true}
+                                configureSelectRepSec={true}
+                                configureDefaultSec={false}
+                                configureNotes={true}
+                                key={index}
+                                item={activeDraftExercise}
+                                focus={true}
+                                selected={true}
+                                finished={(series, reps, goNext) => {
+                                    this.setState({activeDraftExercise: {...activeDraftExercise, reps, series}})
+                                }}
+                                // onRepeat={(item) => this.repeatExercise(item, false, index)}
+                                // moveUp={() => this.moveUp(index)}
+                                // moveDown={() => this.moveDown(index)}
+                                onIntervalSelected={(val) => this.setState({activeDraftExercise: {...activeDraftExercise, type:val}})}
+                            />
+                        </MuiGrid>
+                        {this.renderAddExercise(bg, b, addExerciseInputIndex, j,i,k, true)}
+                    </MuiGrid>
+                }
+            </>
+        )
+    }
+
     renderAddExerciseInputs(bg, b, addExerciseInputIndex, j,i,k, activeDraftExercise) {
         const {state: {permissions: {createNewExercises}}} = this.context
         const index = j+'-'+i+'-'+k
@@ -1114,7 +1161,261 @@ class PageRoutineDetail extends Component{
         )
     }
 
-    storeSeriesData(series, j, i, k,z, name, value, reps) {
+    renderWorkGroupV2(bg, b, j, i,
+                      editionMode, activeIndexes, confirmWorkDeletionIndex,
+                      addExerciseInputIndex, activeDraftExercise, confirmWorkExerciseDeletionIndex, routineStarted) {
+        const name = b.name.split(' - ')
+        const lastExerciseIndex=b.exercises.length-1
+        return (
+            <>
+                <Segment style={{width: '100%'}} className={'no-left-padding no-right-padding workout-v2'} key={b.id}>
+                    <Accordion.Title
+                        className={'no-top-padding no-bottom-padding padding-left-1 padding-right-1'}
+                        active={activeIndexes.indexOf(j+'-'+i) !== -1}
+                        index={j+'-'+i}
+                        onClick={(!editionMode && !routineStarted)? this.handleActiveBlocks : () => {}}>
+                        <b className={'title'}>
+                            {name[0]}
+                        </b>
+                        {name[1] && <Chip feel>
+                            <BlockTypeIcon/> {capitalize(name[1])}
+                        </Chip>}
+                        {b.laps && <Chip feel>
+                            {b.laps} Rondas
+                            <TooltipInfoButton title={"Tambien llamadas Sets"}/>
+                        </Chip>}
+                        {
+                            routineStarted &&
+                            <>
+                                {
+                                    b.exercises.filter(e => e.secs).length > 0 ?
+                                        <PlayIcon className={'table-play'}
+                                                  style={{position: 'relative', float: 'right', padding: 0, fontSize: 13}}
+                                                  onClick={() => this.executeWorkGroup(b, j, i)}/>
+                                        :
+                                        <PopUpDisabledAction
+                                            disableHeader={'Nada que ejecutar'}
+                                            disableDescription={'Agrega ejercicios por tiempo para usar el timer'}
+                                            trigger={
+                                                <PlayIcon
+                                                    className={'table-play disabled-btn'}
+                                                    style={{position: 'relative', float: 'right', padding: 0, fontSize: 13}}
+                                                    onClick={() => this.executeWorkGroup(b, j, i)}/>}/>
+                                }
+                            </>
+                        }
+                        {
+                            editionMode &&
+                            <PopUpConfirmation
+                                title={'Borrar '+name[0]+'?'}
+                                primary={'Borrar'}
+                                secondary={'Cancelar'}
+                                isManaged
+                                open={(j+'-'+i)===confirmWorkDeletionIndex}
+                                trigger={<Button
+                                    onClick={() => this.setState({confirmWorkDeletionIndex: j+'-'+i})}
+                                    basic secondary icon='close' style={
+                                    {position: 'relative', float: 'right', padding: 0, fontSize: 13}
+                                }/>}
+                                onPrimaryAction={() => this.deleteWorkFromBlockGroup(bg.id, b.id, j, i)}
+                                onSecondaryAction={() => this.setState({confirmWorkDeletionIndex: null})}
+                            />
+                        }
+                        {!editionMode && !routineStarted && <Icon name='dropdown' style={{float: 'right'}}/>}
+                    </Accordion.Title>
+                    <Accordion.Content active={activeIndexes.indexOf(j+'-'+i) !== -1}>
+                        <Segment basic className={'no-bottom-padding no-margin workout-v2'}>
+                            {
+                                editionMode &&
+                                <Table basic={'very'} compact unstackable>
+                                    <Table.Row>
+                                        <Table.Cell>
+                                            Rondas<TooltipInfoButton title={"Tambien llamadas Sets"}/>
+                                        </Table.Cell>
+                                        <Table.Cell>
+                                            <Input
+                                                placeholder={b.laps}
+                                                className={'input-centered size-two-digits'}
+                                                type={'number'}
+                                                value={b.laps}
+                                                name={'laps'}
+                                                onChange={(e, {value,name}) => this.onWorkoutUpdate(bg.id, b.id, j, i, name, value)}/>
+                                        </Table.Cell>
+                                    </Table.Row>
+                                    <Table.Row>
+                                        <Table.Cell>
+                                            Descanso Por Ejercicio
+                                        </Table.Cell>
+                                        <Table.Cell>
+                                            <Input
+                                                placeholder={b.exerestinterval}
+                                                className={'input-centered size-two-digits'}
+                                                type={'number'}
+                                                value={b.exerestinterval}
+                                                name={'exerestinterval'}
+                                                onChange={(e, {value,name}) => this.onWorkoutUpdate(bg.id, b.id, j, i, name, value)}/>
+                                        </Table.Cell>
+                                    </Table.Row>
+                                    <Table.Row>
+                                        <Table.Cell>
+                                            Descanso Por Ronda
+                                        </Table.Cell>
+                                        <Table.Cell>
+                                            <Input
+                                                placeholder={b.laprestinterval}
+                                                className={'input-centered size-two-digits'}
+                                                type={'number'}
+                                                value={b.laprestinterval}
+                                                name={'laprestinterval'}
+                                                onChange={(e, {value,name}) => this.onWorkoutUpdate(bg.id, b.id, j, i, name, value)}/>
+                                        </Table.Cell>
+                                    </Table.Row>
+                                </Table>
+                            }
+                            {
+                                !editionMode &&
+                                <>
+                                    {b.duration && <div><b>{b.duration} minutos</b> de duracion</div>}
+                                    {
+                                        (!!b.laprestinterval || !!b.exerestinterval) &&
+                                        <>
+                                            Descanso
+                                            {b.exerestinterval &&
+                                                <Chip style={{fontSize: 14, color: "#252525"}} feel>{b.exerestinterval}s por <ExerciseIcon/></Chip>}
+                                            {b.laprestinterval &&
+                                                <Chip style={{fontSize: 14, color: "#252525"}} feel>{b.laprestinterval}s por <RefreshIcon/></Chip>}
+                                        </>
+                                    }
+                                </>
+                            }
+                        </Segment>
+
+                        <MuiGrid container>
+                            <MuiGrid item container justifyContent={'space-between'}>
+                                <MuiGrid item>
+                                    Ejercicio
+                                </MuiGrid>
+                                {b.exercises.find(e => e.reps || e.secs) && <MuiGrid item>Trabajo</MuiGrid>}
+                                {/*{(editionMode || routineStarted) && <Table.HeaderCell/>}*/}
+                            </MuiGrid>
+                            {
+                                b.exercises.length === 0 &&
+                                <MuiGrid item container>
+                                    <Box style={{position: 'relative'}}>
+                                        Sin Ejercicios
+                                        {editionMode && this.renderAddExercise(bg, b, addExerciseInputIndex, j,i,0)}
+                                    </Box>
+                                    {this.renderAddExerciseInputs(bg, b, addExerciseInputIndex, j,i,0, activeDraftExercise)}
+                                </MuiGrid>
+                            }
+                            {b.exercises.map((e, k) => (this.renderExerciseV2(
+                                bg, b, e, j, i, k,
+                                editionMode, addExerciseInputIndex, activeDraftExercise,
+                                confirmWorkExerciseDeletionIndex, lastExerciseIndex,
+                                routineStarted
+                            )))}
+                        </MuiGrid>
+                    </Accordion.Content>
+                </Segment>
+                <MuiGrid container justifyContent={'center'}>
+                    <Divider horizontal className={'divider-color'} style={{width:30}}/>
+                </MuiGrid>
+            </>
+        )
+    }
+
+    renderExerciseV2(bg, b, e, j, i, k,
+                     editionMode, addExerciseInputIndex, activeDraftExercise,
+                     confirmWorkExerciseDeletionIndex, lastExercise, routineStarted) {
+        const hasValue = e.reps || e.secs
+        return (
+            <>
+                <MuiGrid item container key={k} position={'relative'} pb={2} pt={2} flexWrap={e.isDraft ? 'nowrap' : 'wrap'} spacing={1} className={k === lastExercise ? 'last-child-no-bottom' : ''}>
+                    {
+                        e.isDraft &&
+                        <MuiGrid item className={'label-new-item'}/>
+                    }
+                    <MuiGrid item container>
+                        <MuiGrid item container>
+                            <MuiGrid item container justifyContent={'space-between'}>
+                                <MuiGrid item>
+                                    {e.link ? <Link to={'#'} onClick={() => this.openExerciseVideo(e.link)}>{e.name}</Link> : e.name}
+                                    <TooltipInfoButton
+                                        title={
+                                            <div>
+                                                <p><b>Ultimos registros</b></p>
+                                                <p><b>Rango de
+                                                    fuerza:</b> {e.forceLastWeight ? e.forceLastEffectiveReps + ' X ' + e.forceLastWeight + 'kg' : 'sin datos'}
+                                                </p>
+                                                <p><b>Rango de
+                                                    hipertrofia:</b> {e.hypertrophyLastWeight ? e.hypertrophyLastEffectiveReps + ' X ' + e.hypertrophyLastWeight + 'kg' : 'sin datos'}
+                                                </p>
+                                                <p><b>Rango de
+                                                    resistencia:</b> {e.resistenceLastWeight ? e.resistenceLastEffectiveReps + ' X ' + e.resistenceLastWeight + 'kg' : 'sin datos'}
+                                                </p>
+                                            </div>
+                                        }/>
+                                </MuiGrid>
+                                <MuiGrid item container justifyContent={'flex-end'} width={'fit-content'}>
+                                    {
+                                        (e.reps || e.secs) &&
+                                        <MuiGrid item>
+                                            {e.series ? e.series +'x' : ''}{e.reps ? e.reps+' Reps' : e.secs+' Segs'}
+                                        </MuiGrid>
+                                    }
+                                    {
+                                        editionMode &&
+                                        <MuiGrid item>
+                                            {
+                                                e.toDelete &&
+                                                <Label color='red' style={{float: 'right'}}>
+                                                    A borrar
+                                                </Label>
+                                            }
+                                            {
+                                                !e.toDelete &&
+                                                <PopUpConfirmation
+                                                    title={'Borrar '+e.name+'?'}
+                                                    primary={'Borrar'}
+                                                    secondary={'Cancelar'}
+                                                    isManaged
+                                                    open={(j+'-'+i+'-'+k)===confirmWorkExerciseDeletionIndex}
+                                                    trigger={<Button
+                                                        onClick={() => this.setState({confirmWorkExerciseDeletionIndex: j+'-'+i+'-'+k})}
+                                                        className={'table-remove-item-v2'} icon='close'/>}
+                                                    onPrimaryAction={() => this.deleteExerciseFromWork(bg.id, b.id, e.id, j, i, k, e.isDraft)}
+                                                    onSecondaryAction={() => this.setState({confirmWorkExerciseDeletionIndex: null})}
+                                                />
+                                            }
+                                        </MuiGrid>
+                                    }
+                                    {
+                                        routineStarted && e.secs &&
+                                        <MuiGrid item>
+                                            <Icon className={'table-play'} name={'play'} onClick={() => this.startExercise(e,j,i,k)}/>
+                                        </MuiGrid>
+                                    }
+                                </MuiGrid>
+                            </MuiGrid>
+                        </MuiGrid>
+                        <MuiGrid item container>
+                            <p className={'exercise-notes'}>{e.notes}</p>
+                        </MuiGrid>
+                    </MuiGrid>
+                    {
+                        e.series && e.reps && !editionMode &&
+                        <MuiGrid item container>
+                            {this.renderExerciseTableSeriesV2(j, i, k, e, routineStarted)}
+                        </MuiGrid>
+                    }
+                    {editionMode && this.renderAddExercise(bg, b, addExerciseInputIndex, j,i,k)}
+                </MuiGrid>
+                {this.renderAddExerciseInputsV2(bg, b, addExerciseInputIndex, j,i,k, activeDraftExercise)}
+            </>
+        )
+    }
+
+    storeSeriesData(series, j, i, k,z, name, value, reps, loaded) {
         const {blockGroupers} = this.state
         const exercise = blockGroupers[j].blocks[i].exercises[k]
 
@@ -1134,7 +1435,126 @@ class PageRoutineDetail extends Component{
             }
         }
 
+        exercise.effectiveSeries[z].loaded=loaded
         this.setState({blockGroupers: [...blockGroupers]})
+    }
+
+    renderExerciseTableSeriesV2(j, i, k, e, routineStarted) {
+        // let previousKg = 'Sin peso de referencia'
+        // if (e.rounds) {
+        //     previousKg = e.rounds[e.rounds.length-1].kgs
+        // }
+        // this.setState({executeWithReps: {...e, previousKg, j,i,k}})
+        //
+        // /*
+        // const ex = blockGroupers[executeWithReps.j].blocks[executeWithReps.i].exercises[executeWithReps.k]
+        //                 if (ex.rounds) {
+        //                     ex.rounds.push({effectiveReps:parseInt(effectiveReps,10),kgs:parseInt(kgs,10)})
+        //                 } else {
+        //                     ex.rounds=[{effectiveReps:parseInt(effectiveReps,10),kgs:parseInt(kgs,10)}]
+        //                 }
+        //                 this.setState({blockGroupers,executeWithReps: null})
+        //  */
+
+        const rows = []
+        let totalKgs = 0
+        let totalReps = 0
+        for (let z = 0; z < e.series; z++) {
+            let volumen = 0
+
+            if (e.effectiveSeries[z]?.reps) {
+                volumen = e.effectiveSeries[z]?.reps
+                totalReps += parseInt(e.effectiveSeries[z]?.reps,10)
+            }
+
+            if(e.effectiveSeries[z]?.kgs) {
+                volumen *= e.effectiveSeries[z]?.kgs
+                totalKgs += parseInt(e.effectiveSeries[z]?.kgs,10)
+            }
+
+            rows.push(<>
+                <Table.Row key={z}>
+                    <Table.Cell>
+                        <TextFieldCentered
+                            style={{justifyContent: 'center'}}
+                            className={'size-two-digits'}
+                            // inputRef={this.inputRefSeries}
+                            disabled={!routineStarted}
+                            placeholder={e.reps.toString()}
+                            // defaultValue={e.reps}
+                            value={e.effectiveSeries[z]?.reps}
+                            onChange={(ev) => this.storeSeriesData(e.series, j,i,k,z,'reps',ev.target.value)}
+                            type={'number'}
+                            variant="standard" />
+                    </Table.Cell>
+                    <Table.Cell>
+                        <TextFieldCentered
+                            style={{justifyContent: 'center'}}
+                            className={'size-two-digits'}
+                            // inputRef={this.inputRefSeries}
+                            disabled={!routineStarted}
+                            placeholder={e[e.currentWorkRange+'LastWeight']?.toString() ?? 's/n' }
+                            value={e.effectiveSeries[z]?.kgs}
+                            // onKeyDown={(event) => {console.log(event)}}
+                            // onFocus={(event) => {console.log(event)}}
+                            onChange={(ev) => this.storeSeriesData(e.series, j,i,k,z,'kgs',ev.target.value, e.reps)}
+                            type={'number'}
+                            variant="standard" />
+                    </Table.Cell>
+                    <Table.Cell>
+                        {volumen}
+                    </Table.Cell>
+                    <Table.Cell>
+                        <CheckIcon
+                            style={{color: routineStarted? e.effectiveSeries[z]?.loaded ? 'green' : 'rgba(255, 255, 255, 0.7)' :  'rgba(255, 255, 255, 0.5)'}}
+                            onClick={() => {
+                                let reps = e.reps
+                                if(e.effectiveSeries[z]?.reps) {
+                                    reps = parseInt(e.effectiveSeries[z]?.reps,10)
+                                }
+
+                                let kgs = undefined
+                                if(e.effectiveSeries[z]?.kgs) {
+                                    kgs = parseInt(e.effectiveSeries[z]?.kgs,10)
+                                } else if (z-1 >= 0 && e.effectiveSeries[z-1]?.kgs) {
+                                    kgs = parseInt(e.effectiveSeries[z-1]?.kgs,10)
+                                } else if (e[e.currentWorkRange+'LastWeight']) {
+                                    kgs = e[e.currentWorkRange+'LastWeight']
+                                } else {
+                                    kgs = 0
+                                }
+
+                                this.storeSeriesData(e.series, j,i,k,z,'kgs',kgs, reps, true)
+                            }}
+                        />
+                    </Table.Cell>
+                </Table.Row>
+            </>)
+        }
+        return (
+            <Table unstackable basic='very' textAlign={'center'} className={'margin-top-1 no-border workout-v2'}>
+                <Table.Header>
+                    <Table.Row>
+                        <Table.HeaderCell className={'no-padding'}>efectivas</Table.HeaderCell>
+                        <Table.HeaderCell className={'no-padding'}>kg</Table.HeaderCell>
+                        <Table.HeaderCell className={'no-padding'}>volumen</Table.HeaderCell>
+                        <Table.HeaderCell/>
+                    </Table.Row>
+                </Table.Header>
+                <Table.Body>
+                    {/*TODO: migrate from rounds to Series (OR use both?)*/}
+                    {rows}
+                    <Table.Row>
+                        <Table.Cell>
+                            {totalReps}
+                        </Table.Cell>
+                        <Table.Cell>
+                            {totalKgs}
+                        </Table.Cell>
+                    </Table.Row>
+                </Table.Body>
+            </Table>
+        )
     }
 
     renderExerciseTableSeries(j, i, k, e, routineStarted) {
@@ -1473,65 +1893,72 @@ class PageRoutineDetail extends Component{
                     exclusive={false}
                     fluid>
                     {blockGroupers.map((bg,j) => (
-                        <Segment key={j} className={'padding-left-half padding-right-half'}>
-                            <Header className={'align-center'} as={'h5'}>
-                                {!editionMode && <span>{bg.name}</span>}
+                        <>
+                            <Segment key={j} className={'padding-left-half padding-right-half workout-v2'}>
+                                <Header className={'align-center'} as={'h5'}>
+                                    {!editionMode && <span>{bg.name}</span>}
+                                    {
+                                        editionMode &&
+                                        <>
+                                            <Input
+                                                className={'input-header input-centered'}
+                                                placeholder={bg.name}
+                                                value={bg.name}
+                                                onChange={(e, {value}) => this.onGrouperNameChange(bg.id, j, value)}/>
+                                            <PopUpConfirmation
+                                                title={'Borrar '+bg.name+'?'}
+                                                primary={'Borrar'}
+                                                secondary={'Cancelar'}
+                                                isManaged
+                                                open={j===confirmBlockGroupDeletionIndex}
+                                                trigger={<Button
+                                                    onClick={() => this.setState({confirmBlockGroupDeletionIndex: j})}
+                                                    basic secondary icon='close' style={
+                                                    {position: 'relative', float: 'right', padding: 0, fontSize: 13}
+                                                }/>}
+                                                onPrimaryAction={() => this.deleteBlockGroup(bg.id, j)}
+                                                onSecondaryAction={() => this.setState({confirmBlockGroupDeletionIndex: null})}
+                                            />
+                                        </>
+                                    }
+                                </Header>
+                                <div>
+                                    {
+                                        bg.blocks.length === 0 &&
+                                        <Message><Message.Content>Comienza agregando algunos trabajos al bloque</Message.Content></Message>
+                                    }
+                                    {bg.blocks.map((b,i) => {
+                                        return this.renderWorkGroupV2(
+                                            bg, b, j, i,
+                                            editionMode, activeIndexes, confirmWorkDeletionIndex,
+                                            addExerciseInputIndex, activeDraftExercise, confirmWorkExerciseDeletionIndex,
+                                            routineStarted
+                                        )
+                                    })}
+                                </div>
                                 {
-                                    editionMode &&
-                                    <>
-                                        <Input
-                                            className={'input-header input-centered'}
-                                            placeholder={bg.name}
-                                            value={bg.name}
-                                            onChange={(e, {value}) => this.onGrouperNameChange(bg.id, j, value)}/>
-                                        <PopUpConfirmation
-                                            title={'Borrar '+bg.name+'?'}
-                                            primary={'Borrar'}
-                                            secondary={'Cancelar'}
-                                            isManaged
-                                            open={j===confirmBlockGroupDeletionIndex}
-                                            trigger={<Button
-                                                             onClick={() => this.setState({confirmBlockGroupDeletionIndex: j})}
-                                                             basic secondary icon='close' style={
-                                                {position: 'relative', float: 'right', padding: 0, fontSize: 13}
-                                            }/>}
-                                            onPrimaryAction={() => this.deleteBlockGroup(bg.id, j)}
-                                            onSecondaryAction={() => this.setState({confirmBlockGroupDeletionIndex: null})}
-                                        />
-                                    </>
-                                }
-                            </Header>
-                            <div>
-                                {
-                                    bg.blocks.length === 0 &&
-                                    <Message><Message.Content>Comienza agregando algunos trabajos al bloque</Message.Content></Message>
-                                }
-                                {bg.blocks.map((b,i) => (this.renderWorkoutGroup(
-                                    bg, b, j, i,
-                                    editionMode, activeIndexes, confirmWorkDeletionIndex,
-                                    addExerciseInputIndex, activeDraftExercise, confirmWorkExerciseDeletionIndex,
-                                    routineStarted
-                                )))}
-                            </div>
-                            {
-                                (!editionMode && !routineStarted && actionable) ?
-                                    <Divider horizontal>
-                                        {
-                                            !editRoutine ?
-                                            <PopUpDisabledAction
-                                                trigger={<Icon name={'plus'} className={'disabled-btn'}/>}/>
-                                            :
-                                                canEdit ?
-                                                    <Icon name={'plus'} onClick={() => this.addWorkToGrouper(bg, j)}/> :
-                                                    <Icon name={'plus'} onClick={() => this.addWorkToGrouper(bg, j)}/>}
+                                    (!editionMode && !routineStarted && actionable) ?
+                                        <Divider horizontal className={'divider-lighter'}>
+                                            {
+                                                !editRoutine ?
+                                                    <PopUpDisabledAction
+                                                        trigger={<Icon name={'plus'} className={'disabled-btn'}/>}/>
+                                                    :
+                                                    canEdit ?
+                                                        <span onClick={() => this.addWorkToGrouper(bg, j)}><Icon name={'plus'}/> Nuevo Trabajo</span>:
+                                                        <span onClick={() => this.addWorkToGrouper(bg, j)}><Icon name={'plus'}/> Nuevo Trabajo</span>}
                                             {/*// <PopUpDisabledAction*/}
                                             {/*//     disableHeader={'No es posible agregar'}*/}
                                             {/*//     disableDescription={'Tu o un atleta ya marcaron esta rutina como completada u omitida'}*/}
                                             {/*//     trigger={<Icon name={'plus'} className={'disabled-btn'}/>}/>*/}
-                                    </Divider>
-                                    : null
-                            }
-                        </Segment>
+                                        </Divider>
+                                        : null
+                                }
+                            </Segment>
+                            <MuiGrid container justifyContent={'center'}>
+                                <Divider horizontal className={'divider-color'} style={{width:180}}/>
+                            </MuiGrid>
+                        </>
                     ))}
                 </Accordion>
                 <MuiGrid container item justifyContent={'center'} pl={4} pr={4} pt={4}>

@@ -131,6 +131,8 @@ body {
 .body-dark .ui.message,
 .body-dark .ui.divider,
 .body-dark .ui.message p,
+.body-dark .ui.table,
+.body-dark .ui.table thead th,
 .body-dark .ui.accordion .ui.segment,
 .body-dark .ui.accordion .title .title,
 .body-dark .ui.accordion .ui.segment .ui.header {
@@ -138,8 +140,31 @@ body {
     background-color: #252525 !important;
 }
 
+.body-dark .ui.accordion .title .dropdown.icon {
+    color: #ffffff !important;
+    transform: none !important;
+}
+
+.body-dark .ui.accordion .ui.segment.workout-v2,
+.body-dark .ui.accordion .ui.segment.workout-v2 .ui.header,
+.body-dark .ui.table.workout-v2,
+.body-dark .ui.table.workout-v2 thead th,
+.body-dark .ui.segment.workout-v2 .title .title,
+.body-dark .ui.segment.workout-v2 .ui.divider
+/*.body-dark .ui.accordion .ui.segment.workout-v2 .ui.divider*/
+{
+    background-color: #121212 !important;
+}
+
 .body-dark .white-border {
     border: 1px solid rgb(255 255 255 / 20%) !important;
+}
+
+.ui.divider.divider-color,
+.body-dark .ui.divider.divider-color,
+.body-dark .ui.segment.workout-v2 .ui.divider.divider-color{
+    background-color: #b08f10 !important;
+    height: 2px !important;
 }
 
 .body-dark .background {
@@ -147,15 +172,20 @@ body {
     color: #ffffff !important;
 }
 
-.body-dark .ui.table,
-.body-dark .ui.table thead th {
-    color: #ffffff !important;
-    background-color: #252525 !important;
-}
-
 .body-dark .ui.basic.table tbody tr td,
 .body-dark .ui.table thead th {
     border-bottom: 1px solid rgba(255, 255, 255, 0.2) !important;
+}
+
+.ui.basic.table.no-border tbody tr td,
+.ui.table.no-border thead th,
+.body-dark .ui.basic.table.no-border tbody tr td,
+.body-dark .ui.table.no-border thead th {
+    border-bottom: unset !important;
+}
+
+.body-dark .ui.segment.workout-v2 .ui.divider.divider-lighter {
+    color: #ffffff73 !important;
 }
 
 .body-dark .ui.basic.table tbody tr td.last-child-no-bottom {
@@ -835,6 +865,7 @@ div#g_id_onload, div.g_id_signin {
     bottom: -11px;
     /*margin-top: 32px !important;*/
     color: #b5b5b5;
+    z-index: 1;
 }
 
 .table-plus-item-15-negative {
@@ -843,6 +874,9 @@ div#g_id_onload, div.g_id_signin {
 
 .table-remove-item {
     position: absolute;
+}
+
+.table-remove-item, .table-remove-item-v2 {
     right: 5px;
     /*bottom: 13px;*/
     padding: 0 0 0 0 !important;

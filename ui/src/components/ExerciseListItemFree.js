@@ -105,7 +105,7 @@ export class ExerciseListItemFree extends Component {
 
         return (
             <Segment className={`no-padding ${this.props.selected ? 'mine-selected' : ''}`} basic>
-                <Grid>
+                <Grid style={this.props.noGridMarginTop ? {marginTop:0}:{}}>
                     <Grid.Row style={{ flexWrap:'nowrap' }} className={this.props.configureNotes ? 'no-bottom-padding' : ''}>
                         {/*<Grid.Column width={1} stretched>*/}
                         {/*    <div className={'center-content-vertically'}>*/}
