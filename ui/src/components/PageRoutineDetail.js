@@ -1524,6 +1524,7 @@ class PageRoutineDetail extends Component{
                                     kgs = 0
                                 }
 
+                                //todo: initiate timer
                                 this.storeSeriesData(e.series, j,i,k,z,'kgs',kgs, reps, true)
                             }}
                         />
