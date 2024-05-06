@@ -847,9 +847,8 @@ func (o *Endpoints) saveRoutineExecution(w http.ResponseWriter, r *http.Request,
 
 	//historical data accumulated for making stats
 	//historical data routine header
-	historyId := db.InsertNewRoutineHistory(o.db, tx, *t.RoutineId, usr, *t.Rpe, *t.PreWorkoutReadiness)
-	for i, e := range t.Exercises {
-		fmt.Println("iteration: " + strconv.Itoa(i))
+	historyId := db.InsertNewRoutineHistory(o.db, tx, *t.RoutineId, usr, t.Rpe, t.PreWorkoutReadiness)
+	for _, e := range t.Exercises {
 		//historical data details
 		db.InsertNewExerciseHistory(o.db, tx, *t.RoutineId, *historyId, usr, *e.Id, *e.Reps, *e.EffectiveReps, *e.Kg)
 
@@ -948,7 +947,7 @@ func (o *Endpoints) actionateRoutine(w http.ResponseWriter, r *http.Request, tx 
 			db.InsertUserRoutineHistory(o.db, tx, false, t.PlanificationId, *t.ActionatedRoutineId, usr)
 		} else if *t.ActionatedRoutineAction == "finished" {
 			db.InsertUserRoutineHistory(o.db, tx, true, t.PlanificationId, *t.ActionatedRoutineId, usr)
-			historyId := db.InsertNewRoutineHistory(o.db, tx, *t.ActionatedRoutineId, usr, *t.Rpe, *t.PreWorkoutReadiness)
+			historyId := db.InsertNewRoutineHistory(o.db, tx, *t.ActionatedRoutineId, usr, t.Rpe, t.PreWorkoutReadiness)
 			exercises := db.ListExercisesByRoutineId(o.db, tx, *t.ActionatedRoutineId, usr)
 			for _, e := range exercises {
 				db.InsertNewExerciseHistory(o.db, tx, *t.ActionatedRoutineId, *historyId, usr, *e.ExerciseId, *e.Reps, *e.Reps, 0)
