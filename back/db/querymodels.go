@@ -24,6 +24,7 @@ type ListEquipmentQuery struct {
 type ListMyLastMonthTrainingsQuery struct {
 	RoutineId *int64    `json:"routine_id"`
 	Date      time.Time `json:"date"`
+	Pwr       *int      `json:"pwr"`
 	Rpe       *int      `json:"rpe"`
 }
 

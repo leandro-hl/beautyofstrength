@@ -1276,7 +1276,7 @@ func ListQueuedPlanificationAccessRequests(db *DB, tx *sqlx.Tx, userId int64) []
 
 func ListMyLastMonthTrainings(db *DB, tx *sqlx.Tx, userId int64) []ListMyLastMonthTrainingsQuery {
 	query := `
-		select hr.routine_id, hr.date, hr.rpe from history.routine hr
+		select hr.routine_id, hr.date, hr.rpe, hr.pwr from history.routine hr
 		where hr.useraccount_id=$1 and hr.date>= (CURRENT_DATE - INTERVAL '1 month')`
 	stmt, err := getTxPreparedStmt(db, tx, query)
 	util.Check(err)
