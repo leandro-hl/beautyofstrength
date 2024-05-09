@@ -31,6 +31,7 @@ import {PopUpConfirmation} from "./PopUpConfirmation";
 import {ModalInstructorInviteAccept} from "./ModalInstructorInviteAccept";
 import TimeLineCalendar from "./TimelineCalendar";
 import {Chart, registerables} from "chart.js";
+import {calculatePostTrainingRoutineBorgScale, calculatePreStartRoutineBorgScale} from "../functions";
 
 const MenuHeaderRender = ({onRefresh}) => {
     const [refreshing, setRefreshing] = useState(false)
@@ -97,16 +98,36 @@ class PagePlanificationList extends Component {
         try {
             const res = await listMyLastMonthTrainings()
             if (res.data) {
+                const pwrColorsConfig = calculatePreStartRoutineBorgScale()
+                const rpeColorsConfig = calculatePostTrainingRoutineBorgScale()
+
                 const labels = []
                 const pwrSerie = []
+                const pwrColors = []
                 const rpeSerie = []
+                const rpeColors = []
 
                 for (let i = 0; i < res.data.length; i++) {
                     labels.push(res.data[i].date.substring(5, 10))
-                    pwrSerie.push(res.data[i].pwr??0)
-                    rpeSerie.push(res.data[i].rpe??0)
+                    pwrSerie.push(res.data[i].pwr)
+                    rpeSerie.push(res.data[i].rpe)
+                    if (res.data[i].pwr) {
+                        const val = res.data[i].pwr
+                        pwrColors.push(pwrColorsConfig.colors[val])
+                    }
+                    if (res.data[i].rpe) {
+                        const val = res.data[i].rpe
+                        rpeColors.push(rpeColorsConfig.colors[val])
+                    }
                 }
-                this.renderStatsGraph(labels, pwrSerie, rpeSerie)
+                this.renderStatsGraph(
+                    labels,
+                    pwrSerie,
+                    rpeSerie,
+                    pwrColors,
+                    rpeColors,
+                    pwrColorsConfig,
+                    rpeColorsConfig)
             }
         } catch (e) {
 
@@ -238,7 +259,17 @@ class PagePlanificationList extends Component {
         }
     }
 
-    renderStatsGraph(labels, pwrSerie, rpeSerie) {
+    handleDataSetClick = (event, activeElement) => {
+        if(activeElement.length > 0) {
+            const datasetIndex = activeElement[0].datasetIndex;
+            const dataIndex = activeElement[0].index;
+
+            console.log(`Clicked on element from dataset at index ${datasetIndex} and data at index ${dataIndex}`);
+        }
+    }
+
+    renderStatsGraph(labels, pwrSerie, rpeSerie, pwrColors, rpeColors, pwrColorsConfig,
+                     rpeColorsConfig) {
         Chart.register(...registerables);
         this.setState({myChart: new Chart(this.canvasRef.current, {
                 type: 'line',
@@ -246,22 +277,28 @@ class PagePlanificationList extends Component {
                     labels: labels,
                     datasets: [
                         {
+
                             label: 'pwr',
                             data: pwrSerie,
-                            borderColor: 'blue',
+                            borderColor: 'grey',
+                            pointBackgroundColor: pwrColors,
                             borderWidth: 1
                         },
                         {
                             label: 'rpe',
                             data: rpeSerie,
-                            borderColor: 'red',
+                            borderColor: 'grey',
+                            pointBackgroundColor: rpeColors,
                             borderWidth: 1
                         }]
                 },
                 options: {
+                    onClick: this.handleDataSetClick,
                     scales: {
                         y: {
-                            beginAtZero: true
+                            min: 1,
+                            max: 10,
+                            beginAtZero: false
                         },
                         x: {
                             ticks: {
@@ -273,6 +310,23 @@ class PagePlanificationList extends Component {
                     plugins: {
                         legend: {
                             display: false
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    const value = context.raw;
+                                    const label = context.dataset.label;
+                                    const l = []
+                                    if(label === "pwr"){
+                                        l.push("Como empezaste tu entrenamiento: ");
+                                        l.push(pwrColorsConfig.labels[value])
+                                    } else if(label === "rpe"){
+                                        l.push("Tu experiencia: ");
+                                        l.push(rpeColorsConfig.labels[value])
+                                    }
+                                    return l
+                                }
+                            }
                         }
                     }
                 }
