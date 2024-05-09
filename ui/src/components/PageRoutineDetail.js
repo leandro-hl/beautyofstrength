@@ -13,7 +13,7 @@ import {
     Segment,
     Table
 } from "semantic-ui-react";
-import {Link, withRouter} from "react-router-dom";
+import {Link, Prompt, withRouter} from "react-router-dom";
 import {
     copyTemplateRoutineToPlanification,
     getRoutineDetails,
@@ -1726,8 +1726,22 @@ class PageRoutineDetail extends Component{
         }
     }
 
+    switchWindowReload(remove) {
+        const handleUnload = (e) => {
+            e.preventDefault();
+            return 'Estas seguro que queres recargar la rutina? Perderas tu progreso.';
+        };
+
+        if (remove) {
+            window.removeEventListener('beforeunload', handleUnload);
+        } else {
+            window.addEventListener('beforeunload', handleUnload);
+        }
+    }
+
     cancelRoutineExecution() {
         this.setState({routineStarted: false})
+        this.switchWindowReload(true)
         this.setSecondaryActions()
         showSuccess(this.context, '', 'Ejecucion cancelada!')
     }
@@ -1752,6 +1766,7 @@ class PageRoutineDetail extends Component{
         this.generateAllExerciseGrids()
         this.context.dispatch(setData({secondaryActions: []}))
         this.setState({routineStarted: true})
+        this.switchWindowReload()
     }
 
     async finishRoutine() {
@@ -1821,6 +1836,7 @@ class PageRoutineDetail extends Component{
 
             await saveRoutineExecution({planificationId, routineId, exercises, preWorkoutReadiness, ratePerceivedExertion})
             this.setState({routineStarted: false})
+            this.switchWindowReload(true)
             this.setSecondaryActions()
             showSuccess(this.context, '', 'Ejecucion de rutina guardada con exito!')
         } catch (e) {
@@ -1875,6 +1891,10 @@ class PageRoutineDetail extends Component{
 
         return (
             <>
+                <Prompt
+                    when={routineStarted}
+                    message='Estas seguro que queres recargar la rutina? Perderas tu progreso.'
+                />
                 {actionable && showUploadRoutineImage && <ImageUpload onFileSelected={(file) => this.routineImageCropper(file)}/>}
                 {actionable && showCropper && <ImageCropper toCrop={this.state.toCrop}
                                               onCancel={() => this.setState({showCropper: false, toCrop: null, showUploadRoutineImage:true})}
