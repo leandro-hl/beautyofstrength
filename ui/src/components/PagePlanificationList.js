@@ -1,4 +1,4 @@
-import React, {Component, useState} from "react";
+import React, {Component, createRef, useState} from "react";
 import {
     Advertisement,
     Button,
@@ -14,9 +14,9 @@ import {
 } from "semantic-ui-react";
 import {
     acceptInstructorInvite,
-    createPlanification, deletePlanification, getUserPermissions, listMyLastMonthTrainings,
+    createPlanification, deletePlanification, getUserPermissions, listLastUserRmHistoryStats, listMyLastMonthTrainings,
     listPlanifications,
-    listQueuedPlanificationAccessRequests,
+    listQueuedPlanificationAccessRequests, listUserRms,
     requestAccessToSharedPlanification
 } from "../service";
 import {withRouter} from "react-router-dom";
@@ -30,6 +30,7 @@ import {ModalPlanificationsPendingRequests} from "./ModalPlanificationsPendingRe
 import {PopUpConfirmation} from "./PopUpConfirmation";
 import {ModalInstructorInviteAccept} from "./ModalInstructorInviteAccept";
 import TimeLineCalendar from "./TimelineCalendar";
+import {Chart, registerables} from "chart.js";
 
 const MenuHeaderRender = ({onRefresh}) => {
     const [refreshing, setRefreshing] = useState(false)
@@ -44,6 +45,7 @@ const MenuHeaderRender = ({onRefresh}) => {
 }
 
 class PagePlanificationList extends Component {
+    canvasRef = createRef()
     static contextType = AppContext
     state = {loading: true, planifications: [], requests:[], planificationShared: false}
 
@@ -80,13 +82,12 @@ class PagePlanificationList extends Component {
                 this.context.dispatch(setData({noBottomBar: false, secondaryActions: [], menuButtonSelected: MENU.PLANIFICATIONS}))
             }
 
-            this.getLastMonthTrainings()
-
             const res = await listPlanifications();
             const ownedPlanifications = res.data.filter(p => p.owner);
             const sharedPlanifications = res.data.filter(p => !p.owner)
             this.setState({loading: false, ownedPlanifications, sharedPlanifications})
             this.context.dispatch(setData({myPlanifications: ownedPlanifications}, true))
+            await this.getLastMonthTrainings()
         } catch (e) {
             console.error(e)
         }
@@ -94,7 +95,19 @@ class PagePlanificationList extends Component {
 
     async getLastMonthTrainings() {
         try {
-            await listMyLastMonthTrainings()
+            const res = await listMyLastMonthTrainings()
+            if (res.data) {
+                const labels = []
+                const pwrSerie = []
+                const rpeSerie = []
+
+                for (let i = 0; i < res.data.length; i++) {
+                    labels.push(res.data[i].date.substring(5, 10))
+                    pwrSerie.push(res.data[i].pwr??0)
+                    rpeSerie.push(res.data[i].rpe??0)
+                }
+                this.renderStatsGraph(labels, pwrSerie, rpeSerie)
+            }
         } catch (e) {
 
         }
@@ -225,6 +238,47 @@ class PagePlanificationList extends Component {
         }
     }
 
+    renderStatsGraph(labels, pwrSerie, rpeSerie) {
+        Chart.register(...registerables);
+        this.setState({myChart: new Chart(this.canvasRef.current, {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: [
+                        {
+                            label: 'pwr',
+                            data: pwrSerie,
+                            borderColor: 'blue',
+                            borderWidth: 1
+                        },
+                        {
+                            label: 'rpe',
+                            data: rpeSerie,
+                            borderColor: 'red',
+                            borderWidth: 1
+                        }]
+                },
+                options: {
+                    scales: {
+                        y: {
+                            beginAtZero: true
+                        },
+                        x: {
+                            ticks: {
+                                maxRotation: 0,
+                                minRotation: 0
+                            }
+                        },
+                    },
+                    plugins: {
+                        legend: {
+                            display: false
+                        }
+                    }
+                }
+            })});
+    }
+
     render() {
         const {state: {permissions: {createPlanification, sharePlanification, deletePlanification}}} = this.context
         const {
@@ -244,7 +298,12 @@ class PagePlanificationList extends Component {
 
         return (
             <>
-                {sharePlanification && <Button primary fluid onClick={() => this.fetchPendingRequests()}>Revisar solicitudes pendientes</Button>}
+                {sharePlanification &&
+                    <Button primary fluid onClick={() => this.fetchPendingRequests()}>Revisar solicitudes
+                        pendientes</Button>}
+                <Segment basic>
+                    <canvas ref={this.canvasRef}/>
+                </Segment>
                 <TimeLineCalendar/>
                 {refreshing && <Loader active/>}
                 {
@@ -258,7 +317,7 @@ class PagePlanificationList extends Component {
                                 <p>Cuando un instructor comparta una planificacion con vos, la veras aqui.</p>
                             </Message>
                         }
-                        {sharedPlanifications.map((p,i) => {
+                        {sharedPlanifications.map((p, i) => {
                             return (
                                 <Segment style={{width: '100%'}} key={p.id}
                                          onClick={() => this.redirectToPlanification(p)}>
@@ -268,15 +327,16 @@ class PagePlanificationList extends Component {
                             )
                         })}
                         <Header as={'h5'}>Creadas</Header>
-                        {ownedPlanifications.map((p,i) => {
+                        {ownedPlanifications.map((p, i) => {
                             const canDelete = deletePlanification && !p.starred
                             return (
                                 <Segment style={{width: '100%'}} key={i}>
                                     <Grid>
-                                        <Grid.Column width={canDelete ? 11 : 16} onClick={() => this.redirectToPlanification(p)}>
+                                        <Grid.Column width={canDelete ? 11 : 16}
+                                                     onClick={() => this.redirectToPlanification(p)}>
                                             <Header sub>
                                                 {p.name}
-                                                {p.starred && <Icon name={'star'} className={'header-icon starred'}/> }
+                                                {p.starred && <Icon name={'star'} className={'header-icon starred'}/>}
                                             </Header>
                                             <span>Rutinas: {p.routinescount}</span>
                                         </Grid.Column>
@@ -284,14 +344,15 @@ class PagePlanificationList extends Component {
                                             canDelete &&
                                             <Grid.Column width={5} className={'no-right-padding no-left-padding'}>
                                                 <PopUpConfirmation
-                                                    title={'Borrar planificacion '+p.name+'?'}
+                                                    title={'Borrar planificacion ' + p.name + '?'}
                                                     primary={'Borrar'}
                                                     secondary={'Cancelar'}
                                                     isManaged
-                                                    open={i===confirmPlanificationDeletionIndex}
+                                                    open={i === confirmPlanificationDeletionIndex}
                                                     trigger={<Button
-                                                                     onClick={() => this.openDeletePlanificationPopUpConfirmation(i)}
-                                                                     basic secondary icon='close' style={{position: 'relative', float: 'right'}}/>}
+                                                        onClick={() => this.openDeletePlanificationPopUpConfirmation(i)}
+                                                        basic secondary icon='close'
+                                                        style={{position: 'relative', float: 'right'}}/>}
                                                     onPrimaryAction={() => this.deletePlanification(p.id, i)}
                                                     onSecondaryAction={() => this.setState({confirmPlanificationDeletionIndex: null})}
                                                 />
@@ -304,9 +365,13 @@ class PagePlanificationList extends Component {
                     </>
                 }
                 {createPlanification && this.renderCreatePlanificationModal()}
-                {instructorInvite && <ModalInstructorInviteAccept onCancelRequest={() => this.onCancelRequest2()} onRequestAccess={() => this.acceptInstructorInvite()}/>}
-                {planificationShared && <ModalPlanificationRequestAccess onCancelRequest={() => this.onCancelRequest()} onRequestAccess={() => this.requestAccessToSharedPlanification()}/>}
-                {showPendingRequests && <ModalPlanificationsPendingRequests requests={requests} onRemove={(i) => this.onRemoveRequest(i)} onClose={() => this.setState({showPendingRequests: false})}/>}
+                {instructorInvite && <ModalInstructorInviteAccept onCancelRequest={() => this.onCancelRequest2()}
+                                                                  onRequestAccess={() => this.acceptInstructorInvite()}/>}
+                {planificationShared && <ModalPlanificationRequestAccess onCancelRequest={() => this.onCancelRequest()}
+                                                                         onRequestAccess={() => this.requestAccessToSharedPlanification()}/>}
+                {showPendingRequests &&
+                    <ModalPlanificationsPendingRequests requests={requests} onRemove={(i) => this.onRemoveRequest(i)}
+                                                        onClose={() => this.setState({showPendingRequests: false})}/>}
             </>
         )
     }

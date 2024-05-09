@@ -1727,14 +1727,17 @@ class PageRoutineDetail extends Component{
     }
 
     switchWindowReload(remove) {
+        const {beforeunloadEventHandled} = this.state
         const handleUnload = (e) => {
             e.preventDefault();
             return 'Estas seguro que queres recargar la rutina? Perderas tu progreso.';
         };
 
         if (remove) {
+            this.setState({beforeunloadEventHandled:false})
             window.removeEventListener('beforeunload', handleUnload);
-        } else {
+        } else if(!beforeunloadEventHandled) {
+            this.setState({beforeunloadEventHandled:true})
             window.addEventListener('beforeunload', handleUnload);
         }
     }
