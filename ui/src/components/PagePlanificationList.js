@@ -48,7 +48,7 @@ const MenuHeaderRender = ({onRefresh}) => {
 class PagePlanificationList extends Component {
     canvasRef = createRef()
     static contextType = AppContext
-    state = {loading: true, planifications: [], requests:[], planificationShared: false}
+    state = {loading: true, planifications: [], requests:[], daysThatITrained: [], planificationShared: false}
 
     async componentDidMount() {
         try {
@@ -101,6 +101,7 @@ class PagePlanificationList extends Component {
                 const pwrColorsConfig = calculatePreStartRoutineBorgScale()
                 const rpeColorsConfig = calculatePostTrainingRoutineBorgScale()
 
+                const trainingDays = []
                 const labels = []
                 const pwrSerie = []
                 const pwrColors = []
@@ -109,6 +110,7 @@ class PagePlanificationList extends Component {
 
                 for (let i = 0; i < res.data.length; i++) {
                     labels.push(res.data[i].date.substring(5, 10))
+                    trainingDays.push(new Date(res.data[i].date))
                     pwrSerie.push(res.data[i].pwr)
                     rpeSerie.push(res.data[i].rpe)
                     if (res.data[i].pwr) {
@@ -120,6 +122,7 @@ class PagePlanificationList extends Component {
                         rpeColors.push(rpeColorsConfig.colors[val])
                     }
                 }
+                console.log(trainingDays)
                 this.renderStatsGraph(
                     labels,
                     pwrSerie,
@@ -128,6 +131,7 @@ class PagePlanificationList extends Component {
                     rpeColors,
                     pwrColorsConfig,
                     rpeColorsConfig)
+                this.setState({daysThatITrained: trainingDays})
             }
         } catch (e) {
 
@@ -343,7 +347,8 @@ class PagePlanificationList extends Component {
             requests,
             refreshing,
             confirmPlanificationDeletionIndex,
-            instructorInvite} = this.state;
+            instructorInvite,
+            daysThatITrained} = this.state;
         const {loading} = this.state;
 
         if (loading) {
@@ -358,7 +363,7 @@ class PagePlanificationList extends Component {
                 <Segment basic>
                     <canvas ref={this.canvasRef}/>
                 </Segment>
-                <TimeLineCalendar/>
+                <TimeLineCalendar highlightedDates={daysThatITrained}/>
                 {refreshing && <Loader active/>}
                 {
                     !refreshing &&

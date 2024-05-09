@@ -1049,3 +1049,8 @@ input[type="number"] {
 .timeline-calendar .react-datepicker__day--selected {
     background-color: #af8e11 !important;
 }
+
+.timeline-calendar .react-datepicker__day--highlighted {
+    background-color: #4CAF50 !important;
+    color: white !important;
+}

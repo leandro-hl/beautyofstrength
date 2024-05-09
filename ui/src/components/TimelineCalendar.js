@@ -7,9 +7,12 @@ registerLocale('es', es)
 setDefaultLocale('es')
 
 class TimeLineCalendar extends React.Component {
-    state = {
-        startDate: new Date()
-    };
+    constructor(props) {
+        super(props);
+        this.state = {
+            startDate: new Date()
+        };
+    }
 
     handleChange = date => {
         this.setState({
@@ -26,6 +29,7 @@ class TimeLineCalendar extends React.Component {
                     locale="es"
                     selected={this.state.startDate}
                     onChange={this.handleChange}
+                    highlightDates={this.props.highlightedDates }
                     inline
                 />
             </Segment>
