@@ -312,7 +312,7 @@ func (o *Endpoints) Handle() http.Handler {
 	api.Path("/copyTemplateRoutineToPlanification").HandlerFunc(o.HandleAuthenticatedTransactional(o.HandleAuthorization(o.copyTemplateRoutineToPlanification, db.Professor)))
 	api.Path("/uploadExerciseVideoLink").HandlerFunc(o.HandleAuthenticatedTransactional(o.HandleAuthorization(o.uploadExerciseVideoLink, db.Professor)))
 	api.Path("/inviteAthletesToAssociateWithMe").HandlerFunc(o.HandleAuthenticatedTransactional(o.HandleAuthorization(o.inviteAthletesToAssociateWithMe, db.Professor)))
-	api.Path("/uploadRoutineImage").HandlerFunc(o.HandleAuthenticatedTransactional(o.HandleAuthorization(o.uploadRoutineImage, db.Professor)))
+	api.Path("/uploadRoutineImage").HandlerFunc(o.HandleAuthenticatedTransactional(o.HandleAuthorization(o.uploadRoutineImage, db.StudentPremium, db.Professor)))
 
 	//Premium services
 	api.Path("/listMyLastMonthTrainings").HandlerFunc(o.HandleAuthenticatedTransactional(o.HandleAuthorization(o.listMyLastMonthTrainings, db.StudentPremium, db.Professor)))
