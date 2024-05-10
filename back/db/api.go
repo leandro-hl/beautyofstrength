@@ -510,7 +510,7 @@ func ListActiveRoutinesICreated(db *DB, tx *sqlx.Tx, planificationId int64, user
 			r.coverurlexpirationdate,
 			ua.code as owner,
 		    count(distinct bg.id) as blockcount,
-		    count(b.id) as workcount, 
+		    count(distinct b.id) as workcount, 
 		    u2.completed from routine r 
 		inner join planification p on r.planification_id = p.id
 		inner join userplanification u on r.planification_id = u.planification_id
@@ -544,7 +544,7 @@ func ListActiveRoutines(db *DB, tx *sqlx.Tx, planificationId, userId int64) []Li
 			r.coverurlexpirationdate,
 			ua.code as owner,
 		    count(distinct bg.id) as blockcount,
-		    count(b.id) as workcount, 
+		    count(distinct b.id) as workcount, 
 		    u2.completed from routine r 
 		inner join planification p on r.planification_id = p.id
 		inner join userplanification u on p.id = u.planification_id
