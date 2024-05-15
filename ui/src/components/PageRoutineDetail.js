@@ -251,6 +251,7 @@ class PageRoutineDetail extends Component{
     }
 
     componentWillUnmount() {
+        window.removeEventListener('beforeunload', this.handleUnload);
         this.context.dispatch(setData({coverImageUrl: null, loadCoverImage:null}, true))
     }
 
@@ -1726,19 +1727,19 @@ class PageRoutineDetail extends Component{
         }
     }
 
+    handleUnload = (e) => {
+        e.preventDefault();
+        return 'Estas seguro que queres recargar la rutina? Perderas tu progreso.';
+    }
+
     switchWindowReload(remove) {
         const {beforeunloadEventHandled} = this.state
-        const handleUnload = (e) => {
-            e.preventDefault();
-            return 'Estas seguro que queres recargar la rutina? Perderas tu progreso.';
-        };
-
         if (remove) {
             this.setState({beforeunloadEventHandled:false})
-            window.removeEventListener('beforeunload', handleUnload);
+            window.removeEventListener('beforeunload', this.handleUnload);
         } else if(!beforeunloadEventHandled) {
             this.setState({beforeunloadEventHandled:true})
-            window.addEventListener('beforeunload', handleUnload);
+            window.addEventListener('beforeunload', this.handleUnload);
         }
     }
 

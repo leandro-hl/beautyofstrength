@@ -674,6 +674,7 @@ class PageBlockCreate extends Component {
                                         {
                                             exercises.map((e, index) => {
                                                 return (<ExerciseListItemFree
+                                                    //keep the focus on the same item
                                                     onFocusItem={() => this.setState({next: index})}
                                                     createNewExercises={createNewExercises}
                                                     onExerciseSelected={(selected)=> this.onExerciseSelected(index, selected)}

@@ -193,8 +193,9 @@ export class ExerciseSearch extends Component {
                     multiple={!basic}
                     search={this.searchByKeyWord}
                     selection
-                    onFocus={() => this.props.onFocus()}
-                    onMouseDown={() => this.props.onFocus()}
+                    onFocus={(e,d) => {
+                        this.props.onFocus()
+                    }}
                     onBlur={() => this.props.onBlur()}
                     allowAdditions={allowAdditions}
                     additionLabel='Agregar '
