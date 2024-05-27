@@ -115,11 +115,11 @@ class PagePlanificationList extends Component {
                     rpeSerie.push(res.data[i].rpe)
                     if (res.data[i].pwr) {
                         const val = res.data[i].pwr
-                        pwrColors.push(pwrColorsConfig.colors[val])
+                        pwrColors.push(pwrColorsConfig.colors[val-1])
                     }
                     if (res.data[i].rpe) {
                         const val = res.data[i].rpe
-                        rpeColors.push(rpeColorsConfig.colors[val])
+                        rpeColors.push(rpeColorsConfig.colors[val-1])
                     }
                 }
                 console.log(trainingDays)
