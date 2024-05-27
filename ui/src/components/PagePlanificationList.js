@@ -276,7 +276,7 @@ class PagePlanificationList extends Component {
                      rpeColorsConfig) {
         Chart.register(...registerables);
         this.setState({myChart: new Chart(this.canvasRef.current, {
-                type: 'line',
+                type: 'bar',
                 data: {
                     labels: labels,
                     datasets: [
@@ -284,15 +284,15 @@ class PagePlanificationList extends Component {
 
                             label: 'pwr',
                             data: pwrSerie,
-                            borderColor: 'grey',
-                            pointBackgroundColor: pwrColors,
+                            // borderColor: 'grey',
+                            backgroundColor: pwrColors,
                             borderWidth: 1
                         },
                         {
                             label: 'rpe',
                             data: rpeSerie,
-                            borderColor: 'grey',
-                            pointBackgroundColor: rpeColors,
+                            // borderColor: 'grey',
+                            backgroundColor: rpeColors,
                             borderWidth: 1
                         }]
                 },
@@ -335,6 +335,66 @@ class PagePlanificationList extends Component {
                     }
                 }
             })});
+        // this.setState({myChart: new Chart(this.canvasRef.current, {
+        //         type: 'line',
+        //         data: {
+        //             labels: labels,
+        //             datasets: [
+        //                 {
+        //
+        //                     label: 'pwr',
+        //                     data: pwrSerie,
+        //                     borderColor: 'grey',
+        //                     pointBackgroundColor: pwrColors,
+        //                     borderWidth: 1
+        //                 },
+        //                 {
+        //                     label: 'rpe',
+        //                     data: rpeSerie,
+        //                     borderColor: 'grey',
+        //                     pointBackgroundColor: rpeColors,
+        //                     borderWidth: 1
+        //                 }]
+        //         },
+        //         options: {
+        //             onClick: this.handleDataSetClick,
+        //             scales: {
+        //                 y: {
+        //                     min: 1,
+        //                     max: 10,
+        //                     beginAtZero: false
+        //                 },
+        //                 x: {
+        //                     ticks: {
+        //                         maxRotation: 0,
+        //                         minRotation: 0
+        //                     }
+        //                 },
+        //             },
+        //             plugins: {
+        //                 legend: {
+        //                     display: false
+        //                 },
+        //                 tooltip: {
+        //                     callbacks: {
+        //                         label: function(context) {
+        //                             const value = context.raw;
+        //                             const label = context.dataset.label;
+        //                             const l = []
+        //                             if(label === "pwr"){
+        //                                 l.push("Como empezaste tu entrenamiento: ");
+        //                                 l.push(pwrColorsConfig.labels[value])
+        //                             } else if(label === "rpe"){
+        //                                 l.push("Tu experiencia: ");
+        //                                 l.push(rpeColorsConfig.labels[value])
+        //                             }
+        //                             return l
+        //                         }
+        //                     }
+        //                 }
+        //             }
+        //         }
+        //     })});
     }
 
     render() {
