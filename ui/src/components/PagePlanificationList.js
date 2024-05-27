@@ -122,7 +122,6 @@ class PagePlanificationList extends Component {
                         rpeColors.push(rpeColorsConfig.colors[val-1])
                     }
                 }
-                console.log(trainingDays)
                 this.renderStatsGraph(
                     labels,
                     pwrSerie,
@@ -421,6 +420,7 @@ class PagePlanificationList extends Component {
                     <Button primary fluid onClick={() => this.fetchPendingRequests()}>Revisar solicitudes
                         pendientes</Button>}
                 <Segment basic>
+                    <Header>Pre y Post Entreno</Header>
                     <canvas ref={this.canvasRef}/>
                 </Segment>
                 <TimeLineCalendar highlightedDates={daysThatITrained}/>

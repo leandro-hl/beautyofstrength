@@ -1838,7 +1838,7 @@ class PageRoutineDetail extends Component{
                 }
             }
 
-            await saveRoutineExecution({planificationId, routineId, exercises, preWorkoutReadiness, ratePerceivedExertion})
+            await saveRoutineExecution({planificationId, routineId, exercises, preWorkoutReadiness: preWorkoutReadiness ?? 5, ratePerceivedExertion: ratePerceivedExertion ?? 5})
             this.setState({routineStarted: false})
             this.switchWindowReload(true)
             this.setSecondaryActions()
