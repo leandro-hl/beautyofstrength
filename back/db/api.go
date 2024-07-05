@@ -331,7 +331,11 @@ func GetRoutineDetails(db *DB, tx *sqlx.Tx, routineId int64, userId int64) []Get
 			ue.hypertrophy_last_effective_reps,
 			ue.hypertrophy_last_weight,
 			ue.resistence_last_effective_reps,
-			ue.resistence_last_weight
+			ue.resistence_last_weight,
+			--todo: i need to put it somewhere else OR use the routine as the key indicator (exerciseblockgroup)
+			lt.reps lastreps,
+			lt.effectivereps lasteffectivereps,
+			lt.kg lastweight
 			from routine r
 		inner join planification p on p.id = r.planification_id
 		inner join userplanification u on r.planification_id = u.planification_id
@@ -340,6 +344,7 @@ func GetRoutineDetails(db *DB, tx *sqlx.Tx, routineId int64, userId int64) []Get
 		left join exerciseblockgroup eb on b.id = eb.blockgroup_id and eb.active=true
 		left join exercise e on e.id = eb.exercise_id
 		left join userexercise ue on e.id = ue.exercise_id and ue.useraccount_id = u.useraccount_id
+		left join history.exerciselatest lt on e.id = lt.exercise_id and u.useraccount_id = lt.useraccount_id 
 		left join instructorexercise ie on e.id = ie.exercise_id and r.creator_id = ie.useraccount_id
 		where 
 		    p.active=true 
@@ -1509,6 +1514,28 @@ func InsertNewRoutineHistory(db *DB, tx *sqlx.Tx, routineId, userId int64, rpe, 
 
 func InsertNewExerciseHistory(db *DB, tx *sqlx.Tx, routineId, historyId, userId, exerciseId int64, reps, effectiveReps, kg int) {
 	InsertSchema(tx, &history.Exercise{
+		UserAccountId: &userId,
+		RoutineId:     &routineId,
+		HistoryId:     &historyId,
+		Date:          time.Now(),
+		ExerciseId:    &exerciseId,
+		Reps:          &reps,
+		EffectiveReps: &effectiveReps,
+		Kg:            &kg,
+	}, "history")
+}
+
+func DeleteExerciseHistoryLatest(db *DB, tx *sqlx.Tx, userId, exerciseId int64) {
+	query := "delete from history.exerciselatest where useraccount_id=$1 and exercise_id=$2"
+	stmt, err := getTxPreparedStmt(db, tx, query)
+	util.Check(err)
+
+	_, err = stmt.Exec(userId, exerciseId)
+	util.Check(err)
+}
+
+func InsertNewExerciseHistoryLatest(db *DB, tx *sqlx.Tx, routineId, historyId, userId, exerciseId int64, reps, effectiveReps, kg int) {
+	InsertSchema(tx, &history.ExerciseLatest{
 		UserAccountId: &userId,
 		RoutineId:     &routineId,
 		HistoryId:     &historyId,

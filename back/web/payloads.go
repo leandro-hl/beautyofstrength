@@ -149,6 +149,9 @@ type GetRoutineDetailsBlockExercise struct {
 	ResistenceLastWeight         *int          `json:"resistenceLastWeight"`
 	CurrentWorkRange             *string       `json:"currentWorkRange"`
 	EffectiveSeries              []interface{} `json:"effectiveSeries"`
+	Lastreps                     *int          `json:"lastreps"`
+	Lasteffectivereps            *int          `json:"lasteffectivereps"`
+	Lastweight                   *int          `json:"lastweight"`
 }
 
 type ShareRoutineRequest struct {

@@ -101,6 +101,9 @@ type GetRoutineDetailsQuery struct {
 	HypertrophyLastWeight        *int    `json:"hypertrophy_last_weight"`
 	ResistenceLastEffectiveReps  *int    `json:"resistence_last_effective_reps"`
 	ResistenceLastWeight         *int    `json:"resistence_last_weight"`
+	Lastreps                     *int    `json:"lastreps"`
+	Lasteffectivereps            *int    `json:"lasteffectivereps"`
+	Lastweight                   *int    `json:"lastweight"`
 }
 
 type ListRoutineTemplatesQuery struct {

@@ -665,6 +665,9 @@ func (o *Endpoints) calculateRoutineDetailsResponse(
 						ResistenceLastWeight:         re.ResistenceLastWeight,
 						CurrentWorkRange:             calculateCurrentWorkRange(config, re.Reps),
 						EffectiveSeries:              make([]interface{}, 0),
+						Lastreps:                     re.Lastreps,
+						Lastweight:                   re.Lastweight,
+						Lasteffectivereps:            re.Lasteffectivereps,
 					})
 				}
 				grouper.Blocks = append(grouper.Blocks, *block)
@@ -702,6 +705,9 @@ func (o *Endpoints) calculateRoutineDetailsResponse(
 						ResistenceLastWeight:         re.ResistenceLastWeight,
 						CurrentWorkRange:             calculateCurrentWorkRange(config, re.Reps),
 						EffectiveSeries:              make([]interface{}, 0),
+						Lastreps:                     re.Lastreps,
+						Lastweight:                   re.Lastweight,
+						Lasteffectivereps:            re.Lasteffectivereps,
 					})
 				}
 				grouper.Blocks = append(grouper.Blocks, *block)
@@ -724,6 +730,9 @@ func (o *Endpoints) calculateRoutineDetailsResponse(
 					ResistenceLastWeight:         re.ResistenceLastWeight,
 					CurrentWorkRange:             calculateCurrentWorkRange(config, re.Reps),
 					EffectiveSeries:              make([]interface{}, 0),
+					Lastreps:                     re.Lastreps,
+					Lastweight:                   re.Lastweight,
+					Lasteffectivereps:            re.Lasteffectivereps,
 				})
 			}
 		}
@@ -842,15 +851,29 @@ func (o *Endpoints) saveRoutineExecution(w http.ResponseWriter, r *http.Request,
 		exById[*exercise.ExerciseId] = &exercise
 	}
 
+	//data deletion should happen only for the exercises in the routine, for the current user.
+	//in this case we need to delete by exercise id but inside t.Exercises it is repeated so we need a currated list of ids.
+	exerciseIdsDeleted := make(map[int64]bool)
+	for _, e := range t.Exercises {
+		if ok := exerciseIdsDeleted[*e.Id]; !ok {
+			db.DeleteExerciseHistoryLatest(o.db, tx, *t.RoutineId, *e.Id)
+			exerciseIdsDeleted[*e.Id] = true
+		}
+	}
+
 	//only used for permissions and checks if the routine was already executed or not.
 	db.InsertUserRoutineHistory(o.db, tx, true, t.PlanificationId, *t.RoutineId, usr)
 
 	//historical data accumulated for making stats
 	//historical data routine header
 	historyId := db.InsertNewRoutineHistory(o.db, tx, *t.RoutineId, usr, t.Rpe, t.PreWorkoutReadiness)
+
 	for _, e := range t.Exercises {
 		//historical data details
 		db.InsertNewExerciseHistory(o.db, tx, *t.RoutineId, *historyId, usr, *e.Id, *e.Reps, *e.EffectiveReps, *e.Kg)
+
+		//only retains latest execution for each exercise and user
+		db.InsertNewExerciseHistoryLatest(o.db, tx, *t.RoutineId, *historyId, usr, *e.Id, *e.Reps, *e.EffectiveReps, *e.Kg)
 
 		exercise, ok := exById[*e.Id]
 		if !ok {
@@ -863,14 +886,14 @@ func (o *Endpoints) saveRoutineExecution(w http.ResponseWriter, r *http.Request,
 		}
 
 		if *e.Reps >= *forceMin && *e.Reps <= *forceMax {
-			exercise.ForceLastWeight = e.Kg
-			exercise.ForceLastEffectiveReps = e.EffectiveReps
+			exercise.ForceLastWeight = util.PInt(*e.Kg)
+			exercise.ForceLastEffectiveReps = util.PInt(*e.EffectiveReps)
 		} else if *e.Reps >= *hypertrophyMin && *e.Reps <= *hypertrophyMax {
-			exercise.HypertrophyLastWeight = e.Kg
-			exercise.HypertrophyLastEffectiveReps = e.EffectiveReps
+			exercise.HypertrophyLastWeight = util.PInt(*e.Kg)
+			exercise.HypertrophyLastEffectiveReps = util.PInt(*e.EffectiveReps)
 		} else if *e.Reps >= *resistenceMin && *e.Reps <= *resistenceMax {
-			exercise.ResistanceLastWeight = e.Kg
-			exercise.ResistanceLastEffectiveReps = e.EffectiveReps
+			exercise.ResistanceLastWeight = util.PInt(*e.Kg)
+			exercise.ResistanceLastEffectiveReps = util.PInt(*e.EffectiveReps)
 		}
 
 		if !ok {
@@ -878,6 +901,9 @@ func (o *Endpoints) saveRoutineExecution(w http.ResponseWriter, r *http.Request,
 		} else {
 			db.UpdateUserExercise(o.db, tx, exercise)
 		}
+
+		//for "last time you did an excersise" we would delete all data for that excercise and user
+		//and we add the new data
 	}
 
 	db.RegisterEvent(o.db, tx, usr, db.SaveRoutineExecution)
