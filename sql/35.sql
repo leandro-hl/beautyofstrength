@@ -1,6 +1,3 @@
-ALTER TABLE routine ALTER COLUMN name TYPE VARCHAR (50);
-ALTER TABLE useraccountequipment ADD COLUMN units int not null default 1;
-
 --juan id 8
 insert into instructorexercise(useraccount_id, exercise_id, video_code)
 select 8, id, 'a8Rf0VzWX7k' from exercise
