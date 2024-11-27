@@ -1,16 +1,25 @@
-drop table if exists exerciseblockgroup;
-drop table if exists userplanification;
-drop table if exists exercisemuscle;
-drop table if exists usertraininghistory;
-drop table if exists blockgroup;
-drop table if exists exercise;
-drop table if exists muscle;
-drop table if exists usersharingtoken;
-drop table if exists routine;
-drop table if exists planification;
-drop table if exists userdevice;
-drop table if exists useraccount;
-drop table if exists accountplan;
+drop table if exists exerciseblockgroup cascade;
+drop table if exists userplanification cascade;
+drop table if exists exercisemuscle cascade;
+drop table if exists usertraininghistory cascade;
+drop table if exists blockgroup cascade;
+drop table if exists instructorexercise cascade;
+drop table if exists userexercisermhistory cascade;
+drop table if exists userexerciserm cascade;
+drop table if exists exerciseequipment cascade;
+drop table if exists userexercise cascade;
+drop table if exists exercise cascade;
+drop table if exists muscle cascade;
+drop table if exists usersharingtoken cascade;
+drop table if exists routine cascade;
+drop table if exists planification cascade;
+drop table if exists userdevice cascade;
+drop table if exists useraccount cascade;
+drop table if exists accountplan cascade;
+drop table if exists blockgroupgrouper cascade;
+drop table if exists queue.planificationoperation cascade;
+drop table if exists template.routine cascade;
+drop table if exists template.blockgroupgrouper cascade;
 
 CREATE TABLE IF NOT EXISTS accountplan
 (
