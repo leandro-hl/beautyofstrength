@@ -400,7 +400,7 @@ body {
 
 body > div#root {
     height: 100%;
-    max-width: 600px;
+    /*max-width: 600px;*/
     width: 100%;
     overflow: hidden;
 }
@@ -516,7 +516,7 @@ body > div#root {
     position: relative !important;
     left: -13px !important;
     top: 5px !important;
-    background-color: #F8D018 !important;
+    background-color: var(--primary) !important;
     color: #000000 !important;
     border-radius: 20px !important;
 }
@@ -549,18 +549,18 @@ body > div#root {
     bottom: 76px !important;
     padding: 21px 18px !important;
     border-radius: 16px !important;
-    background-color: #F8D018 !important;
+    background-color: var(--primary) !important;
     color: #000000 !important;
     box-shadow: 0px 4px 8px 3px #00000026 !important;
 }
 
 /*todo: how to use theme here?*/
 .mine-selected {
-    background-color: #F8D018 !important;
+    background-color: var(--primary) !important;
 }
 
 .starred {
-    color: #F8D018 !important;
+    color: var(--primary) !important;
 }
 
 .planification-checkbox-day {
@@ -932,7 +932,7 @@ input[type="number"] {
     line-height: 20px;
     letter-spacing: 0.35px;
     text-align: center;
-    color: #F8D018;
+    color: var(--primary);
 }
 
 .onboarding-subheader {
@@ -978,8 +978,7 @@ input[type="number"] {
 }
 
 .onboarding-selected, .onboarding-selected p {
-    background: unset !important;
-    background-color: #F8D018 !important;
+    background: var(--primary) !important;
     color: #212121 !important;
 }
 
@@ -1053,4 +1052,8 @@ input[type="number"] {
 .timeline-calendar .react-datepicker__day--highlighted {
     background-color: #4CAF50 !important;
     color: white !important;
+}
+
+.home-banner-title {
+    color: var(--primary) !important;
 }

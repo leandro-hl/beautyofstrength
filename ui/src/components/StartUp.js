@@ -16,6 +16,31 @@ const darkThemeMui = createTheme({
             main: '#F8D018',
         },
     },
+    spacing: 4,
+    typography: {
+        fontFamily: '"Rubik"',
+        homeh1: {
+            "color": "#F8D018",
+            "textAlign": "center",
+            "leadingTrim": "both",
+            "textEdge": "cap",
+            "fontFamily": '"Rubik"',
+            "fontSize": "100px",
+            "fontStyle": "normal",
+            "fontWeight": "900",
+            "lineHeight": "normal"
+        },
+    },
+    // components: {
+    //     MuiTypography: {
+    //         defaultProps: {
+    //             //So Typography renders the expected HTML element.
+    //             variantMapping: {
+    //                 // homeh1: 'h1',
+    //             },
+    //         },
+    //     },
+    // },
 });
 
 const themeMui = createTheme({
@@ -27,6 +52,30 @@ const themeMui = createTheme({
             main: '#F8D018',
         },
     },
+    spacing: 4,
+    typography: {
+        fontFamily: '"Rubik"',
+        homeh1: {
+            "textAlign": "center",
+            "leadingTrim": "both",
+            "textEdge": "cap",
+            "fontFamily": '"Rubik"',
+            "fontSize": "100px",
+            "fontStyle": "normal",
+            "fontWeight": "900",
+            "lineHeight": "normal"
+        },
+    },
+    // components: {
+    //     MuiTypography: {
+    //         defaultProps: {
+    //             //So Typography renders the expected HTML element.
+    //             variantMapping: {
+    //                 // homeh1: 'h1',
+    //             },
+    //         },
+    //     },
+    // },
 });
 
 class StartUp extends Component {

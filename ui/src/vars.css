@@ -1,0 +1,21 @@
+:root {
+    --primary: #F8D018;
+}
+
+/*
+
+To enable a theme in your HTML, simply add one of the following data attributes to an HTML element, like so:
+
+<body data-palette-mode="light">
+    <!-- the rest of your content -->
+</body>
+
+You can apply the theme on any DOM node, not just the `body`
+
+*/
+
+[data-palette-mode="light"] {
+}
+
+[data-palette-mode="dark"] {
+}

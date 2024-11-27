@@ -4,60 +4,51 @@ import {getLocalInfo} from "../service";
 import axios from "axios";
 import {AppContext, setData} from "../context";
 import {Loader} from "semantic-ui-react";
+import {Button, Grid, Paper, TextField, Typography} from "@mui/material";
 
 export const Banner = ({signIn}) => {
+    const widthMain=10;
+    const widthSecondary=1;
     return (
-        <div className="banner">
-            <div className="titulos">
-                <div className="TITULOS">
-                    <div className="text-wrapper">ALCANZA</div>
-                    <div className="div">TUS METAS FITNESS</div>
-                </div>
-                <p className="POTENCIAMOS-a-LOS">
-                    <span className="span">🏋️‍♂️ </span>
-                    <span className="text-wrapper-2">POTENCIAMOS A LOS INSTRUCTORES</span>
-                    <span className="span">
-            {" "}
-                        PARA EXPANDIR SU NEGOCIO <br /> <br />
-            🤝{" "}
-          </span>
-                    <span className="text-wrapper-2">CONÉCTATE CON TU COMUNIDAD</span>
-                    <span className="span">
-            {" "}
-                        DE ALUMNOS EN INSTANTES <br /> <br />✅{" "}
-          </span>
-                    <span className="text-wrapper-2">PROGRAMA Y GESTIONA</span>
-                    <span className="span">
-            {" "}
-                        TUS ENTRENAMIENTOS EFICIENTEMENTE <br /> <br />
-            🚀{" "}
-          </span>
-                    <span className="text-wrapper-2">AYUDAMOS A LOS ATLETAS</span>
-                    <span className="span">
-            {" "}
-                        A OPTIMIZAR SU CRECIMIENTO FÍSICO <br /> <br />
-            📈{" "}
-          </span>
-                    <span className="text-wrapper-2">REALIZA UN SEGUIMIENTO</span>
-                    <span className="span"> DE TODO TU PROGRESO</span>
-                </p>
-            </div>
-            <div className="banner-suscripcion">
-                {/*<div className="text-field">*/}
-                {/*    <div className="content">*/}
-                {/*        <div className="input">*/}
-                {/*            <input className="label" placeholder="Ingresa tu email..." type="email" />*/}
-                {/*        </div>*/}
-                {/*        <img className="underline" alt="Underline" src="underline.svg" />*/}
-                {/*    </div>*/}
-                {/*</div>*/}
-                <button className="button" onClick={()=>signIn()}>
-                    <div className="base">
-                        <button className="button-2">Quiero Ser Élite 🔥</button>
-                    </div>
-                </button>
-            </div>
-        </div>
+        <Grid container className={'full-height'}>
+            <Grid item container xs={widthSecondary} sm={widthSecondary} md={widthSecondary} lg={widthSecondary} xl={widthSecondary}></Grid>
+            <Grid item container xs={widthMain} sm={widthMain} md={widthMain} lg={widthMain} xl={widthMain}
+                  flexWrap={'nowrap'} alignItems={'center'}>
+                <Grid item container flexDirection={'column'}>
+                    <Typography variant={'homeh1'} className={'home-banner-title'} >
+                        ALCANZA
+                    </Typography>
+                    <Typography>
+                        TUS METAS FITNESS
+                    </Typography>
+                    <p>
+                        🏋️‍♂️ POTENCIAMOS A LOS INSTRUCTORES PARA EXPANDIR SU NEGOCIO<br/>
+
+                        🤝 CONÉCTATE CON TU COMUNIDAD DE ALUMNOS EN INSTANTES<br/>
+
+                        ✅ PROGRAMA Y GESTIONA TUS ENTRENAMIENTOS EFICIENTEMENTE<br/>
+
+                        🚀 AYUDAMOS A LOS ATLETAS A OPTIMIZAR SU CRECIMIENTO FÍSICO<br/>
+
+                        📈 REALIZA UN SEGUIMIENTO DE TODO TU PROGRESO<br/>
+                    </p>
+                </Grid>
+                <Grid item container justifyContent={'center'}>
+                    <Paper sx={{padding:'20px'}}>
+                        <Grid item container flexDirection={'column'} >
+                            <TextField label="Email" variant="outlined" placeholder={'Ingrese su email'} className={'margin-bottom-1'} />
+                            <Button className={'padding-1'} className={'margin-bottom-1'}>
+                                Quiero ser Élite 🔥
+                            </Button>
+                            <Typography>
+                                Si ya tienes una cuenta te iniciaremos sesión
+                            </Typography>
+                        </Grid>
+                    </Paper>
+                </Grid>
+            </Grid>
+            <Grid item container  xs={widthSecondary} sm={widthSecondary} md={widthSecondary} lg={widthSecondary} xl={widthSecondary}></Grid>
+        </Grid>
     );
 };
 
