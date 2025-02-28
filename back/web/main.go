@@ -4,13 +4,13 @@ import (
 	"context"
 	"crypto/rsa"
 	"encoding/json"
-	"flag"
 	"github.com/golang-jwt/jwt"
 	"github.com/gorilla/handlers"
+	"github.com/joho/godotenv"
 	"github.com/leandro-hl/beautyofstrength/back/db"
+	ls3 "github.com/leandro-hl/beautyofstrength/back/lib/s3"
 	"github.com/leandro-hl/beautyofstrength/back/util"
 	"github.com/leandro-hl/beautyofstrength/back/workers/queue"
-	ls3 "github.com/leandro-hl/beautyofstrength/lib/s3"
 	"log"
 	"net/http"
 	"os"
@@ -37,7 +37,7 @@ type Config struct {
 }
 
 func (o *Config) IsDevelopment() bool {
-	return strings.HasPrefix(*o.Address, "http://localhost")
+	return true //strings.HasPrefix(*o.Address, "http://localhost")
 }
 
 func (o *Config) ServeStaticUI() bool {
@@ -60,24 +60,22 @@ func (o *CryptoConfig) Validate() {
 }
 
 func main() {
-	env := os.Getenv("ENV")
+	err := godotenv.Load()
+	if err != nil {
+		log.Fatal("Error loading .env file")
+	}
+
 	var config Config
 	var cryptoConf CryptoConfig
-	if env == "PROD" {
-		confStr := os.Getenv("CONFIG")
-		err := json.Unmarshal([]byte(confStr), &config)
-		util.Check(err)
 
-		confStr = os.Getenv("CRYPTO_CONFIG")
-		err = json.Unmarshal([]byte(confStr), &cryptoConf)
-		util.Check(err)
-	} else {
-		confSpec := util.FlagString("conf", "back/web/conf.json", "Config")
-		confSpec2 := util.FlagString("cryptoconf", "back/web/crypto-conf.json", "Config")
-		flag.Parse()
-		util.LoadConfig(*confSpec, &config)
-		util.LoadConfig(*confSpec2, &cryptoConf)
-	}
+	confStr := os.Getenv("CONFIG")
+	err = json.Unmarshal([]byte(confStr), &config)
+	util.Check(err)
+
+	confStr = os.Getenv("CRYPTO_CONFIG")
+	err = json.Unmarshal([]byte(confStr), &cryptoConf)
+	util.Check(err)
+
 	config.Validate()
 	cryptoConf.Validate()
 	l := log.New(os.Stdout, "app:", log.LstdFlags)

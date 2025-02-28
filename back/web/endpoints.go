@@ -16,9 +16,9 @@ import (
 	"github.com/gorilla/mux"
 	"github.com/jmoiron/sqlx"
 	"github.com/leandro-hl/beautyofstrength/back/db"
+	ls3 "github.com/leandro-hl/beautyofstrength/back/lib/s3"
 	"github.com/leandro-hl/beautyofstrength/back/util"
 	"github.com/leandro-hl/beautyofstrength/back/webpush"
-	ls3 "github.com/leandro-hl/beautyofstrength/lib/s3"
 	"image"
 	"image/jpeg"
 	_ "image/jpeg"
@@ -2662,7 +2662,7 @@ func (o *Endpoints) HandleIPWhiteListing(f http.HandlerFunc) http.HandlerFunc {
 			origin := strings.Split(r.RemoteAddr, ":")[0]
 			valid := false
 			for _, ip := range o.conf.WhiteListedIPs {
-				if origin == ip {
+				if origin == ip || ip == "*" {
 					valid = true
 					break
 				}

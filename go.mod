@@ -27,5 +27,6 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/internal/s3shared v1.16.10 // indirect
 	github.com/aws/smithy-go v1.19.0 // indirect
 	github.com/felixge/httpsnoop v1.0.1 // indirect
+	github.com/joho/godotenv v1.5.1 // indirect
 	golang.org/x/image v0.15.0 // indirect
 )
