@@ -75,7 +75,7 @@ export function setTheme(darkTheme) {
 
 export function contactByWhatsapp(type) {
     const domain = 'https://api.whatsapp.com/send/?type=phone_number&app_absent=0'
-    const phone = '&phone=5492494284369'
+    const phone = '&phone=PHONE_NUMBER'
 
     let link = ''
     if (type === 'athlete') {
