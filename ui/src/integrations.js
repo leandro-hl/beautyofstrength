@@ -1,5 +1,5 @@
 export async function setupMercadoPago() {
-    const mp = new MercadoPago('TEST-790db967-238c-4572-9471-c00fd05d9e47', {
+    const mp = new MercadoPago("MERCADO_PAGO_ID", {
         locale: 'es'
     });
     const bricksBuilder = mp.bricks();

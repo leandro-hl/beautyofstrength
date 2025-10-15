@@ -4,8 +4,8 @@ module.exports = {
     }],
     webpack: {
         configure: (webpackConfig, { env, paths }) => {
-            webpackConfig.mode = 'production';
-            webpackConfig.devtool = false;
+            // webpackConfig.mode = 'production';
+            // webpackConfig.devtool = false;
 
             return webpackConfig;
         },
