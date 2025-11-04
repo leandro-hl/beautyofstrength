@@ -1,0 +1,92 @@
+# Secrets and Configuration (CRITICAL - Never commit these!)
+back/web/conf.json
+back/web/crypto-conf.json
+**/conf.json
+**/crypto-conf.json
+*.pem
+*.key
+*.crt
+*.env
+*.env.*
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# Go
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+*.test
+*.out
+/vendor/
+/Godeps/
+go.work
+
+# Build artifacts
+/back/web/beautyofstrength
+/back/workers/queue/queue
+/back/workers/notification/notification
+/dist/
+/build/
+
+# Node / Frontend
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+lerna-debug.log*
+.pnpm-debug.log*
+/ui/build/
+/ui/dist/
+.npm
+.eslintcache
+
+# IDEs and Editors
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+*.sublime-project
+*.sublime-workspace
+
+# Testing
+/coverage/
+*.cover
+*.coverage
+.nyc_output
+
+# Logs
+*.log
+logs/
+*.log.*
+
+# Temporary files
+tmp/
+temp/
+*.tmp
+
+# Database
+*.db
+*.sqlite
+*.sqlite3
+
+# OS
+Thumbs.db
+.DS_Store
+
+# Docker
+docker-compose.override.yml
+
+# Redis
+dump.rdb
+
+# Backup files
+*.bak
+*.backup
+*~

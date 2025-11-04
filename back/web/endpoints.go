@@ -269,18 +269,22 @@ func NewShareTokenManager() *ShareTokenManager {
 	}
 }
 
-var sessionStore = NewSessionManager()
+var sessionStore SessionStoreInterface
 var exercisesComparerCache = NewExercisesComparerCache()
 var listExercisesQueryCache = NewListExercisesQueryCache()
 var shareManager = NewShareTokenManager()
 var developmentLastCreatedSessionTokenStack = make([]string, 0)
 
-func NewEndpoints(conf *Config, cryptoConf *CryptoConfig, l *log.Logger, dbs *db.DB) *Endpoints {
+func NewEndpoints(conf *Config, cryptoConf *CryptoConfig, l *log.Logger, dbs *db.DB, store SessionStoreInterface) *Endpoints {
 	exercisesNames := db.ListExerciseNames(dbs)
 	for _, e := range exercisesNames {
 		exercisesComparerCache.Add(*e.Id, *e.Name)
 	}
 
+	// Set the global session store
+	sessionStore = store
+
+	// Load active sessions into the store
 	sessions := db.ListActiveUserAccountSessions(dbs)
 	for _, s := range sessions {
 		sessionStore.Write(*s.Token, *s.UserAccountId)
@@ -301,6 +305,10 @@ func (o *Endpoints) Handle() http.Handler {
 	//o.r.Path("/signUp").HandlerFunc(o.HandleIPWhiteListing(o.HandleFatal(o.HandleTransactional(o.signUp))))
 	//o.r.Path("/signIn").HandlerFunc(o.HandleIPWhiteListing(o.HandleFatal(o.HandleTransactional(o.signIn))))
 	//o.r.Path("/testPushNotificationWorks").HandlerFunc(o.HandleAuthenticatedTransactional(o.HandleAuthorization(o.testPushNotificationWorks, db.Professor)))
+
+	// Health and version endpoints - no authentication required
+	api.Path("/health").HandlerFunc(o.HandleOptionsRequest(o.health))
+	api.Path("/version").HandlerFunc(o.HandleOptionsRequest(o.version))
 
 	if o.conf.IsDevelopment() {
 		api.Path("/getLocalInfo").HandlerFunc(o.HandleOptionsRequest(o.HandleIPWhiteListing(o.HandleFatal(o.getLocalInfo))))

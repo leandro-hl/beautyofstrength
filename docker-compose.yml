@@ -1,0 +1,95 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:15-alpine
+    container_name: bos-postgres
+    environment:
+      POSTGRES_DB: beautyofstrength
+      POSTGRES_USER: bosuser
+      POSTGRES_PASSWORD: bospass_dev_only
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./sql:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U bosuser -d beautyofstrength"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - bos-network
+
+  redis:
+    image: redis:7-alpine
+    container_name: bos-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    command: redis-server --appendonly yes
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+    networks:
+      - bos-network
+
+  # Uncomment when ready to run backend in Docker
+  # backend:
+  #   build:
+  #     context: .
+  #     dockerfile: Dockerfile
+  #   container_name: bos-backend
+  #   ports:
+  #     - "3001:3001"
+  #   environment:
+  #     - ENV=DEV
+  #     - REDIS_URL=redis:6379
+  #   depends_on:
+  #     postgres:
+  #       condition: service_healthy
+  #     redis:
+  #       condition: service_healthy
+  #   volumes:
+  #     - ./back:/app/back
+  #   networks:
+  #     - bos-network
+
+  # Adminer - Database management UI
+  adminer:
+    image: adminer:latest
+    container_name: bos-adminer
+    ports:
+      - "8080:8080"
+    environment:
+      ADMINER_DEFAULT_SERVER: postgres
+    depends_on:
+      - postgres
+    networks:
+      - bos-network
+
+  # Redis Commander - Redis management UI
+  redis-commander:
+    image: rediscommander/redis-commander:latest
+    container_name: bos-redis-commander
+    environment:
+      - REDIS_HOSTS=local:redis:6379
+    ports:
+      - "8081:8081"
+    depends_on:
+      - redis
+    networks:
+      - bos-network
+
+volumes:
+  postgres_data:
+    driver: local
+  redis_data:
+    driver: local
+
+networks:
+  bos-network:
+    driver: bridge
