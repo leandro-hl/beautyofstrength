@@ -269,18 +269,22 @@ func NewShareTokenManager() *ShareTokenManager {
 	}
 }
 
-var sessionStore = NewSessionManager()
+var sessionStore SessionStoreInterface
 var exercisesComparerCache = NewExercisesComparerCache()
 var listExercisesQueryCache = NewListExercisesQueryCache()
 var shareManager = NewShareTokenManager()
 var developmentLastCreatedSessionTokenStack = make([]string, 0)
 
-func NewEndpoints(conf *Config, cryptoConf *CryptoConfig, l *log.Logger, dbs *db.DB) *Endpoints {
+func NewEndpoints(conf *Config, cryptoConf *CryptoConfig, l *log.Logger, dbs *db.DB, store SessionStoreInterface) *Endpoints {
 	exercisesNames := db.ListExerciseNames(dbs)
 	for _, e := range exercisesNames {
 		exercisesComparerCache.Add(*e.Id, *e.Name)
 	}
 
+	// Set the global session store
+	sessionStore = store
+
+	// Load active sessions into the store
 	sessions := db.ListActiveUserAccountSessions(dbs)
 	for _, s := range sessions {
 		sessionStore.Write(*s.Token, *s.UserAccountId)

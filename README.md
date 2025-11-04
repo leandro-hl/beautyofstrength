@@ -130,6 +130,13 @@ White label SPA and Progressive Web App (PWA) for the calisthenics and gym indus
     "secretKey": "YOUR_SECRET_KEY",
     "endpoint": "YOUR_ENDPOINT",
     "mainBucketName": "YOUT_BUCKET"
+  },
+  "useRedisForSessions": true,
+  "redisConfig": {
+    "address": "localhost:6379",
+    "password": "",
+    "db": 0,
+    "sessionExpirationHours": 720
   }
 }
 ```

@@ -33,6 +33,13 @@ import (
 	"time"
 )
 
+type RedisConfig struct {
+	Address            *string `json:"address"`
+	Password           *string `json:"password"`
+	DB                 *int    `json:"db"`
+	SessionExpirationHours *int `json:"sessionExpirationHours"`
+}
+
 type Config struct {
 	LinkSharingExpirationDays            *int            `json:"linkSharingExpirationDays"`
 	AllowedOrigins                       []string        `json:"allowedOrigins"`
@@ -47,7 +54,9 @@ type Config struct {
 	GooglePEMCertsURL                    *string         `json:"googlePEMCertsUrl"`
 	GoogleTokenValidIssuers              map[string]bool `json:"googleTokenValidIssuers"`
 	GooglePEMPublicKeys                  map[string]*rsa.PublicKey
-	S3Config                             ls3.S3Config `json:"s3Config"`
+	S3Config                             ls3.S3Config    `json:"s3Config"`
+	RedisConfig                          *RedisConfig    `json:"redisConfig"`
+	UseRedisForSessions                  *bool           `json:"useRedisForSessions"`
 }
 
 func (o *Config) IsDevelopment() bool {
@@ -114,7 +123,46 @@ func main() {
 	}()
 
 	dbs := db.InitDB(*cryptoConf.DatasourceName, 2)
-	o := NewEndpoints(&config, &cryptoConf, l, dbs)
+
+	// Initialize session store (Redis or in-memory)
+	var sessionStore SessionStoreInterface
+	if config.UseRedisForSessions != nil && *config.UseRedisForSessions && config.RedisConfig != nil {
+		// Use Redis for session storage
+		redisAddr := "localhost:6379"
+		if config.RedisConfig.Address != nil {
+			redisAddr = *config.RedisConfig.Address
+		}
+
+		redisPassword := ""
+		if config.RedisConfig.Password != nil {
+			redisPassword = *config.RedisConfig.Password
+		}
+
+		redisDB := 0
+		if config.RedisConfig.DB != nil {
+			redisDB = *config.RedisConfig.DB
+		}
+
+		sessionExpirationHours := 720 // 30 days default
+		if config.RedisConfig.SessionExpirationHours != nil {
+			sessionExpirationHours = *config.RedisConfig.SessionExpirationHours
+		}
+
+		store, err := NewRedisSessionStore(redisAddr, redisPassword, redisDB, time.Duration(sessionExpirationHours)*time.Hour)
+		if err != nil {
+			l.Printf("Failed to connect to Redis, falling back to in-memory session store: %v\n", err)
+			sessionStore = NewSessionManager()
+		} else {
+			l.Println("Using Redis for session storage")
+			sessionStore = store
+		}
+	} else {
+		// Use in-memory session storage
+		l.Println("Using in-memory session storage (sessions will be lost on restart)")
+		sessionStore = NewSessionManager()
+	}
+
+	o := NewEndpoints(&config, &cryptoConf, l, dbs, sessionStore)
 	allowedHeaders := []string{"Content-type", "Accept", "Content-Length", "Accept-Encoding", "X-CSRF-Token", "Authorization"}
 	if config.IsDevelopment() {
 		allowedHeaders = append(allowedHeaders, "ngrok-skip-browser-warning")
