@@ -46,6 +46,11 @@ func InitDB(datasourceName string, serial int) *DB {
 	}
 }
 
+// Ping checks if the database connection is alive
+func (d *DB) Ping() error {
+	return d.Db.Ping()
+}
+
 func formatIndex(i int) string {
 	return fmt.Sprintf("$%d", i)
 }

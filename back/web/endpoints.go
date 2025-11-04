@@ -302,6 +302,10 @@ func (o *Endpoints) Handle() http.Handler {
 	//o.r.Path("/signIn").HandlerFunc(o.HandleIPWhiteListing(o.HandleFatal(o.HandleTransactional(o.signIn))))
 	//o.r.Path("/testPushNotificationWorks").HandlerFunc(o.HandleAuthenticatedTransactional(o.HandleAuthorization(o.testPushNotificationWorks, db.Professor)))
 
+	// Health and version endpoints - no authentication required
+	api.Path("/health").HandlerFunc(o.HandleOptionsRequest(o.health))
+	api.Path("/version").HandlerFunc(o.HandleOptionsRequest(o.version))
+
 	if o.conf.IsDevelopment() {
 		api.Path("/getLocalInfo").HandlerFunc(o.HandleOptionsRequest(o.HandleIPWhiteListing(o.HandleFatal(o.getLocalInfo))))
 		api.Path("/createTestUser").HandlerFunc(o.HandleOptionsRequest(o.HandleIPWhiteListing(o.HandleFatal(o.HandleTransactional(o.createTestUser)))))
